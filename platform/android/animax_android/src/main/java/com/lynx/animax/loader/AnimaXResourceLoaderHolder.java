@@ -54,6 +54,7 @@ public class AnimaXResourceLoaderHolder {
     registerLoaderForScheme(new AnimaXAssetLoader());
     registerLoaderForScheme(new AnimaXFileLoader());
     registerLoaderForScheme(new AnimaXBase64Loader());
+    registerLoaderForScheme(new AnimaXContentUriLoader());
     registerLoadersByFactory(resourceFactory);
   }
 

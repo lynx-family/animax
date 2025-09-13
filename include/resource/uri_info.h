@@ -39,6 +39,7 @@ struct UriInfo {
     kFile,       // The resource is a local file.
     kHttp,       // The resource is accessed via HTTP.
     kDataURL,    // The resource is a Data URL.
+    kContent,    // The resource is ContentProvider uri
     kEnumCount,
     kUnknown = kEnumCount,  // The scheme of the URI is unknown.
   };
