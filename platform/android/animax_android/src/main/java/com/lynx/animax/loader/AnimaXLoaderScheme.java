@@ -8,4 +8,5 @@ public enum AnimaXLoaderScheme {
   FILE,
   HTTP,
   DATA_URL,
+  CONTENT_URI,
 }

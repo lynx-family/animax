@@ -44,6 +44,7 @@ static constexpr URIScheme kHttp{"http:", "http://"};
 static constexpr URIScheme kHttps{"https:", "https://"};
 static constexpr URIScheme kAsset{"asset:", "asset:///"};
 static constexpr URIScheme kFile{"file:", "file:///"};
+static constexpr URIScheme kContent{"content:", "content://"};
 
 static constexpr const char* kPolyfillPlaceHolder = "%s";
 
@@ -77,6 +78,8 @@ UriInfo::Scheme ParseUriScheme(const std::string& uri) {
   } else if (lynx::base::BeginsWith(uri, kPathSeparator) ||
              lynx::base::BeginsWith(uri, kFile.base)) {
     return UriInfo::Scheme::kFile;
+  } else if (lynx::base::BeginsWith(uri, kContent.base)) {
+    return UriInfo::Scheme::kContent;
   }
 
 #if OS_WIN
@@ -141,6 +144,8 @@ std::string NormalizePath(const std::string& path) {
     first = kHttp.slash;
   } else if (first == kHttps.base) {
     first = kHttps.slash;
+  } else if (first == kContent.base) {
+    first = kContent.slash;
   } else {
     first_is_scheme = false;
   }
