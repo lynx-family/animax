@@ -56,6 +56,8 @@ skity_shared_sources = [
   "real_context.h",
   "shader.cc",
   "shader.h",
+  "skity_log.cc",
+  "skity_log.h",
   "skity_util.cc",
   "skity_util.h",
   "surface.h",

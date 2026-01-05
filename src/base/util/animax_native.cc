@@ -5,6 +5,7 @@
 #include "src/base/util/animax_native.h"
 
 #include "base/include/no_destructor.h"
+#include "render/skity_log.h"
 
 namespace lynx {
 namespace animax {
@@ -16,6 +17,8 @@ AnimaXNative& AnimaXNative::Instance() {
 
 void AnimaXNative::RegisterALogFunction(ALogFunction logger_function) {
   log_function_ = logger_function;
+
+  SkityLog::RegisterLogFunction(log_function_);
 }
 
 ALogFunction AnimaXNative::GetALogFunction() { return log_function_; }
