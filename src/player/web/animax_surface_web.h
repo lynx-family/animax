@@ -23,6 +23,7 @@ class AnimaXSurfaceWeb : public AnimaXSurface {
   struct Description {
     std::string canvas_id;
     int32_t width, height;  // without pixel ratio
+    uintptr_t gl_context_handle = 0;
   };
 
   AnimaXSurfaceWeb(const Description& desc,

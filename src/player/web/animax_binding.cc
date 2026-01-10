@@ -4,6 +4,8 @@
 
 #include <emscripten/bind.h>
 
+#include <unordered_map>
+
 #include "include/player/animax_player.h"
 #include "src/player/web/animax_wasm.h"
 #include "src/player/web/animax_web_gpu_context.h"
@@ -42,7 +44,24 @@ EMSCRIPTEN_BINDINGS(animax) {
       .function("setJson", AnimaXPlayerSetJsonString)
       .function("setSrc", &lynx::animax::AnimaXPlayer::SetSrc)
       .function("setImageFolder", &lynx::animax::AnimaXPlayer::SetImageFolder)
-      .function("setSrcPolyfill", &lynx::animax::AnimaXPlayer::SetSrcPolyfill)
+      .function(
+          "setSrcPolyfill",
+          emscripten::optional_override(
+              [](lynx::animax::AnimaXPlayer& self, emscripten::val polyfill) {
+                std::unordered_map<std::string, std::string> map;
+                if (!polyfill.isUndefined() && !polyfill.isNull()) {
+                  emscripten::val keys =
+                      emscripten::val::global("Object").call<emscripten::val>(
+                          "keys", polyfill);
+                  int length = keys["length"].as<int>();
+                  for (int i = 0; i < length; ++i) {
+                    std::string key = keys[i].as<std::string>();
+                    std::string value = polyfill[key].as<std::string>();
+                    map.emplace(key, value);
+                  }
+                }
+                self.SetSrcPolyfill(map);
+              }))
       .function("setStartFrame", &lynx::animax::AnimaXPlayer::SetStartFrame)
       .function("setEndFrame", &lynx::animax::AnimaXPlayer::SetEndFrame)
       .function("setFpsEventInterval",
@@ -60,8 +79,18 @@ EMSCRIPTEN_BINDINGS(animax) {
       .function("seek", &lynx::animax::AnimaXPlayer::Seek)
       .function("getCurrentFrame", &lynx::animax::AnimaXPlayer::GetCurrentFrame)
       .function("playSegment", &lynx::animax::AnimaXPlayer::PlaySegment)
-      .function("onShow", &lynx::animax::AnimaXPlayer::OnShow)
-      .function("onHide", &lynx::animax::AnimaXPlayer::OnHide)
+      .function(
+          "onShow",
+          emscripten::optional_override(
+              [](lynx::animax::AnimaXPlayer& self, int state) {
+                self.OnShow(static_cast<lynx::animax::VisibilityState>(state));
+              }))
+      .function(
+          "onHide",
+          emscripten::optional_override(
+              [](lynx::animax::AnimaXPlayer& self, int state) {
+                self.OnHide(static_cast<lynx::animax::VisibilityState>(state));
+              }))
       .function("onTap", &lynx::animax::AnimaXPlayer::OnTap)
       .function("subscribeUpdateEvent",
                 &lynx::animax::AnimaXPlayer::SubscribeUpdateEvent)
@@ -93,8 +122,16 @@ EMSCRIPTEN_BINDINGS(animax) {
       .class_function("setDefaultTypefaceWithData",
                       &lynx::animax::AnimaXWasm::SetDefaultTypefaceWithData)
       .function("getPlayer", &lynx::animax::AnimaXWasm::GetPlayer)
-      .function("setSurfaceWithCanvas",
-                &lynx::animax::AnimaXWasm::SetSurfaceWithCanvas)
+      .function(
+          "setSurfaceWithCanvas",
+          emscripten::optional_override(
+              [](lynx::animax::AnimaXWasm& self, const std::string& canvas_id,
+                 int32_t width, int32_t height,
+                 const std::shared_ptr<lynx::animax::AnimaXWebGPUContext>& ctx,
+                 uintptr_t gl_context_handle) {
+                self.SetSurfaceWithCanvas(canvas_id, width, height, ctx,
+                                          gl_context_handle);
+              }))
       .function("updateVisibilityStates",
                 &lynx::animax::AnimaXWasm::UpdateVisibilityStates)
       .function("setEventCallback",

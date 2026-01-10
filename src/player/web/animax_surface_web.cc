@@ -182,19 +182,12 @@ void AnimaXSurfaceWeb::Reconfigure(const Description& desc) {
   }
 }
 void AnimaXSurfaceWeb::InitWebGLSurface(const Description& desc) {
-  EmscriptenWebGLContextAttributes attrs;
-  emscripten_webgl_init_context_attributes(&attrs);
-  attrs.majorVersion = 2;
-  attrs.minorVersion = 0;
-  attrs.stencil = 1;
-  attrs.antialias = 0;
-  attrs.enableExtensionsByDefault = 1;
-  attrs.powerPreference = EM_WEBGL_POWER_PREFERENCE_HIGH_PERFORMANCE;
-  gl_context_ = emscripten_webgl_create_context(desc.canvas_id.c_str(), &attrs);
-  if (gl_context_ <= 0) {
-    ANIMAX_LOGI("Failed to create WebGL context!");
+  if (desc.gl_context_handle <= 0) {
+    ANIMAX_LOGI("WebGL context handle is invalid! " << desc.gl_context_handle);
     return;
   }
+  gl_context_ =
+      static_cast<EMSCRIPTEN_WEBGL_CONTEXT_HANDLE>(desc.gl_context_handle);
   emscripten_webgl_make_context_current(gl_context_);
   gl_gpu_ctx_ = skity::GLContextCreate(
       reinterpret_cast<void*>(emscripten_webgl_get_proc_address));

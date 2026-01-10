@@ -208,14 +208,16 @@ AnimaXWasm::~AnimaXWasm() {
 
 void AnimaXWasm::SetSurfaceWithCanvas(
     const std::string& canvas_id, int32_t width, int32_t height,
-    const std::shared_ptr<AnimaXWebGPUContext>& web_gpu_ctx) {
+    const std::shared_ptr<AnimaXWebGPUContext>& web_gpu_ctx,
+    uintptr_t gl_context_handle) {
   player_->UpdateSurface(
-      [canvas_id, width, height, ctx = web_gpu_ctx](
+      [canvas_id, width, height, ctx = web_gpu_ctx, gl_context_handle](
           std::unique_ptr<lynx::animax::AnimaXSurface> old_surface) {
         const auto desc = AnimaXSurfaceWeb::Description{
             .canvas_id = canvas_id,
             .width = width,
             .height = height,
+            .gl_context_handle = gl_context_handle,
         };
         if (old_surface && old_surface->Valid()) {
           auto web_surface = static_cast<AnimaXSurfaceWeb*>(old_surface.get());

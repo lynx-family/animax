@@ -32,7 +32,8 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
 
   void SetSurfaceWithCanvas(
       const std::string& canvas_id, int32_t width, int32_t height,
-      const std::shared_ptr<AnimaXWebGPUContext>& web_gpu_ctx);
+      const std::shared_ptr<AnimaXWebGPUContext>& web_gpu_ctx,
+      uintptr_t gl_context_handle = 0);
 
   using ResourceLoaderImpl = std::function<void(
       const std::string& url, int32_t result_type, int32_t callback_id)>;
