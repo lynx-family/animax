@@ -37,5 +37,25 @@ public enum ObjectPosition {
    * "bottom": The content is aligned to the bottom edge of the container.
    * Horizontal alignment remains centered.
    */
-  BOTTOM;
+  BOTTOM,
+
+  /**
+   * "top-left": The content is aligned to the top-left corner of the container.
+   */
+  TOP_LEFT,
+
+  /**
+   * "top-right": The content is aligned to the top-right corner of the container.
+   */
+  TOP_RIGHT,
+
+  /**
+   * "bottom-left": The content is aligned to the bottom-left corner of the container.
+   */
+  BOTTOM_LEFT,
+
+  /**
+   * "bottom-right": The content is aligned to the bottom-right corner of the container.
+   */
+  BOTTOM_RIGHT;
 }

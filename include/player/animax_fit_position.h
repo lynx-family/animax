@@ -58,6 +58,18 @@ enum class ObjectPosition : uint8_t {
 
   kBottom,  // The animation will be aligned to the bottom edge of the
             // onscreen surface. Horizontal alignment remains centered.
+
+  kTopLeft,  // The animation will be aligned to the top-left corner of the
+             // onscreen surface.
+
+  kTopRight,  // The animation will be aligned to the top-right corner of the
+              // onscreen surface.
+
+  kBottomLeft,  // The animation will be aligned to the bottom-left corner of
+                // the onscreen surface.
+
+  kBottomRight,  // The animation will be aligned to the bottom-right corner of
+                 // the onscreen surface.
 };
 
 }  // namespace animax

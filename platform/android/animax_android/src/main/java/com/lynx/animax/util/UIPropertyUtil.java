@@ -32,6 +32,14 @@ public class UIPropertyUtil {
       objectPositionType = ObjectPosition.TOP;
     } else if ("bottom".equals(objectPositionString)) {
       objectPositionType = ObjectPosition.BOTTOM;
+    } else if ("top-left".equals(objectPositionString)) {
+      objectPositionType = ObjectPosition.TOP_LEFT;
+    } else if ("top-right".equals(objectPositionString)) {
+      objectPositionType = ObjectPosition.TOP_RIGHT;
+    } else if ("bottom-left".equals(objectPositionString)) {
+      objectPositionType = ObjectPosition.BOTTOM_LEFT;
+    } else if ("bottom-right".equals(objectPositionString)) {
+      objectPositionType = ObjectPosition.BOTTOM_RIGHT;
     }
     return objectPositionType;
   }

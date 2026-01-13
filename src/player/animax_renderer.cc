@@ -317,6 +317,21 @@ void AnimaXRenderer::ResizeCanvas(Canvas& canvas) {
     case ObjectPosition::kBottom:
       dy = height_ - scale_factor_y * model_height_;
       break;
+    case ObjectPosition::kTopLeft:
+      dx = dy = 0.f;
+      break;
+    case ObjectPosition::kTopRight:
+      dx = width_ - scale_factor_x * model_width_;
+      dy = 0.f;
+      break;
+    case ObjectPosition::kBottomLeft:
+      dx = 0.f;
+      dy = height_ - scale_factor_y * model_height_;
+      break;
+    case ObjectPosition::kBottomRight:
+      dx = width_ - scale_factor_x * model_width_;
+      dy = height_ - scale_factor_y * model_height_;
+      break;
     case ObjectPosition::kCenter:
     default:
       break;

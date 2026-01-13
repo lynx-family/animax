@@ -231,6 +231,14 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
     objectPos = lynx::animax::ObjectPosition::kTop;
   } else if ([@"bottom" isEqualToString:objectPosition]) {
     objectPos = lynx::animax::ObjectPosition::kBottom;
+  } else if ([@"top-left" isEqualToString:objectPosition]) {
+    objectPos = lynx::animax::ObjectPosition::kTopLeft;
+  } else if ([@"top-right" isEqualToString:objectPosition]) {
+    objectPos = lynx::animax::ObjectPosition::kTopRight;
+  } else if ([@"bottom-left" isEqualToString:objectPosition]) {
+    objectPos = lynx::animax::ObjectPosition::kBottomLeft;
+  } else if ([@"bottom-right" isEqualToString:objectPosition]) {
+    objectPos = lynx::animax::ObjectPosition::kBottomRight;
   }
   _player->SetObjectPosition(objectPos);
 }

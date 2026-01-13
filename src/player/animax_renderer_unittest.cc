@@ -248,6 +248,10 @@ TEST_F(AnimaXRendererTest, SetObjectPosition_WithAllValidValues_DoesNotCrash) {
   renderer_->SetObjectPosition(ObjectPosition::kRight);
   renderer_->SetObjectPosition(ObjectPosition::kTop);
   renderer_->SetObjectPosition(ObjectPosition::kBottom);
+  renderer_->SetObjectPosition(ObjectPosition::kTopLeft);
+  renderer_->SetObjectPosition(ObjectPosition::kTopRight);
+  renderer_->SetObjectPosition(ObjectPosition::kBottomLeft);
+  renderer_->SetObjectPosition(ObjectPosition::kBottomRight);
 }
 
 TEST_F(AnimaXRendererTest, OnTap_WithoutSurface_HandlesGracefully) {
