@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class VideoPlayerImpl extends AbsVideoPlayer
     implements SurfaceTexture.OnFrameAvailableListener, CodecManager.CodecErrorReporter {
   private static final String TAG = "VideoPlayerImpl";
-  private static final long FRAME_AVAILABLE_TIMEOUT_MS = 20;
+  private static final long FRAME_AVAILABLE_TIMEOUT_MS = 500;
   private static final long DESTROY_TIMEOUT_MS = 1000;
 
   private boolean mSurfaceTextureAvailable;
