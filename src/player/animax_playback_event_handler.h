@@ -36,8 +36,7 @@ class AnimaXPlaybackEventHandler
   void OnStart() override;
   void OnResume() override;
   void OnPause() override;
-  void OnProgress(double progress, double current_frame,
-                  bool skippable) override;
+  void OnProgress(double progress, double current_frame) override;
   void OnNewLoop(int32_t current_loop) override;
   void OnEnd() override;
   void OnCancel() override;

@@ -48,15 +48,6 @@ public class AnimaXContext {
   }
 
   /**
-   * Check if the count down event should be skipped for this context.
-   * @return True if the count down event should be skipped, false otherwise.
-   */
-  @CalledByNative
-  public boolean needSkipCountDownEvent() {
-    return DeviceUtil.needSkipCountDownEvent(mAbility);
-  }
-
-  /**
    * Get the device density for this context.
    * @return The device density.
    */

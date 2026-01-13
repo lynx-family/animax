@@ -45,14 +45,12 @@ void AnimaXPlaybackEventHandler::OnPause() {
 }
 
 void AnimaXPlaybackEventHandler::OnProgress(double progress,
-                                            double current_frame,
-                                            bool skippable) {
+                                            double current_frame) {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act(
-        [progress, current_frame, skippable](auto& controller) {
-          controller->OnProgress(progress, current_frame, skippable);
-        });
+    controller_actor->Act([progress, current_frame](auto& controller) {
+      controller->OnProgress(progress, current_frame);
+    });
   }
 }
 

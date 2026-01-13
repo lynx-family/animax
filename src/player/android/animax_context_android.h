@@ -25,7 +25,6 @@ class AnimaXContextAndroid {
 
   base::android::ScopedLocalJavaRef<jobject> GetAbility() const;
   bool MultiThreadAccelerate() const;
-  bool NeedSkipCountDownEvent() const;
   float GetDeviceDensity() const;
 
  private:

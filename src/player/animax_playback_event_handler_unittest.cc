@@ -26,12 +26,11 @@ class MockAnimaXMainController : public AnimaXMainController {
       std::shared_ptr<VSyncMonitor> vsync_monitor,
       std::shared_ptr<AnimaXPlaybackEventHandler> playback_handler)
       : AnimaXMainController(std::move(weak_player), std::move(vsync_monitor),
-                             std::move(playback_handler), nullptr, false) {}
+                             std::move(playback_handler)) {}
   ~MockAnimaXMainController() = default;
 
   MOCK_METHOD(void, NotifyCurrentFrameEvent, (const Event event), ());
-  MOCK_METHOD(void, OnProgress,
-              (double progress, double current_frame, bool skippable), ());
+  MOCK_METHOD(void, OnProgress, (double progress, double current_frame), ());
   MOCK_METHOD(void, OnNewLoop, (int32_t current_loop), ());
   MOCK_METHOD(void, OnEnd, (), ());
   MOCK_METHOD(void, NotifyWarning,
@@ -84,9 +83,9 @@ TEST_F(AnimaXPlaybackEventHandlerTest, OnStart_NotifiesStartEvent) {
 
 TEST_F(AnimaXPlaybackEventHandlerTest, OnProgress_NotifiesUpdateEvent) {
   testing::Mock::AllowLeak(mock_controller_);
-  EXPECT_CALL(*mock_controller_, OnProgress(0.5, 10.0, false));
+  EXPECT_CALL(*mock_controller_, OnProgress(0.5, 10.0));
 
-  handler_->OnProgress(0.5, 10.0, false);
+  handler_->OnProgress(0.5, 10.0);
 }
 
 TEST_F(AnimaXPlaybackEventHandlerTest, OnNewLoop_NotifiesRepeatEvent) {

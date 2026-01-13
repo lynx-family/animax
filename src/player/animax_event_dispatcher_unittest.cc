@@ -35,8 +35,7 @@ class TestAnimaXMainController : public AnimaXMainController {
   TestAnimaXMainController(std::weak_ptr<AnimaXPlayer> player,
                            std::shared_ptr<VSyncMonitor> vsync_monitor)
       : AnimaXMainController(player, vsync_monitor,
-                             std::weak_ptr<AnimaXPlaybackEventHandler>(),
-                             nullptr, false) {}
+                             std::weak_ptr<AnimaXPlaybackEventHandler>()) {}
 };
 
 class AnimaXEventDispatcherTest : public ::testing::Test {
@@ -48,7 +47,6 @@ class AnimaXEventDispatcherTest : public ::testing::Test {
             .SetScale(1.0f)
             .SetVSyncMonitor(mock_vsync_monitor_)
             .EnableMultiThreadAccelerate(false)
-            .SetSkipCountDownEvent(false)
             .SetResourceLoader(nullptr)
             .SetUnzipLoader(nullptr)
             .SetAbility(nullptr)

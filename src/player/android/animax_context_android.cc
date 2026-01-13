@@ -37,11 +37,6 @@ bool AnimaXContextAndroid::MultiThreadAccelerate() const {
   return Java_AnimaXContext_multiThreadAccelerate(env, java_context_.Get());
 }
 
-bool AnimaXContextAndroid::NeedSkipCountDownEvent() const {
-  JNIEnv* env = base::android::AttachCurrentThread();
-  return Java_AnimaXContext_needSkipCountDownEvent(env, java_context_.Get());
-}
-
 float AnimaXContextAndroid::GetDeviceDensity() const {
   JNIEnv* env = base::android::AttachCurrentThread();
   return Java_AnimaXContext_getDeviceDensity(env, java_context_.Get());

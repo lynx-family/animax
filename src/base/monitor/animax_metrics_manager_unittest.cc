@@ -53,9 +53,8 @@ class AnimaXMetricsManagerTest : public ::testing::Test {
     std::weak_ptr<AnimaXPlaybackEventHandler> playback_handler;
     controller_actor_ =
         std::make_shared<lynx::shell::LynxActor<AnimaXMainController>>(
-            std::unique_ptr<AnimaXMainController>(
-                new AnimaXMainController(player_->weak_from_this(), nullptr,
-                                         playback_handler, nullptr, false)),
+            std::unique_ptr<AnimaXMainController>(new AnimaXMainController(
+                player_->weak_from_this(), nullptr, playback_handler)),
             GetAnimaXMainThread());
 
     renderer_actor_ = std::make_shared<lynx::shell::LynxActor<AnimaXRenderer>>(

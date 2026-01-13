@@ -9,8 +9,6 @@ base_util_shared_sources = [
   "buffer_copy_helper.cc",
   "buffer_copy_helper.h",
   "color_util.cc",
-  "count_down_event.cc",
-  "count_down_event.h",
   "event_warning_checker.cc",
   "event_warning_checker.h",
   "misc_util.cc",

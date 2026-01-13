@@ -14,7 +14,6 @@
 #include "include/player/animax_player_builder.h"
 #include "include/player/vsync_monitor.h"
 #include "src/base/thread/task_runner.h"
-#include "src/base/util/count_down_event.h"
 #include "src/player/animax_playback_event_handler.h"
 
 using namespace lynx::animax;
@@ -32,7 +31,7 @@ class MockAnimaXPlaybackEventHandler : public AnimaXPlaybackEventHandler {
 
   MOCK_METHOD(void, OnNewLoop, (int32_t));
   MOCK_METHOD(void, OnEnd, ());
-  MOCK_METHOD(void, OnProgress, (double, double, bool));
+  MOCK_METHOD(void, OnProgress, (double, double));
   MOCK_METHOD(void, OnFps, (float, uint32_t));
   MOCK_METHOD(void, OnWarning, (EventWarning, const std::string&));
   MOCK_METHOD(void, OnError, (EventError, const std::string&));
@@ -52,7 +51,7 @@ class AnimaXMainControllerTest : public ::testing::Test {
         std::make_shared<lynx::shell::LynxActor<AnimaXMainController>>(
             std::unique_ptr<AnimaXMainController>(new AnimaXMainController(
                 player_->weak_from_this(), std::move(mock_vsync_monitor_),
-                mock_playback_handler_, nullptr, false)),
+                mock_playback_handler_)),
             GetAnimaXMainThread());
   }
 
@@ -109,7 +108,7 @@ TEST_F(AnimaXMainControllerTest, OnNewLoop_UpdatesLoopIndex) {
 }
 
 TEST_F(AnimaXMainControllerTest, OnProgress_UpdatesCurrentFrame) {
-  controller_actor_->Impl()->OnProgress(0.5, 50.0, true);
+  controller_actor_->Impl()->OnProgress(0.5, 50.0);
   EXPECT_EQ(controller_actor_->Impl()->GetCurrentFrame(), 50.0);
 }
 

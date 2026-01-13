@@ -92,7 +92,6 @@ static jlong Create(JNIEnv* env, jobject jcaller, jlong loader,
   builder.SetScale(animax_context.GetDeviceDensity())
       .SetVSyncMonitor(std::make_shared<lynx::animax::VSyncMonitorAndroid>())
       .EnableMultiThreadAccelerate(animax_context.MultiThreadAccelerate())
-      .SetSkipCountDownEvent(animax_context.NeedSkipCountDownEvent())
       .SetAbility(android_ability);
 
   auto* loader_holder =

@@ -28,11 +28,6 @@ AnimaXPlayerBuilder& AnimaXPlayerBuilder::EnableMultiThreadAccelerate(
   return *this;
 }
 
-AnimaXPlayerBuilder& AnimaXPlayerBuilder::SetSkipCountDownEvent(bool skip) {
-  skip_count_down_event_ = skip;
-  return *this;
-}
-
 AnimaXPlayerBuilder& AnimaXPlayerBuilder::SetAbility(
     std::shared_ptr<AnimaXAbility> ability) {
   ability_ = std::move(ability);

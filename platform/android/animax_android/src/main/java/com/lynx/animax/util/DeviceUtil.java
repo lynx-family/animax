@@ -28,7 +28,6 @@ public class DeviceUtil {
       "ANIMAX_VIDEO_SURFACE_DESTROY_TIMEOUT";
   private static final String sSettingSyncSurfaceDestroyName = "ANIMAX_SYNC_SURFACE_DESTROY";
   private static final String sSettingLegacyFetcher = "ANIMAX_USE_LEGACY_FETCHER";
-  private static final String sSettingSkipCountDownEvent = "ANIMAX_SKIP_COUNT_DOWN_EVENT";
   private static final String sSettingDisableShowEventLogbox = "ANIMAX_DISABLE_SHOW_EVENT_LOGBOX";
   private static final String sSettingDisableByteVC1Decoder = "ANIMAX_DISABLE_BYTEVC1_DECODER";
 
@@ -192,11 +191,6 @@ public class DeviceUtil {
   // Use legacy fetcher, default is false
   public static boolean useLegacyFetcher(@NonNull BaseAbility ability) {
     final String result = getStringFromExternalEnv(sSettingLegacyFetcher, ability);
-    return isPositiveConfigValue(result);
-  }
-
-  public static boolean needSkipCountDownEvent(@NonNull BaseAbility ability) {
-    final String result = getStringFromExternalEnv(sSettingSkipCountDownEvent, ability);
     return isPositiveConfigValue(result);
   }
 

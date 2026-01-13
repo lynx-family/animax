@@ -12,7 +12,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 
 @property(nonatomic, strong, nullable) BaseAnimaXAbility *ability;
-@property(nonatomic, assign) BOOL needSkipCountDown;
 @property(nonatomic, assign) BOOL enableMultiThreadAccelerate;
 @property(nonatomic, assign) BOOL enableOptVtbErrorHandler;
 

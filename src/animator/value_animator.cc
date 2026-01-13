@@ -91,7 +91,7 @@ void ValueAnimator::OnFrame(double current_time_ms) {
   }
   if (has_listener) {
     double progress = GetProgress();
-    listener->OnProgress(progress, current_frame_, true);
+    listener->OnProgress(progress, current_frame_);
   }
   if (end) {
     ResetState();
@@ -247,7 +247,7 @@ void ValueAnimator::SeekToFrame(double frame, int32_t current_loop_count) {
   MakeCurrentFrameValid();
 
   if (listener) {
-    listener->OnProgress(GetProgress(), current_frame_, false);
+    listener->OnProgress(GetProgress(), current_frame_);
   }
 }
 

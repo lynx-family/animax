@@ -10,7 +10,6 @@
 #include "include/property/animax_player_global.h"
 #include "src/animator/animax_value_animator.h"
 #include "src/base/log/log.h"
-#include "src/base/util/count_down_event.h"
 #include "src/base/util/event_warning_checker.h"
 #include "src/player/animax_playback_event_handler.h"
 
@@ -20,14 +19,10 @@ namespace animax {
 AnimaXMainController::AnimaXMainController(
     std::weak_ptr<AnimaXPlayer> weak_player,
     std::shared_ptr<VSyncMonitor> vsync_monitor,
-    std::weak_ptr<AnimaXPlaybackEventHandler> playback_handler,
-    std::shared_ptr<CountDownEvent> count_down_event,
-    bool skip_count_down_event)
+    std::weak_ptr<AnimaXPlaybackEventHandler> playback_handler)
     : weak_player_(std::move(weak_player)),
-      value_animator_(AnimaXValueAnimator::Create(std::move(vsync_monitor),
-                                                  std::move(playback_handler))),
-      count_down_event_(count_down_event),
-      skip_count_down_event_(skip_count_down_event) {
+      value_animator_(AnimaXValueAnimator::Create(
+          std::move(vsync_monitor), std::move(playback_handler))) {
   event_dispatcher_ =
       std::make_shared<AnimaXEventDispatcher>(weak_player_, *this);
   player_id_ =
@@ -345,13 +340,7 @@ void AnimaXMainController::OnEnd() {
   NotifyCurrentFrameEvent(Event::kCompletion);
 }
 
-void AnimaXMainController::OnProgress(double progress, double current_frame,
-                                      bool skippable) {
-  if (!skip_count_down_event_ && skippable && count_down_event_ &&
-      !count_down_event_->TryCountDown()) {
-    return;
-  }
-
+void AnimaXMainController::OnProgress(double progress, double current_frame) {
   // Round frame to nearest integer and recalculate progress if there is video
   // layer in the composition
   if (model_meta_.has_video_layer &&
@@ -366,7 +355,7 @@ void AnimaXMainController::OnProgress(double progress, double current_frame,
 
   auto player = weak_player_.lock();
   if (player) {
-    player->OnProgress(progress, current_frame, skippable);
+    player->OnProgress(progress, current_frame);
   }
 }
 

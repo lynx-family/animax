@@ -28,7 +28,6 @@ class AnimaXValueAnimator;
 class CompositionModelPipeline;
 class CompositionLayer;
 class CompositionModel;
-class CountDownEvent;
 class Canvas;
 class Matrix;
 class Surface;
@@ -293,9 +292,8 @@ class ANIMAX_EXPORT AnimaXPlayer
    *
    * @param progress Normalized progress value (0.0 to 1.0).
    * @param current_frame Current frame index.
-   * @param skippable True if the progress update is skippable, false otherwise.
    */
-  void OnProgress(double progress, double current_frame, bool skippable);
+  void OnProgress(double progress, double current_frame);
   /**
    * Handle a tap event at the specified coordinates.
    * @param x X coordinate of the tap.
@@ -418,8 +416,6 @@ class ANIMAX_EXPORT AnimaXPlayer
   std::shared_ptr<shell::LynxActor<AnimaXCompositionLoader>> loader_actor_;
 
   // Multi thread
-  std::shared_ptr<CountDownEvent> count_down_event_;
-  bool skip_count_down_event_ = false;
   std::shared_ptr<AnimaXMetricsManager> metrics_manager_;
   std::shared_ptr<AnimaXAbility> ability_;
 

@@ -38,11 +38,8 @@ class ValueAnimatorListener {
    * @param progress      a progress between origin start frame and origin end
    * frame. 0.0 means origin start frame, 1.0 means origin end frame.
    * @param current_frame current frame. This value is related with progress.
-   * @param skippable whether this frame can be skipped. If true, this frame can
-   * be ignored.
    */
-  virtual void OnProgress(double progress, double current_frame,
-                          bool skippable) = 0;
+  virtual void OnProgress(double progress, double current_frame) = 0;
   /**
    * Notify entering to new loop.
    * The first turn wouldn't trigger this event, that is current_loop = 0. For

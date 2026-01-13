@@ -9,7 +9,6 @@
 #include "src/base/log/log.h"
 #include "src/base/monitor/animax_metrics_manager.h"
 #include "src/base/thread/task_runner.h"
-#include "src/base/util/count_down_event.h"
 #include "src/base/util/visibility_state.h"
 #include "src/layer/composition_layer.h"
 #include "src/player/animax_composition_loader.h"
@@ -24,17 +23,11 @@ namespace animax {
 
 AnimaXPlayer::AnimaXPlayer(AnimaXPlayerBuilder& builder)
     : scale_(builder.scale_),
-      skip_count_down_event_(builder.skip_count_down_event_),
       ability_(builder.ability_),
       gpu_thread_holder_(
           GetAnimaXGPUThreadHolder(builder.multi_thread_accelerate_)) {
   ANIMAX_LOGI("AnimaXPlayer constructor"
               << ", this: " << this);
-
-  // Initialize fundamental player state.
-  if (!skip_count_down_event_) {
-    count_down_event_ = std::shared_ptr<CountDownEvent>(new CountDownEvent(2));
-  }
 }
 
 void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
@@ -44,8 +37,7 @@ void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
   // Create main controller actor and initialize controller capabilities.
   controller_actor_ = std::make_shared<shell::LynxActor<AnimaXMainController>>(
       std::unique_ptr<AnimaXMainController>(new AnimaXMainController(
-          weak_from_this(), builder.vsync_monitor_, playback_handler_,
-          count_down_event_, skip_count_down_event_)),
+          weak_from_this(), builder.vsync_monitor_, playback_handler_)),
       GetAnimaXMainThread());
 
   // Register event listeners provided by builder.
@@ -527,17 +519,9 @@ void AnimaXPlayer::OnHide(VisibilityState state) {
       [state](auto& controller) { controller->OnHide(state); });
 }
 
-void AnimaXPlayer::OnProgress(double progress, double current_frame,
-                              bool skippable) {
-  auto should_count_up =
-      !skip_count_down_event_ && skippable && count_down_event_;
-  renderer_actor_->Act([progress, should_count_up,
-                        count_down_event = count_down_event_](auto& renderer) {
-    if (should_count_up) {
-      count_down_event->CountUp();
-    }
-    renderer->Render(progress);
-  });
+void AnimaXPlayer::OnProgress(double progress, double current_frame) {
+  renderer_actor_->Act(
+      [progress](auto& renderer) { renderer->Render(progress); });
 }
 
 void AnimaXPlayer::OnTap(float x, float y) {

@@ -340,7 +340,6 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   builder.SetScale(static_cast<float>(scale))
       .SetVSyncMonitor(std::make_shared<lynx::animax::VSyncMonitorIOS>())
       .EnableMultiThreadAccelerate(_context.enableMultiThreadAccelerate)
-      .SetSkipCountDownEvent(_context.needSkipCountDown)
       .SetAbility(std::make_shared<lynx::animax::AnimaXAbilityIOS>(_context));
 
   __weak typeof(self) weakSelf = self;

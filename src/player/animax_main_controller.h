@@ -23,7 +23,6 @@ namespace animax {
 class AnimaXPlayer;
 class AnimaXValueAnimator;
 class VSyncMonitor;
-class CountDownEvent;
 class AnimaXPlaybackEventHandler;
 
 struct CompositionModelMeta {
@@ -42,9 +41,7 @@ class AnimaXMainController {
   AnimaXMainController(
       std::weak_ptr<AnimaXPlayer> weak_player,
       std::shared_ptr<VSyncMonitor> vsync_monitor,
-      std::weak_ptr<AnimaXPlaybackEventHandler> playback_handler,
-      std::shared_ptr<CountDownEvent> count_down_event,
-      bool skip_count_down_event);
+      std::weak_ptr<AnimaXPlaybackEventHandler> playback_handler);
   ~AnimaXMainController();
 
   // Event dispatcher operations
@@ -73,7 +70,7 @@ class AnimaXMainController {
   // Playback event handlers
   void OnNewLoop(int32_t current_loop);
   void OnEnd();
-  void OnProgress(double progress, double current_frame, bool skippable);
+  void OnProgress(double progress, double current_frame);
 
   // Visiblity handlers
   void OnShow(VisibilityState state);
@@ -137,9 +134,6 @@ class AnimaXMainController {
   CompositionModelMeta model_meta_;
   double current_frame_ = 0.0;
   int32_t current_loop_ = 0;
-
-  std::shared_ptr<CountDownEvent> count_down_event_;
-  bool skip_count_down_event_ = false;
 
   std::string current_src_;
 };
