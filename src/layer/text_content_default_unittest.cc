@@ -58,4 +58,11 @@ TEST(TextContentDefaultTest, DrawCallsCanvasDrawText) {
   TextContentDefault text_content(data_source);
   Canvas canvas(nullptr, 100, 100, nullptr);
   text_content.Draw(canvas, 255);
+  RectF rect;
+  rect.Set(0, 0, 0, 0);
+  text_content.GetRect(rect);
+  EXPECT_EQ(rect.GetTop(), 0);
+  EXPECT_EQ(rect.GetBottom(), 0);
+  EXPECT_EQ(rect.GetLeft(), 0);
+  EXPECT_EQ(rect.GetRight(), 0);
 }

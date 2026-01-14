@@ -68,6 +68,51 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   drawer.DrawLayoutPage(layout_region);
 }
 
+void TextContentTextra::GetRect(RectF& out_rect) {
+  if (!layout_context_) {
+    return;
+  }
+  auto& document_data = data_source_.GetDocumentData();
+  double x = 0, y = 0, w = 0, h = 0;
+  if (layout_context_->IsBoxMode()) {
+    auto* box_position = document_data.GetBoxPosition();
+    if (box_position && !box_position->IsEmpty()) {
+      x = box_position->GetX();
+      y = box_position->GetY();
+    }
+    auto* box_size = document_data.GetBoxSize();
+    if (box_size && !box_size->IsEmpty()) {
+      w = box_size->GetX();
+      h = box_size->GetY();
+    }
+  } else {
+    auto* layout_region = layout_context_->GetLayoutRegion();
+    DCHECK(layout_region);
+    w = layout_region->GetLayoutedWidth();
+    h = layout_region->GetLayoutedHeight();
+    switch (document_data.GetJustification()) {
+      case DocumentJustification::kRightAlign:
+        x = -w;
+        break;
+      case DocumentJustification::kCenter:
+        x = -w / 2;
+        break;
+      default:
+        break;
+    }
+    auto* first_line = layout_region->GetLine(0);
+    if (first_line) {
+      y = -first_line->GetMaxAscent();
+    }
+  }
+  auto baseline_shift = document_data.GetBaselineShift();
+  if (baseline_shift != 0) {
+    y -= baseline_shift;
+  }
+
+  out_rect.Set(x, y, x + w, y + h);
+}
+
 void TextContentTextra::ConfigurePlatformPainter(
     const TextContentDataSource& data_source, int32_t alpha) {
   // anti-aliasing default to true

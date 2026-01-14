@@ -127,6 +127,11 @@ void TextLayer::GetBounds(RectF& out_bounds, Matrix& parent_matrix,
   BaseLayer::GetBounds(out_bounds, parent_matrix, apply_parent);
   auto& bounds = composition_.GetBounds();
   out_bounds.Set(0, 0, bounds.GetWidth(), bounds.GetHeight());
+  if (!text_content_) {
+    return;
+  }
+  text_content_->GetRect(out_bounds);
+  bounds_matrix_->MapRect(out_bounds);
 }
 
 inline KeyframeAnimation* TextLayer::GetAnimationFromAnimatorProperty(

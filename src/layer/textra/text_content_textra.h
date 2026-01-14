@@ -18,6 +18,7 @@ class TextContentTextra : public TextContent {
   ~TextContentTextra();
 
   void Draw(Canvas& canvas, int32_t alpha) override;
+  void GetRect(RectF& out_rect) override;
 
  private:
   void ConfigurePlatformPainter(const TextContentDataSource& data_source,
