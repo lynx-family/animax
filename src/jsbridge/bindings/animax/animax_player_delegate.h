@@ -58,6 +58,13 @@ class AnimaXPlayerDelegate : public binding::ImplBase {
                            std::unique_ptr<NapiOnPropertyCallback> callback);
 
   /**
+   * Load assets from resource properties.
+   *  @param callback Callback to be invoked when the operation completes
+   */
+  void SubmitResourcePropertiesUpdate(
+      std::unique_ptr<NapiOnPropertyCallback> callback);
+
+  /**
    * Run on GPU thread and call AnimaXPlayer's play function
    */
   void Play();

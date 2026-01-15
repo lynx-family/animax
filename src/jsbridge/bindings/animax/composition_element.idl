@@ -6,6 +6,8 @@ interface CompositionElement {
 
     void setResourceProperty(long type, ByteString resourceId, ValueParam param, OnPropertyCallback callback);
 
+    void submitResourcePropertiesUpdate(OnPropertyCallback callback);
+
     void play();
 };
 

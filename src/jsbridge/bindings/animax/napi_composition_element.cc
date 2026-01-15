@@ -213,6 +213,23 @@ Value NapiCompositionElement::SetResourcePropertyMethod(const CallbackInfo& info
   return info.Env().Undefined();
 }
 
+Value NapiCompositionElement::SubmitResourcePropertiesUpdateMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 1) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "SubmitResourcePropertiesUpdate", "1");
+    return Value();
+  }
+
+  auto arg0_callback = NativeValueTraits<IDLFunction<NapiOnPropertyCallback>>::NativeValue(info, 0);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->SubmitResourcePropertiesUpdate(std::move(arg0_callback));
+  return info.Env().Undefined();
+}
+
 Value NapiCompositionElement::PlayMethod(const CallbackInfo& info) {
   DCHECK(impl_);
 
@@ -227,13 +244,14 @@ Napi::Class* NapiCompositionElement::Class(Napi::Env env) {
     return clazz;
   }
 
-  base::InlineVector<Wrapped::PropertyDescriptor, 3> props;
+  base::InlineVector<Wrapped::PropertyDescriptor, 4> props;
 
   // Attributes
 
   // Methods
   AddInstanceMethod(props, "updateLayerProperty", &NapiCompositionElement::UpdateLayerPropertyMethod);
   AddInstanceMethod(props, "setResourceProperty", &NapiCompositionElement::SetResourcePropertyMethod);
+  AddInstanceMethod(props, "submitResourcePropertiesUpdate", &NapiCompositionElement::SubmitResourcePropertiesUpdateMethod);
   AddInstanceMethod(props, "play", &NapiCompositionElement::PlayMethod);
 
   // Cache the class

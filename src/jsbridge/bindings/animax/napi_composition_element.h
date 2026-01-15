@@ -40,6 +40,7 @@ class NapiCompositionElement : public NapiBridge {
   // Methods
   Napi::Value UpdateLayerPropertyMethod(const Napi::CallbackInfo&);
   Napi::Value SetResourcePropertyMethod(const Napi::CallbackInfo&);
+  Napi::Value SubmitResourcePropertiesUpdateMethod(const Napi::CallbackInfo&);
   Napi::Value PlayMethod(const Napi::CallbackInfo&);
 
   // Overload Hubs
