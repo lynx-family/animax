@@ -110,7 +110,7 @@ bool AnimaXEGLContext::Valid() const { return is_valid_; }
 EGLConfig AnimaXEGLContext::Config() const { return config_; }
 
 AnimaXEGLContext& AnimaXEGLContext::Instance() {
-  static base::NoDestructor<AnimaXEGLContext> context{
+  static thread_local base::NoDestructor<AnimaXEGLContext> context{
       IsNoConfigContextSupported(), IsSurfacelessContextSupported()};
   return *context;
 }
