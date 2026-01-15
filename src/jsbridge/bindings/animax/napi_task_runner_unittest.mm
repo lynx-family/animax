@@ -9,7 +9,7 @@
 #import <Lynx/LynxView.h>
 #import <XCTest/XCTest.h>
 #import "LynxTemplateRender+Internal.h"
-#include "core/runtime/bindings/napi/napi_environment.h"
+#include "core/runtime/common/napi/napi_environment.h"
 #include "core/runtime/js/lynx_runtime.h"
 #include "core/shell/lynx_shell.h"
 
