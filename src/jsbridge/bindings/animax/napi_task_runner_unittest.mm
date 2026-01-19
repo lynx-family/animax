@@ -10,8 +10,8 @@
 #import <XCTest/XCTest.h>
 #import "LynxTemplateRender+Internal.h"
 #include "core/runtime/common/napi/napi_environment.h"
-#include "core/runtime/js/lynx_runtime.h"
 #include "core/shell/lynx_shell.h"
+#include "core/shell/runtime/bts/bts_runtime.h"
 
 constexpr static NSInteger DEFAULT_LYNXVIEW_NUMBER = 1;
 
@@ -92,7 +92,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   using namespace lynx;
   XCTestExpectation* expectation = [self expectationWithDescription:@"task should be invoked"];
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [expectation](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      [expectation](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner =
             std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -107,7 +107,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   using namespace lynx;
   XCTestExpectation* expectation = [self expectationWithDescription:@"task should be invoked"];
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [expectation](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      [expectation](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner = lynx::animax::NapiTaskRunner{env};
         auto task_runner2 = std::move(task_runner);
@@ -122,7 +122,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   using namespace lynx;
   XCTestExpectation* expectation = [self expectationWithDescription:@"task should be invoked"];
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [expectation](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      [expectation](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner = lynx::animax::NapiTaskRunner{env};
         auto task_runner2 = lynx::animax::NapiTaskRunner{};
@@ -151,8 +151,8 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
       new int{1}, std::move(releaseExpectationDeleter));
 
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [unique_resource = std::move(unique_resource)](
-          std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) mutable {
+      [unique_resource =
+           std::move(unique_resource)](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) mutable {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner =
             std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -175,7 +175,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   XCTestExpectation* e2 = [self expectationWithDescription:@"task2 should be invoked"];
 
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [e1, e2](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      [e1, e2](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner =
             std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -191,7 +191,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   XCTestExpectation* e4 = [self expectationWithDescription:@"task4 should be invoked"];
 
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [e3](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      [e3](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner =
             std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -200,7 +200,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
         });
       });
   self.shellPtr->GetRuntimeActor()->ActAsync(
-      [e4](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      [e4](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         auto task_runner =
             std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -218,7 +218,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   auto old_task_runner = std::shared_ptr<lynx::animax::NapiTaskRunner>{};
   self.shellPtr->GetRuntimeActor()->ActAsync(
       [napiTaskRunnerCreatedExpectation,
-       &old_task_runner](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+       &old_task_runner](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
         auto env = runtime->GetNapiEnvironment()->proxy()->Env();
         old_task_runner =
             std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -232,7 +232,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
       [self expectationWithDescription:@"dispatch should be performed"];
   dispatch_async(dispatch_get_main_queue(), ^{
     self.shellPtr->GetRuntimeActor()->ActAsync(
-        [old_task_runner, dispatchExp](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+        [old_task_runner, dispatchExp](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
           // The old NapiTaskRunner should be invalidated
           // At this point, we create a new NapiTaskRunner
           auto env = runtime->GetNapiEnvironment()->proxy()->Env();
@@ -263,19 +263,19 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
   [self createNewLynxViewWithLynxGroupNumber:2];
 
   [self getShellPtrWithLynxGroupNumber:1]->GetRuntimeActor()
-      -> ActAsync([random1](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      -> ActAsync([random1](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
     auto env = runtime->GetNapiEnvironment()->proxy()->Env();
     std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
     MarkCurrentThread(random1);
   });
   [self getShellPtrWithLynxGroupNumber:2]->GetRuntimeActor()
-      -> ActAsync([random2](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      -> ActAsync([random2](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
     auto env = runtime->GetNapiEnvironment()->proxy()->Env();
     std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
     MarkCurrentThread(random2);
   });
   [self getShellPtrWithLynxGroupNumber:1]->GetRuntimeActor()
-      -> ActAsync([e1, random1](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      -> ActAsync([e1, random1](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
     auto env = runtime->GetNapiEnvironment()->proxy()->Env();
     auto task_runner =
         std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
@@ -288,7 +288,7 @@ int GetCurrentThreadMark() { return kCurrentThreadMark; }
     });
   });
   [self getShellPtrWithLynxGroupNumber:2]->GetRuntimeActor()
-      -> ActAsync([e2, random2](std::unique_ptr<lynx::runtime::LynxRuntime>& runtime) {
+      -> ActAsync([e2, random2](std::unique_ptr<lynx::shell::BTSRuntime>& runtime) {
     auto env = runtime->GetNapiEnvironment()->proxy()->Env();
     auto task_runner =
         std::shared_ptr<lynx::animax::NapiTaskRunner>(new lynx::animax::NapiTaskRunner{env});
