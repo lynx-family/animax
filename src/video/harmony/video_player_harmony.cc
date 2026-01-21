@@ -8,11 +8,24 @@
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
 #include "src/player/animax_ability.h"
+#include "src/player/harmony/animax_ability_harmony.h"
 
 namespace lynx {
 namespace animax {
 
-VideoPlayerHarmony::VideoPlayerHarmony() {
+VideoPlayerHarmony::VideoPlayerHarmony(const AnimaXAbility *ability_ptr) {
+  if (ability_ptr) {
+    auto *harmony_ability =
+        static_cast<const AnimaXAbilityHarmony *>(ability_ptr);
+    if (harmony_ability) {
+      auto timeout = harmony_ability->GetVideoFrameTimeout();
+      if (timeout > 0) {
+        ANIMAX_LOGI("Set user video decode timeout: " << timeout);
+        user_timeout_ = std::chrono::milliseconds(timeout);
+      }
+    }
+  }
+
   // Flip Y
   transform_ = {1.f, 0.f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f,
                 0.f, 0.f, 1.f, 0.f, 0.f, 1.f,  0.f, 1.f};
@@ -38,6 +51,9 @@ VideoPlayerHarmony::~VideoPlayerHarmony() {
 
   // Detach and destroy native image
   if (native_image_) {
+    if (IsFrameListenerEnabled()) {
+      FrameListenerAdapter::GetInstance().Unregister(native_image_);
+    }
     OH_NativeImage_DetachContext(native_image_);
   }
 
@@ -117,6 +133,13 @@ std::unique_ptr<TextureInfo> VideoPlayerHarmony::UpdateTexture(
 }
 
 void VideoPlayerHarmony::UpdateSurfaceImage() {
+  if (IsFrameListenerEnabled() &&
+      !FrameListenerAdapter::WaitForFrameAvailable(*frame_callback_context_,
+                                                   user_timeout_)) {
+    ANIMAX_LOGW("Timeout waiting for frame available callback");
+    return;
+  }
+
   // Retry for the case that the surface image is not updated.
   for (int32_t i = 0; i < kSurfaceUpdateRetryCount; i++) {
     auto ret = OH_NativeImage_UpdateSurfaceImage(native_image_);
@@ -195,6 +218,7 @@ bool VideoPlayerHarmony::RenderFrame(int32_t frame) {
 }
 
 std::chrono::milliseconds VideoPlayerHarmony::GetTimeout(int32_t frame) const {
+  // Default behavior: use longer timeout for keyframes
   auto is_keyframe =
       std::find(data_->keyframe_index.begin(), data_->keyframe_index.end(),
                 frame) != data_->keyframe_index.end();
@@ -309,6 +333,11 @@ void VideoPlayerHarmony::InitNativeWindow() {
   OH_NativeWindow_NativeWindowHandleOpt(native_window_, SET_BUFFER_GEOMETRY,
                                         asset_->GetVideoWidth(),
                                         asset_->GetVideoHeight());
+
+  if (IsFrameListenerEnabled()) {
+    FrameListenerAdapter::GetInstance().Register(native_image_,
+                                                 frame_callback_context_);
+  }
 }
 
 void VideoPlayerHarmony::AttachAsset(VideoAsset *asset) {
@@ -325,6 +354,9 @@ void VideoPlayerHarmony::AttachAsset(VideoAsset *asset) {
 
   InitNativeWindow();
   InitCodec();
+  // Clear GL errors from video decoding, as OH_NativeImage_UpdateSurfaceImage
+  // checks GL error state and fails if any error exists.
+  ANIMAX_LOGE("AttachAsset success, gl_error:" << glGetError());
 }
 
 void VideoPlayerHarmony::NotifyErrorEvent(const std::string &err_msg) {
@@ -379,7 +411,7 @@ void VideoPlayerHarmony::InitCodec() {
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
     const AnimaXAbility *ability_ptr) {
-  return std::unique_ptr<VideoPlayer>(new VideoPlayerHarmony());
+  return std::unique_ptr<VideoPlayer>(new VideoPlayerHarmony(ability_ptr));
 }
 }  // namespace animax
 }  // namespace lynx

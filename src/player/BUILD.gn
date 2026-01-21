@@ -74,5 +74,7 @@ animax_source_set("player") {
       "web/vsync_monitor_web.cc",
       "web/vsync_monitor_web.h",
     ]
+  } else if (is_harmony) {
+    sources += [ "harmony/animax_ability_harmony.h" ]
   }
 }

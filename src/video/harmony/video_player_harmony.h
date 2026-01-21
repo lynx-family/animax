@@ -10,9 +10,11 @@
 #include <native_window/external_window.h>
 
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <queue>
 
+#include "src/base/util/harmony/frame_listener_adapter.h"
 #include "src/render/texture_info_gl.h"
 #include "src/video/harmony/video_asset_harmony.h"
 #include "src/video/video_player.h"
@@ -54,7 +56,7 @@ struct CodecData {
 
 class VideoPlayerHarmony : public VideoPlayer {
  public:
-  VideoPlayerHarmony();
+  explicit VideoPlayerHarmony(const AnimaXAbility *ability_ptr);
   ~VideoPlayerHarmony() override;
 
   static constexpr const std::chrono::milliseconds kBaseTimeout{16};
@@ -117,6 +119,9 @@ class VideoPlayerHarmony : public VideoPlayer {
   // Increase the timeout occurrence count.
   void IncreaseTimeoutCount();
 
+  // Check if frame listener is enabled (user has set a timeout).
+  bool IsFrameListenerEnabled() const { return user_timeout_.count() > 0; }
+
   uint32_t video_texture_ = 0;
   std::array<float, 16> transform_{};
 
@@ -132,6 +137,12 @@ class VideoPlayerHarmony : public VideoPlayer {
   int32_t next_output_frame_ = 0;
   int32_t next_input_frame_ = 0;
   int32_t timeout_count_ = 0;
+
+  std::shared_ptr<FrameCallbackContext> frame_callback_context_ =
+      std::make_shared<FrameCallbackContext>();
+
+  // User-defined timeout. Zero means use default behavior.
+  std::chrono::milliseconds user_timeout_{0};
 };
 
 }  // namespace animax

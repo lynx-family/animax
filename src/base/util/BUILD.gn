@@ -45,6 +45,8 @@ if (is_ios) {
   ]
 } else if (is_harmony) {
   base_util_shared_sources += [
+    "harmony/frame_listener_adapter.cc",
+    "harmony/frame_listener_adapter.h",
     "harmony/scoped_object_harmony.h",
     "harmony/xcomponent_adapter.cc",
     "harmony/xcomponent_adapter.h",
