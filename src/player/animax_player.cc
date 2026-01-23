@@ -34,10 +34,16 @@ void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
   // Create playback handler.
   playback_handler_ = std::make_shared<AnimaXPlaybackEventHandler>();
 
+  // Create VSync monitor if not provided.
+  auto vsync_monitor = builder.vsync_monitor_;
+  if (!vsync_monitor) {
+    vsync_monitor = std::make_shared<VSyncMonitor>();
+  }
+
   // Create main controller actor and initialize controller capabilities.
   controller_actor_ = std::make_shared<shell::LynxActor<AnimaXMainController>>(
       std::unique_ptr<AnimaXMainController>(new AnimaXMainController(
-          weak_from_this(), builder.vsync_monitor_, playback_handler_)),
+          weak_from_this(), std::move(vsync_monitor), playback_handler_)),
       GetAnimaXMainThread());
 
   // Register event listeners provided by builder.

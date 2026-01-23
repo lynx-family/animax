@@ -10,21 +10,21 @@ import com.lynx.animax.util.UIThreadUtils;
 
 public class VSyncMonitor {
   @CalledByNative
-  public static void requestVSync(final long nativeCallbackPtr) {
+  public static void requestVSync() {
     // Call from AnimaX_Main thread to UI main thread.
     UIThreadUtils.postAsynchronousAtFrontOfQueueOnUiThread(() -> {
       Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
         @Override
         public void doFrame(long frameTimeNanos) {
-          VSyncMonitor.invokeNativeCallback(nativeCallbackPtr, frameTimeNanos);
+          VSyncMonitor.invokeNativeCallback(frameTimeNanos);
         }
       });
     });
   }
 
-  private static void invokeNativeCallback(long nativeCallbackPtr, long frameTimeNanos) {
-    nativeInvokeCallback(nativeCallbackPtr, frameTimeNanos);
+  private static void invokeNativeCallback(long frameTimeNanos) {
+    nativeInvokeCallback(frameTimeNanos);
   }
 
-  private static native void nativeInvokeCallback(long nativeCallbackPtr, long frameTimeNanos);
+  private static native void nativeInvokeCallback(long frameTimeNanos);
 }

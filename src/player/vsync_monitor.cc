@@ -7,9 +7,28 @@
 #include "base/include/fml/message_loop.h"
 #include "src/base/log/log.h"
 #include "src/base/thread/task_runner.h"
+#include "src/player/vsync_dispatcher.h"
 
 namespace lynx {
 namespace animax {
+
+VSyncMonitor::~VSyncMonitor() {
+  // Atomically take the token and clear it to 0.
+  uint64_t t = token_.exchange(0, std::memory_order_acq_rel);
+  if (t != 0) {
+    VSyncDispatcher::Instance().Cancel(t);
+  }
+}
+
+void VSyncMonitor::RequestVSync(Callback callback) {
+  auto &dispatcher = VSyncDispatcher::Instance();
+  uint64_t t = dispatcher.SubscribeOnce(std::move(callback));
+  // If multiple RequestVSync calls are possible, cancel the old one.
+  uint64_t old = token_.exchange(t, std::memory_order_acq_rel);
+  if (old != 0) {
+    dispatcher.Cancel(old);
+  }
+}
 
 void VSyncMonitor::AsyncRequestVSync(Callback callback) {
   if (callback_) {

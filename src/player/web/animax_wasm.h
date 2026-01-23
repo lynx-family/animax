@@ -21,7 +21,6 @@ class AnimaXPlayer;
 class AnimaXPlayerBuilder;
 class AnimaXWebGPUContext;
 class ResourceLoaderWeb;
-class VSyncMonitorWeb;
 
 class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
  public:
@@ -70,8 +69,6 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
   std::shared_ptr<AnimaXPlayer> player_;
 
   std::shared_ptr<ResourceLoaderWeb> resource_loader_;
-
-  std::shared_ptr<VSyncMonitorWeb> vsync_monitor_;
 
   uint16_t current_visible_states_ = 0;
 

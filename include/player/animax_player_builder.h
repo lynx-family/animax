@@ -33,7 +33,8 @@ class ANIMAX_EXPORT AnimaXPlayerBuilder {
    */
   AnimaXPlayerBuilder& SetScale(float scale);
   /**
-   * Set the VSync monitor to drive rendering; required before Build.
+   * Set the VSync monitor to drive rendering;
+   * Optional, default with a new VSyncMonitor instance.
    */
   AnimaXPlayerBuilder& SetVSyncMonitor(
       std::shared_ptr<VSyncMonitor> vsync_monitor);

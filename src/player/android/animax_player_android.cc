@@ -21,7 +21,6 @@
 #include "src/player/android/animax_context_android.h"
 #include "src/player/android/animax_surface_android.h"
 #include "src/player/android/animax_surface_drawable_android.h"
-#include "src/player/android/vsync_monitor_android.h"
 #include "src/player/animax_event.h"
 #include "src/property/android/animax_key_path_android.h"
 #include "src/property/android/animax_key_path_list_callback_android.h"
@@ -90,7 +89,6 @@ static jlong Create(JNIEnv* env, jobject jcaller, jlong loader,
 
   lynx::animax::AnimaXPlayerBuilder builder;
   builder.SetScale(animax_context.GetDeviceDensity())
-      .SetVSyncMonitor(std::make_shared<lynx::animax::VSyncMonitorAndroid>())
       .EnableMultiThreadAccelerate(animax_context.MultiThreadAccelerate())
       .SetAbility(android_ability);
 
