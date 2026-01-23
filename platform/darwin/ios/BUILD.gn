@@ -90,6 +90,7 @@ subspec_target("Core") {
     "../../../include",
     "../../../src/animation",
     "../../../src/animator",
+    "../../../src/audio",
     "../../../src/base/gl",
     "../../../src/base/log",
     "../../../src/base/monitor",

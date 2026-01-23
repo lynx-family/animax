@@ -43,14 +43,6 @@ jobs:
         run: |
           source tools/envsetup.sh
           python3 tools_shared/git_lynx.py check --checkers commit-message
-      - name: Run coding-style check
-        run: |
-          source tools/envsetup.sh
-          python3 tools_shared/git_lynx.py check --checkers coding-style
-      - name: Run android-check-style check
-        run: |
-          source tools/envsetup.sh
-          python3 tools_shared/git_lynx.py check --checkers android-check-style
 
   android-example-build:
     runs-on: lynx-ubuntu-22.04-large

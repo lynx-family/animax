@@ -1,7 +1,7 @@
 source 'https://cdn.cocoapods.org/'
 project './AnimaXExample.xcodeproj'
 
-platform :ios, '12.0'
+platform :ios, '13.0'
 
 install!'cocoapods',:deterministic_uuids=>false,
                     :lock_pod_sources=>false,
@@ -28,7 +28,7 @@ target 'AnimaXExample' do
     'ThirdParty'
   ]
 
-  pod 'skity', { :path => pod_path + 'third_party/binary_deps' }
+  pod 'skity', '1.0.0-beta.6'
 
   pod 'LynxTextra', { :path => pod_path + 'third_party/lynx-textra' }
 

@@ -178,12 +178,7 @@ task configGnCompileParas {
 
 dependencies {
     implementation project.ext.appcompat
-    // the final integrated apk should use implementation and pick libskity.so
-    // LynxExample deps on asan-version with asan flavor, so we do the same here.
-    // noasanImplementation project.ext.skity_noasan
-    // asanImplementation project.ext.skity_asan
-
-    implementation files('../../../third_party/binary_deps/skity-native.aar')
+    implementation "org.lynxsdk.lynx:skity-native:1.0.0-beta.6"
 
     implementation project(':LynxBase')
     implementation project(':LynxTrace')

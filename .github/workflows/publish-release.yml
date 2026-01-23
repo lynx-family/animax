@@ -153,14 +153,14 @@ jobs:
 
   ios-sdk-publish:
     timeout-minutes: 60
-    runs-on: macos-13
+    runs-on: macos-14
     needs: get-version
     steps:
       - name: Download Source
         uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 2
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.inputs.commitId || github.ref }}
           path: animax
       - name: Install Common Dependencies
         uses: ./animax/.github/actions/common-deps

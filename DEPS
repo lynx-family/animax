@@ -107,7 +107,7 @@ deps = {
     'third_party/skity': {
         "type": "solution",
         "url": "https://github.com/lynx-family/skity.git",
-        "commit": "2dcd013f49f6ad5a85abea33ce57e32de95d6ae2",
+        "commit": "3fb6bb60a0e94e6c8a01630f7690492ff59aa666",
         "deps_file": "hab/DEPS",
         "ignore_in_git": True,
     },
@@ -181,24 +181,4 @@ deps = {
         "ignore_in_git": True,
     },
     # lynx-base DEPS END
-    # binary deps BEGIN
-    'third_party/binary_deps/skity-native.aar': {
-        "type": "http",
-        "url": "https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/skity-native-v1.0.0-beta.1.aar",
-        "ignore_in_git": True,
-        "decompress": False,
-    },
-    'third_party/binary_deps/skity.framework': {
-        "type": "http",
-        "url": "https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/skity.framework-v1.0.0-beta.1.zip",
-        "ignore_in_git": True,
-        "decompress": True,
-    },
-    'third_party/binary_deps/skity.podspec': {
-        "type": "http",
-        "url": "https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/skity.podspec",
-        "ignore_in_git": True,
-        "decompress": False,
-    },
-    # binary deps END
 }
