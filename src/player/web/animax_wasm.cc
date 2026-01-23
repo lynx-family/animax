@@ -19,7 +19,6 @@
 #include "src/base/thread/task_runner.h"
 #include "src/player/web/animax_surface_web.h"
 #include "src/player/web/animax_web_gpu_context.h"
-#include "src/player/web/vsync_monitor_web.h"
 #include "src/resource/resource_loader/web/resource_loader_web.h"
 
 namespace lynx {
@@ -183,11 +182,9 @@ base::NoDestructor<std::map<AnimaXPlayer*, AnimaXWasm::EventCallback>>
 AnimaXWasm::AnimaXWasm() {
   ANIMAX_LOGI("AnimaXWasm constructor");
   resource_loader_ = std::make_shared<ResourceLoaderWeb>();
-  vsync_monitor_ = std::make_shared<VSyncMonitorWeb>();
 
   AnimaXPlayerBuilder builder;
   builder.SetScale(1)
-      .SetVSyncMonitor(vsync_monitor_)
       .SetResourceLoader(resource_loader_)
       .AddEventListener([](AnimaXPlayer* player, const Event event,
                            const animax::EventParamMap& params) {
@@ -201,8 +198,6 @@ AnimaXWasm::AnimaXWasm() {
 
 AnimaXWasm::~AnimaXWasm() {
   ANIMAX_LOGI("AnimaXWasm destructor");
-  vsync_monitor_->OnDestroy();
-  vsync_monitor_.reset();
   event_callback_map_->erase(player_.get());
 }
 

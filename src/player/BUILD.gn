@@ -25,6 +25,8 @@ player_shared_sources = [
   "animax_surface.cc",
   "layer_event_listener.h",
   "value_animator_listener.h",
+  "vsync_dispatcher.cc",
+  "vsync_dispatcher.h",
   "vsync_monitor.cc",
 ]
 
@@ -36,8 +38,7 @@ animax_source_set("player") {
       "ios/animax_ability_ios.h",
       "ios/animax_surface_ios.h",
       "ios/animax_surface_ios.mm",
-      "ios/vsync_monitor_ios.h",
-      "ios/vsync_monitor_ios.mm",
+      "ios/vsync_dispatcher_ios.mm",
     ]
   } else if (is_android) {
     sources += [
@@ -62,8 +63,7 @@ animax_source_set("player") {
       "android/first_frame_aware_surface_texture.h",
       "android/gl_context_android.cc",
       "android/gl_context_android.h",
-      "android/vsync_monitor_android.cc",
-      "android/vsync_monitor_android.h",
+      "android/vsync_dispatcher_android.cc",
     ]
   } else if (is_wasm) {
     sources += [
@@ -71,8 +71,7 @@ animax_source_set("player") {
       "web/animax_surface_web.h",
       "web/animax_web_gpu_context.cc",
       "web/animax_web_gpu_context.h",
-      "web/vsync_monitor_web.cc",
-      "web/vsync_monitor_web.h",
+      "web/vsync_dispatcher_web.cc",
     ]
   } else if (is_harmony) {
     sources += [ "harmony/animax_ability_harmony.h" ]

@@ -5,6 +5,7 @@
 #ifndef ANIMAX_INCLUDE_PLAYER_VSYNC_MONITOR_H_
 #define ANIMAX_INCLUDE_PLAYER_VSYNC_MONITOR_H_
 
+#include <atomic>
 #include <memory>
 
 #include "base/include/closure.h"
@@ -16,7 +17,7 @@ namespace animax {
 class ANIMAX_EXPORT VSyncMonitor
     : public std::enable_shared_from_this<VSyncMonitor> {
  public:
-  virtual ~VSyncMonitor() = default;
+  virtual ~VSyncMonitor();
 
   // During a single VSync cycle, only the first callback passed to
   // AsyncRequestVSync will be invoked upon the VSync event. Any subsequent
@@ -25,12 +26,13 @@ class ANIMAX_EXPORT VSyncMonitor
   using Callback = base::MoveOnlyClosure<void, int64_t>;
   virtual void AsyncRequestVSync(Callback callback);
 
-  // Pure virtual function defined here, leaving the implementation to be
-  // provided by platform-specific derived classes.
-  virtual void RequestVSync(Callback callback) = 0;
+  // Default implementation of RequestVSync. Derived classes can override this
+  // method if they want to provide a custom implementation.
+  virtual void RequestVSync(Callback callback);
 
  private:
   Callback callback_{};
+  std::atomic<uint64_t> token_{0};
 };
 
 }  // namespace animax

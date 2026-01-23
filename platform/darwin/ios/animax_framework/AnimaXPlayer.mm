@@ -23,7 +23,6 @@
 #include "src/base/util/ios/lifecycle_manager.h"
 #include "src/player/ios/animax_ability_ios.h"
 #include "src/player/ios/animax_surface_ios.h"
-#include "src/player/ios/vsync_monitor_ios.h"
 
 namespace lynx {
 namespace animax {
@@ -338,7 +337,6 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
 
   lynx::animax::AnimaXPlayerBuilder builder;
   builder.SetScale(static_cast<float>(scale))
-      .SetVSyncMonitor(std::make_shared<lynx::animax::VSyncMonitorIOS>())
       .EnableMultiThreadAccelerate(_context.enableMultiThreadAccelerate)
       .SetAbility(std::make_shared<lynx::animax::AnimaXAbilityIOS>(_context));
 

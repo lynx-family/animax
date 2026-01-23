@@ -23,7 +23,6 @@
 #include "src/model/composition_model.h"
 #include "src/model/layer_model.h"
 #include "src/model/text/font_character_model.h"
-#include "src/player/ios/vsync_monitor_ios.h"
 
 @interface AnimaXImageView () <AnimaXPixelBufferUpdateListener, AnimaXLayerProtocol>
 
