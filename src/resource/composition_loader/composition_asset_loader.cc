@@ -196,6 +196,9 @@ void CompositionAssetLoader::Load(CompositionAssetRequest request,
   auto invalid_assets = std::vector<std::shared_ptr<Asset>>{};
 
   for (const auto& asset : assets) {
+    if (!asset) {
+      continue;
+    }
     asset->AcceptVisitor(resource_request_build);
     auto resource_request = resource_request_build.ConsumeResourceRequest();
     if (resource_request.uri_info.Valid()) {

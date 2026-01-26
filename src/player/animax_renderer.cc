@@ -124,6 +124,7 @@ void AnimaXRenderer::StartAnimationIfNeeded() {
     return;
   }
   if (surface_->Type() == AnimaXBackend::kSoftware) {
+    ANIMAX_LOGE("Video layers can't be rendered in software.");
     // Need to clear it because software didn't ensure the gl environment for
     // alpha video, which causes null pointer error. todo(lixianruo.cyrus):
     // Support to render video layer when backend is software.
