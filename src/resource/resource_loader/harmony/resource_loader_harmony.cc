@@ -15,6 +15,7 @@
 #include "src/base/util/harmony/scoped_object_harmony.h"
 #include "src/resource/loader/exec_loader.h"
 #include "src/resource/loader/lambda_loader.h"
+#include "src/resource/loader/pipe_loader.h"
 
 namespace lynx {
 namespace animax {
@@ -220,13 +221,14 @@ ResourceLoaderHarmony::CreateRawDataHttpLoader() {
 
 Loader<ResourceRequest, ResourceResponse>::Ptr
 ResourceLoaderHarmony::CreateBitmapHttpLoader() {
-  auto load_bitmap = MakeLambdaLoader<ResourceRequest, ResourceResponse>(
+  // Step 1: Fetch bitmap data from platform.
+  auto fetch_data = MakeLambdaLoader<ResourceRequest, std::vector<uint8_t>>(
       [platform_loader = platform_loader_](ResourceRequest request,
                                            auto callback) {
         auto& uri = request.uri_info.uri;
         auto shared_platform_loader = platform_loader.lock();
         if (shared_platform_loader == nullptr) {
-          callback(ResourceResponse{},
+          callback(std::vector<uint8_t>{},
                    LoaderError{.code = kReferToMessage,
                                .message = "Platform loader is null."});
           return;
@@ -238,27 +240,34 @@ ResourceLoaderHarmony::CreateBitmapHttpLoader() {
             [callback = std::move(callback)](
                 pub::LynxResourceResponse& response) mutable {
               if (!response.Success()) {
-                callback(ResourceResponse{},
+                callback(std::vector<uint8_t>{},
                          LoaderError{.code = kLoaderNotHandleRequest,
                                      .message = "Load bitmap failed."});
                 return;
               }
-
-              auto bitmap = LoadBitmapFromData(response.data.data(),
-                                               response.data.size());
-              if (bitmap) {
-                callback(ResourceResponse{.payload = MakeBitmapResourcePayload(
-                                              std::move(bitmap))},
-                         LoaderError{});
-              } else {
-                callback(ResourceResponse{},
-                         LoaderError{
-                             .code = kInvalidImageData,
-                             .message = "Load bitmap from local path failed."});
-              }
+              callback(std::vector<uint8_t>(response.data.begin(),
+                                            response.data.end()),
+                       LoaderError{});
             });
       });
-  return ResourceThreadExecLoader(load_bitmap);
+
+  // Step 2: Decode bitmap from data. This runs on resource thread.
+  auto decode_bitmap = MakeLambdaLoader<std::vector<uint8_t>, ResourceResponse>(
+      [](std::vector<uint8_t> data, auto callback) {
+        auto bitmap = LoadBitmapFromData(data.data(), data.size());
+        if (bitmap) {
+          callback(ResourceResponse{.payload = MakeBitmapResourcePayload(
+                                        std::move(bitmap))},
+                   LoaderError{});
+        } else {
+          callback(ResourceResponse{},
+                   LoaderError{.code = kInvalidImageData,
+                               .message = "Load bitmap from data failed."});
+        }
+      });
+
+  return ResourceThreadExecLoader(fetch_data) |
+         ResourceThreadExecLoader(decode_bitmap);
 }
 
 Loader<ResourceRequest, ResourceResponse>::Ptr
