@@ -28,6 +28,12 @@ AnimaXPlayerBuilder& AnimaXPlayerBuilder::EnableMultiThreadAccelerate(
   return *this;
 }
 
+AnimaXPlayerBuilder& AnimaXPlayerBuilder::DisablePlaybackOnAssetLoadFailure(
+    bool disable) {
+  disable_playback_on_asset_load_failure_ = disable;
+  return *this;
+}
+
 AnimaXPlayerBuilder& AnimaXPlayerBuilder::SetAbility(
     std::shared_ptr<AnimaXAbility> ability) {
   ability_ = std::move(ability);

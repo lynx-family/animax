@@ -37,6 +37,12 @@ bool AnimaXContextAndroid::MultiThreadAccelerate() const {
   return Java_AnimaXContext_multiThreadAccelerate(env, java_context_.Get());
 }
 
+bool AnimaXContextAndroid::DisablePlaybackOnAssetLoadFailure() const {
+  JNIEnv* env = base::android::AttachCurrentThread();
+  return Java_AnimaXContext_disablePlaybackOnAssetLoadFailure(
+      env, java_context_.Get());
+}
+
 float AnimaXContextAndroid::GetDeviceDensity() const {
   JNIEnv* env = base::android::AttachCurrentThread();
   return Java_AnimaXContext_getDeviceDensity(env, java_context_.Get());

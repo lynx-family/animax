@@ -150,11 +150,24 @@ std::ostream& operator<<(std::ostream& os,
                          const CompositionAssetResponse& res) {
   os << "CompositionAssetLoader finished loading " << res.asset_responses.size()
      << " assets.\n";
+
+  bool has_failed = false;
   for (const auto& response : res.asset_responses) {
-    if (response.error.code != kSuccess) {
-      os << "Failed to load asset: " << response << "\n";
+    if (response.error.code == kSuccess) {
+      continue;
+    }
+    if (!has_failed) {
+      os << " failed_assets = [";
+      os << response;
+      has_failed = true;
+    } else {
+      os << ", " << response;
     }
   }
+  if (has_failed) {
+    os << "]";
+  }
+
   return os;
 }
 

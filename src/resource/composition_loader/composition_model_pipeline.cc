@@ -219,13 +219,7 @@ void CompositionModelPipeline::OnBeforeAssetsLoad(
     return;
   }
 
-  std::ostringstream oss;
-  for (std::size_t i = 0; i < assets.size(); ++i) {
-    oss << "(" << (i + 1) << ") " << *assets[i] << "\n";
-  }
-
-  ANIMAX_RESOURCE_LOGI("Will load the following " << assets.size()
-                                                  << " assets: " << oss.str());
+  ANIMAX_RESOURCE_LOGI("Will load the following " << assets.size());
 }
 
 void CompositionModelPipeline::Trace(TraceEventType type) {

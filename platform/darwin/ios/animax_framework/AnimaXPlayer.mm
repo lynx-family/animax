@@ -338,6 +338,7 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   lynx::animax::AnimaXPlayerBuilder builder;
   builder.SetScale(static_cast<float>(scale))
       .EnableMultiThreadAccelerate(_context.enableMultiThreadAccelerate)
+      .DisablePlaybackOnAssetLoadFailure(_context.disablePlaybackOnAssetLoadFailure)
       .SetAbility(std::make_shared<lynx::animax::AnimaXAbilityIOS>(_context));
 
   __weak typeof(self) weakSelf = self;

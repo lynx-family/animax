@@ -39,6 +39,7 @@ class ANIMAX_EXPORT AnimaXPlayerBuilder {
   AnimaXPlayerBuilder& SetVSyncMonitor(
       std::shared_ptr<VSyncMonitor> vsync_monitor);
   AnimaXPlayerBuilder& EnableMultiThreadAccelerate(bool enable);
+  AnimaXPlayerBuilder& DisablePlaybackOnAssetLoadFailure(bool disable);
   /**
    * Set the ability object for the player.
    * Previously configured via AnimaXPlayer::SetAbility.
@@ -75,6 +76,7 @@ class ANIMAX_EXPORT AnimaXPlayerBuilder {
   float scale_ = 1.f;
   std::shared_ptr<VSyncMonitor> vsync_monitor_{};
   bool multi_thread_accelerate_ = false;
+  bool disable_playback_on_asset_load_failure_ = false;
   std::shared_ptr<AnimaXAbility> ability_{};
   Loader<ResourceRequest, ResourceResponse>::Ptr resource_loader_{};
   Loader<UnzipRequest, UnzipResponse>::Ptr unzip_loader_{};

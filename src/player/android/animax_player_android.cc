@@ -90,6 +90,8 @@ static jlong Create(JNIEnv* env, jobject jcaller, jlong loader,
   lynx::animax::AnimaXPlayerBuilder builder;
   builder.SetScale(animax_context.GetDeviceDensity())
       .EnableMultiThreadAccelerate(animax_context.MultiThreadAccelerate())
+      .DisablePlaybackOnAssetLoadFailure(
+          animax_context.DisablePlaybackOnAssetLoadFailure())
       .SetAbility(android_ability);
 
   auto* loader_holder =

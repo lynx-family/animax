@@ -26,9 +26,9 @@ public class DeviceUtil {
 
   private static final String sSettingVideoSurfaceDestroyTimeout =
       "ANIMAX_VIDEO_SURFACE_DESTROY_TIMEOUT";
-  private static final String sSettingSyncSurfaceDestroyName = "ANIMAX_SYNC_SURFACE_DESTROY";
   private static final String sSettingLegacyFetcher = "ANIMAX_USE_LEGACY_FETCHER";
-  private static final String sSettingDisableShowEventLogbox = "ANIMAX_DISABLE_SHOW_EVENT_LOGBOX";
+  private static final String sSettingDisablePlaybackOnAssetLoadFailure =
+      "ANIMAX_DISABLE_PLAYBACK_ON_ASSET_LOAD_FAILURE";
   private static final String sSettingDisableByteVC1Decoder = "ANIMAX_DISABLE_BYTEVC1_DECODER";
 
   private static final String sSettingUseImageViewPrefix = "ANIMAX_USE_IMAGE_VIEW_";
@@ -194,8 +194,9 @@ public class DeviceUtil {
     return isPositiveConfigValue(result);
   }
 
-  public static boolean disableShowEventLogbox(@NonNull BaseAbility ability) {
-    final String result = getStringFromExternalEnv(sSettingDisableShowEventLogbox, ability);
+  public static boolean disablePlaybackOnAssetLoadFailure(@NonNull BaseAbility ability) {
+    final String result =
+        getStringFromExternalEnv(sSettingDisablePlaybackOnAssetLoadFailure, ability);
     return isPositiveConfigValue(result);
   }
 

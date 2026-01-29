@@ -14,6 +14,7 @@
 #include "src/model/composition_model.h"
 #include "src/parser/composition_parser.h"
 #include "src/resource/loader/exec_loader.h"
+#include "src/resource/log_util.h"
 #include "src/resource/resource_loader_listener.h"
 
 using namespace ::testing;
@@ -133,6 +134,16 @@ TEST(CompositionAssetLoaderTest, LoadCompositionAssetNoAsset) {
         EXPECT_FALSE(!!error);
         EXPECT_NE(nullptr, res.model);
         EXPECT_TRUE(res.asset_responses.empty());
+
+        auto asset = AssetResponse();
+        asset.type = ResourceType::kImage;
+        asset.id = "image_0";
+        asset.error.code = LoaderErrorCode::kInvalidLoaderRequest;
+        asset.error.message = "error msg";
+        res.asset_responses.push_back(asset);
+        std::ostringstream oss;
+        oss << res;
+        EXPECT_FALSE(oss.str().empty());
       });
 }
 

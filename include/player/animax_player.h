@@ -42,6 +42,8 @@ class AnimaXRenderer;
 class AnimaXCompositionLoader;
 class AnimaXPlayerBuilder;
 struct AnimaXPlayerContext;
+struct CompositionAssetResponse;
+struct LoaderError;
 
 class ANIMAX_EXPORT AnimaXPlayer
     : public std::enable_shared_from_this<AnimaXPlayer> {
@@ -364,6 +366,8 @@ class ANIMAX_EXPORT AnimaXPlayer
   void Init(AnimaXPlayerBuilder &builder);
   void LoadCompositionAssets(std::shared_ptr<CompositionModel> composition,
                              base::MoveOnlyClosure<void> completion);
+  void OnCompositionLoaded(int32_t src_index, CompositionAssetResponse &res,
+                           LoaderError &error);
   void UpdateComposition(int32_t src_index,
                          std::shared_ptr<CompositionModel> model);
   bool EnableDynamicResourceFeature();
@@ -418,6 +422,8 @@ class ANIMAX_EXPORT AnimaXPlayer
   // Multi thread
   std::shared_ptr<AnimaXMetricsManager> metrics_manager_;
   std::shared_ptr<AnimaXAbility> ability_;
+
+  bool disable_playback_on_asset_load_failure_ = false;
 
   // Main controller for all main thread operations
   std::shared_ptr<GPUThreadHolder> gpu_thread_holder_;

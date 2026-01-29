@@ -48,6 +48,15 @@ public class AnimaXContext {
   }
 
   /**
+   * Check if playback is disabled on asset load failure.
+   * @return True if disabled, false otherwise.
+   */
+  @CalledByNative
+  public boolean disablePlaybackOnAssetLoadFailure() {
+    return DeviceUtil.disablePlaybackOnAssetLoadFailure(mAbility);
+  }
+
+  /**
    * Get the device density for this context.
    * @return The device density.
    */

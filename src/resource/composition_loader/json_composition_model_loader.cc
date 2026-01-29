@@ -132,19 +132,14 @@ JSONCompositionModelLoader::Ptr JSONCompositionModelLoader::MakePipeline(
             OnResourceLoaderTraceEvent(
                 weak_self, TraceEventType::kParseCompositionEnd, task.main_uri);
             if (!model) {
-              callback({}, LoaderError{.code = kCompositionParserError});
-              return;
-            }
-
-            task.response.model = std::move(model);
-            if (!task.response.model) {
               callback(
-                  std::move(task.response),
+                  {},
                   LoaderError{.code = kCompositionParserError,
                               "Failed to convert JSON into CompositionModel."});
-            } else {
-              callback(std::move(task.response), {});
+              return;
             }
+            task.response.model = std::move(model);
+            callback(std::move(task.response), {});
           });
 
   auto pipeline = task_get_raw_data | raw_data_to_model;

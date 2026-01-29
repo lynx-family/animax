@@ -47,6 +47,7 @@ class AnimaXEventDispatcherTest : public ::testing::Test {
             .SetScale(1.0f)
             .SetVSyncMonitor(mock_vsync_monitor_)
             .EnableMultiThreadAccelerate(false)
+            .DisablePlaybackOnAssetLoadFailure(false)
             .SetResourceLoader(nullptr)
             .SetUnzipLoader(nullptr)
             .SetAbility(nullptr)

@@ -25,6 +25,8 @@ const char* StringifyEventWarning(EventWarning warning) {
       return "kExecuteBeforeReady";
     case EventWarning::kIllegalSubscribedStartFrame:
       return "kIllegalSubscribedStartFrame";
+    case EventWarning::kAssetLoadFailed:
+      return "kAssetLoadFailed";
   }
 }
 

@@ -39,16 +39,32 @@ bool EventWarningChecker::CheckAssetCountOverLimit(
       font_count > kRecommendedFontLimit) {
     EventWarning warning = EventWarning::kAssetCountOverLimit;
     std::ostringstream warning_msg;
-    warning_msg << "Asset count over limit warning: the composition contains "
-                << image_count << " image(s) (recommended limit "
-                << kRecommendedImageLimit << ") and " << video_count
-                << " alpha-video(s) (recommended limit "
-                << kRecommendedVideoLimit << ") and " << font_count
-                << " font(s) (recommended limit " << kRecommendedFontLimit
-                << "). "
-                << "Exceeding these limits may degrade rendering performance.";
-    std::string warning_str = warning_msg.str();
+    warning_msg << "Asset count exceeds recommended limits: ";
 
+    if (image_count > kRecommendedImageLimit) {
+      warning_msg << "images = " << image_count << " (limit "
+                  << kRecommendedImageLimit << "), ";
+    }
+
+    if (video_count > kRecommendedVideoLimit) {
+      warning_msg << "alpha-videos = " << video_count << " (limit "
+                  << kRecommendedVideoLimit << "), ";
+    }
+
+    if (font_count > kRecommendedFontLimit) {
+      warning_msg << "fonts = " << font_count << " (limit "
+                  << kRecommendedFontLimit << "), ";
+    }
+
+    warning_msg << "This does not affect functionality, but may reduce FPS and "
+                   "cause stuttering.\n";
+
+    if (image_count > kRecommendedImageLimit) {
+      warning_msg << "The image count is high, consider converting to AP "
+                     "format to improve performance.";
+    }
+
+    std::string warning_str = warning_msg.str();
     if (warning_handler) {
       warning_handler(warning, warning_str);
     }

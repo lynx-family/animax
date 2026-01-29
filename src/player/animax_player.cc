@@ -24,6 +24,8 @@ namespace animax {
 AnimaXPlayer::AnimaXPlayer(AnimaXPlayerBuilder& builder)
     : scale_(builder.scale_),
       ability_(builder.ability_),
+      disable_playback_on_asset_load_failure_(
+          builder.disable_playback_on_asset_load_failure_),
       gpu_thread_holder_(
           GetAnimaXGPUThreadHolder(builder.multi_thread_accelerate_)) {
   ANIMAX_LOGI("AnimaXPlayer constructor"
@@ -160,29 +162,7 @@ void AnimaXPlayer::SetJson(std::string json) {
           if (!player) {
             return;
           }
-
-          if (!res.model || error) {
-            ANIMAX_RESOURCE_LOGE("Receive index: " << src_index
-                                                   << ", error: " << error);
-            std::ostringstream oss;
-            oss << error;
-            player->controller_actor_->Act([oss = std::move(oss)](
-                                               auto& controller) {
-              controller->NotifyError(EventError::kResourceNotFound, oss.str());
-            });
-            return;
-          }
-          if (!res.asset_responses.empty()) {
-            ANIMAX_RESOURCE_LOGI(
-                "Finished loading JSON composition model for index: "
-                << src_index << ", asset loading status: " << res);
-          } else {
-            ANIMAX_RESOURCE_LOGI(
-                "Finished loading JSON composition model (no asset) for index: "
-                << src_index);
-          }
-
-          player->UpdateComposition(src_index, std::move(res.model));
+          player->OnCompositionLoaded(src_index, res, error);
         });
   });
 }
@@ -226,28 +206,7 @@ void AnimaXPlayer::SetSrc(const std::string& src) {
             return;
           }
 
-          if (!res.model || error) {
-            ANIMAX_RESOURCE_LOGE("Received index: " << src_index
-                                                    << ", error: " << error);
-            std::ostringstream oss;
-            oss << error;
-            player->controller_actor_->Act([oss = std::move(oss)](
-                                               auto& controller) {
-              controller->NotifyError(EventError::kResourceNotFound, oss.str());
-            });
-            return;
-          }
-
-          if (!res.asset_responses.empty()) {
-            ANIMAX_RESOURCE_LOGI(
-                "Finished loading SRC composition model for index: "
-                << src_index << ", asset loading status: " << res);
-          } else {
-            ANIMAX_RESOURCE_LOGI(
-                "Finished loading SRC composition model (no asset) for index: "
-                << src_index);
-          }
-          player->UpdateComposition(src_index, std::move(res.model));
+          player->OnCompositionLoaded(src_index, res, error);
         });
   });
 }
@@ -331,6 +290,56 @@ void AnimaXPlayer::LoadCompositionAssets(
         loader->LoadCompositionModelAsset(composition,
                                           std::move(handle_asset_loading));
       });
+}
+
+void AnimaXPlayer::OnCompositionLoaded(int32_t src_index,
+                                       CompositionAssetResponse& res,
+                                       LoaderError& error) {
+  if (!res.model || error) {
+    ANIMAX_RESOURCE_LOGE("Received index: " << src_index
+                                            << ", error: " << error);
+    std::ostringstream oss;
+    oss << error;
+    controller_actor_->Act([oss = std::move(oss)](auto& controller) {
+      controller->NotifyError(EventError::kResourceNotFound, oss.str());
+    });
+    return;
+  }
+
+  if (!res.asset_responses.empty()) {
+    ANIMAX_RESOURCE_LOGI(
+        "Finished loading SRC composition model for index: " << src_index);
+
+    bool has_failed_asset = false;
+    for (const auto& asset : res.asset_responses) {
+      if (asset.error.code != kSuccess) {
+        has_failed_asset = true;
+        break;
+      }
+    }
+    if (has_failed_asset) {
+      std::ostringstream oss;
+      oss << res;
+      const std::string msg = oss.str();
+
+      if (disable_playback_on_asset_load_failure_) {
+        controller_actor_->Act([msg](auto& controller) {
+          controller->NotifyError(EventError::kAssetLoadFailed, msg);
+        });
+        return;
+      } else {
+        controller_actor_->Act([msg](auto& controller) {
+          controller->NotifyWarning(EventWarning::kAssetLoadFailed, msg);
+        });
+      }
+    }
+  } else {
+    ANIMAX_RESOURCE_LOGI(
+        "Finished loading SRC composition model (no asset) for index: "
+        << src_index);
+  }
+
+  UpdateComposition(src_index, std::move(res.model));
 }
 
 void AnimaXPlayer::SetLoop(const bool loop) {

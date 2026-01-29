@@ -41,11 +41,13 @@ enum class EventError : int32_t {
   // kScaleImageFailed = 2, // Reserved
   // kRecreateBitmapFailed = 3, // Reserved
   // kLocalResourceNotFound = 4, // Reserved
+  kAssetLoadFailed = 5,
   kSurfaceInitError = 10,
   // kThreadInitError = 11, // Deprecated
   kLibraryInitError = 12,
   kVideoPlayerError = 100,
   kVideoPlayerErrorHasOccurred = 101,
+  kVideoPlayerSoftwareRenderingNotSupported = 102,
 };
 
 enum class EventWarning : int32_t {
@@ -54,6 +56,7 @@ enum class EventWarning : int32_t {
   kIllegalAlphaVideoSize = 102,
   kAssetCountOverLimit = 103,
   kDynamicResourceCannotBeLoaded = 104,
+  kAssetLoadFailed = 105,
   kStartFrameGreaterThanEndFrame = 201,
   kIllegalSubscribedStartFrame = 202,
   kExecuteBeforeReady = 301,

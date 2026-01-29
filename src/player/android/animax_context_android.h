@@ -25,6 +25,7 @@ class AnimaXContextAndroid {
 
   base::android::ScopedLocalJavaRef<jobject> GetAbility() const;
   bool MultiThreadAccelerate() const;
+  bool DisablePlaybackOnAssetLoadFailure() const;
   float GetDeviceDensity() const;
 
  private:
