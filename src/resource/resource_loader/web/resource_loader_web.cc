@@ -78,14 +78,25 @@ void ResourceLoaderWeb::OnResourceLoaded(const ResourceLoadResult& result) {
                 << result.callback_id << " error: " << result.error_message);
     info->callback(ResourceResponse{},
                    LoaderError{.code = kInvalidLoaderRequest,
-                               .message = "Load fail, invalid request type."});
+                               .message = result.error_message});
+    return;
+  }
+
+  if (result.HasValidTexture() &&
+      info->type == ResourceRequestType::kLoadBitmap) {
+    auto bitmap = Bitmap::MakeFromTexture(result.width, result.height,
+                                          result.texture, BitmapFormat::kRGBA,
+                                          BitmapAlphaType::kUnpremul_AlphaType);
+    info->callback(ResourceResponse{.payload = MakeBitmapResourcePayload(
+                                        std::move(bitmap))},
+                   LoaderError{});
     return;
   }
 
   LoaderErrorCode error_code =
       (info->type == ResourceRequestType::kLoadBitmap ? kInvalidImageData
                                                       : kInvalidRawData);
-  if (result.size <= 0 || result.data == nullptr) {
+  if (!result.data.has_value() || result.data->empty()) {
     ANIMAX_LOGE("OnResourceLoaded, Uint8Array length is zero, callback_id: "
                 << result.callback_id);
     info->callback(
@@ -95,10 +106,11 @@ void ResourceLoaderWeb::OnResourceLoaded(const ResourceLoadResult& result) {
   }
 
   if (info->type == ResourceRequestType::kLoadRawData) {
-    uint8_t* copy = new uint8_t[result.size];
-    memcpy(copy, result.data, result.size);
+    auto size = result.data->size();
+    uint8_t* copy = new uint8_t[size];
+    memcpy(copy, result.data->data(), size);
     auto raw_data = RawData::MakeRawData(
-        copy, result.size,
+        copy, result.data->size(),
         [](const void* ptr) { delete[] static_cast<const uint8_t*>(ptr); },
         copy);
     info->callback(ResourceResponse{.payload = MakeRawDataResourcePayload(
@@ -106,8 +118,9 @@ void ResourceLoaderWeb::OnResourceLoaded(const ResourceLoadResult& result) {
                    LoaderError{});
   } else {
     DCHECK(info->type == ResourceRequestType::kLoadBitmap);
-    uint8_t* copy = new uint8_t[result.size];
-    memcpy(copy, result.data, result.size);
+    auto size = result.data->size();
+    uint8_t* copy = new uint8_t[size];
+    memcpy(copy, result.data->data(), size);
     auto bitmap = Bitmap::Make(
         result.width, result.height, copy,
         [](const void* ptr) { delete[] static_cast<const uint8_t*>(ptr); },

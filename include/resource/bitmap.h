@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 #include "include/base/macros.h"
 
@@ -30,7 +31,6 @@ class ANIMAX_EXPORT Bitmap {
  public:
   using BitmapDeleterContext = const void*;
   using BitmapDeleter = void (*)(const void*);
-
   static std::unique_ptr<Bitmap> MakeRGBA(uint32_t width, uint32_t height,
                                           const void* pixels,
                                           BitmapDeleter deleter,
@@ -40,6 +40,13 @@ class ANIMAX_EXPORT Bitmap {
       BitmapDeleter deleter, BitmapDeleterContext context,
       BitmapFormat format = BitmapFormat::kRGBA,
       BitmapAlphaType alpha = BitmapAlphaType::kPremul_AlphaType);
+
+  static std::unique_ptr<Bitmap> MakeFromTexture(uint32_t width,
+                                                 uint32_t height,
+                                                 uint64_t texture,
+                                                 BitmapFormat format,
+                                                 BitmapAlphaType alpha);
+
   ~Bitmap();
   uint32_t Width() const;
   uint32_t Height() const;
@@ -49,19 +56,23 @@ class ANIMAX_EXPORT Bitmap {
   uint32_t BytesPerRow() const;
   BitmapFormat Format() const;
   BitmapAlphaType AlphaType() const;
+  bool HasTexture() const;
+  uint64_t TextureID() const;  // check HasTexture() first
 
  private:
-  Bitmap(uint32_t width, uint32_t height, const void* pixels,
-         BitmapDeleter deleter, BitmapDeleterContext context,
-         BitmapFormat format = BitmapFormat::kRGBA,
-         BitmapAlphaType alpha = BitmapAlphaType::kPremul_AlphaType);
-  uint32_t width_;
-  uint32_t height_;
-  const void* pixels_;
-  BitmapDeleter deleter_;
-  BitmapDeleterContext context_;
+  struct BitmapPixels {
+    const void* data = nullptr;
+    BitmapDeleter deleter = nullptr;
+    BitmapDeleterContext context = nullptr;
+  };
+  Bitmap(uint32_t width, uint32_t height, BitmapFormat format,
+         BitmapAlphaType alpha, std::optional<BitmapPixels> pixels,
+         std::optional<uint64_t> texture);
+  uint32_t width_, height_;
   BitmapFormat format_{BitmapFormat::kRGBA};
   BitmapAlphaType alpha_type_{BitmapAlphaType::kPremul_AlphaType};
+  std::optional<BitmapPixels> pixels_;
+  std::optional<uint64_t> texture_;  // do not own texture
 };
 
 }  // namespace animax

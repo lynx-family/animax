@@ -40,7 +40,8 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
 
   static void OnResourceLoadSuccess(int32_t callback_id,
                                     const emscripten::val& buffer,
-                                    uint32_t width, uint32_t height);
+                                    uint32_t width, uint32_t height,
+                                    uint64_t texture);
   static void OnResourceLoadError(int32_t callback_id,
                                   const std::string& error_message);
 

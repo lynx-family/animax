@@ -91,6 +91,9 @@ animax_source_set("skity") {
       "surface_mtl.h",
       "surface_mtl.mm",
     ]
+  } else if (is_wasm) {
+    sources += [ "web/image_gl_web.cc" ]
+    sources -= [ "image_gl.cc" ]
   }
 
   if (enable_unittests) {

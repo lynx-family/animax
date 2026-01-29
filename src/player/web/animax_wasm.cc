@@ -260,14 +260,20 @@ bool AnimaXWasm::SetDefaultTypefaceWithData(const emscripten::val& buffer) {
 
 void AnimaXWasm::OnResourceLoadSuccess(int32_t callback_id,
                                        const emscripten::val& buffer,
-                                       uint32_t width, uint32_t height) {
-  auto data = emscripten::convertJSArrayToNumberVector<uint8_t>(buffer);
-  ResourceLoaderWeb::OnResourceLoaded({.callback_id = callback_id,
-                                       .success = true,
-                                       .size = data.size(),
-                                       .width = width,
-                                       .height = height,
-                                       .data = data.data()});
+                                       uint32_t width, uint32_t height,
+                                       uint64_t texture) {
+  std::optional<std::vector<uint8_t>> data;
+  if (!buffer.isNull() && !buffer.isUndefined()) {
+    data = emscripten::convertJSArrayToNumberVector<uint8_t>(buffer);
+  }
+  ResourceLoaderWeb::OnResourceLoaded({
+      .callback_id = callback_id,
+      .success = true,
+      .data = std::move(data),
+      .width = width,
+      .height = height,
+      .texture = texture,
+  });
 }
 
 void AnimaXWasm::OnResourceLoadError(int32_t callback_id,

@@ -9,6 +9,8 @@
 
 #include <list>
 #include <map>
+#include <optional>
+#include <string>
 
 #include "base/include/no_destructor.h"
 #include "include/resource/loader.h"
@@ -32,9 +34,11 @@ class ResourceLoaderWeb : public Loader<ResourceRequest, ResourceResponse> {
   struct ResourceLoadResult {
     int32_t callback_id = 0;
     bool success;
-    uint32_t size = 0, width = 0, height = 0;
-    const uint8_t* data = nullptr;
+    uint64_t texture = 0;
+    uint32_t width = 0, height = 0;
+    std::optional<std::vector<uint8_t>> data;
     std::string error_message;
+    bool HasValidTexture() const { return texture != 0; }
   };
   static void OnResourceLoaded(const ResourceLoadResult& result);
 
