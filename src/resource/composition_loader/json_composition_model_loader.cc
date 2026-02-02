@@ -21,8 +21,6 @@
 namespace lynx {
 namespace animax {
 
-namespace {
-
 static constexpr const char* kJSONMainURIPlaceHolder = "[[JSON]]";
 
 struct LottieCompositionModelTask {
@@ -42,7 +40,6 @@ std::unique_ptr<RawData> MakeRawDataFromString(std::string str) {
       str_ptr);
   return raw_data;
 }
-}  // namespace
 
 JSONCompositionModelLoader::Ptr JSONCompositionModelLoader::MakePipeline(
     Loader<ResourceRequest, ResourceResponse>::Ptr resource_loader,
