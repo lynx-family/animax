@@ -32,25 +32,28 @@ BaseLayer::BaseLayer(LayerModel& layer_model, CompositionModel& model)
       dst_in_paint_(std::make_unique<Paint>()),
       dst_out_paint_(std::make_unique<Paint>()),
       matte_paint_(std::make_unique<Paint>()),
-      clear_paint_(std::make_unique<Paint>()) {
+      clear_paint_(std::make_unique<Paint>()),
+      blend_paint_(std::make_unique<Paint>()) {
   content_paint_->SetAntiAlias(true);
 
   dst_in_paint_->SetAntiAlias(true);
-  dst_in_paint_->SetXfermode(PaintXfermode::kDstIn);
+  dst_in_paint_->SetBlendMode(BlendModeType::kDstIn);
 
   dst_out_paint_->SetAntiAlias(true);
-  dst_out_paint_->SetXfermode(PaintXfermode::kDstOut);
+  dst_out_paint_->SetBlendMode(BlendModeType::kDstOut);
 
   matte_paint_->SetAntiAlias(true);
 
-  clear_paint_->SetXfermode(PaintXfermode::kClear);
+  clear_paint_->SetBlendMode(BlendModeType::kClear);
+
+  blend_paint_->SetAntiAlias(true);
 }
 
 void BaseLayer::Init() {
   if (layer_model_.GetMatteType() == MatteType::kAlphaInverted) {
-    matte_paint_->SetXfermode(PaintXfermode::kDstOut);
+    matte_paint_->SetBlendMode(BlendModeType::kDstOut);
   } else {
-    matte_paint_->SetXfermode(PaintXfermode::kDstIn);
+    matte_paint_->SetBlendMode(BlendModeType::kDstIn);
   }
 
   transform_ = layer_model_.GetTransform()->CreateAnimation();
@@ -114,7 +117,10 @@ void BaseLayer::Draw(Canvas& canvas, Matrix& parent_matrix,
   }
 
   auto alpha = (parent_alpha / 255.0 * (opacity / 100.0) * 255.0);
-  if (!HasMatteOnThisLayer() && !HasMaskOnThisLayer()) {
+  auto blend_mode = layer_model_.GetBlendMode();
+
+  if (!HasMatteOnThisLayer() && !HasMaskOnThisLayer() &&
+      blend_mode == BlendModeType::kNormal) {
     matrix_->PreConcat(transform_->GetMatrix());
     DrawLayer(canvas, *matrix_, alpha);
     return;
@@ -139,8 +145,10 @@ void BaseLayer::Draw(Canvas& canvas, Matrix& parent_matrix,
   }
 
   if (rect_.GetWidth() >= 1 && rect_.GetHeight() >= 1) {
-    content_paint_->SetAlpha(255);
-    canvas.SaveLayer(rect_, *content_paint_);
+    blend_paint_->SetAlpha(255);
+    blend_paint_->SetBlendMode(blend_mode);
+
+    canvas.SaveLayer(rect_, *blend_paint_);
 
     ClearCanvas(canvas);
 

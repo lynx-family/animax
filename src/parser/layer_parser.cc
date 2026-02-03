@@ -34,6 +34,46 @@
 
 namespace lynx {
 namespace animax {
+namespace {
+BlendModeType ParseLottieBlendMode(int32_t value) {
+  switch (value) {
+    case 0:
+      return BlendModeType::kNormal;
+    case 1:
+      return BlendModeType::kMultiply;
+    case 2:
+      return BlendModeType::kScreen;
+    case 3:
+      return BlendModeType::kOverlay;
+    case 4:
+      return BlendModeType::kDarken;
+    case 5:
+      return BlendModeType::kLighten;
+    case 6:
+      return BlendModeType::kColorDodge;
+    case 7:
+      return BlendModeType::kColorBurn;
+    case 8:
+      return BlendModeType::kHardLight;
+    case 9:
+      return BlendModeType::kSoftLight;
+    case 10:
+      return BlendModeType::kDifference;
+    case 11:
+      return BlendModeType::kExclusion;
+    case 12:
+      return BlendModeType::kHue;
+    case 13:
+      return BlendModeType::kSaturation;
+    case 14:
+      return BlendModeType::kColor;
+    case 15:
+      return BlendModeType::kLuminosity;
+    default:
+      return BlendModeType::kNormal;
+  }
+}
+}  // namespace
 
 std::unique_ptr<LayerModel> LayerParser::Parse(CompositionModel& composition) {
   auto layer_model = LayerModel::Make(composition);
@@ -45,7 +85,7 @@ std::unique_ptr<LayerModel> LayerParser::Parse(CompositionModel& composition) {
       bounds.GetHeight(), nullptr, nullptr, false,
       std::unique_ptr<AnimatableTransformModel>(new AnimatableTransformModel()),
       static_cast<int>(MatteType::kUnknown), -1, false, nullptr, nullptr,
-      nullptr, false, nullptr);
+      nullptr, false, nullptr, BlendModeType::kNormal);
   return layer_model;
 }
 
@@ -65,6 +105,7 @@ std::unique_ptr<LayerModel> LayerParser::Parse(rapidjson::Value& value,
   std::string cl;
   bool hidden = false;
   bool auto_orient = false;
+  BlendModeType blend_mode = BlendModeType::kNormal;
 
   std::unique_ptr<BlurEffectModel> blur_effect;
   std::unique_ptr<DropShadowEffectModel> drop_shadow_effect;
@@ -206,6 +247,8 @@ std::unique_ptr<LayerModel> LayerParser::Parse(rapidjson::Value& value,
       enable_3d = it->value.GetInt() == 1;
     } else if (strcmp(key, "pe") == 0) {
       perspective = AnimatableValueParser::ParseFloat(it->value, composition);
+    } else if (strcmp(key, "bm") == 0) {
+      blend_mode = ParseLottieBlendMode(it->value.GetInt());
     }
   }
 
@@ -248,7 +291,7 @@ std::unique_ptr<LayerModel> LayerParser::Parse(rapidjson::Value& value,
                     std::move(transform), matte_type_int, matte_parent,
                     is_matte_target, std::move(time_remapping),
                     std::move(blur_effect), std::move(drop_shadow_effect),
-                    enable_3d, std::move(perspective));
+                    enable_3d, std::move(perspective), blend_mode);
   return layer_model;
 }
 

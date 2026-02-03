@@ -18,6 +18,7 @@
 #include "src/model/effect/blur_effect_model.h"
 #include "src/model/effect/drop_shadow_effect_model.h"
 #include "src/model/mask_model.h"
+#include "src/model/value/blend_mode_type.h"
 
 namespace lynx {
 namespace animax {
@@ -66,12 +67,14 @@ class LayerModel {
             std::unique_ptr<AnimatableFloatValue> time_remapping,
             std::unique_ptr<BlurEffectModel> blur_effect,
             std::unique_ptr<DropShadowEffectModel> drop_shadow_effect,
-            bool enable_3d, std::unique_ptr<AnimatableFloatValue> perspective);
+            bool enable_3d, std::unique_ptr<AnimatableFloatValue> perspective,
+            BlendModeType blend_mode);
 
   LayerType GetLayerType() { return layer_type_; }
   int32_t GetId() { return layer_id_; }
   std::string& GetRefId() { return ref_id_; }
   std::string& GetName() { return layer_name_; }
+  BlendModeType GetBlendMode() { return blend_mode_; }
 
   std::vector<std::unique_ptr<ContentModel>>& GetShapes() { return shapes_; }
   std::vector<std::unique_ptr<MaskModel>>& GetMasks() { return masks_; }
@@ -127,6 +130,7 @@ class LayerModel {
   int32_t layer_id_ = -1;
   int32_t parent_id_ = -1;
   std::string ref_id_;
+  BlendModeType blend_mode_ = BlendModeType::kNormal;
 
   std::unique_ptr<AnimatableTransformModel> transform_;
   int32_t solid_width_ = 0;

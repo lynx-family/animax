@@ -44,7 +44,8 @@ void LayerModel::Init(
     std::unique_ptr<AnimatableFloatValue> time_remapping,
     std::unique_ptr<BlurEffectModel> blur_effect,
     std::unique_ptr<DropShadowEffectModel> drop_shadow_effect, bool enable_3d,
-    std::unique_ptr<AnimatableFloatValue> perspective) {
+    std::unique_ptr<AnimatableFloatValue> perspective,
+    BlendModeType blend_mode) {
   layer_name_ = std::move(layer_name);
   layer_type_ = layer_type;
   layer_id_ = layer_id;
@@ -69,6 +70,7 @@ void LayerModel::Init(
   drop_shadow_effect_ = std::move(drop_shadow_effect);
   enable_3d_ = enable_3d;
   perspective_ = std::move(perspective);
+  blend_mode_ = blend_mode;
 }
 
 AnimatableTransformModel* LayerModel::GetTransform() {

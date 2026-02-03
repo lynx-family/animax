@@ -94,14 +94,14 @@ void AddAlphaVideoLayer(
                     std::unique_ptr<lynx::animax::AnimatableTransformModel>(
                         new lynx::animax::AnimatableTransformModel()),
                     static_cast<int>(lynx::animax::MatteType::kUnknown),
-                    -1,       // matte parent
-                    false,    // is matte target
-                    nullptr,  // time remapping
-                    nullptr,  // blur effect
-                    nullptr,  // drop shadow effect
-                    false,    // 3d
-                    nullptr   // perspective
-
+                    -1,                                   // matte parent
+                    false,                                // is matte target
+                    nullptr,                              // time remapping
+                    nullptr,                              // blur effect
+                    nullptr,                              // drop shadow effect
+                    false,                                // 3d
+                    nullptr,                              // perspective
+                    lynx::animax::BlendModeType::kNormal  // blend mode
   );
 
   model->GetLayerMap()[layer_model->GetId()] = layer_model.get();
@@ -161,13 +161,14 @@ void AddAudioLayer(const std::shared_ptr<lynx::animax::CompositionModel> &model,
                     std::unique_ptr<lynx::animax::AnimatableTransformModel>(
                         new lynx::animax::AnimatableTransformModel()),
                     static_cast<int>(lynx::animax::MatteType::kUnknown),
-                    -1,       // matte parent
-                    false,    // is matte target
-                    nullptr,  // time remapping
-                    nullptr,  // blur effect
-                    nullptr,  // drop shadow effect
-                    false,    // 3d
-                    nullptr   // perspective
+                    -1,                                   // matte parent
+                    false,                                // is matte target
+                    nullptr,                              // time remapping
+                    nullptr,                              // blur effect
+                    nullptr,                              // drop shadow effect
+                    false,                                // 3d
+                    nullptr,                              // perspective
+                    lynx::animax::BlendModeType::kNormal  // blend mode
   );
   model->GetLayerMap()[layer_model->GetId()] = layer_model.get();
   model->GetLayers().push_back(std::move(layer_model));
