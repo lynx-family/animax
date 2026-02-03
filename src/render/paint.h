@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include "src/model/value/blend_mode_type.h"
 #include "src/render/color_filter.h"
 #include "src/render/path_effect.h"
 
@@ -26,8 +27,6 @@ enum class PaintStyle : uint8_t {
 enum class PaintCap : uint8_t { kButt = 0, kRound, kSquare };
 
 enum class PaintJoin : uint8_t { kMiter = 0, kRound, kBevel };
-
-enum class PaintXfermode : uint8_t { kDstOut = 0, kDstIn, kClear };
 
 struct SkityShadowLayer {
   float radius;
@@ -70,7 +69,7 @@ class Paint {
 
   void SetStrokeWidth(float width);
 
-  void SetXfermode(PaintXfermode mode);
+  void SetBlendMode(BlendModeType mode);
 
   void SetShader(Shader *shader);
 

@@ -172,6 +172,7 @@ class BaseLayer : public Content,
   std::unique_ptr<Paint> dst_out_paint_;
   std::unique_ptr<Paint> matte_paint_;
   std::unique_ptr<Paint> clear_paint_;
+  std::unique_ptr<Paint> blend_paint_;
 
   bool outline_maks_and_mattes_;
   std::unique_ptr<Paint> outline_masks_and_mattes_paint_;

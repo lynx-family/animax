@@ -109,21 +109,14 @@ void Paint::SetStrokeMiter(float miter) { paint_->SetStrokeMiter(miter); }
 
 void Paint::SetStrokeWidth(float width) { paint_->SetStrokeWidth(width); }
 
-void Paint::SetXfermode(PaintXfermode mode) {
-  switch (mode) {
-    case PaintXfermode::kDstOut:
-      paint_->SetBlendMode(skity::BlendMode::kDstOut);
-      break;
-    case PaintXfermode::kDstIn:
-      paint_->SetBlendMode(skity::BlendMode::kDstIn);
-      break;
-    case PaintXfermode::kClear:
-      paint_->SetBlendMode(skity::BlendMode::kClear);
-      break;
-    default:
-      paint_->SetBlendMode(skity::BlendMode::kDefault);
-      break;
+void Paint::SetBlendMode(BlendModeType mode) {
+  // same with skity::BlendMode
+  // Defensive: mode may come from parsing/deserialization and be out of range.
+  if (mode < BlendModeType::kClear || mode > BlendModeType::kLastMode) {
+    paint_->SetBlendMode(skity::BlendMode::kDefault);
+    return;
   }
+  paint_->SetBlendMode(static_cast<skity::BlendMode>(mode));
 }
 
 void Paint::SetShader(Shader *shader) {

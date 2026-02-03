@@ -45,6 +45,7 @@ model_shared_sources = [
   "text/font_character_model.h",
   "value/base_value.cc",
   "value/base_value.h",
+  "value/blend_mode_type.h",
   "value/document_data.cc",
   "value/document_data.h",
   "value/gradient_color.cc",
