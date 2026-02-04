@@ -36,9 +36,9 @@ const std::array<float, 16> &VideoPlayerWeb::GetTransform() {
   return transform_;
 }
 
-void VideoPlayerWeb::AttachAsset(VideoAsset *asset) {
+void VideoPlayerWeb::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   DCHECK(asset);
-  asset_ = static_cast<VideoAssetWeb *>(asset);
+  asset_ = std::static_pointer_cast<VideoAssetWeb>(asset);
 }
 
 void VideoPlayerWeb::NotifyErrorEvent(const std::string &err_msg) {

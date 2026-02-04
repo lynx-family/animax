@@ -25,7 +25,7 @@ AlphaVideoLayer::AlphaVideoLayer(LayerModel& layer_model,
   auto id = layer_model_.GetRefId();
   std::shared_ptr<VideoAsset> video = composition.GetVideos()[id];
   if (video) {
-    video_asset_ = video.get();
+    video_asset_ = video;
   } else {
     ANIMAX_LOGE("video " << id << " is null");
   }

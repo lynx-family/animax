@@ -340,9 +340,9 @@ void VideoPlayerHarmony::InitNativeWindow() {
   }
 }
 
-void VideoPlayerHarmony::AttachAsset(VideoAsset *asset) {
+void VideoPlayerHarmony::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   DCHECK(asset);
-  asset_ = reinterpret_cast<VideoAssetHarmony *>(asset);
+  asset_ = std::static_pointer_cast<VideoAssetHarmony>(asset);
   if (asset_) {
     data_ = &asset_->GetVideoData();
   }

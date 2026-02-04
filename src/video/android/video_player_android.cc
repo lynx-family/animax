@@ -86,9 +86,9 @@ void VideoPlayerAndroid::CreateVideoTexture() {
   Java_IVideoPlayer_setSurface(env, player_.Get(), video_texture_);
 }
 
-void VideoPlayerAndroid::AttachAsset(VideoAsset *asset) {
+void VideoPlayerAndroid::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   DCHECK(asset);
-  asset_ = static_cast<VideoAssetAndroid *>(asset);
+  asset_ = std::static_pointer_cast<VideoAssetAndroid>(asset);
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   Java_IVideoPlayer_attachAsset(env, player_.Get(), asset_->JavaObject());
   // trigger Java_IVideoPlayer_setSurface

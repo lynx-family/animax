@@ -37,7 +37,7 @@ class MockVideoPlayerProvider : public VideoPlayerProvider {
   }
 
   bool IsSupported(const AnimaXAbility *ability,
-                   const VideoAsset *asset) override {
+                   std::shared_ptr<VideoAsset> asset) override {
     return true;
   }
 };
@@ -65,7 +65,7 @@ TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
   auto asset = MockVideoAsset::Make(VideoAssetModel());
 
   auto provider_0 =
-      VideoPlayerService::GetInstance().GetProvider(&ability, asset.get());
+      VideoPlayerService::GetInstance().GetProvider(&ability, asset);
   auto player_0 = provider_0->CreateVideoPlayer(&ability);
   auto shader_0 = provider_0->CreateVideoShader();
   EXPECT_EQ(nullptr, player_0);
@@ -84,7 +84,7 @@ TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
   EXPECT_EQ(false, ret);
 
   auto provider_1 =
-      VideoPlayerService::GetInstance().GetProvider(&ability, asset.get());
+      VideoPlayerService::GetInstance().GetProvider(&ability, asset);
   auto player_1 = provider_1->CreateVideoPlayer(&ability);
   auto shader_1 = provider_1->CreateVideoShader();
   EXPECT_EQ(nullptr, player_1);

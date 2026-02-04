@@ -26,7 +26,7 @@ class VideoAsset : public BaseAsset<VideoAsset>,
    * @return Shared pointer to the initialized VideoAsset.
    */
   static std::shared_ptr<VideoAsset> Make(VideoAssetModel model);
-  ~VideoAsset() override = default;
+  ~VideoAsset() override;
 
   /**
    * Loads the video from a local path.

@@ -19,7 +19,7 @@ class VideoPlayerAndroid : public VideoPlayer {
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16> &GetTransform() override;
-  void AttachAsset(VideoAsset *asset) override;
+  void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
 
   void NotifyErrorEvent(const std::string &err_msg);
 
@@ -27,7 +27,7 @@ class VideoPlayerAndroid : public VideoPlayer {
   void CreateVideoTexture();
 
   lynx::base::android::ScopedGlobalJavaRef<jobject> player_;
-  VideoAssetAndroid *asset_ = nullptr;
+  std::shared_ptr<VideoAssetAndroid> asset_;
 
   uint32_t video_texture_ = 0;
   std::array<float, 16> transform_{};

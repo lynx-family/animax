@@ -8,6 +8,7 @@
 #include <array>
 #include <memory>
 
+#include "src/base/log/log.h"
 #include "src/player/animax_ability.h"
 #include "src/render/texture_info.h"
 #include "src/video/video_player_listener.h"
@@ -18,7 +19,9 @@ namespace animax {
 class VideoAsset;
 class VideoPlayer {
  public:
-  virtual ~VideoPlayer() = default;
+  virtual ~VideoPlayer() {
+    ANIMAX_LOGI("Video player is destroyed, this: " << this);
+  }
   static std::unique_ptr<VideoPlayer> MakeVideoPlayer(
       const AnimaXAbility *ability_ptr);
 
@@ -39,7 +42,7 @@ class VideoPlayer {
    * Attach an asset to player
    * @param asset an asset to be played
    */
-  virtual void AttachAsset(VideoAsset *asset) = 0;
+  virtual void AttachAsset(std::shared_ptr<VideoAsset> asset) = 0;
   /**
    * Set video player listener
    * make sure listener is valid in the lifecycle of video player.
@@ -48,7 +51,7 @@ class VideoPlayer {
   void SetListener(VideoPlayerListener *listener) { listener_ = listener; }
 
  protected:
-  VideoPlayer() = default;
+  VideoPlayer() { ANIMAX_LOGI("Video player is created, this: " << this); }
 
   VideoPlayerListener *listener_ = nullptr;
 };

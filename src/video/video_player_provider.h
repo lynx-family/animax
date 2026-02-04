@@ -40,7 +40,7 @@ class VideoPlayerProvider {
    * otherwise.
    */
   virtual bool IsSupported(const AnimaXAbility *ability,
-                           const VideoAsset *asset) = 0;
+                           std::shared_ptr<VideoAsset> asset) = 0;
 };
 }  // namespace animax
 }  // namespace lynx

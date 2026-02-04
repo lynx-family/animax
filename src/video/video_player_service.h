@@ -45,8 +45,8 @@ class VideoPlayerService {
    * @param asset The video asset containing the video data and metadata.
    * @return A pointer to the VideoPlayerProvider instance.
    */
-  std::shared_ptr<VideoPlayerProvider> GetProvider(const AnimaXAbility* ability,
-                                                   VideoAsset* asset);
+  std::shared_ptr<VideoPlayerProvider> GetProvider(
+      const AnimaXAbility* ability, std::shared_ptr<VideoAsset> asset);
 
  private:
   VideoPlayerService()

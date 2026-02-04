@@ -12,7 +12,13 @@
 namespace lynx {
 namespace animax {
 
-VideoAsset::VideoAsset(VideoAssetModel info) : model_{std::move(info)} {}
+VideoAsset::VideoAsset(VideoAssetModel info) : model_{std::move(info)} {
+  ANIMAX_LOGI("Video asset is created, this: " << this);
+}
+
+VideoAsset::~VideoAsset() {
+  ANIMAX_LOGI("Video asset is destroyed, this: " << this);
+}
 
 std::string VideoAsset::ComposeUrl(const std::string& prefix) const {
   std::string full_path;

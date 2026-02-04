@@ -206,12 +206,15 @@ void AnimaXPlayer::SetSrc(const std::string& src) {
     ANIMAX_RESOURCE_LOGE("SetSrc failed, src is empty, this: " << this);
     return;
   }
+
+  auto old_src = source_state_.src;
   if (!source_state_.SetSrc(src)) {
     ANIMAX_RESOURCE_LOGI("SetSrc failed, src is the same, this: " << this);
     return;
   }
   auto src_index = source_state_.GetIndex();
-  ANIMAX_RESOURCE_LOGI("SetSrc index: " << src_index << ", src: " << src);
+  ANIMAX_RESOURCE_LOGI("SetSrc index: " << src_index << ", new src: " << src
+                                        << ", old src: " << old_src);
 
   controller_actor_->Act(
       [src](auto& controller) { controller->SetCurrentSrc(src); });
@@ -267,6 +270,9 @@ void AnimaXPlayer::UpdateComposition(int32_t src_index,
   if (src_index != source_state_.GetIndex()) {
     return;
   }
+
+  ANIMAX_LOGI("Update composition for index: " << src_index
+                                               << ", this: " << this);
 
   controller_actor_->Act([](auto& controller) {
     controller->NotifyCurrentFrameEvent(Event::kCompositionReady);

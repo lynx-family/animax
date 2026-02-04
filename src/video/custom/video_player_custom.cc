@@ -138,7 +138,7 @@ void VideoPlayerCustom::ClearAllCachedFrames() {
   frame_cache_.clear();
 }
 
-void VideoPlayerCustom::AttachAsset(VideoAsset* asset) {
+void VideoPlayerCustom::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   if (!asset) {
     ANIMAX_LOGE("VideoPlayerCustom: Failed to attach asset with null asset.");
     return;

@@ -48,7 +48,7 @@ class AlphaVideoLayer : public BaseLayer, public VideoPlayerListener {
   RectF src_;
   RectF dst_;
 
-  VideoAsset* video_asset_ = nullptr;
+  std::shared_ptr<VideoAsset> video_asset_;
   std::unique_ptr<VideoShader> video_shader_;
   std::unique_ptr<VideoPlayer> video_player_;
 
