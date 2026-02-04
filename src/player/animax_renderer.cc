@@ -272,8 +272,9 @@ void AnimaXRenderer::Destroy() {
   surface_ = nullptr;
   layer_ = nullptr;
   model_ = nullptr;
-  is_destroyed_ = true;
 }
+
+void AnimaXRenderer::MarkDestroyed() { is_destroyed_ = true; }
 
 void AnimaXRenderer::MarkPlatformSurfaceAsInvalid(bool is_invalid) {
   is_invalid_platform_surface_ = is_invalid;

@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_PLAYER_ANIMAX_RENDERER_H_
 #define ANIMAX_SRC_PLAYER_ANIMAX_RENDERER_H_
 
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -66,6 +67,10 @@ class AnimaXRenderer : public MetricsDataSource {
   // Utility methods
   void Reload();
   void Destroy();
+  // Marks the renderer as destroyed. May be called from the main thread.
+  // Synchronously flags destoryed to prevent previously dispatched tasks
+  // from accessing main-thread resources that no longer exist.
+  void MarkDestroyed();
   void MarkPlatformSurfaceAsInvalid(bool is_invalid);
 
   // Property update
@@ -130,7 +135,7 @@ class AnimaXRenderer : public MetricsDataSource {
   int32_t model_height_ = 0;
 
   bool has_rendered_first_frame_ = false;
-  bool is_destroyed_ = false;
+  std::atomic<bool> is_destroyed_ = false;
 
   std::unique_ptr<AnimaXPropertyUpdater> property_updater_;
   PeriodicalTimestampRecorder gpu_thread_recorder_;
