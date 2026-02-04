@@ -106,6 +106,7 @@ void AnimaXPlayer::Destroy() {
               << ", this: " << this);
   controller_actor_->Act(
       [](auto& controller) { controller->ClearEventListeners(); });
+  renderer_actor_->Impl()->MarkDestroyed();
   renderer_actor_->Act([](auto& renderer) { renderer->Destroy(); });
 }
 

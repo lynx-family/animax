@@ -219,8 +219,9 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceHarmony::Reconfigure(
     const ReconfigureDescription& desc) {
   auto* old_surface_harmony =
       static_cast<AnimaXSurfaceHarmony*>(old_surface.get());
-
-  old_surface_harmony->OnReconfigure(desc);
+  if (old_surface_harmony) {
+    old_surface_harmony->OnReconfigure(desc);
+  }
 
   return old_surface;
 }
