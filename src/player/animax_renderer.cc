@@ -135,6 +135,7 @@ void AnimaXRenderer::StartAnimationIfNeeded() {
 
 void AnimaXRenderer::StartAnimation() {
   audio_controllers_.clear();
+  has_rendered_first_frame_ = false;
   auto& bounds = model_->GetBounds();
   model_width_ = bounds.GetWidth();
   model_height_ = bounds.GetHeight();
