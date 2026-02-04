@@ -165,7 +165,8 @@ std::unique_ptr<TextureInfo> VideoPlayerIOS::UpdateTexture(const int32_t frame) 
   const int32_t presentation_frame = frame;
   DCHECK(0 <= presentation_frame && presentation_frame < asset_->GetFrameCount());
 
-  if (presentation_frame == current_presentation_frame_) {
+  if (presentation_frame < 0 || presentation_frame >= asset_->GetFrameCount() ||
+      presentation_frame == current_presentation_frame_) {
     // don't need draw
     return nullptr;
   }
@@ -308,14 +309,17 @@ void VideoPlayerIOS::PrepareNextFrame(const int32_t target_presentation_index) {
   if (!session_valid_) {
     return;
   }
+  if (asset_->GetFrameCount() == 0) {
+    return;
+  }
   const int32_t decode_index = (CURRENT_FRAME_INVALID == current_decoded_frame_)
                                    ? 0
                                    : ((current_decoded_frame_ + 1) % asset_->GetFrameCount());
   DecodeFrame(decode_index, target_presentation_index);
 }
 
-void VideoPlayerIOS::AttachAsset(VideoAsset *asset) {
-  auto asset_ios = static_cast<VideoAssetIOS *>(asset);
+void VideoPlayerIOS::AttachAsset(std::shared_ptr<VideoAsset> asset) {
+  auto asset_ios = std::static_pointer_cast<VideoAssetIOS>(asset);
   if (!asset_ios || !asset_ios->IsValid()) {
     return;
   }
@@ -364,6 +368,11 @@ void VideoPlayerIOS::ReleaseSession() {
 }
 
 CMSampleBufferRef VideoPlayerIOS::PrepareFrameData(const FrameInfo &frame_info) {
+  if (frame_info.beg_ < 0 || frame_info.end_ < 0 || frame_info.beg_ >= frame_info.end_ ||
+      frame_info.end_ > asset_->GetFrameDataLength()) {
+    return nullptr;
+  }
+
   size_t frame_size = frame_info.end_ - frame_info.beg_;
   CMBlockBufferRef block_buffer = nullptr;
   CMSampleBufferRef sample_buffer = nullptr;

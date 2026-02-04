@@ -30,7 +30,7 @@ class VideoPlayerIOS : public VideoPlayer {
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16> &GetTransform() override;
-  void AttachAsset(VideoAsset *asset) override;
+  void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
   void ProcessVtbCodecError(OSStatus status);
 
  private:
@@ -50,7 +50,7 @@ class VideoPlayerIOS : public VideoPlayer {
   VideoFrameCache *GetFrameCache();
   void MoveFrameFromCache(int32_t presentation_frame);
 
-  VideoAssetIOS *asset_ = nullptr;
+  std::shared_ptr<VideoAssetIOS> asset_ = nullptr;
   std::array<float, 16> transform_;
   std::unique_ptr<VideoPlayerErrorReporter> error_reporter_ = nullptr;
 

@@ -22,7 +22,7 @@ class VideoPlayerProviderDefault : public VideoPlayerProvider {
   }
 
   bool IsSupported(const AnimaXAbility *ability,
-                   const VideoAsset *asset) override {
+                   std::shared_ptr<VideoAsset> asset) override {
     return true;
   }
 };

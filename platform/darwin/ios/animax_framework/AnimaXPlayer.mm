@@ -19,6 +19,7 @@
 
 #include "include/player/animax_player.h"
 #include "include/player/animax_player_builder.h"
+#include "src/base/log/log.h"
 #include "src/base/thread/task_runner.h"
 #include "src/base/util/ios/lifecycle_manager.h"
 #include "src/player/ios/animax_ability_ios.h"
@@ -101,6 +102,10 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
 
 - (void)dealloc {
   [[self.context monitorDelegate] onRelease];
+
+  ANIMAX_LOGI("AnimaXPlayer dealloc"
+              << ", this: " << [self getPlayerRaw]);
+
   if (_player) {
     _player->Destroy();
     _player = nullptr;

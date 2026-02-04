@@ -68,7 +68,7 @@ TEST_F(VideoPlayerCustomTest, UpdateTexture) {
 
   auto player_ = std::make_shared<VideoPlayerCustom>(std::move(decoder_));
   auto asset = std::make_shared<MockVideoAsset>(VideoAssetModel());
-  player_->AttachAsset(asset.get());
+  player_->AttachAsset(asset);
   EXPECT_NE(nullptr, asset.get());
   EXPECT_EQ(20, asset->GetFrameCount());
 

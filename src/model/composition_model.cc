@@ -28,6 +28,11 @@ namespace animax {
 CompositionModel::CompositionModel(float scale) : scale_(scale) {
   font_asset_manager_ = TextHelper::Impl().CreateFontAssetManager();
   DCHECK(font_asset_manager_);
+  ANIMAX_LOGI("Composition model is created, this: " << this);
+}
+
+CompositionModel::~CompositionModel() {
+  ANIMAX_LOGI("Composition model is destroyed, this: " << this);
 }
 
 void CompositionModel::Init(std::unique_ptr<RectF> bounds, float start_frame,

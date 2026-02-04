@@ -23,7 +23,7 @@ class ANIMAX_EXPORT VideoPlayerCustom : public VideoPlayer {
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16>& GetTransform() override;
-  void AttachAsset(VideoAsset* asset) override;
+  void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
 
  private:
   // Frame managment
@@ -44,7 +44,7 @@ class ANIMAX_EXPORT VideoPlayerCustom : public VideoPlayer {
   std::vector<std::shared_ptr<YUVFrameInfo>> reusable_frame_pool_;
   std::unique_ptr<VideoDecoderCustom> decoder_ = nullptr;
   std::array<float, 16> transform_{};
-  VideoAsset* asset_ = nullptr;
+  std::shared_ptr<VideoAsset> asset_;
   mutable std::shared_mutex mutex_;
   static constexpr int32_t kCurrentFrameInvalid = -1;
   int32_t display_index_ = kCurrentFrameInvalid;

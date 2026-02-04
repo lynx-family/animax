@@ -80,7 +80,7 @@ class VideoPlayerHarmony : public VideoPlayer {
 
   const std::array<float, 16> &GetTransform() override;
 
-  void AttachAsset(VideoAsset *asset) override;
+  void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
 
   void NotifyErrorEvent(const std::string &err_msg);
 
@@ -125,7 +125,7 @@ class VideoPlayerHarmony : public VideoPlayer {
   uint32_t video_texture_ = 0;
   std::array<float, 16> transform_{};
 
-  VideoAssetHarmony *asset_ = nullptr;
+  std::shared_ptr<VideoAssetHarmony> asset_;
   VideoData *data_ = nullptr;
 
   OH_AVCodec *av_codec_ = nullptr;

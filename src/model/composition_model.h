@@ -47,7 +47,7 @@ struct ParseContext {
 class CompositionModel {
  public:
   CompositionModel(float scale);
-  ~CompositionModel() = default;
+  ~CompositionModel();
 
   void Init(std::unique_ptr<RectF> bounds, float start_frame, float end_frame,
             float frame_rate, bool enable_3d);

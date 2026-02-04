@@ -25,6 +25,7 @@ class VideoAssetIOS : public VideoAsset {
   CMFormatDescriptionRef GetFormatDescription() const { return desc_; }
   const FrameInfo& GetFrameInfo(size_t index) const { return frame_infos_[index]; }
   char* GetFrameData() const { return (char*)[frames_ bytes]; }
+  uint32_t GetFrameDataLength() const { return [frames_ length]; }
   int GetPrevKeyFrame(int frame) const;
 
  private:
