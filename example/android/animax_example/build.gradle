@@ -81,6 +81,8 @@ android {
 dependencies {
     implementation "androidx.appcompat:appcompat:1.0.0"
     implementation "androidx.recyclerview:recyclerview:1.2.1"
+    implementation "androidx.cardview:cardview:1.0.0"
+    implementation 'com.google.android.material:material:1.4.0'
 
     implementation project(':AnimaXAndroid')
     implementation project(':AnimaXTextra')
@@ -91,6 +93,12 @@ dependencies {
     implementation 'com.facebook.fresco:animated-base:2.3.0'
     implementation "com.facebook.fresco:imagepipeline:2.3.0"
     implementation "com.facebook.fresco:drawee:2.3.0"
+
+    // OkHttp for network requests
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+
+    // Color picker
+    implementation 'com.github.yukuku:ambilwarna:2.0.1'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'androidx.test.ext:junit:1.1.1'

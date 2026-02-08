@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FAFAFA">
+
+    <!-- File Name Display -->
+    <TextView
+        android:id="@+id/tv_file_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="12dp"
+        android:text="loader_animation_v4_final.json"
+        android:textColor="#888888"
+        android:textSize="13sp"/>
+
+    <!-- AnimaXView Container with Card Style -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/animation_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <com.lynx.animax.ui.AnimaXView
+            android:id="@+id/animax_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Progress Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp"
+        android:background="#FAFAFA">
+
+        <!-- Progress Bar -->
+        <SeekBar
+            android:id="@+id/seek_bar_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#333333"
+            android:thumbTint="#333333"/>
+
+        <!-- Frame Count and Progress Percentage -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <!-- Frame Count Display (Left) -->
+            <TextView
+                android:id="@+id/tv_frame_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0/300"
+                android:textColor="#333333"
+                android:textSize="13sp"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <!-- Progress Percentage (Right) -->
+            <TextView
+                android:id="@+id/tv_progress_percent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textColor="#333333"
+                android:textSize="13sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Playback Controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingVertical="12dp"
+        android:paddingHorizontal="24dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
+
+        <!-- Loop Button -->
+        <ImageButton
+            android:id="@+id/btn_loop"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_repeat"
+            android:contentDescription="Loop"
+            android:scaleType="centerInside"
+            android:tint="#666666"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- Previous Frame Button -->
+        <ImageButton
+            android:id="@+id/btn_prev_frame"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_skip_previous"
+            android:contentDescription="Previous Frame"
+            android:scaleType="centerInside"
+            android:tint="#333333"/>
+
+        <!-- Play/Pause Button -->
+        <ImageButton
+            android:id="@+id/btn_play_pause"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="16dp"
+            android:background="@drawable/circle_button_background"
+            android:src="@drawable/ic_play"
+            android:contentDescription="Play/Pause"
+            android:scaleType="centerInside"
+            android:padding="12dp"/>
+
+        <!-- Next Frame Button -->
+        <ImageButton
+            android:id="@+id/btn_next_frame"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_skip_next"
+            android:contentDescription="Next Frame"
+            android:scaleType="centerInside"
+            android:tint="#333333"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- More Options Button -->
+        <ImageButton
+            android:id="@+id/btn_more"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_more"
+            android:contentDescription="More Options"
+            android:scaleType="centerInside"
+            android:tint="#666666"/>
+    </LinearLayout>
+
+</LinearLayout>

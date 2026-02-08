@@ -5,24 +5,26 @@ package com.lynx.animax.example
 
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.lynx.animax.listener.AnimaXParam
 import com.lynx.animax.listener.AnimationListenerAdapter
 import com.lynx.animax.property.AnimaXKeyPath
-import com.lynx.animax.property.AnimaXKeyPathListCallback
 import com.lynx.animax.property.LayerPropertyType
 import com.lynx.animax.property.AnimaXPropertyCallback
 import com.lynx.animax.property.AnimaXValueParam
 import com.lynx.animax.ui.AnimaXView
 import com.lynx.animax.util.AnimaXLog
 
-class UpdatePropertyActivity : AppCompatActivity() {
+class UpdatePropertyFragment : Fragment() {
 
-    private val TAG = "UpdatePropertyActivity"
-    private lateinit var mAnimaXView: AnimaXView
-    private lateinit var mButtonContainer: LinearLayout
+    private val TAG = "UpdatePropertyFragment"
+    private var mAnimaXView: AnimaXView? = null
+    private var mButtonContainer: LinearLayout? = null
     private val mKeyPath = AnimaXKeyPath("**")
     private val mFillKeyPath = AnimaXKeyPath("**")
 
@@ -34,24 +36,31 @@ class UpdatePropertyActivity : AppCompatActivity() {
         val staticValue: AnimaXValueParam
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_property_update_animax)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_property, container, false)
+    }
 
-        mAnimaXView = findViewById(R.id.animation_container)
-        mButtonContainer = findViewById(R.id.button_container)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        mAnimaXView = view.findViewById(R.id.animation_container)
+        mButtonContainer = view.findViewById(R.id.button_container)
         
-        mAnimaXView.setAutoPlay(true)
-        mAnimaXView.setLoop(true)
-        mAnimaXView.setSrc(LottieFiles.DynamicPropertySchema)
+        mAnimaXView?.setAutoPlay(true)
+        mAnimaXView?.setLoop(true)
+        mAnimaXView?.setSrc(LottieFiles.DynamicPropertySchema)
 
         setupStaticUpdateButtons()
         addResetButton()
 
-        mAnimaXView.addAnimationListener(object : AnimationListenerAdapter() {
+        mAnimaXView?.addAnimationListener(object : AnimationListenerAdapter() {
             override fun onReady(param: AnimaXParam?) {
                 AnimaXLog.i(TAG, "Animation ready")
-                mAnimaXView.player.getKeysForKeyPath(AnimaXKeyPath("**")) { paths ->
+                mAnimaXView?.player?.getKeysForKeyPath(AnimaXKeyPath("**")) { paths ->
                     AnimaXLog.i(TAG, "getKeysForKeyPath: $paths")
                 }
             }
@@ -356,7 +365,7 @@ class UpdatePropertyActivity : AppCompatActivity() {
     }
 
     private fun createPropertyButton(config: PropertyUpdateConfig) {
-        val button = Button(this).apply {
+        val button = Button(requireContext()).apply {
             text = config.displayName
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -370,11 +379,11 @@ class UpdatePropertyActivity : AppCompatActivity() {
             }
         }
         
-        mButtonContainer.addView(button)
+        mButtonContainer?.addView(button)
     }
 
     private fun updateProperty(config: PropertyUpdateConfig) {
-        mAnimaXView.player.updateLayerProperty(
+        mAnimaXView?.player?.updateLayerProperty(
             config.type,
             config.keyPath,
             config.staticValue,
@@ -383,7 +392,7 @@ class UpdatePropertyActivity : AppCompatActivity() {
     }
 
     private fun addResetButton() {
-        val resetButton = Button(this).apply {
+        val resetButton = Button(requireContext()).apply {
             text = "Reset Animation"
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -397,12 +406,12 @@ class UpdatePropertyActivity : AppCompatActivity() {
             }
         }
         
-        mButtonContainer.addView(resetButton)
+        mButtonContainer?.addView(resetButton)
     }
 
     private fun resetAnimation() {
         // Reload the animation to reset all properties
-        mAnimaXView.player.reload()
+        mAnimaXView?.player?.reload()
         AnimaXLog.i(TAG, "Animation reset")
     }
 
@@ -416,5 +425,12 @@ class UpdatePropertyActivity : AppCompatActivity() {
                 AnimaXLog.e(TAG, "$propertyName update error: $errorMessageList")
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mAnimaXView?.release()
+        mAnimaXView = null
+        mButtonContainer = null
     }
 }

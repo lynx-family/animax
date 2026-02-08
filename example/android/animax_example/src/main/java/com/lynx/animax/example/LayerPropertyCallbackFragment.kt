@@ -5,9 +5,12 @@ package com.lynx.animax.example
 
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.lynx.animax.listener.AnimaXParam
 import com.lynx.animax.listener.AnimationListenerAdapter
 import com.lynx.animax.property.AnimaXFrameInfo
@@ -20,11 +23,11 @@ import com.lynx.animax.ui.AnimaXView
 import com.lynx.animax.util.AnimaXLog
 import kotlin.math.*
 
-class LayerPropertyCallbackActivity : AppCompatActivity() {
+class LayerPropertyCallbackFragment : Fragment() {
 
-    private val TAG = "LayerPropertyCallbackActivity"
-    private lateinit var mAnimaXView: AnimaXView
-    private lateinit var mButtonContainer: LinearLayout
+    private val TAG = "LayerPropertyCallbackFragment"
+    private var mAnimaXView: AnimaXView? = null
+    private var mButtonContainer: LinearLayout? = null
     private val mKeyPath = AnimaXKeyPath("**")
     private val mFillKeyPath = AnimaXKeyPath("**")
     private val mCallbacks = mutableListOf<Any>()
@@ -37,21 +40,28 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
         val valueGenerator: (AnimaXFrameInfo) -> AnimaXValueParam?
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_property_update_animax)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_property, container, false)
+    }
 
-        mAnimaXView = findViewById(R.id.animation_container)
-        mButtonContainer = findViewById(R.id.button_container)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        mAnimaXView.setAutoPlay(true)
-        mAnimaXView.setLoop(true)
-        mAnimaXView.setSrc(LottieFiles.DynamicPropertySchema)
+        mAnimaXView = view.findViewById(R.id.animation_container)
+        mButtonContainer = view.findViewById(R.id.button_container)
+
+        mAnimaXView?.setAutoPlay(true)
+        mAnimaXView?.setLoop(true)
+        mAnimaXView?.setSrc(LottieFiles.DynamicPropertySchema)
 
         setupDynamicButtons()
         addResetButton()
 
-        mAnimaXView.addAnimationListener(object : AnimationListenerAdapter() {
+        mAnimaXView?.addAnimationListener(object : AnimationListenerAdapter() {
             override fun onReady(param: AnimaXParam?) {
                 AnimaXLog.i(TAG, "Animation ready")
             }
@@ -484,7 +494,7 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
     }
 
     private fun createPropertyButton(config: PropertyConfig) {
-        val button = Button(this).apply {
+        val button = Button(requireContext()).apply {
             text = config.displayName
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -498,7 +508,7 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
             }
         }
 
-        mButtonContainer.addView(button)
+        mButtonContainer?.addView(button)
     }
 
     private fun addPropertyCallback(config: PropertyConfig) {
@@ -508,7 +518,7 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
             }
         }
 
-        mAnimaXView.player.addLayerPropertyCallback(
+        mAnimaXView?.player?.addLayerPropertyCallback(
             config.type,
             config.keyPath,
             callback,
@@ -518,7 +528,7 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
     }
 
     private fun addResetButton() {
-        val resetButton = Button(this).apply {
+        val resetButton = Button(requireContext()).apply {
             text = "Reset All Callbacks"
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -532,7 +542,7 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
             }
         }
 
-        mButtonContainer.addView(resetButton)
+        mButtonContainer?.addView(resetButton)
     }
 
     private fun resetCallbacks() {
@@ -550,5 +560,13 @@ class LayerPropertyCallbackActivity : AppCompatActivity() {
                 AnimaXLog.e(TAG, "$propertyName callback error: $errorMessageList")
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mCallbacks.clear()
+        mAnimaXView?.release()
+        mAnimaXView = null
+        mButtonContainer = null
     }
 }

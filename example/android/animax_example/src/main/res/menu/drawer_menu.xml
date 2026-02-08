@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_previewer"
+            android:title="Previewer" />
+        <item
+            android:id="@+id/nav_multi_animax"
+            android:title="Multi AnimaX" />
+        <item
+            android:id="@+id/nav_layer_property_callback"
+            android:title="Layer Property Callback" />
+        <item
+            android:id="@+id/nav_update_property"
+            android:title="Update Property" />
+    </group>
+</menu>

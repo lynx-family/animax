@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Material Design key/layers icon -->
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M17,4h-3V2h-4v2H7c-1.1,0 -2,0.9 -2,2v15c0,1.1 0.9,2 2,2h10c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2zM12,17c-1.1,0 -2,-0.9 -2,-2s0.9,-2 2,-2 2,0.9 2,2 -0.9,2 -2,2zM15,9H9V6h6v3z"/>
+</vector>
