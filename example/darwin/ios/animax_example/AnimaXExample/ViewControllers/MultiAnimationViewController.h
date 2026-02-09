@@ -4,9 +4,10 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ButtonsCollectionViewCell : UICollectionViewCell
+NS_ASSUME_NONNULL_BEGIN
 
-@property(nonatomic, strong) UIButton *button;
-@property(nonatomic, strong) NSString *buttonTitle;
+@interface MultiAnimationViewController : UIViewController
 
 @end
+
+NS_ASSUME_NONNULL_END

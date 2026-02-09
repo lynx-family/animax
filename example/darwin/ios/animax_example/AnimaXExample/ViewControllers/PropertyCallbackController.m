@@ -53,13 +53,6 @@
   self.view.backgroundColor = [UIColor whiteColor];
   self.title = @"Property Callback";
 
-  // Add back button
-  UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"Back"
-                                                                 style:UIBarButtonItemStylePlain
-                                                                target:self
-                                                                action:@selector(backButtonTapped)];
-  self.navigationItem.leftBarButtonItem = backButton;
-
   // Initialize key paths and callbacks array
   self.keyPath = [[AnimaXKeyPath alloc] initWithKeys:@[ @"**" ]];
   self.fillKeyPath = [[AnimaXKeyPath alloc] initWithKeys:@[ @"**" ]];
@@ -87,6 +80,24 @@
 }
 
 - (void)setupUI {
+  // Close button
+  UIButton *closeBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+  [closeBtn setImage:[UIImage systemImageNamed:@"xmark"] forState:UIControlStateNormal];
+  [closeBtn addTarget:self
+                action:@selector(closeTapped)
+      forControlEvents:UIControlEventTouchUpInside];
+  closeBtn.tintColor = [UIColor blackColor];
+  closeBtn.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view addSubview:closeBtn];
+
+  // Title Label
+  UILabel *titleLabel = [[UILabel alloc] init];
+  titleLabel.text = self.title;
+  titleLabel.font = [UIFont boldSystemFontOfSize:17];
+  titleLabel.textAlignment = NSTextAlignmentCenter;
+  titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view addSubview:titleLabel];
+
   // Create animation view (fixed at top)
   self.animaXView = [self createAnimaXView];
   self.animaXView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -106,9 +117,19 @@
 
   // Set up constraints
   [NSLayoutConstraint activateConstraints:@[
+    // Close button
+    [closeBtn.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor
+                                       constant:10],
+    [closeBtn.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
+    [closeBtn.widthAnchor constraintEqualToConstant:44],
+    [closeBtn.heightAnchor constraintEqualToConstant:44],
+
+    // Title Label
+    [titleLabel.centerYAnchor constraintEqualToAnchor:closeBtn.centerYAnchor],
+    [titleLabel.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+
     // Animation view constraints (fixed at top)
-    [self.animaXView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor
-                                              constant:16],
+    [self.animaXView.topAnchor constraintEqualToAnchor:closeBtn.bottomAnchor constant:10],
     [self.animaXView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:16],
     [self.animaXView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-16],
     [self.animaXView.heightAnchor constraintEqualToConstant:200],
@@ -136,7 +157,7 @@
   [self.animaXView setAutoplay:YES];
   [self.animaXView setLoop:YES];
   NSBundle *bundle = [NSBundle mainBundle];
-  NSString *jsonPath = [bundle pathForResource:@"dp/data" ofType:@"json"];
+  NSString *jsonPath = [bundle pathForResource:@"data" ofType:@"json"];
   if (jsonPath) {
     NSURL *url = [NSURL fileURLWithPath:jsonPath];
     [_animaXView setSrc:url.absoluteString];
@@ -558,21 +579,8 @@
 
 #pragma mark - Actions
 
-- (void)backButtonTapped {
-  NSLog(@"Back button tapped");
-  NSLog(@"Navigation controller: %@", self.navigationController);
-  NSLog(@"Presenting view controller: %@", self.presentingViewController);
-
-  if (self.navigationController && self.navigationController.viewControllers.count > 1) {
-    NSLog(@"Popping view controller");
-    [self.navigationController popViewControllerAnimated:YES];
-  } else if (self.presentingViewController) {
-    NSLog(@"Dismissing modal view controller");
-    [self dismissViewControllerAnimated:YES completion:nil];
-  } else {
-    NSLog(@"No navigation controller or presenting view controller found, trying dismiss anyway");
-    [self dismissViewControllerAnimated:YES completion:nil];
-  }
+- (void)closeTapped {
+  [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 // Helper methods for color generation (matching Android implementation)

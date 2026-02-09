@@ -3,7 +3,8 @@
     {
       "idiom": "universal",
       "platform": "ios",
-      "size": "1024x1024"
+      "size": "512x512",
+      "filename": "AppIcon.png"
     }
   ],
   "info": {
