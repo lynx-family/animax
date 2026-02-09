@@ -278,9 +278,10 @@ void AnimaXPlayer::UpdateComposition(int32_t src_index,
     controller->NotifyCurrentFrameEvent(Event::kCompositionReady);
   });
 
-  renderer_actor_->Act([src_index, model = std::move(model)](auto& renderer) {
-    renderer->UpdateComposition(src_index, model);
-  });
+  renderer_actor_->Act(
+      [src_index, model = std::move(model)](auto& renderer) mutable {
+        renderer->UpdateComposition(src_index, std::move(model));
+      });
 }
 
 void AnimaXPlayer::SetSrcPolyfill(
@@ -299,13 +300,20 @@ void AnimaXPlayer::LoadAssetsWithCallback(
     if (!player) {
       return;
     }
+
+    auto composition = renderer->GetComposition();
+    if (!composition) {
+      ANIMAX_LOGI("LoadAssetsWithCallback failed, composition is null");
+      return;
+    }
+
     if (renderer->IsCompositionAssetsLoaded()) {
       player->controller_actor_->Act([completion = std::move(completion)](
                                          auto& controller) { completion(); });
       return;
     }
-    auto composition = renderer->GetComposition();
-    player->LoadCompositionAssets(composition, std::move(completion));
+    player->LoadCompositionAssets(std::move(composition),
+                                  std::move(completion));
   };
   renderer_actor_->Act(std::move(handle_renderer));
 }
@@ -331,12 +339,12 @@ void AnimaXPlayer::LoadCompositionAssets(
                                        auto& controller) { completion(); });
   };
 
-  loader_actor_->Act(
-      [composition, handle_asset_loading =
-                        std::move(handle_asset_loading)](auto& loader) mutable {
-        loader->LoadCompositionModelAsset(composition,
-                                          std::move(handle_asset_loading));
-      });
+  loader_actor_->Act([composition = std::move(composition),
+                      handle_asset_loading = std::move(handle_asset_loading)](
+                         auto& loader) mutable {
+    loader->LoadCompositionModelAsset(std::move(composition),
+                                      std::move(handle_asset_loading));
+  });
 }
 
 void AnimaXPlayer::SetLoop(const bool loop) {
