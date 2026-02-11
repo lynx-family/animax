@@ -115,6 +115,7 @@ class AnimaXMainController {
   void EnsureReadyOrWarn(const std::string& operation_name);
   void UpdateAnimationID();
   void PlayFromStart();
+  bool IsAnimationReady();
 
   std::weak_ptr<AnimaXPlayer> weak_player_;
   std::shared_ptr<AnimaXEventDispatcher> event_dispatcher_;

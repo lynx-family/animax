@@ -198,9 +198,7 @@ bool AnimaXMainController::IsAnimating() {
 void AnimaXMainController::EnsureReadyOrWarn(
     const std::string& operation_name) {
   EventWarningChecker::CheckExecuteBeforeReady(
-      event_tracker_->GetEventValue(
-          PlayerEventTracker::AnimationEventType::kReady),
-      operation_name,
+      IsAnimationReady(), operation_name,
       [this](EventWarning warning, const std::string& warning_message) {
         NotifyWarning(warning, warning_message);
       });
@@ -229,8 +227,14 @@ void AnimaXMainController::SetProgress(float progress) {
 }
 
 void AnimaXMainController::SetAutoplay(bool autoplay) {
+  if (autoplay_ == autoplay) {
+    return;
+  }
   autoplay_ = autoplay;
   value_animator_->SetAutoplay(autoplay);
+  if (autoplay && IsAnimationReady()) {
+    Play();
+  }
 }
 
 bool AnimaXMainController::EnableDynamicResourceFeature() {
@@ -251,14 +255,19 @@ void AnimaXMainController::Reload() {
 }
 
 void AnimaXMainController::Play() {
+  if (!IsAnimationReady()) {
+    if (!EnableDynamicResourceFeature()) {
+      SetAutoplay(true);
+    }
+    return;
+  }
+
   auto player = weak_player_.lock();
   if (!player) {
     return;
   }
 
-  if (!autoplay_) {
-    EnsureReadyOrWarn("Play");
-  }
+  EnsureReadyOrWarn("Play");
 
   auto play_action = [this, weak_player = weak_player_]() {
     if (auto player = weak_player.lock()) {
@@ -412,6 +421,11 @@ void AnimaXMainController::MarkEvent(Event event) {
 }
 
 double AnimaXMainController::GetCurrentFrame() { return current_frame_; }
+
+bool AnimaXMainController::IsAnimationReady() {
+  return event_tracker_->GetEventValue(
+      PlayerEventTracker::AnimationEventType::kReady);
+}
 
 }  // namespace animax
 }  // namespace lynx
