@@ -112,13 +112,18 @@ void SkitySurfaceMTL::Flush() {
     return;
   }
 
-  ANIMAX_TRACE_EVENT_BEGIN(kFlushFrame);
-  frame_canvas_->Flush();
-  ANIMAX_TRACE_EVENT_END();
+  @try {
+    ANIMAX_TRACE_EVENT_BEGIN(kFlushFrame);
+    frame_canvas_->Flush();
+    ANIMAX_TRACE_EVENT_END();
 
-  ANIMAX_TRACE_EVENT_BEGIN(kSwapFrame);
-  gpu_surface_->Flush();
-  ANIMAX_TRACE_EVENT_END();
+    ANIMAX_TRACE_EVENT_BEGIN(kSwapFrame);
+    gpu_surface_->Flush();
+    ANIMAX_TRACE_EVENT_END();
+  } @catch (NSException* exception) {
+    ANIMAX_LOGE("Flush failed with exception: " << exception.name
+                                                << ", reason: " << exception.reason)
+  }
 }
 
 void SkitySurfaceMTL::Destroy() {
