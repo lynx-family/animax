@@ -64,8 +64,6 @@ void TextContentDefault::DrawTextWithFont(const DocumentData& document_data,
   DCHECK(font);
 
   auto& text = document_data.GetText();
-  // TODO(aiyongbiao): text delegate
-
   float text_size = data_source_.GetTextSize();
   font->SetTextSize(text_size);
 
@@ -225,12 +223,6 @@ void TextContentDefault::DrawFontTextLine(const std::u32string& text,
 void TextContentDefault::DrawCharacter(const std::u32string& text, Paint& paint,
                                        Canvas& canvas, Font& font) {
   canvas.DrawText(base::U32StringToU8(text), 0, 0, font, paint);
-}
-
-const std::string& TextContentDefault::CodePointToString(
-    const std::string& text, int32_t start_index) {
-  // TODO(aiyongbiao): implement this
-  return text;
 }
 
 std::u32string TextContentDefault::TrimText(const std::u32string& s) {

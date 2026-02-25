@@ -101,8 +101,6 @@ class BaseLayer : public Content,
                          IntegerKeyframeAnimation& opacity_animation,
                          Paint& save_paint, Paint& alpha_paint);
 
-  //  TODO(aiyongbiao): resolve key path p1
-
   CompositionModel& GetComposition() { return composition_; }
   MaskFilter* GetBlurMaskFilter(float radius);
 

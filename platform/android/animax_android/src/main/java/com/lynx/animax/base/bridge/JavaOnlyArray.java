@@ -7,7 +7,7 @@ package com.lynx.animax.base.bridge;
 import com.lynx.animax.base.CalledByNative;
 import java.util.ArrayList;
 
-public class JavaOnlyArray extends ArrayList<Object> {
+public class JavaOnlyArray extends ArrayList<Object> implements ReadableArray {
   public JavaOnlyArray() {
     super();
   }
@@ -31,11 +31,13 @@ public class JavaOnlyArray extends ArrayList<Object> {
     this.add(new String(array));
   }
 
+  @Override
   @CalledByNative
   public int size() {
     return super.size();
   }
 
+  @Override
   @CalledByNative
   public String getString(int index) {
     return (String) this.get(index);

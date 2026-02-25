@@ -136,8 +136,6 @@ std::unique_ptr<Value> ValueParser::Parse(rapidjson::Value& value, float scale,
       if (value.IsArray() || value.IsObject()) {
         return JsonParser::JsonToPoint(value, scale);
       } else if (value.IsNumber()) {
-        // TODO(aiyongbiao): tmp impl p1
-        ANIMAX_LOGI("warn, should not go to there basicvalueparser");
         auto v = value.GetFloat();
         return ValueFactory::Make<PointF>(v * scale, v * scale, v * scale);
       }

@@ -29,6 +29,10 @@
 namespace lynx {
 namespace animax {
 
+// Default text layout and rendering implementation. This provides basic text
+// typesetting capabilities using the built-in font engine. For higher layout
+// accuracy and multilingual rendering support, we recommend integrating Textra
+// as the text layout engine.
 class TextContentDefault : public TextContent {
  public:
   TextContentDefault(const TextContentDataSource& data_source);
@@ -62,8 +66,6 @@ class TextContentDefault : public TextContent {
                      Font& font);
 
   TextSubLine& EnsureEnoughSubLines(int32_t num_lines);
-  const std::string& CodePointToString(const std::string& text,
-                                       int32_t start_index);
 
   std::u32string TrimText(const std::u32string& s);
 

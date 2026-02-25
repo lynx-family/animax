@@ -39,6 +39,15 @@ AnimatableIntegerValue::CreateAnimation() {
       new IntegerKeyframeAnimation(frames_));
 }
 
+std::unique_ptr<AnimatableIntegerValue> AnimatableIntegerValue::MakeDefault(
+    CompositionModel& composition, int32_t value) {
+  auto result = std::make_unique<AnimatableIntegerValue>();
+  auto& frames = result->GetKeyframes();
+  frames.emplace_back(std::make_unique<KeyframeModel>(
+      composition, ValueFactory::Make<Integer>(value)));
+  return result;
+}
+
 std::unique_ptr<PointKeyframeAnimation> AnimatablePointValue::CreateAnimation(
     bool enable_3d) {
   return std::unique_ptr<PointKeyframeAnimation>(

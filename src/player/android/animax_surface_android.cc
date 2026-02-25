@@ -236,7 +236,7 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceAndroid::Make(
         animax_surface.reset(new AnimaXImageSurfaceAndroidSW(
             std::move(bitmap_buffer_group), desc));
       }  // backend == AnimaXBackend::kGL
-      // todo(lixianruo) enable AnimaXImageView rendered with GL
+      // TODO(lixianruo) enable AnimaXImageView rendered with GL
       break;
     }
     case AnimaXSurfaceDrawableAndroid::Type::kTextureView:

@@ -151,7 +151,7 @@ bool KeyframeAnimation::CheckNullValue(KeyframeModel& keyframe) const {
 
 Value& KeyframeAnimation::GetValue() {
   float progress = GetLinearCurrentKeyframeProgress();
-  // TODO(aiyongbiao): cached get value p1
+  // TODO(aiyongbiao.rick): Optimize get performance by cached value.
 
   auto& keyframe = GetCurrentKeyframe();
 

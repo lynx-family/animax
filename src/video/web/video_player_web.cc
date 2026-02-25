@@ -27,7 +27,7 @@ std::unique_ptr<TextureInfo> VideoPlayerWeb::UpdateTexture(
     // don't need draw
     return nullptr;
   }
-  // todo: impl
+  // TODO(caitan): video texture on web is not support, implement it later
   return std::make_unique<TextureInfoGL>(
       video_texture_, asset_->GetVideoWidth(), asset_->GetVideoHeight(), 0);
 }

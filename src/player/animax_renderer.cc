@@ -126,8 +126,9 @@ void AnimaXRenderer::StartAnimationIfNeeded() {
   if (surface_->Type() == AnimaXBackend::kSoftware &&
       !model_->GetVideos().empty()) {
     // Need to clear it because software didn't ensure the gl environment for
-    // alpha video, which causes null pointer error. todo(lixianruo.cyrus):
-    // Support to render video layer when backend is software.
+    // alpha video, which causes null pointer error.
+    // TODO(lixianruo.cyrus): Support to render video layer when backend is
+    // software.
     auto controller_actor = weak_controller_actor_.lock();
     if (controller_actor) {
       controller_actor->Act([](auto& controller) {

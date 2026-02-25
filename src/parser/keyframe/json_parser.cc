@@ -57,8 +57,6 @@ std::unique_ptr<PointF> JsonParser::JsonToPoint(rapidjson::Value& value,
 
 std::unique_ptr<PointF> JsonParser::JsonNumbersToPoint(rapidjson::Value& value,
                                                        float scale) {
-  // TODO(aiyongbiao): tmp impl p1
-  ANIMAX_LOGI("JsonNumbersToPoint should not be here, pls check!");
   auto v = value.GetFloat();
   return ValueFactory::Make<PointF>(v * scale, v * scale, v * scale);
 }

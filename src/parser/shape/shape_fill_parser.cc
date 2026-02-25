@@ -51,11 +51,7 @@ std::unique_ptr<ShapeFillModel> ShapeFillParser::Parse(
   }
 
   if (opacity == nullptr) {
-    opacity =
-        std::unique_ptr<AnimatableIntegerValue>(new AnimatableIntegerValue());
-    auto& frames = opacity->GetKeyframes();
-    frames.emplace_back(std::unique_ptr<KeyframeModel>(
-        new KeyframeModel(composition, ValueFactory::Make<Integer>(100))));
+    opacity = AnimatableIntegerValue::MakeDefault(composition);
   }
 
   return std::unique_ptr<ShapeFillModel>(

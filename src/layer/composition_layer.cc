@@ -128,8 +128,13 @@ void CompositionLayer::DrawLayerInner(Canvas& canvas, Matrix& matrix,
                      layer_model_.GetPreCompHeight());
   matrix.MapRect(new_clip_rect_);
 
-  // TODO(aiyongbiao): is drawing with offscreen p1
-
+  // By default, translucency and drop-shadow compositing issues are not
+  // resolved. When a group contains 2 or more contents with translucency or
+  // drop-shadow effects, the rendering fidelity may differ from After Effects.
+  // This is intentional, as fixing it requires expensive off-screen rendering.
+  // We generally recommend that designers optimize and adjust at the design
+  // level. If this issue receives significant feedback, we will consider adding
+  // compatibility support.
   bool non_empty_rect = true;
   auto layer_name = layer_model_.GetName().data();
   bool ignore_clip = !clip_to_composition_bounds_ &&
@@ -139,8 +144,7 @@ void CompositionLayer::DrawLayerInner(Canvas& canvas, Matrix& matrix,
   }
 
   auto camera_matrix = GetCameraMatrix(canvas);
-  auto child_alpha =
-      parent_alpha;  // TODO(aiyongbiao): drawing with off screen p1
+  auto child_alpha = parent_alpha;
   for (auto it = layers_.rbegin(); it != layers_.rend(); it++) {
     if (!non_empty_rect) {
       continue;
@@ -222,7 +226,7 @@ void CompositionLayer::ResolveChildKeyPath(
   for (auto& layer : layers_) {
     layer->ResolveKeyPath(path, depth, match_elements, current_partial_path);
   }
-  // todo(aiyongbiao.rick): support camera layer property update.
+  // TODO(aiyongbiao.rick): support camera layer property update.
 }
 
 void CompositionLayer::HitTest(float x, float y,

@@ -3,14 +3,21 @@
 // LICENSE file in the root directory of this source tree.
 package com.lynx.animax.player;
 
+import com.lynx.animax.service.IAnimaXVideoService;
+import com.lynx.animax.util.AnimaXLog;
+
 public class VideoPlayerFactory {
+  private static final String TAG = "VideoPlayerFactory";
+
   public static IVideoPlayer create(long nativePlayer, VideoPlayerConfig config) {
-    switch (config.getPlayerType()) {
-      case CUSTOM:
-        // todo(aiyongbiao.rick): create from IAnimaXVideoService
-      case DEFAULT:
-      default:
-        return new VideoPlayerImpl(nativePlayer, config);
+    if (config.getPlayerType() == VideoPlayerType.CUSTOM) {
+      IAnimaXVideoService service =
+          config.getServiceRegistry().getService(IAnimaXVideoService.class);
+      if (service != null) {
+        return service.createVideoPlayer(nativePlayer, config);
+      }
+      AnimaXLog.e(TAG, "IAnimaXVideoService not found, use default player");
     }
+    return new VideoPlayerImpl(nativePlayer, config);
   }
 }

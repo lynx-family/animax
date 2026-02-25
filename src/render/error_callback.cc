@@ -11,7 +11,6 @@ namespace animax {
 
 void SkityErrorCallbackDefault(skity::GPUError, char const *message,
                                void *userdata) {
-  // TODO(liuyufeng.0716): report error by AnimaXMonitor
   ANIMAX_LOGE("skity error: " << message);
 }
 

@@ -4,6 +4,11 @@
 package com.lynx.animax.listener;
 
 import androidx.annotation.NonNull;
+import com.lynx.animax.base.bridge.ReadableArray;
+import com.lynx.animax.base.bridge.ReadableMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class AnimaXParam {
@@ -91,5 +96,26 @@ public class AnimaXParam {
   protected String getString(String key) {
     Object value = mOriginParams.get(key);
     return value instanceof String ? (String) value : null;
+  }
+
+  /**
+   * Utility method to retrieve a string array from the event parameters.
+   * @param key The key for the desired parameter.
+   * @return The list of strings, or an empty list if not found or type mismatch.
+   */
+  protected List<String> getStringArray(String key) {
+    if (!(mOriginParams instanceof ReadableMap)) {
+      return Collections.emptyList();
+    }
+    try {
+      ReadableArray array = ((ReadableMap) mOriginParams).getArray(key);
+      List<String> result = new ArrayList<>(array.size());
+      for (int i = 0; i < array.size(); i++) {
+        result.add(array.getString(i));
+      }
+      return result;
+    } catch (Exception e) {
+      return Collections.emptyList();
+    }
   }
 }

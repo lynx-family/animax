@@ -357,7 +357,7 @@ void ResourceLoaderHarmony::Load(ResourceRequest request,
 
   switch (request.type) {
     case ResourceRequestType::kLoadRawData: {
-      // todo(aiyongbiao.rick): Construct loader matrix to support file and
+      // TODO(aiyongbiao.rick): Construct loader matrix to support file and
       // asset scene.
       if (request.uri_info.scheme == UriInfo::Scheme::kFile) {
         raw_data_file_loader_->Load(std::move(request), std::move(callback));

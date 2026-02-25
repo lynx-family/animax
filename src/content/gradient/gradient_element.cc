@@ -83,38 +83,27 @@ void GradientElement::Draw(Paint& paint, Matrix& parent_matrix) {
 }
 
 std::unique_ptr<Shader> GradientElement::GetLinearGradient(Matrix& matrix) {
-  //    auto gradient_hash = GetGradientHash();
-  //    auto gradient = linear_gradient_cache_[gradient_hash];
-  //    if (gradient) {
-  //        return gradient;
-  //    }
+  // TODO(aiyongbiao.rick): Support linear_gradient_cache_
   const auto& start_point = start_point_animation_->GetValue();
   const auto& end_point = end_point_animation_->GetValue();
   const auto& gradient_color = color_animation_->GetValue();
 
-  // TODO(aiyongbiao): dynamic colors
+  // TODO(aiyongbiao.rick): Support dynamic colors update.
   auto colors = gradient_color.GetColors();
   auto positions = gradient_color.GetPositions();
   auto gradient =
       Shader::MakeLinear(start_point, end_point, gradient_color.GetSize(),
                          colors, positions, ShaderTileMode::kClamp, matrix);
-
-  //    linear_gradient_cache_[gradient_hash] = gradient; // TODO(aiyongbiao):
-  //    support setLocalMatrix
   return gradient;
 }
 
 std::unique_ptr<Shader> GradientElement::GetRadialGradient(Matrix& matrix) {
-  //    auto gradient_hash = GetGradientHash();
-  //    auto gradient = radial_gradient_cache_[gradient_hash];
-  //    if (gradient) {
-  //        return gradient;
-  //    }
+  // TODO(aiyongbiao.rick): Support radial_gradient_cache_
   const auto& start_point = start_point_animation_->GetValue();
   const auto& end_point = end_point_animation_->GetValue();
   const auto& gradient_color = color_animation_->GetValue();
 
-  // TODO(aiyongbiao): dynamic colors
+  // TODO(aiyongbiao.rick): Support dynamic colors update.
   auto colors = gradient_color.GetColors();
   auto positions = gradient_color.GetPositions();
   auto x0 = start_point.GetX();
@@ -127,8 +116,8 @@ std::unique_ptr<Shader> GradientElement::GetRadialGradient(Matrix& matrix) {
   }
 
   std::unique_ptr<Shader> gradient;
-  constexpr float max_highlight_length =
-      99.9f;  // change to 100 after fixing skity bug
+  // TODO(liyun.rainbow): Change to 100 after fixing skity bug
+  constexpr float max_highlight_length = 99.9f;
   float highlight_length =
       highlight_length_animation_
           ? std::clamp(highlight_length_animation_->GetValue().Get(),
@@ -152,8 +141,6 @@ std::unique_ptr<Shader> GradientElement::GetRadialGradient(Matrix& matrix) {
         PointF(x2, y2, 0), 0, start_point, r, gradient_color.GetSize(), colors,
         positions, ShaderTileMode::kClamp, matrix);
   }
-
-  //    radial_gradient_cache_[gradient_hash] = gradient;
   return gradient;
 }
 
@@ -175,10 +162,6 @@ int32_t GradientElement::GetGradientHash() {
     hash = hash * 31 * color_progress;
   }
   return hash;
-}
-
-int32_t* GradientElement::ApplyDynamicColorIfNeeds(int32_t* colors) {
-  return nullptr;  // TODO(aiyongbiao): p0
 }
 
 }  // namespace animax

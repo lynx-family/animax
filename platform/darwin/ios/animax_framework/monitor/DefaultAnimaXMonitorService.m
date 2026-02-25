@@ -40,7 +40,7 @@
 - (void)reportWithName:(NSString *)eventName
               category:(NSDictionary *)category
                 metric:(NSDictionary *)metric {
-  // todo(aiyongbiao.rick): implement native side report
+  // TODO(aiyongbiao.rick): implement native side report
 }
 
 @end

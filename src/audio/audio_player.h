@@ -18,7 +18,7 @@ class AudioPlayer {
   virtual void Init(const std::string& file_path) {}
   virtual void Resume() {}
   virtual void Pause() {}
-  // todo(lixianruo.cyrus): support speed change.
+  // TODO(lixianruo.cyrus): support speed change.
 
   // Android don't support it until API 23 (android 6)
   // virtual void SetSpeed(double speed){}

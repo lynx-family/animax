@@ -150,8 +150,6 @@ void BaseStrokeContent::SetContents(std::vector<Content*>& contents_before,
 
 void BaseStrokeContent::Draw(Canvas& canvas, Matrix& parent_matrix,
                              int32_t parent_alpha) {
-  // TODO(aiyongbiao): has zero axis p1
-
   auto alpha =
       (parent_alpha / 255.0 * opacity_animation_->GetValue().Get() / 100.0) *
       255.0;

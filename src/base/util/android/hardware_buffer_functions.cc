@@ -34,7 +34,7 @@ int GetSDKVersion() {
 }  // namespace
 
 HardwareBufferFunctions::HardwareBufferFunctions() {
-  // todo(lixianruo.cyrus): Or IsGLHardwareBufferSupported.
+  // TODO(lixianruo.cyrus): Or IsGLHardwareBufferSupported.
   if (IsWrappedBitmapSupported()) {
     void *handle = GetAndroidSoHandle();
     SymbolUtil::LoadSymbol(handle, describe_, "AHardwareBuffer_describe");

@@ -27,6 +27,8 @@
 namespace lynx {
 namespace animax {
 
+class CompositionModel;
+
 class FloatKeyframeAnimation;
 class IntegerKeyframeAnimation;
 class PointKeyframeAnimation;
@@ -44,6 +46,11 @@ class AnimatableFloatValue : public AnimatableValue {
 class AnimatableIntegerValue : public AnimatableValue {
  public:
   std::unique_ptr<IntegerKeyframeAnimation> CreateAnimation();
+
+  // Creates a default AnimatableIntegerValue with a single keyframe of the
+  // given value. Commonly used to provide a default opacity of 100.
+  static std::unique_ptr<AnimatableIntegerValue> MakeDefault(
+      CompositionModel& composition, int32_t value = 100);
 };
 
 class AnimatablePointValue : public AnimatableValue {

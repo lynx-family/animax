@@ -101,6 +101,24 @@ TEST(CompositionAssetLoaderTest, CompositionModelAssetCheck) {
   EXPECT_EQ(0, model2->GetVideos().size());
 }
 
+TEST(CompositionAssetLoaderTest, AnimatableIntegerValueMakeDefault) {
+  auto composition = GetNoAssetCompositionModel();
+  EXPECT_NE(nullptr, composition);
+
+  auto default_opacity = AnimatableIntegerValue::MakeDefault(*composition);
+  EXPECT_NE(nullptr, default_opacity);
+
+  auto& frames = default_opacity->GetKeyframes();
+  EXPECT_EQ(1, frames.size());
+
+  auto& keyframe = frames.front();
+  EXPECT_TRUE(keyframe->IsStatic());
+
+  auto* start_value = keyframe->GetStartValue<Integer>();
+  EXPECT_NE(nullptr, start_value);
+  EXPECT_EQ(100, start_value->Get());
+}
+
 TEST(CompositionAssetLoaderTest, LoadCompositionAssetNoAsset) {
   auto model = GetNoAssetCompositionModel();
   EXPECT_NE(nullptr, model);

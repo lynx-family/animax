@@ -114,7 +114,6 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     }
 
     // Set the application's context into AnimaX instance if is unset.
-    // todo: would be better init on LynxAnimaX.inst().init method
     AnimaX.inst().setAppContextIfUnset(context.getApplicationContext());
 
     IAnimaXResourceFactoryService resourceFactory =

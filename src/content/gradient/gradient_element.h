@@ -50,13 +50,9 @@ class GradientElement : public AnimationListener {
   std::unique_ptr<Shader> GetLinearGradient(Matrix& matrix);
   std::unique_ptr<Shader> GetRadialGradient(Matrix& matrix);
   int32_t GetGradientHash();
-  int32_t* ApplyDynamicColorIfNeeds(int32_t* colors);
 
   GradientType type_;
   bool keep_min_radius_ = true;
-
-  std::unordered_map<int32_t, std::unique_ptr<Shader>> linear_gradient_cache_;
-  std::unordered_map<int32_t, std::unique_ptr<Shader>> radial_gradient_cache_;
 
   std::unique_ptr<GradientKeyframeAnimation> color_animation_;
   std::unique_ptr<PointKeyframeAnimation> start_point_animation_;

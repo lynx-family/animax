@@ -23,6 +23,7 @@ public interface ReadableMap {
   double getDouble(String name, double defaultValue);
   int getInt(String name, int defaultValue);
   long getLong(String name, long defaultValue);
+  ReadableArray getArray(String name);
 
   ReadableType getType(String name);
 

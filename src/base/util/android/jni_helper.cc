@@ -15,10 +15,6 @@ bool CheckException(JNIEnv *env) {
   std::string error_msg;
   bool has_no_exception = lynx::base::android::CheckException(env, error_msg);
   if (!has_no_exception) {
-    // TODO(@aiyongbiao.rick) Currently, just log and print the error message.
-    // Need a delegate mechanism to handle JNI exceptions, which will be
-    // implemented by the integrating party and injected into Krypton,
-    // delegating the handling of JNI Exceptions to the integrating party.
     ANIMAX_LOGE("JNI exception found: " << error_msg);
   }
   return has_no_exception;

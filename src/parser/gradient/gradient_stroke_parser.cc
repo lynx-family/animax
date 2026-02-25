@@ -120,7 +120,9 @@ std::unique_ptr<GradientStrokeModel> GradientStrokeParser::Parse(
     }
   }
 
-  // TODO(aiyongbiao): opacity wr p1
+  if (opacity == nullptr) {
+    opacity = AnimatableIntegerValue::MakeDefault(composition);
+  }
 
   stroke_model->Init(model_name, gradient_type, std::move(color),
                      std::move(opacity), std::move(start_point),

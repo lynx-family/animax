@@ -77,7 +77,9 @@ std::unique_ptr<GradientFillModel> GradientFillParser::Parse(
           AnimatableValueParser::ParseFloat(it->value, composition, false);
     }
   }
-  // TODO(aiyongbiao): opacity p1
+  if (opacity == nullptr) {
+    opacity = AnimatableIntegerValue::MakeDefault(composition);
+  }
   return std::make_unique<GradientFillModel>(
       gradient_type, fill_type, std::move(color), std::move(opacity),
       std::move(start_point), std::move(end_point), std::move(model_name),

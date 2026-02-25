@@ -17,26 +17,20 @@ std::shared_ptr<VideoAsset> VideoAsset::Make(VideoAssetModel model) {
   return std::make_shared<VideoAssetWeb>(std::move(model));
 }
 
+// TODO(aiyongbiao.rick): Implement VideoAssetWeb methods.
+
 VideoAssetWeb::VideoAssetWeb(VideoAssetModel model)
     : VideoAsset(std::move(model)) {}
 
 std::vector<uint8_t> VideoAssetWeb::GetFrameRawData(int32_t frame) const {
-  // todo: impl
   return {};
 }
 
-std::vector<uint8_t> VideoAssetWeb::GetVideoParameterSets() const {
-  // todo: impl
-  return {};
-}
+std::vector<uint8_t> VideoAssetWeb::GetVideoParameterSets() const { return {}; }
 
-int VideoAssetWeb::GetPrevKeyFrame(const int32_t frame) const {
-  // todo: impl
-  return 0;
-}
+int VideoAssetWeb::GetPrevKeyFrame(const int32_t frame) const { return 0; }
 
 bool VideoAssetWeb::PrepareFrameData(const std::string& video_path) {
-  // todo: impl
   ANIMAX_TRACE_EVENT_ASSET_ID(kPrepareAlphaVideoFrameData, Model().id);
   is_valid_ = false;
   frame_count_ = 0;

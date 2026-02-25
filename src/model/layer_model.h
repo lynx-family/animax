@@ -128,7 +128,6 @@ class LayerModel {
   int32_t parent_id_ = -1;
   std::string ref_id_;
 
-  // TODO(aiyongbiao): masks p1
   std::unique_ptr<AnimatableTransformModel> transform_;
   int32_t solid_width_ = 0;
   int32_t solid_height_ = 0;

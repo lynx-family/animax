@@ -39,7 +39,6 @@ std::unique_ptr<LayerModel> LayerParser::Parse(CompositionModel& composition) {
   auto layer_model = LayerModel::Make(composition);
   auto& bounds = composition.GetBounds();
 
-  // TODO(aiyongbiao): add more params to constructor, text, textprop p1
   layer_model->Init(
       std::string("__container"), LayerType::kPreComp, -1, -1, std::string(""),
       0, 0, ValueFactory::Make<Color>(), 0, 0, bounds.GetWidth(),

@@ -33,12 +33,11 @@ class GradientStrokeContent : public BaseStrokeContent {
   void Draw(Canvas& canvas, Matrix& parent_matrix,
             int32_t parent_alpha) override;
 
-  // TODO(aiyongbiao): add value callback p1
  private:
   RectF bounds_rect_;
   std::unique_ptr<GradientElement> gradient_element_;
 
-  // TODO(aiyongbiao): value callback
+  // TODO(aiyongbiao.rick): Support color callback animation.
 };
 
 }  // namespace animax

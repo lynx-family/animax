@@ -122,17 +122,20 @@ void ContentGroup::Draw(Canvas& canvas, Matrix& parent_matrix,
     layer_alpha = parent_alpha;
   }
 
-  // TODO(aiyongbiao): offscreen p1
-
-  auto child_alpha = layer_alpha;  // TODO(aiyongbiao): offscreen alpha
+  // By default, translucency and drop-shadow compositing issues are not
+  // resolved. When a group contains 2 or more contents with translucency or
+  // drop-shadow effects, the rendering fidelity may differ from After Effects.
+  // This is intentional, as fixing it requires expensive off-screen rendering.
+  // We generally recommend that designers optimize and adjust at the design
+  // level. If this issue receives significant feedback, we will consider adding
+  // compatibility support.
+  auto child_alpha = layer_alpha;
   for (auto it = contents_.rbegin(); it != contents_.rend(); it++) {
     auto drawing_content = (*it).get();
     if (drawing_content->SubDrawingType()) {
       drawing_content->Draw(canvas, *matrix_, child_alpha);
     }
   }
-
-  // TODO(aiyongbiao): offscreen render p1
 }
 
 void ContentGroup::ContentsFromModels(

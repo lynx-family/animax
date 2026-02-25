@@ -151,9 +151,7 @@ void BaseLayer::Draw(Canvas& canvas, Matrix& parent_matrix,
     }
 
     if (HasMatteOnThisLayer()) {
-      canvas.SaveLayer(
-          rect_,
-          *matte_paint_);  // TODO(aiyongbiao): save layer missing params p0
+      canvas.SaveLayer(rect_, *matte_paint_);
 
       ClearCanvas(canvas);
       matte_layer_->Draw(canvas, parent_matrix, alpha);
@@ -178,8 +176,7 @@ void BaseLayer::Draw(Canvas& canvas, Matrix& parent_matrix,
 }
 
 void BaseLayer::ApplyMasks(Canvas& canvas, Matrix& matrix) {
-  canvas.SaveLayer(rect_, *dst_in_paint_);  // TODO(aiyongbiao): opt this p1
-  // TODO(aiyongbiao): may need clear canvas p1
+  canvas.SaveLayer(rect_, *dst_in_paint_);
 
   auto& masks = mask_->GetMasks();
   for (auto i = 0; i < masks.size(); i++) {

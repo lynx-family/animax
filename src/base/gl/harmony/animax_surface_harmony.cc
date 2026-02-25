@@ -104,7 +104,7 @@ class AnimaXSurfaceHarmonySW : public AnimaXSurfaceHarmony {
     BufferHandle* buffer_handle =
         OH_NativeWindow_GetBufferHandleFromNative(a_buffer);
 
-    // todo(aiyongbiao.rick): not work for now
+    // TODO(aiyongbiao.rick): not work for now, optimize it later
     void* map_addr =
         mmap(buffer_handle->virAddr, buffer_handle->size,
              PROT_READ | PROT_WRITE, MAP_SHARED, buffer_handle->fd, 0);
@@ -163,8 +163,6 @@ class AnimaXSurfaceHarmonySW : public AnimaXSurfaceHarmony {
   uint8_t* buffer_;
   std::unique_ptr<Surface> draw_surface_;
 };
-
-// todo: software
 
 }  // namespace
 

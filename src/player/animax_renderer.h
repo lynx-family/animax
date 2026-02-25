@@ -68,7 +68,7 @@ class AnimaXRenderer : public MetricsDataSource {
   void Reload();
   void Destroy();
   // Marks the renderer as destroyed. May be called from the main thread.
-  // Synchronously flags destoryed to prevent previously dispatched tasks
+  // Synchronously flags destroyed to prevent previously dispatched tasks
   // from accessing main-thread resources that no longer exist.
   void MarkDestroyed();
   void MarkPlatformSurfaceAsInvalid(bool is_invalid);

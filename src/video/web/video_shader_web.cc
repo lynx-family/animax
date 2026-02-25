@@ -16,30 +16,17 @@ std::unique_ptr<VideoShader> VideoShader::Make() {
   return std::unique_ptr<VideoShaderWeb>(new VideoShaderWeb());
 }
 
-const char *VideoShaderWeb::GetVertexShader() const {
-  // todo: impl
-  return nullptr;
-}
+// TODO(aiyongbiao.rick): Implement VideoShaderWeb methods.
 
-const char *VideoShaderWeb::GetFragmentShader() const {
-  // todo: impl
-  return nullptr;
-}
+const char *VideoShaderWeb::GetVertexShader() const { return nullptr; }
 
-GLint VideoShaderWeb::GetTransformMatrixLocation() {
-  // todo: impl
-  return -1;
-}
+const char *VideoShaderWeb::GetFragmentShader() const { return nullptr; }
 
-GLenum VideoShaderWeb::GetVideoTextureTarget() {
-  // todo: impl
-  return -1;
-}
+GLint VideoShaderWeb::GetTransformMatrixLocation() { return -1; }
 
-GLenum VideoShaderWeb::GetVideoTextureBindingPoint() {
-  // todo: impl
-  return -1;
-}
+GLenum VideoShaderWeb::GetVideoTextureTarget() { return -1; }
+
+GLenum VideoShaderWeb::GetVideoTextureBindingPoint() { return -1; }
 
 }  // namespace animax
 }  // namespace lynx

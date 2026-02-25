@@ -156,6 +156,17 @@ public class JavaOnlyMap extends HashMap<String, Object> implements ReadableMap 
   }
 
   @Override
+  @CalledByNative
+  public ReadableArray getArray(String name) {
+    Object obj = get(name);
+    if (obj instanceof JavaOnlyArray) {
+      return (JavaOnlyArray) obj;
+    }
+    throw new ClassCastException(obj.getClass().getName() + " cannot be cast to "
+        + ReadableArray.class.getName() + ", key: " + name + ", value: " + obj);
+  }
+
+  @Override
   public ReadableType getType(String name) {
     Object value = get(name);
     if (value == null) {
@@ -172,6 +183,8 @@ public class JavaOnlyMap extends HashMap<String, Object> implements ReadableMap 
       return ReadableType.Boolean;
     } else if (value instanceof ReadableMap) {
       return ReadableType.Map;
+    } else if (value instanceof ReadableArray) {
+      return ReadableType.Array;
     } else {
       throw new IllegalArgumentException(
           "Invalid value " + value.toString() + " for key " + name + "contained in JavaOnlyMap");

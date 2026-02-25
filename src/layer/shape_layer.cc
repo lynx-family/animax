@@ -44,7 +44,6 @@ void ShapeLayer::Init() {
 
 void ShapeLayer::DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) {
   if (!content_group_) {
-    // TODO(aiyongbiao): need check at else
     return;
   }
 

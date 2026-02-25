@@ -438,7 +438,7 @@ KeyframeAnimation* TransformKeyframeAnimation::GetAnimationForProperty(
     case LayerPropertyType::kTransformRotationZ:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(z_rotation_, host,
                                                           nullptr);
-      // todo(aiyongbiao.rick): support orientation property update.
+      // TODO(aiyongbiao.rick): support orientation property update.
     default:
       return nullptr;
   }

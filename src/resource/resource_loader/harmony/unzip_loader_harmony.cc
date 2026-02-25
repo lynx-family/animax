@@ -47,7 +47,7 @@ UnzipLoaderHarmony::UnzipLoaderHarmony() {
         auto unzip_path =
             (parent_path / std::string(kUnzipSuffix).append(hash_str)).string();
 
-        // todo(aiyongbiao.rick): In some cases, the unzip utility may succeed
+        // TODO(aiyongbiao.rick): In some cases, the unzip utility may succeed
         // but return false.
         UnzipUtil::UnzipToPath(zip_path, unzip_path);
         callback(UnzipResponse{.path = std::move(unzip_path)}, LoaderError{});

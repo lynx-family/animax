@@ -119,7 +119,7 @@ class PreviewerFragment : Fragment(), OptionsListener, PlaybackListener {
 
         override fun onTapLayers(param: AnimaXTapParam?) {
             if (optionsManager.eventsEnabled) {
-                val layerList = param?.originParams?.get("layerList")?.toString() ?: "No layers"
+                val layerList = param?.layerNames?.joinToString(", ") ?: "No layers"
                 activity?.runOnUiThread {
                     eventsOverlay.updateContent(layerList)
                 }

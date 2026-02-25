@@ -146,7 +146,7 @@ subspec_target("ThirdParty") {
     ":rapidjson",
   ]
 
-  # todo: delete enable_napi after napi was integrated
+  # TODO(aiyongbiao.rick): delete enable_napi after napi was integrated
   if (enable_napi) {
     deps += [ ":NapiBinding" ]
   }

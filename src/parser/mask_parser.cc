@@ -20,8 +20,7 @@ std::unique_ptr<MaskModel> MaskParser::Parse(rapidjson::Value& value,
 
   const auto& object = value.GetObject();
   for (auto it = object.MemberBegin(); it != object.MemberEnd(); it++) {
-    const auto& name =
-        it->name.GetString();  // TODO(aiyongbiao): may not correct p0
+    const auto& name = it->name.GetString();
     if (strcmp(name, "mode") == 0) {
       const auto& mode_name = it->value.GetString();
       if (strcmp(mode_name, "a") == 0) {
