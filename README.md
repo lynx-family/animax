@@ -4,6 +4,7 @@ A high-performance Lottie animation library for cross-platform applications.
 
 ## Content
 - [About AnimaX](#About-AnimaX)
+- [AnimaX Export Plugin (AFX)](#AnimaX-Export-Plugin-AFX)
 - [Documentation](#Documentation)
 - [How to Use AnimaX](#How-to-Use-AnimaX)
 - [How to Contribute](#How-to-Contribute)
@@ -20,6 +21,13 @@ AnimaX is an open-source, high-performance Lottie animation rendering library de
 - **Dynamic Properties.** Modify animation properties at runtime for interactive and personalized experiences.
 - **Alpha Video Support.** Built-in support for video elements within animations.
 
+
+
+## AnimaX Export Plugin (AFX)
+
+AFX is an Adobe After Effects plugin that allows designers to export their designs to Lottie-compatible formats. If there are layers that need to be exported as alpha video layers, you must use AFX to export them. The exported artifacts can be played seamlessly by AnimaX.
+
+For more details, please refer to the [AFX Plugin Documentation](./export/README.md).
 
 ## Documentation
 You shall find documentation for AnimaX on [lynxjs.org](https://lynxjs.org/next/guide/animax/introduction.html).
