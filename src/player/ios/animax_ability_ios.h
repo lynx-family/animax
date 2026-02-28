@@ -6,6 +6,7 @@
 #define ANIMAX_SRC_BRIDGE_IOS_ANIMAX_ABILITY_IOS_H_
 
 #include <AnimaX/AnimaXContext.h>
+
 #include "src/base/log/log.h"
 #include "src/player/animax_ability.h"
 
@@ -14,9 +15,9 @@ namespace animax {
 
 class AnimaXAbilityIOS : public AnimaXAbility {
  public:
-  explicit AnimaXAbilityIOS(AnimaXContext* context) : context_(context) { DCHECK(context); }
-
-  bool EnableOptVtbErrorHandler() const { return [context_ enableOptVtbErrorHandler]; }
+  explicit AnimaXAbilityIOS(AnimaXContext* context) : context_(context) {
+    DCHECK(context);
+  }
 
  private:
   AnimaXContext* context_;

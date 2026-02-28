@@ -13,7 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, strong, nullable) BaseAnimaXAbility *ability;
 @property(nonatomic, assign) BOOL enableMultiThreadAccelerate;
-@property(nonatomic, assign) BOOL enableOptVtbErrorHandler;
 @property(nonatomic, assign) BOOL disablePlaybackOnAssetLoadFailure;
 
 + (instancetype)contextWithDefaultAbility;  // For client usage

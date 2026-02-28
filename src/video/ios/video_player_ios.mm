@@ -35,14 +35,13 @@ class VideoPlayerErrorReporter {
   enum class Error : int32_t {
     kCreateSessionError = 1,
     kCreateSampleBufferError = 2,
-    kCreateBlockBufferError = 3,
+    //    kCreateBlockBufferError = 3,
     kDecodeFrameError = 4,
   };
   VideoPlayerErrorReporter(VideoPlayerIOS *player) : player_(player) {}
 
   void HasDrewOnce();
   void ReportErrorOnce(const std::string &err_msg, const Error err_code);
-  void ReportDecodeFrameError();
   void ReportHasDrawnOnceAfterError();
 
  private:
@@ -50,20 +49,9 @@ class VideoPlayerErrorReporter {
 
   std::unordered_set<Error> error_reported_;
   int32_t error_count_ = 0;
-  bool decode_frame_error_reported = false;
   bool has_drawn_once_after_error_reported = false;
   VideoPlayerIOS *player_ = nullptr;
 };
-
-void VideoPlayerErrorReporter::ReportDecodeFrameError() {
-  if (!decode_frame_error_reported && error_reported_.count(Error::kDecodeFrameError)) {
-    decode_frame_error_reported = true;
-    const auto err_msg = std::string("DecodeFrame error has occurred");
-    if (player_->listener_) {
-      player_->listener_->OnVideoPlayerError(EventError::kVideoPlayerErrorHasOccurred, err_msg);
-    }
-  }
-}
 
 void VideoPlayerErrorReporter::ReportHasDrawnOnceAfterError() {
   if (!has_drawn_once_after_error_reported && !error_reported_.empty()) {
@@ -90,18 +78,16 @@ void VideoPlayerErrorReporter::ReportErrorOnce(const std::string &err_msg, const
   if (player_->listener_) {
     player_->listener_->OnVideoPlayerError(err_msg);
   }
-  ReportDecodeFrameError();
 }
 
 void VideoPlayerErrorReporter::Log(const std::string &err_msg) const {
   ANIMAX_LOGE("Error(" << static_cast<int32_t>(error_count_) << "): " << err_msg);
 }
 
-VideoPlayerIOS::VideoPlayerIOS(bool enable_opt_vtb_decoder_handler)
+VideoPlayerIOS::VideoPlayerIOS()
     : error_reporter_(
           std::unique_ptr<VideoPlayerErrorReporter>(new VideoPlayerErrorReporter(this))),
-      pending_frame_set_(PendingFrameSet::Create()),
-      enable_opt_vtb_decoder_handler_(enable_opt_vtb_decoder_handler) {
+      pending_frame_set_(PendingFrameSet::Create()) {
   transform_.fill(0.f);
   transform_[0] = 1.f;
   transform_[5] = 1.f;
@@ -266,7 +252,6 @@ bool VideoPlayerIOS::DecodeFrameData(CMSampleBufferRef sample_buffer,
     } else {
       error_reporter_->ReportErrorOnce("decode frame error, status: " + std::to_string(status),
                                        VideoPlayerErrorReporter::Error::kDecodeFrameError);
-      ProcessVtbCodecError(status);
     }
     pending_frame_set_->DidDecodeFrameFailDirectly(presentation_index);
 
@@ -334,7 +319,7 @@ void VideoPlayerIOS::ResetSession() {
 
   VTDecompressionOutputCallbackRecord callback{
       .decompressionOutputCallback = AnimaXVideoDecompression,
-      .decompressionOutputRefCon = enable_opt_vtb_decoder_handler_ ? this : nullptr,
+      .decompressionOutputRefCon = nullptr,
   };
   OSStatus status = VTDecompressionSessionCreate(
       kCFAllocatorDefault, asset_->GetFormatDescription(), nullptr, (__bridge CFDictionaryRef) @{
@@ -383,9 +368,8 @@ CMSampleBufferRef VideoPlayerIOS::PrepareFrameData(const FrameInfo &frame_info) 
       kCFAllocatorDefault, asset_->GetFrameData() + frame_info.beg_, frame_size, kCFAllocatorNull,
       nullptr, 0, frame_size, 0, &block_buffer);
   if (kCMBlockBufferNoErr != status || !block_buffer) {
-    error_reporter_->ReportErrorOnce("create block buffer error: " + std::to_string(status) +
-                                         ", block buffer: " + std::to_string(!!block_buffer),
-                                     VideoPlayerErrorReporter::Error::kCreateBlockBufferError);
+    ANIMAX_LOGE("create block buffer error: " + std::to_string(status) +
+                ", block buffer: " + std::to_string(!!block_buffer));
     if (block_buffer) {
       CFRelease(block_buffer);
     }
@@ -410,46 +394,10 @@ CMSampleBufferRef VideoPlayerIOS::PrepareFrameData(const FrameInfo &frame_info) 
   return sample_buffer;
 }
 
-void VideoPlayerIOS::ProcessVtbCodecError(OSStatus status) {
-  std::unique_lock lock(mutex_);
-
-  if (noErr == status || !enable_opt_vtb_decoder_handler_) {
-    return;
-  }
-
-  switch (status) {
-    case kVTInvalidSessionErr:
-      session_valid_ = false;
-      should_restart_ = true;
-      break;
-    case kVTVideoDecoderUnsupportedDataFormatErr:
-    case kVTVideoDecoderNotAvailableNowErr:
-      session_valid_ = false;
-      break;
-    case kVTVideoDecoderBadDataErr:
-    case kVTVideoDecoderMalfunctionErr:
-      session_valid_ = false;
-      if (decoder_retry_count_ < kMaxRetryCount) {
-        decoder_retry_count_++;
-        should_restart_ = true;
-        ANIMAX_LOGE("decode frame error and retry, error :" << std::to_string(status));
-      }
-      break;
-    default:
-      break;
-  }
-}
-
 const std::array<float, 16> &VideoPlayerIOS::GetTransform() { return transform_; }
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(const AnimaXAbility *ability_ptr) {
-  bool enable_opt_vtb_decoder_handler = false;
-  if (ability_ptr) {
-    auto *ios_ability = static_cast<const AnimaXAbilityIOS *>(ability_ptr);
-    enable_opt_vtb_decoder_handler = ios_ability->EnableOptVtbErrorHandler();
-  }
-
-  return std::make_unique<VideoPlayerIOS>(enable_opt_vtb_decoder_handler);
+  return std::make_unique<VideoPlayerIOS>();
   ;
 }
 
@@ -473,11 +421,6 @@ static void AnimaXVideoDecompression(void *decompressionOutputRefCon, void *sour
     ANIMAX_LOGE("AnimaXVideoDecompression error: " << std::to_string(status)
                                                    << ", pending_frame_set alive: "
                                                    << std::to_string(alive));
-
-    auto player = (lynx::animax::VideoPlayerIOS *)decompressionOutputRefCon;
-    if (player) {
-      player->ProcessVtbCodecError(status);
-    }
   }
 
   delete decompression_info_ptr;

@@ -25,13 +25,12 @@ class VideoFrameCache;
 
 class VideoPlayerIOS : public VideoPlayer {
  public:
-  VideoPlayerIOS(bool enable_opt_vtb_decoder_handler);
+  VideoPlayerIOS();
   ~VideoPlayerIOS() override;
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16> &GetTransform() override;
   void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
-  void ProcessVtbCodecError(OSStatus status);
 
  private:
   friend VideoPlayerErrorReporter;
@@ -68,7 +67,6 @@ class VideoPlayerIOS : public VideoPlayer {
 
   static constexpr int32_t kMaxRetryCount = 5;
   int32_t decoder_retry_count_ = 0;
-  bool enable_opt_vtb_decoder_handler_ = false;
   mutable std::shared_mutex mutex_;
 };
 
