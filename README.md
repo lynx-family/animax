@@ -1,6 +1,6 @@
 [![Apache licensed](https://img.shields.io/badge/License-Apache--2.0-cyan?logo=apache)](https://github.com/lynx-family/animax/blob/main/LICENSE)
 
-A high-performance Lottie animation library for cross-platform applications.
+A high-performance animation library for cross-platform applications. It is fully compatible with the Lottie format, and uniquely supports standalone playback of Alpha Videos as well as seamless mixing of Lottie 2D vector layers and Alpha Video layers.
 
 ## Content
 - [About AnimaX](#About-AnimaX)
@@ -12,16 +12,27 @@ A high-performance Lottie animation library for cross-platform applications.
 - [Credits](#Credits)
 - [License](#License)
 
-## About AnimaX
+## Showcase
 
-AnimaX is an open-source, high-performance Lottie animation rendering library designed to deliver smooth and efficient animations across mobile platforms.
-- **Lottie Animation Support.** Render Adobe After Effects animations exported as JSON with full fidelity and flexibility.
-- **Cross-Platform.** Native support for Android and iOS with consistent rendering behavior.
-- **High Performance.** Optimized rendering engine with GPU acceleration and efficient resource management.
-- **Dynamic Properties.** Modify animation properties at runtime for interactive and personalized experiences.
-- **Alpha Video Support.** Built-in support for video elements within animations.
+Here are some stunning animations rendered seamlessly by AnimaX:
 
+| <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/video_demo_1.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/mixed_image_video_demo.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/vector_demo_2.gif" width="250"/> |
+| :----------------------------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| Pure Alpha Video Layer                                       | Mixed With Text And Alpha Video Layer                        | Vector Layer                                                 |
+| <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/vector_demo_3.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/text_demo.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/image_demo_3.gif" width="250"/> |
+| Vector Layer With Effects                                    | Text Layer                                                   | Image Layer                                                  |
 
+## Why AnimaX?
+
+While Lottie popularized vector animations on mobile and web, reproducing complex After Effects features often forces compromises. Designers may have to rely on large image sequences which bloat app sizes, face inconsistent rendering across iOS and Android due to differing platform implementations, or suffer performance drops because traditional Lottie players run heavy parsing and rendering on the main thread.
+
+AnimaX bridges this gap by maintaining full compatibility with the standard After Effects and Lottie workflow while completely re-architecting the runtime engine:
+
+- **Full Lottie Compatibility & Zero-Cost Migration**: AnimaX seamlessly parses and plays existing Lottie JSON files. You can drop AnimaX into your project as a direct replacement for traditional Lottie players with zero code changes required.
+- **Uncompromised Performance**: Unlike traditional Lottie players that compete for main thread resources, AnimaX offloads the most time-consuming graphics rendering entirely to background threads, ensuring silky-smooth frame rates even on low-end devices.
+- **Consistent Cross-Platform Rendering**: Powered by a unified C++ rendering engine [Skity](https://github.com/lynx-family/skity), AnimaX ensures pixel-perfect consistency across platforms without relying on fragmented native APIs.
+- **Breakthrough Engine Capabilities**: Overcome Lottie's inability to render complex AE effects. AnimaX uniquely supports mixing standard 2D vector layers with Alpha Video (transparent video) layers, unlocking limitless visual potential without sacrificing file size or performance.
+- **Advanced Interactivity**: Built-in support for dynamic properties allows you to modify animation attributes at runtime or respond to user interactions seamlessly.
 
 ## AnimaX Export Plugin (AFX)
 

@@ -3,11 +3,4 @@
 // LICENSE file in the root directory of this source tree.
 project.ext {
     appcompat = 'androidx.appcompat:appcompat:1.0.0'
-
-    // AutoService dependency for service registration
-    auto_service = 'com.google.auto.service:auto-service:1.0-rc5'
-
-    // Skity
-    skity_noasan = "com.bytedance.skity:skity:${project.ext.SKITY_VERSION}"
-    skity_asan = "com.bytedance.skity:skity:${project.ext.SKITY_VERSION}-asan"
 }

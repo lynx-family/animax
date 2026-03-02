@@ -196,7 +196,7 @@
 
   // Load animation
   NSBundle *bundle = [NSBundle mainBundle];
-  NSString *jsonPath = [bundle pathForResource:@"animation_1" ofType:@"json"];
+  NSString *jsonPath = [bundle pathForResource:@"simple_shape" ofType:@"json"];
   if (jsonPath) {
     NSURL *url = [NSURL fileURLWithPath:jsonPath];
     [cell.animaxView setSrc:url.absoluteString];

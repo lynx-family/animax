@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		36671F21220DD77AE3114727 /* libPods-AnimaXExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 978FF595DA8F4F97014D122E /* libPods-AnimaXExample.a */; };
+		360B292A8923011EA126DFF8 /* libPods-AnimaXExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2071F91781515F3794D8915B /* libPods-AnimaXExample.a */; };
+		9F1A2B3D4E5FA6B7089CDEF0 /* export_output in Resources */ = {isa = PBXBuildFile; fileRef = 9F1A2B3D4E5FA6B7089CDEF1 /* export_output */; };
 		9F2884B12EE1C55E0048D5F2 /* KeyPathsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F2884AE2EE1C55E0048D5F2 /* KeyPathsViewController.m */; };
+		9F5F68362F55C76600B928C6 /* dp.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F5F68352F55C76600B928C6 /* dp.json */; };
+		9F5F68382F55C76600B928C7 /* simple_shape.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F5F68372F55C76600B928C7 /* simple_shape.json */; };
 		9F691C582E30C3DE00C80187 /* PropertyUpdateController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F691C562E30C3DE00C80187 /* PropertyUpdateController.m */; };
 		9F691C592E30C3DE00C80187 /* PropertyCallbackController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F691C572E30C3DE00C80187 /* PropertyCallbackController.m */; };
-		9F69833A2F39E5AC00F16A30 /* data.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F6983392F39E5AC00F16A30 /* data.json */; };
 		9F69833D2F3A08F100F16A30 /* SideMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F69833C2F3A08F100F16A30 /* SideMenuViewController.m */; };
-		9F8BD6952D3685FD00378D42 /* animation_1.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F8BD6942D3685FD00378D42 /* animation_1.json */; };
 		9FCC95E82D15CD4800E1C72A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FCC95E72D15CD4800E1C72A /* VideoToolbox.framework */; };
 		9FCC95EA2D15CD4E00E1C72A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FCC95E92D15CD4E00E1C72A /* AVFoundation.framework */; };
 		9FCC95EC2D15CD5400E1C72A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FCC95EB2D15CD5400E1C72A /* CoreMedia.framework */; };
@@ -31,19 +32,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1895D557B11DC3FE3B1E6948 /* Pods-AnimaXExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.debug.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.debug.xcconfig"; sourceTree = "<group>"; };
-		35ED481ADDDBB331F37A47E3 /* Pods-AnimaXExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.release.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.release.xcconfig"; sourceTree = "<group>"; };
-		978FF595DA8F4F97014D122E /* libPods-AnimaXExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AnimaXExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		013884E5297B2449052E2D95 /* Pods-AnimaXExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.debug.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.debug.xcconfig"; sourceTree = "<group>"; };
+		2071F91781515F3794D8915B /* libPods-AnimaXExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AnimaXExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		867BD44B1CFC5D8A99CB4659 /* Pods-AnimaXExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.release.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.release.xcconfig"; sourceTree = "<group>"; };
+		9F1A2B3D4E5FA6B7089CDEF1 /* export_output */ = {isa = PBXFileReference; lastKnownFileType = folder; name = export_output; path = Assets/export_output; sourceTree = "<group>"; };
 		9F2884AD2EE1C55E0048D5F2 /* KeyPathsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyPathsViewController.h; sourceTree = "<group>"; };
 		9F2884AE2EE1C55E0048D5F2 /* KeyPathsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyPathsViewController.m; sourceTree = "<group>"; };
+		9F5F68352F55C76600B928C6 /* dp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = dp.json; path = Assets/dp.json; sourceTree = "<group>"; };
+		9F5F68372F55C76600B928C7 /* simple_shape.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = simple_shape.json; path = Assets/simple_shape.json; sourceTree = "<group>"; };
 		9F691C542E30C3DE00C80187 /* PropertyUpdateController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PropertyUpdateController.h; sourceTree = "<group>"; };
 		9F691C552E30C3DE00C80187 /* PropertyCallbackController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PropertyCallbackController.h; sourceTree = "<group>"; };
 		9F691C562E30C3DE00C80187 /* PropertyUpdateController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PropertyUpdateController.m; sourceTree = "<group>"; };
 		9F691C572E30C3DE00C80187 /* PropertyCallbackController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PropertyCallbackController.m; sourceTree = "<group>"; };
-		9F6983392F39E5AC00F16A30 /* data.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = data.json; sourceTree = "<group>"; };
 		9F69833B2F3A08F100F16A30 /* SideMenuViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SideMenuViewController.h; sourceTree = "<group>"; };
 		9F69833C2F3A08F100F16A30 /* SideMenuViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SideMenuViewController.m; sourceTree = "<group>"; };
-		9F8BD6942D3685FD00378D42 /* animation_1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = animation_1.json; path = Assets/animation_1.json; sourceTree = "<group>"; };
 		9FCC95E72D15CD4800E1C72A /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		9FCC95E92D15CD4E00E1C72A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		9FCC95EB2D15CD5400E1C72A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -77,7 +79,7 @@
 				9FCC95EC2D15CD5400E1C72A /* CoreMedia.framework in Frameworks */,
 				9FCC95EA2D15CD4E00E1C72A /* AVFoundation.framework in Frameworks */,
 				9FCC95E82D15CD4800E1C72A /* VideoToolbox.framework in Frameworks */,
-				36671F21220DD77AE3114727 /* libPods-AnimaXExample.a in Frameworks */,
+				360B292A8923011EA126DFF8 /* libPods-AnimaXExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,7 +94,7 @@
 				9FCC95EB2D15CD5400E1C72A /* CoreMedia.framework */,
 				9FCC95E92D15CD4E00E1C72A /* AVFoundation.framework */,
 				9FCC95E72D15CD4800E1C72A /* VideoToolbox.framework */,
-				978FF595DA8F4F97014D122E /* libPods-AnimaXExample.a */,
+				2071F91781515F3794D8915B /* libPods-AnimaXExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -132,8 +134,9 @@
 		9FDE9D412D15BEC000763E5D = {
 			isa = PBXGroup;
 			children = (
-				9F6983392F39E5AC00F16A30 /* data.json */,
-				9F8BD6942D3685FD00378D42 /* animation_1.json */,
+				9F5F68352F55C76600B928C6 /* dp.json */,
+				9F5F68372F55C76600B928C7 /* simple_shape.json */,
+				9F1A2B3D4E5FA6B7089CDEF1 /* export_output */,
 				9FDE9D4C2D15BEC000763E5D /* AnimaXExample */,
 				9FDE9D4B2D15BEC000763E5D /* Products */,
 				AAB685425C953026528E4B1A /* Pods */,
@@ -166,8 +169,8 @@
 		AAB685425C953026528E4B1A /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				1895D557B11DC3FE3B1E6948 /* Pods-AnimaXExample.debug.xcconfig */,
-				35ED481ADDDBB331F37A47E3 /* Pods-AnimaXExample.release.xcconfig */,
+				013884E5297B2449052E2D95 /* Pods-AnimaXExample.debug.xcconfig */,
+				867BD44B1CFC5D8A99CB4659 /* Pods-AnimaXExample.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -179,7 +182,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9FDE9D632D15BEC100763E5D /* Build configuration list for PBXNativeTarget "AnimaXExample" */;
 			buildPhases = (
-				FE4AD5BAEC9CF923B655EB79 /* [CP] Check Pods Manifest.lock */,
+				681359AD33897F4AB2DE4838 /* [CP] Check Pods Manifest.lock */,
 				9FDE9D462D15BEC000763E5D /* Sources */,
 				9FDE9D472D15BEC000763E5D /* Frameworks */,
 				9FDE9D482D15BEC000763E5D /* Resources */,
@@ -230,10 +233,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F8BD6952D3685FD00378D42 /* animation_1.json in Resources */,
+				9F1A2B3D4E5FA6B7089CDEF0 /* export_output in Resources */,
 				9FDE9D5D2D15BEC100763E5D /* LaunchScreen.storyboard in Resources */,
+				9F5F68362F55C76600B928C6 /* dp.json in Resources */,
+				9F5F68382F55C76600B928C7 /* simple_shape.json in Resources */,
 				9FDE9D5A2D15BEC100763E5D /* Assets.xcassets in Resources */,
-				9F69833A2F39E5AC00F16A30 /* data.json in Resources */,
 				9FDE9D582D15BEC000763E5D /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -241,7 +245,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		FE4AD5BAEC9CF923B655EB79 /* [CP] Check Pods Manifest.lock */ = {
+		681359AD33897F4AB2DE4838 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -423,7 +427,7 @@
 		};
 		9FDE9D642D15BEC100763E5D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1895D557B11DC3FE3B1E6948 /* Pods-AnimaXExample.debug.xcconfig */;
+			baseConfigurationReference = 013884E5297B2449052E2D95 /* Pods-AnimaXExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -443,7 +447,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bytedance.AnimaXExample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lynx.AnimaXExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -452,7 +456,7 @@
 		};
 		9FDE9D652D15BEC100763E5D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 35ED481ADDDBB331F37A47E3 /* Pods-AnimaXExample.release.xcconfig */;
+			baseConfigurationReference = 867BD44B1CFC5D8A99CB4659 /* Pods-AnimaXExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -472,7 +476,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bytedance.AnimaXExample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lynx.AnimaXExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";

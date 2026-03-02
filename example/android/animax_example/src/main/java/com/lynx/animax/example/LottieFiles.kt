@@ -7,9 +7,9 @@ import android.content.Context
 import com.lynx.animax.util.UriUtil
 
 object LottieFiles {
-    val SimpleShape = "simple_shape.json"
+    val SimpleShape = "sample/simple_shape.json"
     val SimpleShapeSchema = UriUtil.fromLocalAsset(SimpleShape)
-    val DynamicProperty = "dp.json"
+    val DynamicProperty = "sample/dp.json"
     val DynamicPropertySchema = UriUtil.fromLocalAsset(DynamicProperty)
 
     private const val DOWNLOAD_DIR = ""

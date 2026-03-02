@@ -37,7 +37,7 @@
 @property(nonatomic, assign) BOOL isSeeking;
 
 // Playlist
-@property(nonatomic, strong) NSArray<NSString *> *animationFiles;
+@property(nonatomic, strong) NSArray<NSURL *> *animationFiles;
 @property(nonatomic, assign) NSInteger currentAnimationIndex;
 
 @end
@@ -57,16 +57,32 @@
   self.isLooping = YES;
   self.isPlaying = YES;
 
-  // Load all json files from bundle
-  NSMutableArray *files = [NSMutableArray array];
+  // Load all json files from bundle root
+  NSMutableArray<NSURL *> *fileUrls = [NSMutableArray array];
   NSArray *urls = [[NSBundle mainBundle] URLsForResourcesWithExtension:@"json" subdirectory:nil];
-  for (NSURL *url in urls) {
-    NSString *fileName = [[url lastPathComponent] stringByDeletingPathExtension];
-    [files addObject:fileName];
+  if (urls) {
+    [fileUrls addObjectsFromArray:urls];
   }
+
+  // Discover files in export_output
+  NSString *downloadPath =
+      [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"export_output"];
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSDirectoryEnumerator *enumerator = [fm enumeratorAtPath:downloadPath];
+  NSString *file;
+  while ((file = [enumerator nextObject])) {
+    if ([file.pathExtension isEqualToString:@"json"] ||
+        [file.pathExtension isEqualToString:@"zip"]) {
+      NSURL *fileUrl = [NSURL fileURLWithPath:[downloadPath stringByAppendingPathComponent:file]];
+      [fileUrls addObject:fileUrl];
+    }
+  }
+
   // Sort files for consistent order
-  [files sortUsingSelector:@selector(localizedStandardCompare:)];
-  self.animationFiles = files;
+  [fileUrls sortUsingComparator:^NSComparisonResult(NSURL *url1, NSURL *url2) {
+    return [url1.lastPathComponent localizedStandardCompare:url2.lastPathComponent];
+  }];
+  self.animationFiles = fileUrls;
 
   self.currentAnimationIndex = 0;
 
@@ -304,19 +320,14 @@
     self.fileNameLabel.text = @"";
     return;
   }
-  NSString *fileName = self.animationFiles[self.currentAnimationIndex];
-  self.fileNameLabel.text = [NSString stringWithFormat:@"%@.json", fileName];
+  NSURL *url = self.animationFiles[self.currentAnimationIndex];
+  self.fileNameLabel.text = url.lastPathComponent;
 
-  NSBundle *bundle = [NSBundle mainBundle];
-  NSString *jsonPath = [bundle pathForResource:fileName ofType:@"json"];
-  if (jsonPath) {
-    NSURL *url = [NSURL fileURLWithPath:jsonPath];
-    [self.animaXView setSrc:url.absoluteString];
-    [self.animaXView setLoop:self.isLooping];
-    [self.animaXView setAutoplay:YES];
-    self.isPlaying = YES;
-    [self updatePlayPauseButtonState];
-  }
+  [self.animaXView setSrc:url.absoluteString];
+  [self.animaXView setLoop:self.isLooping];
+  [self.animaXView setAutoplay:YES];
+  self.isPlaying = YES;
+  [self updatePlayPauseButtonState];
 }
 
 #pragma mark - Actions
@@ -485,8 +496,8 @@
                                    preferredStyle:UIAlertControllerStyleActionSheet];
 
   for (int i = 0; i < self.animationFiles.count; i++) {
-    NSString *name = self.animationFiles[i];
-    [alert addAction:[UIAlertAction actionWithTitle:name
+    NSURL *url = self.animationFiles[i];
+    [alert addAction:[UIAlertAction actionWithTitle:url.lastPathComponent
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_Nonnull action) {
                                               self.currentAnimationIndex = i;

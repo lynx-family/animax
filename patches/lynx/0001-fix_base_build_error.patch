@@ -1,9 +1,9 @@
 From 67dd24995c0b1c69517cd6324c19e2f13e52a9a0 Mon Sep 17 00:00:00 2001
-From: "aiyongbiao.rick" <aiyongbiao.rick@bytedance.com>
+From: "RickAi" <RickAi@users.noreply.github.com>
 Date: Fri, 12 Dec 2025 16:52:30 +0800
 Subject: [PATCH] fix lynxbase is not able to build without lynx
 
-Signed-off-by: aiyongbiao.rick <aiyongbiao.rick@bytedance.com>
+Signed-off-by: RickAi <RickAi@users.noreply.github.com>
 ---
  base/platform/android/BUILD.gn                |  6 +-
  base/platform/android/build.gradle            |  2 +-

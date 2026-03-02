@@ -3,7 +3,7 @@ From: Lynx <anonymous@example.com>
 Date: Fri, 12 Dec 2025 15:02:37 +0800
 Subject: [PATCH] Fix shorten64to32 and unused variable error
 
-Signed-off-by: aiyongbiao.rick <aiyongbiao.rick@bytedance.com>
+Signed-off-by: RickAi <RickAi@users.noreply.github.com>
 ---
  platform/android/lynxtextra/BUILD.gn     |  6 ++-
  platform/android/lynxtextra/build.gradle | 56 +++++++++++++++++++++---

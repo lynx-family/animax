@@ -1,6 +1,8 @@
 /build
 /buildtools
 
+export/output/*
+
 # third_party
 platform/android/gradle/wrapper/gradle-6.7.1-all.zip
 example/android/gradle/wrapper/gradle-6.7.1-all.zip

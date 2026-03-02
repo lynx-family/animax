@@ -13,8 +13,6 @@ AFX is an Adobe After Effects plugin that streamlines the entire motion design w
    - [Preview & Testing](#preview--testing)
    - [Quality Assurance](#quality-assurance)
 5. [Troubleshooting & FAQ](#troubleshooting--faq)
-6. [Advanced Topics](#advanced-topics)
-7. [Resources & References](#resources--references)
 
 ## Overview
 

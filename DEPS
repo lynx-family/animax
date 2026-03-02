@@ -181,4 +181,10 @@ deps = {
         "ignore_in_git": True,
     },
     # lynx-base DEPS END
+    "export/output": {
+        "type": "http",
+        "url": "https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/example/export_output.zip",
+        "ignore_in_git": True,
+        "decompress": True,
+    },
 }
