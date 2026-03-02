@@ -117,5 +117,10 @@ animax_source_set("resource") {
       "resource_loader/harmony/unzip_util.cc",
       "resource_loader/harmony/unzip_util.h",
     ]
+  } else if (is_win) {
+    sources += [
+      "resource_loader/harmony/unzip_util.cc",
+      "resource_loader/harmony/unzip_util.h",
+    ]
   }
 }

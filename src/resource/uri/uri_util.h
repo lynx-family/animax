@@ -13,6 +13,12 @@
 namespace lynx {
 namespace animax {
 
+#ifdef OS_WIN
+static constexpr const char* kPathSeparator = "\\";
+#else
+static constexpr const char* kPathSeparator = "/";
+#endif
+
 class FontAsset;
 class ImageAsset;
 class VideoAsset;

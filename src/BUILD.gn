@@ -27,6 +27,10 @@ source_set("animax") {
     ":animax_core",
     "render:skity",
   ]
+
+  if (is_win) {
+    deps += [ "//third_party/zlib" ]
+  }
 }
 
 config("animax_private_config") {

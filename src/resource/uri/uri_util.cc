@@ -74,10 +74,17 @@ UriInfo::Scheme ParseUriScheme(const std::string& uri) {
     return UriInfo::Scheme::kHttp;
   } else if (lynx::base::BeginsWith(uri, kAsset.base)) {
     return UriInfo::Scheme::kAsset;
-  } else if (lynx::base::BeginsWith(uri, "/") ||
+  } else if (lynx::base::BeginsWith(uri, kPathSeparator) ||
              lynx::base::BeginsWith(uri, kFile.base)) {
     return UriInfo::Scheme::kFile;
   }
+
+#if OS_WIN
+  if (uri.size() >= 3 && std::isalpha(uri[0]) && uri[1] == ':' &&
+      (uri[2] == '\\' || uri[2] == '/')) {
+    return UriInfo::Scheme::kFile;
+  }
+#endif
 
   return UriInfo::Scheme::kUnknown;
 }
@@ -104,7 +111,7 @@ UriInfo::ContentType ParseUriMainResourceContentType(const std::string& uri) {
 }
 
 std::string ParseUriMainResourceBaseUri(const std::string& uri) {
-  if (auto pos = uri.rfind("/"); std::string::npos != pos) {
+  if (auto pos = uri.rfind(kPathSeparator); std::string::npos != pos) {
     return uri.substr(0, pos + 1);
   } else {
     return std::string{};
@@ -141,13 +148,13 @@ std::string NormalizePath(const std::string& path) {
   auto head = std::string{};
 
   if (path_starts_with_slash) {
-    head = "/";
+    head = kPathSeparator;
   } else if (first_is_scheme) {
     head = first;
     split_result.erase(split_result.begin());
   }
 
-  auto result = head + base::Join(split_result, "/");
+  auto result = head + base::Join(split_result, kPathSeparator);
   return result;
 }
 }  // namespace
@@ -159,7 +166,7 @@ std::string ConcatFilePaths(const std::string& base_path,
   } else if (relative_path.empty()) {
     return base_path;
   } else {
-    return NormalizePath(base_path + "/" + relative_path);
+    return NormalizePath(base_path + kPathSeparator + relative_path);
   }
 }
 
@@ -321,8 +328,14 @@ UriInfo UriInfoFromAudioAsset(const MainResourceUriInfo& main_uri_info,
 }
 
 bool IsRegularFileExists(const std::string& filePath) {
+#ifdef OS_WIN
+  DWORD attr = ::GetFileAttributesA(filePath.c_str());
+  return (attr != INVALID_FILE_ATTRIBUTES) &&
+         ((attr & FILE_ATTRIBUTE_DIRECTORY) == 0);
+#else
   struct stat sb;
   return (stat(filePath.c_str(), &sb) == 0) && S_ISREG(sb.st_mode);
+#endif
 }
 
 std::string FindFirstMatchingFile(const std::string& directoryPath,

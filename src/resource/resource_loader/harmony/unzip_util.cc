@@ -4,10 +4,17 @@
 
 #include "src/resource/resource_loader/harmony/unzip_util.h"
 
-#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#ifdef OS_WIN
+#include <filesystem>
+
+#include "third_party/zlib/zlib.h"
+#else
+#include <dirent.h>
 #include <zlib.h>
+#endif
 
 #include <cstring>
 #include <fstream>
@@ -15,6 +22,7 @@
 #include <string>
 
 #include "src/base/log/log.h"
+#include "src/resource/uri/uri_util.h"
 
 namespace lynx {
 namespace animax {
@@ -40,11 +48,20 @@ bool UnzipUtil::CreateDirectories(const std::string& path) {
   if (stat(path.c_str(), &info) != 0) {
     if (errno == ENOENT) {
       // Directory does not exist, try to create parent directory recursively
-      size_t pos = path.find_last_of('/');
+      size_t pos = path.find_last_of(kPathSeparator);
       if (pos == std::string::npos) return false;
       std::string parent = path.substr(0, pos);
       if (!CreateDirectories(parent)) return false;
 
+#ifdef OS_WIN
+      std::error_code ec;
+      bool created = std::filesystem::create_directories(path, ec);
+      if (ec) {
+        ANIMAX_LOGE("Failed to create directory: " << path << " Error: "
+                                                   << ec.message());
+        return false;
+      }
+#else
       // Now create the current directory
       if (mkdir(path.c_str(), 0755) != 0) {
         if (errno != EEXIST) {  // Ignore "file exists" error since it could
@@ -54,6 +71,7 @@ bool UnzipUtil::CreateDirectories(const std::string& path) {
           return false;
         }
       }
+#endif
     } else {
       ANIMAX_LOGE("Failed to check existence of directory: "
                   << path << " Error: " << strerror(errno));
@@ -126,7 +144,11 @@ bool UnzipUtil::UnzipToPath(const std::string& src_path,
 
   size_t offset = 0;
   while (offset < zip_data.size()) {
-    // Read local file header
+    // PK\x01\x02: All files have been read
+    if (memcmp(&zip_data[offset], "PK\x01\x02", 4) == 0) {
+      return true;
+    }
+    // PK\x03\x04: Local file header signature - start of a new file
     if (memcmp(&zip_data[offset], "PK\x03\x04", 4) != 0) {
       ANIMAX_LOGE("Invalid local file header signature");
       return false;
@@ -156,6 +178,11 @@ bool UnzipUtil::UnzipToPath(const std::string& src_path,
 
     // Read file name
     std::string file_name(zip_data.data() + offset, file_name_length);
+
+#ifdef OS_WIN
+    std::replace(file_name.begin(), file_name.end(), '/', '\\');
+#endif
+
     offset += file_name_length;
 
     ANIMAX_LOGI("Try to unzip file_name:"
@@ -165,8 +192,8 @@ bool UnzipUtil::UnzipToPath(const std::string& src_path,
     // Skip extra field
     offset += extra_field_length;
 
-    std::string full_path = target_path + "/" + file_name;
-    if (file_name.back() == '/') {
+    std::string full_path = target_path + kPathSeparator + file_name;
+    if (file_name.back() == kPathSeparator[0]) {
       // Directory
       if (!CreateDirectories(full_path)) {
         ANIMAX_LOGE("Cannot create directory: " << full_path);
@@ -176,7 +203,8 @@ bool UnzipUtil::UnzipToPath(const std::string& src_path,
     }
 
     // Create directory for file
-    if (!CreateDirectories(full_path.substr(0, full_path.find_last_of('/')))) {
+    if (!CreateDirectories(
+            full_path.substr(0, full_path.find_last_of(kPathSeparator)))) {
       ANIMAX_LOGE("Cannot create directory for file: " << full_path);
       return false;
     }

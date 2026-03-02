@@ -17,6 +17,7 @@
 #include "src/resource/asset/audio_asset_model.h"
 #include "src/resource/asset/video_asset.h"
 #include "src/resource/asset/video_asset_model.h"
+#include "src/resource/uri/uri_util.h"
 #include "third_party/rapidjson/document.h"
 
 namespace {
@@ -187,7 +188,8 @@ std::shared_ptr<lynx::animax::CompositionModel> ParseAsset(
   for (auto it = object.MemberBegin(); it != object.MemberEnd(); ++it) {
     const auto &key = it->name.GetString();
     if (strcmp(key, "path") == 0) {
-      video_path = unzip_path + "/" + it->value.GetString();
+      video_path =
+          unzip_path + lynx::animax::kPathSeparator + it->value.GetString();
     } else if (strcmp(key, "aFrame") == 0) {
       if (!ParseRect(alpha_frame, it->value)) {
         return nullptr;
