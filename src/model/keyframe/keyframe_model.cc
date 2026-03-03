@@ -140,10 +140,8 @@ float KeyframeModel::GetEndProgress() {
     if (end_frame_ == Float::kMin) {
       end_progress_ = 1;
     } else {
-      float start_progress = GetStartProgress();
-      float frames = end_frame_ - start_frame_;
-      float progress = frames / composition_->GetDurationFrames();
-      end_progress_ = start_progress + progress;
+      end_progress_ = (end_frame_ - composition_->GetStartFrame()) /
+                      composition_->GetDurationFrames();
     }
   }
   return end_progress_;
