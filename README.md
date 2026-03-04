@@ -1,9 +1,15 @@
 [![Apache licensed](https://img.shields.io/badge/License-Apache--2.0-cyan?logo=apache)](https://github.com/lynx-family/animax/blob/main/LICENSE)
 
-A high-performance animation library for cross-platform applications. It is fully compatible with the Lottie format, and uniquely supports standalone playback of Alpha Videos as well as seamless mixing of Lottie 2D vector layers and Alpha Video layers.
+A high-performance, cross-platform animation library built entirely in C++ with a self-rendering engine. It is fully compatible with the Lottie format, and uniquely supports standalone playback of Alpha Videos as well as seamless mixing of Lottie 2D vector layers and Alpha Video layers.
+
+By leveraging a unified C++ self-rendering architecture, AnimaX achieves pixel-perfect consistency across iOS and Android, avoids platform-specific rendering discrepancies, and delivers superior performance by offloading graphics work off the main thread. 
+
+Its unique ability to mix 2D vector layers with Alpha Video layers empowers designers to deliver visually rich, complex animations that were previously impossible with Lottie alone
 
 ## Content
-- [About AnimaX](#About-AnimaX)
+- [Showcase](#Showcase)
+- [Glossary](#Glossary)
+- [Why AnimaX?](#Why-AnimaX)
 - [AnimaX Export Plugin (AFX)](#AnimaX-Export-Plugin-AFX)
 - [Documentation](#Documentation)
 - [How to Use AnimaX](#How-to-Use-AnimaX)
@@ -14,13 +20,81 @@ A high-performance animation library for cross-platform applications. It is full
 
 ## Showcase
 
-Here are some stunning animations rendered seamlessly by AnimaX:
+Here are some stunning animations rendered seamlessly by AnimaX. Click on the images below to watch the demo videos 🎬
 
-| <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/video_demo_1.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/mixed_image_video_demo.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/vector_demo_2.gif" width="250"/> |
-| :----------------------------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| Pure Alpha Video Layer                                       | Mixed With Text And Alpha Video Layer                        | Vector Layer                                                 |
-| <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/vector_demo_3.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/text_demo.gif" width="250"/> | <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase/image_demo_3.gif" width="250"/> |
-| Vector Layer With Effects                                    | Text Layer                                                   | Image Layer                                                  |
+> **Tip**: Use **⌘ + Click** (macOS) or **Ctrl + Click** (Windows/Linux) to open videos in a new tab without leaving this page.
+
+<table>
+  <tr>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_1.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_1.png" width="250"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/image_demo_3.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/image_demo_3.png" width="250"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_2.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_2.png" width="250"/>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>Alpha Video Layer</td>
+    <td>Image Layer</td>
+    <td>Alpha Video And Image Layer</td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/vector_demo_3.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/vector_demo_3.png" width="250"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/text_demo.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/text_demo.png" width="250"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/mixed_image_video_demo.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/mixed_image_video_demo.png" width="250"/>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>Vector Layer With Effects</td>
+    <td>Text Layer</td>
+    <td>Text And Image Layer</td>
+  </tr>
+</table>
+
+## Glossary
+
+<table>
+  <tr>
+    <th>Term</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><b>Lottie</b></td>
+    <td>An open-source animation file format originally developed by Airbnb. Designers create animations in Adobe After Effects and export them as lightweight JSON files, which can then be rendered natively on mobile and web platforms. AnimaX is fully compatible with the Lottie format.</td>
+  </tr>
+  <tr>
+    <td><b>Alpha Video</b></td>
+    <td>A video format that includes an alpha (transparency) channel, allowing parts of the video to be transparent. This enables overlaying video content on top of other UI elements with smooth edges. AnimaX supports standalone playback of Alpha Videos, making it possible to render complex visual effects that are difficult or impossible to achieve with vector animations alone.</td>
+  </tr>
+  <tr>
+    <td><b>Video Layer Mixing</b></td>
+    <td>The ability to combine standard 2D vector/image layers with Alpha Video layers within a single animation. This is a breakthrough feature of AnimaX — designers can mix traditional Lottie elements (shapes, text, images) with transparent video layers to create richer, more expressive animations. Key benefits: (1) drastically reduces asset size compared to full image sequences; (2) enables complex visual effects (particle, 3D, live-action) that pure vector layers cannot reproduce; (3) maintains smooth performance since the C++ engine renders all layer types in a unified pipeline on a background thread.</td>
+  </tr>
+  <tr>
+    <td><b>Dynamic Properties</b></td>
+    <td>Runtime-modifiable animation attributes that allow developers to change colors, text content, positions, and other properties of an animation programmatically. This enables interactive animations that respond to user input, data changes, or application state without requiring new animation assets.</td>
+  </tr>
+</table>
 
 ## Why AnimaX?
 
@@ -49,8 +123,18 @@ AnimaX apps may target iOS 10 and Android 5.0 (API 21) or newer.
 
 We recommend using macOS as the development operating system. Windows and Linux are not yet verified or guaranteed, so you may encounter problems. If you need assistance, please file an issue, and we will be more than happy to help you address it.
 
-### Getting Started guide
-Getting started guide [here](https://lynxjs.org/next/guide/animax/start/quick_start.html)
+### Getting Started
+
+#### Native Client Examples
+
+You can run AnimaX as a standalone native library. Refer to the platform-specific example guides below:
+
+- **Android**: [Android Example Guide](./example/android/README.md)
+- **iOS**: [iOS Example Guide](./example/darwin/ios/README.md)
+
+#### Integrate as a Lynx Component
+
+AnimaX can also be used as a component within the [Lynx](https://lynxjs.org) framework. For integration details, please refer to the [Lynx AnimaX Quick Start Guide](https://lynxjs.org/next/guide/animax/start/quick_start.html).
 
 ## How to Contribute
 ### [Code of Conduct][coc]

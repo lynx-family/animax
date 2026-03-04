@@ -5,14 +5,26 @@ AFX is an Adobe After Effects plugin that streamlines the entire motion design w
 ## Table of Contents
 
 1. [Overview](#overview)
+   - [Key Features](#key-features)
+   - [System Requirements](#system-requirements)
 2. [Installation & Setup](#installation--setup)
+   - [Downloading AFX](#downloading-afx)
+   - [Installing with ZXP Installer](#installing-with-zxp-installer)
+   - [First-time Setup](#first-time-setup)
 3. [Core Concepts & Terminology](#core-concepts--terminology)
+   - [AnimaX Framework](#animax-framework)
+   - [Alpha Video](#alpha-video)
+   - [Rendering & Output Artifacts](#rendering--output-artifacts)
+   - [Compatibility Checking](#compatibility-checking)
 4. [AnimaX Export Module](#animax-export-module)
    - [Getting Started](#getting-started)
    - [Rendering Configuration](#rendering-configuration)
    - [Preview & Testing](#preview--testing)
    - [Quality Assurance](#quality-assurance)
 5. [Troubleshooting & FAQ](#troubleshooting--faq)
+   - [Common Issues](#common-issues)
+   - [Platform-specific Issues](#platform-specific-issues)
+   - [Performance Optimization](#performance-optimization)
 
 ## Overview
 
@@ -40,7 +52,7 @@ AFX is a professional-grade Adobe After Effects plugin designed to enhance motio
 
 Download the latest version of AFX from:  
 
-[com.bytedance.afx.0.0.2-beta.17-f9df48e-out.zxp](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/com.bytedance.afx.0.0.2-beta.17-f9df48e-out.zxp)
+[com.bytedance.afx.0.0.2-beta.17-16e562b-out.zxp](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/com.bytedance.afx.0.0.2-beta.17-16e562b-out.zxp)
 
 ### Installing with ZXP Installer
 
@@ -55,7 +67,7 @@ AFX is distributed as a ZXP (ZIP Extension Package) file. Follow these steps to 
    - Drag and drop the AFX ZXP file into the installer window
    - Follow the on-screen instructions to complete installation
 
-![ZXP Installation](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/13.png)
+![ZXP Installation](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/13.png)
 
 ### First-time Setup
 
@@ -67,13 +79,11 @@ AFX consists of two separate panels that must be opened in sequence:
    - Provides image compression, Lynx preview, artifact validation
    - Must be opened first and docked to the AE interface
 
-   ![Panel Setup](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/15.png)
-   
 2. **AFX Panel** (User Interface):
    - Main interface for export configuration and controls
    - Opens after the server panel is running
 
-![Panel Setup](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/17.png)
+![Panel Setup](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/15.png)
 
 #### Initial Configuration
 
@@ -94,8 +104,8 @@ A video format where transparency information is stored alongside RGB data, typi
 
 ### Rendering & Output Artifacts
 
-- **Rendering**: The process of exporting selected compositions to AnimaX format (data.json + images + videos)
-- **Output Artifacts**: The exported files including data.json, images, and videos
+- **Rendering**: The process of exporting selected compositions to AnimaX format (data.json + images_en + videos)
+- **Output Artifacts**: The exported files including data.json, images_en, and videos
 - **Artifact Validation**: Built-in checks for image formats, dimensions, memory usage, and compliance with project specifications
 
 ### Compatibility Checking
@@ -132,14 +142,14 @@ The AnimaX Export module is the primary interface for exporting AE compositions.
 Access image configuration by clicking the gear icon next to the composition name:
 
 - **Image Compression**: Set quality limits (default 0-80%). Lower values reduce file size but may affect quality
-- **Embed Images as Base64**: Convert images to base64 and embed directly in JSON file
+- **Embed images_en as Base64**: Convert images_en to base64 and embed directly in JSON file
   - Note: Base64 encoding increases file size significantly
 
 #### Original Filename Export
 
 **Important**: It is highly recommended that filenames contain only ASCII characters (letters, numbers, and underscores) to avoid potential cross-platform compatibility issues. Any unsupported characters will be automatically replaced with underscores.
 
-![Filename Export](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/23.png)
+![Filename Export](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/23.png)
 
 #### Video Settings (Alpha Video)
 
@@ -154,7 +164,7 @@ When compositions contain sub-compositions or unsupported AE features, you can e
    - Original Lottie resources are moved to `animaxLottie` directory
    - Note: This changes the output directory structure
 
-![Alpha Video Configuration](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/24.png)
+![Alpha Video Configuration](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/24.png)
 
 #### Font Configuration
 
@@ -175,7 +185,7 @@ When compositions contain text layers without "Convert to Shapes" enabled, you'l
 
 AFX provides real-time preview of exported animations directly within the plugin interface:
 
-![Live Preview](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/104.png)
+![Live Preview](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/104.png)
 
 **Current Limitations**:
 - Alpha Video preview not yet supported (planned for Q2 2026)
@@ -189,7 +199,7 @@ After rendering, preview animations on mobile devices:
 2. Scan the generated QR code with the Douyin or Tiktok App
 3. View animations in the Animax Lynx Viewer interface
 
-![Lynx Preview](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/42.png)
+![Lynx Preview](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/42.png)
 
 #### CDN Upload for Public Preview
 
@@ -199,7 +209,7 @@ Upload artifacts to CDN for public access:
 2. Record the data.json URL for sharing
 3. Use public apps for scanning (no internal test versions required)
 
-![CDN Upload](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/45.png)
+![CDN Upload](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/45.png)
 
 ### Quality Assurance
 
@@ -212,7 +222,7 @@ Validate compositions before export:
 3. Review warnings and errors
 4. Use "Locate" buttons to highlight problematic layers
 
-![Compatibility Check](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/35.png)
+![Compatibility Check](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/35.png)
 
 #### Artifact Validation
 
@@ -220,11 +230,11 @@ Validate exported files for compliance:
 
 - **Image Validation**: Memory size, file size, blank space ratio, PNG8 format
 
-![Artifact Validation](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/37.png)
+![Artifact Validation](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/37.png)
 
 - **Video Validation**: Dimensions, frame rate, codec compatibility
 
-![Artifact Validation](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images/38.png)
+![Artifact Validation](https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/export/images_en/38.png)
 
 - **Double-click filenames** to open files in Finder/Explorer
 
@@ -233,7 +243,7 @@ Validate exported files for compliance:
 ##### Image Optimization
 
 - Automatic PNG compression using `imagemin`
-- Conversion of opaque PNG images to JPG format
+- Conversion of opaque PNG images_en to JPG format
 - Quality adjustment with real-time preview
 
 ##### Video Optimization

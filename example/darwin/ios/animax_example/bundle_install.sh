@@ -54,8 +54,8 @@ python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root "$gn_root_dir" 
 python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root "$gn_root_dir" $enable_trace_param --target //third_party/lynx/platform/darwin/ios/lynx_service_api:LynxServiceAPI_podspec
 popd
 
-arch -x86_64 bundle install -V --path="$root_dir"
+bundle install -V --path="$root_dir"
 
-arch -x86_64 bundle exec pod deintegrate "$project_name"
+bundle exec pod deintegrate "$project_name"
 rm -rf Podfile.lock
-arch -x86_64 bundle exec $command
+bundle exec $command

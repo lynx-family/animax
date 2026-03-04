@@ -115,7 +115,10 @@ If you have installed the Android SDK before, please set ANDROID_HOME to the ins
 
     ```bash
     export ANDROID_HOME=<path-to-android-sdk>
+    export ANDROID_NDK=<path-to-android-ndk>
     ```
+
+    > **Note**: The NDK version must be **21.1.6352462**. Other versions may cause build failures.
 
 - Windows
 
@@ -135,7 +138,7 @@ To install pyenv:
 
 Install python with version higher or equal to 3.9 using pyenv:  
 
-```
+```bash
 pyenv install 3.9 # or higher
 pyenv global 3.9 # or higher
 ```
@@ -146,7 +149,7 @@ pyenv global 3.9 # or higher
 
 Pull the code from the Github repository.
 
-```
+```bash
 git clone https://github.com/lynx-family/animax.git
 ```
 
@@ -170,7 +173,7 @@ After getting the project repository, execute the following commands in the root
     tools\hab.ps1 sync .
     ```
 
-    > notice: tools/envsetup.ps1 will add ninja to user scope's Path environment variable for building.
+> notice: tools/envsetup.ps1 will add ninja to user scope's Path environment variable for building.
 
 ### Install the Android Components
 
@@ -206,10 +209,10 @@ Enter the `example/android` directory from the project root directory and execut
 
 ```
 cd example/android
-./gradlew :AnimaXExample:assembleDebug --no-daemon
+./gradlew :AnimaXExample:assembleNoasanDebug
 ```
 
-This command will generate AnimaXExample-debug.apk in the `example/android/AnimaXExample/build/outputs/apk/debug/` folder.
+This command will generate AnimaXExample-noasan-debug.apk in the `example/android/animax_example/build/outputs/apk/noasan/debug/` folder.
 
 > notice: If you have just setup the development environment in the same terminal session, some environment variables might not take effect. Please restart a terminal session (or VS Code, Android Studio) then retry.
 
@@ -218,7 +221,7 @@ This command will generate AnimaXExample-debug.apk in the `example/android/Anima
 You can install the above .apk file on your device using the adb command.
 
 ```
-adb install example/android/AnimaXExample/build/outputs/apk/debug/AnimaXExample-debug.apk
+adb install example/android/animax_example/build/outputs/apk/noasan/debug/AnimaXExample-noasan-debug.apk
 ```
 
 If the adb command is not found, you can add the path to the adb command in the environment configuration file on Linux or MacOS (~/.zshrc or ~/.bash_profile or ~/.bashrc):
