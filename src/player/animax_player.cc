@@ -447,12 +447,13 @@ void AnimaXPlayer::SetObjectPosition(const ObjectPosition object_position) {
   });
 }
 
-void AnimaXPlayer::SetVolume(double volume) {
-  renderer_actor_->Act(
-      [volume](auto& controller) { controller->SetVolume(volume); });
+void AnimaXPlayer::SetMuted(bool mute) {
+  renderer_actor_->Act([mute](auto& renderer) { renderer->SetMuted(mute); });
 }
-void AnimaXPlayer::SetMute(bool mute) {
-  renderer_actor_->Act([mute](auto& controller) { controller->SetMute(mute); });
+
+void AnimaXPlayer::SetEnableAudio(bool enable) {
+  loader_actor_->Act(
+      [enable](auto& loader) { loader->SetEnableAudio(enable); });
 }
 
 void AnimaXPlayer::SetMaxFrameRate(const double max_frame_rate) {

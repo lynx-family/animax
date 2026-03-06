@@ -42,6 +42,7 @@ struct CompositionModelRequest {
   UriInfo uri_info{};
   std::string json_str;
   float scale = 1.0f;
+  bool enable_audio = false;
 };
 
 /**

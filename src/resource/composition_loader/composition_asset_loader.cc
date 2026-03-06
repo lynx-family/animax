@@ -117,7 +117,7 @@ class ResourceResponseConsumer : public AssetVisitor {
 
   void Visit(AudioAsset& asset) override {
     if (!error_) {
-      asset.SetLocalPath(resource_response_.payload.path);
+      asset.LoadLocal(resource_response_.payload.path);
     }
     asset_response_ = {
         .type = ResourceType::kAudio,
@@ -135,7 +135,7 @@ class ResourceResponseConsumer : public AssetVisitor {
 std::vector<std::shared_ptr<Asset>> MergeCompositionModelAssets(
     const std::shared_ptr<CompositionModel>& model) {
   const auto size = model->GetFonts().size() + model->GetImages().size() +
-                    model->GetVideos().size();
+                    model->GetVideos().size() + model->GetAudios().size();
   auto assets = std::vector<std::shared_ptr<Asset>>{};
   assets.reserve(size);
   for (auto& [id, asset] : model->GetFonts()) {

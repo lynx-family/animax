@@ -74,7 +74,7 @@ ZipAlphaVideoModelLoader::Ptr ZipAlphaVideoModelLoader::MakePipeline(
             auto model = AlphaPlayerAssetParser::Parse(
                 task.response.base_uri,
                 static_cast<const char*>(raw_data->Data()), raw_data->Length(),
-                task.request.scale);
+                task.request.scale, task.request.enable_audio);
             CompositionModelLoader::OnResourceLoaderTraceEvent(
                 weak_model_loader, TraceEventType::kParseCompositionEnd,
                 config_json_file_path_str);

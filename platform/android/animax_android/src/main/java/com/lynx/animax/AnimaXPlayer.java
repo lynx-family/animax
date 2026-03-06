@@ -296,6 +296,22 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   }
 
   @Override
+  public void setMuted(boolean mute) {
+    if (!checkNativeReady()) {
+      return;
+    }
+    nativeSetMuted(mPtr, mute);
+  }
+
+  @Override
+  public void setEnableAudio(boolean enable) {
+    if (!checkNativeReady()) {
+      return;
+    }
+    nativeSetEnableAudio(mPtr, enable);
+  }
+
+  @Override
   public void setSrc(String src) {
     if (!checkNativeReady()) {
       return;
@@ -739,6 +755,10 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   private native void nativeOnHide(long player, long state);
 
   private native void nativeSetDynamicResource(long player, boolean dynamic);
+
+  private native void nativeSetMuted(long player, boolean mute);
+
+  private native void nativeSetEnableAudio(long player, boolean mute);
 
   private native void nativeCancel(long player);
 

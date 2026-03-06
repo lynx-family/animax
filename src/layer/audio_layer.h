@@ -25,7 +25,8 @@ class AudioLayer : public BaseLayer {
 
  private:
   double GetCurrentProgress();
-  AudioAsset* audio_asset_ = nullptr;
+  void AttachToAssetOnce();
+  std::shared_ptr<AudioAsset> audio_asset_;
   std::shared_ptr<AudioController> audio_controller_;
 };
 

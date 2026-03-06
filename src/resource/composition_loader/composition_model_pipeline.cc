@@ -121,6 +121,7 @@ void CompositionModelPipeline::LoadCompositionModelFromURI(
                           .content_type = ParseUriMainResourceContentType(uri),
                           .uri = std::move(uri)},
       .scale = scale,
+      .enable_audio = enable_audio_,
   };
   LoadCompositionModel(std::move(request), std::move(callback));
 }
@@ -131,6 +132,7 @@ void CompositionModelPipeline::LoadCompositionModelFromJSONString(
   auto request = CompositionModelRequest{
       .json_str = std::move(json_str),
       .scale = scale,
+      .enable_audio = enable_audio_,
   };
   LoadCompositionModel(std::move(request), std::move(callback));
 }
@@ -166,6 +168,10 @@ void CompositionModelPipeline::SetImageFolder(std::string image_folder) {
 void CompositionModelPipeline::SetHasDynamicResource(
     bool has_dynamic_resource) {
   has_dynamic_resource_ = has_dynamic_resource;
+}
+
+void CompositionModelPipeline::SetEnableAudio(bool enable) {
+  enable_audio_ = enable;
 }
 
 void CompositionModelPipeline::OnResourceLoaderTraceEvent(

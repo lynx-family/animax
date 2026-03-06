@@ -119,8 +119,10 @@ void AddAudioAsset(const std::shared_ptr<lynx::animax::CompositionModel> &model,
       .file_name = std::string{},
   };
   std::shared_ptr<lynx::animax::AudioAsset> audio =
-      std::make_shared<lynx::animax::AudioAsset>(std::move(audio_asset_model));
-  audio->SetLocalPath(video_path);
+      lynx::animax::AudioAsset::Make(std::move(audio_asset_model));
+  if (audio) {
+    audio->LoadLocal(video_path);
+  }
   model->GetAudios()[kAudioId] = audio;
 }
 
@@ -173,7 +175,7 @@ void AddAudioLayer(const std::shared_ptr<lynx::animax::CompositionModel> &model,
 
 std::shared_ptr<lynx::animax::CompositionModel> ParseAsset(
     const std::string &unzip_path, const float scale,
-    const rapidjson::Value &value) {
+    const rapidjson::Value &value, bool enable_audio) {
   if (!value.IsObject()) {
     return nullptr;
   }
@@ -209,15 +211,17 @@ std::shared_ptr<lynx::animax::CompositionModel> ParseAsset(
   if (!video || !video->IsValid()) {
     return nullptr;
   }
-  // add audios
-  AddAudioAsset(model, video_path);
-  auto audio = model->GetAudios()[kAudioId];
-  if (!audio) {
-    return nullptr;
-  }
-  // add layers
   AddAlphaVideoLayer(model, video->GetFrameCount());
-  AddAudioLayer(model, video->GetFrameCount());
+  if (enable_audio) {
+    // add audios
+    AddAudioAsset(model, video_path);
+    //    TODO(lixianruo.cyrus): Audio is not implemented at all platforms yet,
+    //    empty audio is expected. auto audio = model->GetAudios()[kAudioId]; if
+    //    (!audio || !audio->IsValid()) {
+    //      return nullptr;
+    //    }
+    AddAudioLayer(model, video->GetFrameCount());
+  }
 
   model->Init(
       std::unique_ptr<lynx::animax::RectF>(new lynx::animax::RectF(
@@ -233,7 +237,7 @@ namespace animax {
 
 std::shared_ptr<CompositionModel> AlphaPlayerAssetParser::Parse(
     const std::string &unzip_path, const char *config, size_t length,
-    float scale) {
+    float scale, bool enable_audio) {
   rapidjson::Document document;
   document.Parse(config, length);
   if (document.HasParseError()) {
@@ -248,7 +252,7 @@ std::shared_ptr<CompositionModel> AlphaPlayerAssetParser::Parse(
   for (auto it = document.MemberBegin(); it != document.MemberEnd(); ++it) {
     const auto &key = it->name.GetString();
     if (strcmp(key, "portrait") == 0) {
-      return ParseAsset(unzip_path, scale, it->value);
+      return ParseAsset(unzip_path, scale, it->value, enable_audio);
     }
   }
   ANIMAX_LOGE("there isn't 'portrait' in config.json");

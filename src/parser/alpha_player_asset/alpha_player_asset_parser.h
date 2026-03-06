@@ -15,7 +15,8 @@ class AlphaPlayerAssetParser final {
  public:
   static std::shared_ptr<CompositionModel> Parse(const std::string &unzip_path,
                                                  const char *config,
-                                                 size_t length, float scale);
+                                                 size_t length, float scale,
+                                                 bool enable_audio = false);
 };
 
 }  // namespace animax

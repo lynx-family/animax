@@ -27,6 +27,15 @@ class MockVideoAsset : public VideoAsset {
   int32_t GetFrameCount() const override { return 1; }
 };
 
+class MockAudioAsset : public AudioAsset {
+ public:
+  using AudioAsset::AudioAsset;
+  static std::shared_ptr<AudioAsset> Make(AudioAssetModel model) {
+    return std::shared_ptr<AudioAsset>(new MockAudioAsset(std::move(model)));
+  }
+  void LoadLocal(const std::string& file_path) override { is_valid_ = true; }
+};
+
 TEST(ResourcePropertyAssetUpdatorTest, NullParamsTest) {
   auto request = ResourceUpdateRequest::Make(
       ResourcePropertyType::kUnknown, "font1",
@@ -90,14 +99,15 @@ TEST(ResourcePropertyAssetUpdatorTest, NullParamsTest) {
   // Test AudioAsset
   {
     auto model = AudioAssetModel{"audio1", "/audios", "test.mp3"};
-    AudioAsset asset = AudioAsset(std::move(model));
-
-    asset.AcceptVisitor(updator);
+    auto asset = MockAudioAsset::Make(std::move(model));
+    asset->LoadLocal("some file");
+    asset->AcceptVisitor(updator);
 
     EXPECT_FALSE(context.GetResponse().IsSuccess());
-    EXPECT_EQ(asset.Model().file_name, "test.mp3");
-    EXPECT_EQ(asset.Model().dir_name, "/audios");
-    EXPECT_EQ(asset.Model().id, "audio1");
+    EXPECT_TRUE(asset->IsValid());
+    EXPECT_EQ(asset->Model().file_name, "test.mp3");
+    EXPECT_EQ(asset->Model().dir_name, "/audios");
+    EXPECT_EQ(asset->Model().id, "audio1");
   }
 }
 
@@ -327,7 +337,7 @@ TEST(ResourcePropertyAssetUpdatorTest, VideoAssetUpdate) {
 }
 
 TEST(ResourcePropertyAssetUpdatorTest, AudioAssetUpdate) {
-  auto asset = AudioAsset({"audio1", "/audios", "test.mp3"});
+  auto asset = MockAudioAsset::Make({"audio1", "/audios", "test.mp3"});
 
   // Test each possible ResourcePropertyType for VideoAsset
   {
@@ -338,10 +348,10 @@ TEST(ResourcePropertyAssetUpdatorTest, AudioAssetUpdate) {
     PropertyUpdateContext context(std::move(request));
 
     ResourcePropertyAssetUpdator updator(context);
-    asset.AcceptVisitor(updator);
+    asset->AcceptVisitor(updator);
 
     EXPECT_TRUE(context.GetResponse().IsSuccess());
-    EXPECT_EQ(asset.Model().dir_name, "/new_audios");
+    EXPECT_EQ(asset->Model().dir_name, "/new_audios");
   }
 
   {
@@ -352,10 +362,10 @@ TEST(ResourcePropertyAssetUpdatorTest, AudioAssetUpdate) {
     PropertyUpdateContext context(std::move(request));
 
     ResourcePropertyAssetUpdator updator(context);
-    asset.AcceptVisitor(updator);
+    asset->AcceptVisitor(updator);
 
     EXPECT_TRUE(context.GetResponse().IsSuccess());
-    EXPECT_EQ(asset.Model().file_name, "new_test.mp3");
+    EXPECT_EQ(asset->Model().file_name, "new_test.mp3");
   }
 
   // Test an unsupported property type for VideoAsset
@@ -367,7 +377,7 @@ TEST(ResourcePropertyAssetUpdatorTest, AudioAssetUpdate) {
     PropertyUpdateContext context(std::move(request));
 
     ResourcePropertyAssetUpdator updator(context);
-    asset.AcceptVisitor(updator);
+    asset->AcceptVisitor(updator);
 
     EXPECT_FALSE(context.GetResponse().IsSuccess());
     EXPECT_EQ(context.GetResponse().GetErrorType(),
@@ -375,5 +385,5 @@ TEST(ResourcePropertyAssetUpdatorTest, AudioAssetUpdate) {
   }
 
   // Verify that other properties of the VideoAsset remain unchanged
-  EXPECT_EQ(asset.Model().id, "audio1");
+  EXPECT_EQ(asset->Model().id, "audio1");
 }

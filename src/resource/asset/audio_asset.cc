@@ -13,11 +13,7 @@ const AudioAssetModel &AudioAsset::Model() const { return model_; }
 
 void AudioAsset::ResetModel(AudioAssetModel info) { model_ = std::move(info); }
 
-void AudioAsset::SetLocalPath(const std::string &file_path) {
-  file_path_ = file_path;
-}
-
-const std::string &AudioAsset::GetLocalPath() { return file_path_; }
+bool AudioAsset::IsValid() { return is_valid_; }
 
 }  // namespace animax
 }  // namespace lynx

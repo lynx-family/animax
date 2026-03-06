@@ -16,7 +16,7 @@ AudioLayer::AudioLayer(LayerModel &layer, CompositionModel &composition)
   auto id = layer_model_.GetRefId();
   std::shared_ptr<AudioAsset> audio = composition.GetAudios()[id];
   if (audio) {
-    audio_asset_ = audio.get();
+    audio_asset_ = audio;
   } else {
     ANIMAX_LOGE("audio " << id << " is null");
   }
@@ -24,12 +24,11 @@ AudioLayer::AudioLayer(LayerModel &layer, CompositionModel &composition)
 
 void AudioLayer::Init() {
   BaseLayer::Init();
-  if (!audio_asset_) {
+  audio_controller_ = std::make_shared<AudioController>();
+  if (!audio_controller_) {
     return;
   }
-  audio_controller_ =
-      std::make_shared<AudioController>(std::make_unique<AudioPlayer>());
-  audio_controller_->Init(audio_asset_->GetLocalPath());
+  AttachToAssetOnce();
   auto context = weak_context_.lock();
   if (!context) {
     return;
@@ -46,6 +45,7 @@ void AudioLayer::DrawLayer(Canvas &canvas, Matrix &matrix, int32_t alpha) {
   if (!audio_controller_) {
     return;
   }
+  AttachToAssetOnce();
   audio_controller_->OnProgress(GetCurrentProgress());
 }
 
@@ -60,6 +60,28 @@ double AudioLayer::GetCurrentProgress() {
     return 1;
   }
   return progress;
+}
+
+void AudioLayer::AttachToAssetOnce() {
+  if (audio_controller_->HasAudioPlayer()) {
+    return;
+  }
+  if (!audio_asset_ || !audio_asset_->IsValid()) {
+    return;
+  }
+  auto context = weak_context_.lock();
+  if (!context) {
+    return;
+  }
+  auto ability = context->weak_ability.lock();
+  if (!ability) {
+    return;
+  }
+  auto player = AudioPlayer::MakeAudioPlayer(ability, audio_asset_);
+  if (!player) {
+    return;
+  }
+  audio_controller_->SetAudioPlayer(std::move(player));
 }
 
 }  // namespace animax

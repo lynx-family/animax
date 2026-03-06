@@ -11,4 +11,14 @@ audio_shared_sources = [
 
 animax_source_set("audio") {
   sources = audio_shared_sources
+  if (is_android) {
+    sources += [
+      "android/audio_asset_android.cc",
+      "android/audio_asset_android.h",
+      "android/audio_player_android.cc",
+      "android/audio_player_android.h",
+    ]
+  } else {
+    sources += [ "default_audio_player.cc" ]
+  }
 }

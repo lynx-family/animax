@@ -90,12 +90,11 @@ class AnimaXRenderer : public MetricsDataSource {
 
   // audio
   void AddAudioController(std::weak_ptr<AudioController> controller);
-  void SetVolume(double volume);
-  void SetMute(bool mute);
   void OnResume();
   void OnPause();
   void OnEnd();
   void OnCancel();
+  void SetMuted(bool mute);
 
  private:
   std::unique_ptr<AnimaXSurface> ReleaseSurface();
@@ -146,7 +145,6 @@ class AnimaXRenderer : public MetricsDataSource {
   // audio
   std::vector<std::weak_ptr<AudioController>> audio_controllers_;
   bool mute_ = false;
-  double volume_ = 0;
 };
 
 }  // namespace animax

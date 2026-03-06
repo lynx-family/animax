@@ -47,3 +47,5 @@ jni_class_configs:
     - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXUnzipLoader.java
     - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoader.java
     - java: platform/android/animax_android/src/main/java/com/lynx/animax/ui/AnimaXContext.java
+    - java: platform/android/animax_android/src/main/java/com/lynx/animax/audio/AudioAsset.java
+    - java: platform/android/animax_android/src/main/java/com/lynx/animax/audio/AudioPlayer.java

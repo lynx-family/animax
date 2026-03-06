@@ -33,10 +33,12 @@ class CompositionParser {
    * @param str_data
    * @param length
    * @param scale
+   * @param enable_audio
    * @return
    */
   static std::shared_ptr<CompositionModel> Parse(const char* str_data,
-                                                 size_t length, float scale);
+                                                 size_t length, float scale,
+                                                 bool enable_audio = false);
 
  private:
   /**

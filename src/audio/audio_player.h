@@ -11,27 +11,31 @@
 namespace lynx {
 namespace animax {
 class AudioAsset;
+class AnimaXAbility;
 class AudioPlayer {
  public:
-  // Make this class pure virtual in next commit.
+  static constexpr double kSyncThreshold = 50.f;
   virtual ~AudioPlayer() = default;
-  virtual void Init(const std::string& file_path) {}
-  virtual void Resume() {}
-  virtual void Pause() {}
-  // TODO(lixianruo.cyrus): support speed change.
+  virtual void Resume() = 0;
+  virtual void Pause() = 0;
+  virtual void SeekToProgress(double progress) = 0;
 
-  // Android don't support it until API 23 (android 6)
-  // virtual void SetSpeed(double speed){}
-  virtual void SetVolume(double volume) {}
-  virtual void SeekToProgress(double progress) {}
   bool NeedSync(double progress) {
-    auto layer_current_time = progress * GetDuration();
-    return std::abs(GetCurrentTime() - layer_current_time) > 1;
+    auto duration = GetDuration();
+    auto animation_time = progress * duration;
+    auto diff = std::abs(GetAudioTime() - animation_time);
+    auto diff_in_loop = std::abs(duration - diff);
+    return diff > kSyncThreshold && diff_in_loop > kSyncThreshold;
   }
 
+  static std::unique_ptr<AudioPlayer> MakeAudioPlayer(
+      std::shared_ptr<AnimaXAbility> ability,
+      std::shared_ptr<AudioAsset> asset);
+
  protected:
-  virtual double GetDuration() { return 0; }
-  virtual double GetCurrentTime() { return 0; }
+  AudioPlayer() {}
+  virtual double GetDuration() = 0;
+  virtual double GetAudioTime() = 0;
 };
 
 }  // namespace animax

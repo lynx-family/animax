@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_RESOURCE_ASSET_AUDIO_ASSET_H_
 #define ANIMAX_SRC_RESOURCE_ASSET_AUDIO_ASSET_H_
 
+#include <atomic>
 #include <memory>
 
 #include "src/audio/audio_controller.h"
@@ -20,6 +21,8 @@ class AudioAsset : public BaseAsset<AudioAsset> {
    * Constructs a default AudioAsset.
    */
   AudioAsset() = default;
+
+  static std::shared_ptr<AudioAsset> Make(AudioAssetModel model);
 
   /**
    * Constructs a AudioAsset with a specified AudioAssetModel.
@@ -46,18 +49,16 @@ class AudioAsset : public BaseAsset<AudioAsset> {
   void ResetModel(AudioAssetModel info);
 
   /**
-   * Sets the local path of audio.
+   * Loads the audio from a local path.
    *
    * @param file_path Local file system path to the audio file.
    */
-  void SetLocalPath(const std::string& file_path);
+  virtual void LoadLocal(const std::string& file_path) = 0;
 
-  /**
-   * Gets the local path of audio.
-   *
-   * @return the local file system path to the audio file.
-   */
-  const std::string& GetLocalPath();
+  bool IsValid();
+
+ protected:
+  std::atomic<bool> is_valid_ = false;
 
  private:
   std::string file_path_;

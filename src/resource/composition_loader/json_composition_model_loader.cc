@@ -125,7 +125,7 @@ JSONCompositionModelLoader::Ptr JSONCompositionModelLoader::MakePipeline(
                                        task.main_uri);
             auto model = CompositionParser::Parse(
                 static_cast<const char*>(raw_data->Data()), raw_data->Length(),
-                task.request.scale);
+                task.request.scale, task.request.enable_audio);
             OnResourceLoaderTraceEvent(
                 weak_self, TraceEventType::kParseCompositionEnd, task.main_uri);
             if (!model) {
