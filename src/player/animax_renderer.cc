@@ -477,7 +477,10 @@ MetricsMap AnimaXRenderer::ExportMetricsMap() const {
 
 void AnimaXRenderer::AddAudioController(
     std::weak_ptr<AudioController> controller) {
-  audio_controllers_.push_back(controller);
+  if (auto audio_controller = controller.lock()) {
+    audio_controller->SetMuted(mute_);
+    audio_controllers_.push_back(controller);
+  }
 }
 
 void AnimaXRenderer::OnResume() {
@@ -500,32 +503,12 @@ void AnimaXRenderer::OnEnd() { OnPause(); }
 
 void AnimaXRenderer::OnCancel() { OnPause(); }
 
-void AnimaXRenderer::SetVolume(double volume) {
-  if (volume < 0) {
-    volume_ = 0;
-  } else if (volume > 1) {
-    volume_ = 1;
-  } else {
-    volume_ = volume;
-  }
-  if (!mute_) {
-    for (auto weak_controller : audio_controllers_) {
-      if (auto controller = weak_controller.lock()) {
-        controller->SetVolume(volume_);
-      }
-    }
-  }
-}
-
-void AnimaXRenderer::SetMute(bool mute) {
-  if (mute_ == mute) {
-    return;
-  }
+void AnimaXRenderer::SetMuted(bool mute) {
   mute_ = mute;
-  if (mute_) {
-    SetVolume(0);
-  } else {
-    SetVolume(volume_);
+  for (auto weak_controller : audio_controllers_) {
+    if (auto controller = weak_controller.lock()) {
+      controller->SetMuted(mute_);
+    }
   }
 }
 

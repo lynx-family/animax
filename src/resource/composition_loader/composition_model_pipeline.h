@@ -100,6 +100,15 @@ class CompositionModelPipeline
   void SetHasDynamicResource(bool has_dynamic_resource);
 
   /**
+   * Configures whether the pipeline will handle audio assets in a composition
+   * model. This function is thread-safe. If true, then the pipeline will skip
+   * parsing audio assets.
+   *
+   * @param enable True to handle audio assets in this pipeline.
+   */
+  void SetEnableAudio(bool enable);
+
+  /**
    * Initiates the loading of a composition model from a specified URI.
    *
    * @param uri The URI from which to load the composition model.
@@ -153,6 +162,7 @@ class CompositionModelPipeline
                             AssetLoader::CallbackType callback);
 
   bool has_dynamic_resource_{false};
+  bool enable_audio_{false};
   MainResourceUriInfo main_uri_info_{};
   ModelLoader::Ptr json_composition_model_loader_{};
   ModelLoader::Ptr zip_composition_model_loader_{};

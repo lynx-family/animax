@@ -371,6 +371,20 @@ static void SetDynamicResource(JNIEnv* env, jobject jcaller, jlong player,
   (*player_ptr)->SetDynamicResource(dynamic);
 }
 
+static void SetMuted(JNIEnv* env, jobject jcaller, jlong player,
+                     jboolean mute) {
+  auto* player_ptr =
+      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  (*player_ptr)->SetMuted(mute);
+}
+
+static void SetEnableAudio(JNIEnv* env, jobject jcaller, jlong player,
+                           jboolean enable) {
+  auto* player_ptr =
+      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  (*player_ptr)->SetEnableAudio(enable);
+}
+
 static void SetStartFrame(JNIEnv* env, jobject jcaller, jlong player,
                           jint startFrame) {
   auto* player_ptr =

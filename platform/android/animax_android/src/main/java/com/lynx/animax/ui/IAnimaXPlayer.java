@@ -114,6 +114,21 @@ public interface IAnimaXPlayer {
    */
   void setDynamicResource(boolean dynamicResource);
 
+  /**
+   * Mutes the audio layer.
+   * The audio layer could be muted and unmuted when the animation is playing.
+   * @param muted if true, mutes audio layer.
+   */
+  void setMuted(boolean muted);
+
+  /**
+   * Enables or disables audio layer.
+   * The audio layer will not be parsed when disabled.
+   * Call this function before `setSrc`.
+   * @param enable if true, enables audio layer.
+   */
+  void setEnableAudio(boolean enable);
+
   // Animation-playing(setProperties)
 
   /**

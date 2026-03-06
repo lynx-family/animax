@@ -115,6 +115,20 @@ public interface IAnimaXPlayerDelegate extends IAnimaXPlayer {
     getPlayer().setDynamicResource(dynamicResource);
   }
 
+  /**
+   * @see IAnimaXPlayer#setMuted(boolean)
+   */
+  default void setMuted(boolean mute) {
+    getPlayer().setMuted(mute);
+  }
+
+  /**
+   * @see IAnimaXPlayer#setEnableAudio(boolean)
+   */
+  default void setEnableAudio(boolean enable) {
+    getPlayer().setEnableAudio(enable);
+  }
+
   // Animation-playing(setProperties)
 
   /**

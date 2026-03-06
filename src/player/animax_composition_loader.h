@@ -68,6 +68,8 @@ class AnimaXCompositionLoader : public MetricsDataSource {
 
   void SetHasDynamicResource(bool has_dynamic_resource);
 
+  void SetEnableAudio(bool enable);
+
   void LoadCompositionModelFromURI(std::string uri, float scale,
                                    AssetLoader::CallbackType callback);
 

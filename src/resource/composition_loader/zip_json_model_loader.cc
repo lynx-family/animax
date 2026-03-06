@@ -80,7 +80,7 @@ ZipJSONModelLoader::Ptr ZipJSONModelLoader::MakePipeline(
                 main_uri);
             auto model = CompositionParser::Parse(
                 static_cast<const char*>(raw_data->Data()), raw_data->Length(),
-                task.request.scale);
+                task.request.scale, task.request.enable_audio);
             CompositionModelLoader::OnResourceLoaderTraceEvent(
                 weak_model_loader, TraceEventType::kParseCompositionEnd,
                 main_uri);

@@ -40,6 +40,7 @@ class FontCharacterModel;
 using LayerModelList = std::vector<std::unique_ptr<LayerModel>>;
 
 struct ParseContext {
+  bool enable_audio_;
   // Only updated on GradientColor parse
   int32_t color_points_;
 };

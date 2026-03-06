@@ -48,9 +48,11 @@ bool IsAudio(const std::string& filename) {
 }
 }  // namespace
 
+// TODO(lixianruo.cyrus): Compose these params into a struct.
 std::shared_ptr<CompositionModel> CompositionParser::Parse(const char* str_data,
                                                            size_t length,
-                                                           float scale) {
+                                                           float scale,
+                                                           bool enable_audio) {
   rapidjson::Document document;
   document.Parse(str_data, length);
   if (document.HasParseError()) {
@@ -67,6 +69,7 @@ std::shared_ptr<CompositionModel> CompositionParser::Parse(const char* str_data,
 
   auto composition_model =
       std::shared_ptr<CompositionModel>(new CompositionModel(scale));
+  composition_model->parse_context_.enable_audio_ = enable_audio;
   int32_t width = 0, height = 0;
   float start_frame = 0, end_frame = 0, frame_rate = 0;
   bool enable_3d = false;
@@ -118,11 +121,15 @@ void CompositionParser::ParseLayers(rapidjson::Value& value,
                                     CompositionModel& composition) {
   const auto& array = value.GetArray();
   int32_t image_count = 0;
+  bool enable_audio = composition.parse_context_.enable_audio_;
 
   auto& layers = composition.GetLayers();
   auto& layer_map = composition.GetLayerMap();
   for (auto it = array.Begin(); it != array.End(); it++) {
     auto layer = LayerParser::Parse(it->Move(), composition);
+    if (layer->GetLayerType() == LayerType::kAudio && !enable_audio) {
+      continue;
+    }
     if (layer->GetLayerType() == LayerType::kImage) {
       image_count++;
     }
@@ -174,8 +181,11 @@ void CompositionParser::ParseAssets(rapidjson::Value& value,
     const auto info_id = info.id;
     const auto file_name = info.file_name;
     if (IsAudio(file_name)) {
-      audios[info_id] = std::shared_ptr<AudioAsset>(
-          new AudioAsset({info.id, info.dir_name, info.file_name}));
+      if (!composition.parse_context_.enable_audio_) {
+        continue;
+      }
+      audios[info_id] =
+          AudioAsset::Make({info.id, info.dir_name, info.file_name});
     } else if (!file_name.empty()) {
       images[info_id] =
           std::shared_ptr<ImageAsset>(new ImageAsset{std::move(info)});

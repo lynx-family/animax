@@ -44,11 +44,11 @@ TEST(ZipAlphaVideoModelLoaderTest, LoadFromJSONString) {
             nullptr));
         callback(ResourceResponse{.payload = std::move(raw_data_payload)}, {});
       });
-  auto task =
-      ZipCompositionModelTask{.request = CompositionModelRequest{.scale = 1.f},
-                              .response = CompositionModelResponse{
-                                  .model_type = CompositionModelType::kLottie,
-                                  .base_uri = base_uri_str}};
+  auto task = ZipCompositionModelTask{
+      .request = CompositionModelRequest{.scale = 1.f, .enable_audio = true},
+      .response =
+          CompositionModelResponse{.model_type = CompositionModelType::kLottie,
+                                   .base_uri = base_uri_str}};
   EXPECT_NE(nullptr, loader);
   loader->Load(std::move(task),
                [](CompositionModelResponse res, LoaderError error) {

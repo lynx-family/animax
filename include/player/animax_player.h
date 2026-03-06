@@ -180,16 +180,19 @@ class ANIMAX_EXPORT AnimaXPlayer
    */
   void SetObjectPosition(const ObjectPosition object_position);
   /**
-   * Set the volume of audio. the default value is 1.
-   * @param volume a relative value. Can be 0 or positive and not greater
-   * than 1.
+   * Mutes the audio layer.
+   * The audio layer could be muted and unmuted when the animation is playing.
+   * @param muted if true, mutes audio layer.
    */
-  void SetVolume(double volume);
+  void SetMuted(bool mute);
+
   /**
-   * Mute the audio of animation. the default value is false.
-   * @param mute True to mute the animation.
+   * Enables or disables audio layer.
+   * The audio layer will not be parsed when disabled.
+   * Call this function before `SetSrc`.
+   * @param enable if true, enables audio layer.
    */
-  void SetMute(bool mute);
+  void SetEnableAudio(bool enable);
 
   /**
    * Start or resume playback of the animation.

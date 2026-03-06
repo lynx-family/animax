@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import com.lynx.animax.AnimaXPlayer;
+import com.lynx.animax.audio.AudioAsset;
+import com.lynx.animax.audio.AudioPlayer;
 import com.lynx.animax.base.CalledByNative;
 import com.lynx.animax.base.IAnimaXCompositionReadyListener;
 import com.lynx.animax.base.bridge.ReadableMap;
@@ -69,6 +71,11 @@ public class BaseAbility {
   public IVideoPlayer createVideoPlayer(long nativePtr) {
     mVideoPlayerConfig.setSurfaceDestroyTimeout(DeviceUtil.getVideoSurfaceDestroyTimeout(this));
     return VideoPlayerFactory.create(nativePtr, mVideoPlayerConfig);
+  }
+
+  @CalledByNative
+  public AudioPlayer createAudioPlayer(AudioAsset asset) {
+    return AudioPlayer.create(asset);
   }
 
   @CalledByNative

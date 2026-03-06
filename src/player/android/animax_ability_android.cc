@@ -35,5 +35,11 @@ AnimaXAbilityAndroid::CreateVideoPlayer(jlong native_ptr) const {
   return Java_BaseAbility_createVideoPlayer(env, ability_.Get(), native_ptr);
 }
 
+base::android::ScopedLocalJavaRef<jobject>
+AnimaXAbilityAndroid::CreateAudioPlayer(jobject asset_object) const {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  return Java_BaseAbility_createAudioPlayer(env, ability_.Get(), asset_object);
+}
+
 }  // namespace animax
 }  // namespace lynx

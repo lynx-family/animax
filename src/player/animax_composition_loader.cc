@@ -36,6 +36,10 @@ void AnimaXCompositionLoader::SetHasDynamicResource(bool has_dynamic_resource) {
   pipeline_->SetHasDynamicResource(has_dynamic_resource);
 }
 
+void AnimaXCompositionLoader::SetEnableAudio(bool enable) {
+  pipeline_->SetEnableAudio(enable);
+}
+
 void AnimaXCompositionLoader::LoadCompositionModelFromURI(
     std::string uri, float scale, AssetLoader::CallbackType callback) {
   pipeline_->LoadCompositionModelFromURI(std::move(uri), scale,

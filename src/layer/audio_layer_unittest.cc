@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "src/base/thread/task_runner.h"
+#include "src/parser/alpha_player_asset/alpha_player_asset_parser.h"
 #include "src/parser/composition_parser.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/player/animax_renderer.h"
@@ -19,10 +20,19 @@ constexpr const char* lottie_json =
     "\"ty\":6,\"nm\":\"27.mp3\",\"cl\":\"mp3\",\"refId\":\"audio_0\",\"sr\":1,"
     "\"ip\":0,\"op\":5006.88,\"st\":0,\"bm\":0}],\"markers\":[],\"props\":{}}";
 
+class TestAsset : public AudioAsset {
+ public:
+  using AudioAsset::AudioAsset;
+  void LoadLocal(const std::string& file_path) override { is_valid_ = true; }
+};
+
 TEST(AudioLayer, FullTest) {
-  auto model =
-      CompositionParser::Parse(lottie_json, std::strlen(lottie_json), 1.0f);
+  auto model = CompositionParser::Parse(lottie_json, std::strlen(lottie_json),
+                                        1.0f, true);
   EXPECT_NE(nullptr, model);
+  auto asset = std::make_shared<TestAsset>(AudioAssetModel{});
+  asset->LoadLocal("");
+  model->GetAudios()["audio_0"] = asset;
   auto layer_model = model->GetLayers().begin();
   auto layer = std::make_unique<AudioLayer>(**layer_model, *model);
   auto context = std::make_shared<AnimaXPlayerContext>();
@@ -41,4 +51,14 @@ TEST(AudioLayer, FullTest) {
   layer->DrawLayer(canvas, matrix, 0);
   layer->SetProgress(2);
   layer->DrawLayer(canvas, matrix, 0);
+}
+
+TEST(AudioLayer, InvalidTest) {
+  auto model = CompositionParser::Parse(lottie_json, std::strlen(lottie_json),
+                                        1.0f, true);
+  EXPECT_NE(nullptr, model);
+  model->GetAudios()["audio_0"] = nullptr;
+  auto layer_model = model->GetLayers().begin();
+  auto layer = std::make_unique<AudioLayer>(**layer_model, *model);
+  layer->Init();
 }

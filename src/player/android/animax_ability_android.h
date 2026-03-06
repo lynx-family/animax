@@ -24,6 +24,9 @@ class ANIMAX_EXPORT AnimaXAbilityAndroid : public AnimaXAbility {
   base::android::ScopedLocalJavaRef<jobject> CreateVideoPlayer(
       jlong native_ptr) const;
 
+  base::android::ScopedLocalJavaRef<jobject> CreateAudioPlayer(
+      jobject asset_object) const;
+
  private:
   base::android::ScopedGlobalJavaRef<jobject> ability_;
 };
