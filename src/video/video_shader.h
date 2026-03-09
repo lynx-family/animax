@@ -8,6 +8,7 @@
 #include <array>
 #include <memory>
 
+#include "src/player/animax_ability.h"
 #include "src/render/texture_info.h"
 
 namespace lynx {
@@ -18,7 +19,7 @@ class RealContext;
 
 class VideoShader {
  public:
-  static std::unique_ptr<VideoShader> Make();
+  static std::unique_ptr<VideoShader> Make(const AnimaXAbility *ability_ptr);
   VideoShader() = default;
   virtual ~VideoShader() = default;
 

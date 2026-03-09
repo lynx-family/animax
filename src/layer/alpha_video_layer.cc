@@ -52,7 +52,7 @@ void AlphaVideoLayer::AttachAssetOnce() {
   if (!provider) {
     return;
   }
-  video_shader_ = provider->CreateVideoShader();
+  video_shader_ = provider->CreateVideoShader(ability.get());
 
   DCHECK(video_shader_);
   int32_t video_width = video_asset_->GetVideoWidth();

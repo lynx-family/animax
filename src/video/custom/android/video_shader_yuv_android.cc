@@ -7,7 +7,7 @@
 #include "src/base/gl/scoped_gl_reset_restore.h"
 #include "src/base/log/log.h"
 #include "src/render/image_gl.h"
-#include "src/render/texture_info_multi_gl.h"
+#include "src/render/texture_info_frame_data.h"
 #include "src/video/custom/yuv_frame_info.h"
 
 namespace lynx {
@@ -16,6 +16,9 @@ namespace animax {
 VideoShaderYUVAndroid::~VideoShaderYUVAndroid() noexcept {
   if (texture_ != 0) {
     glDeleteTextures(1, &texture_);
+  }
+  if (!textures_.empty()) {
+    glDeleteTextures(textures_.size(), textures_.data());
   }
 }
 
@@ -110,18 +113,11 @@ void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
     return;
   }
 
-  auto *texture_multi_gl =
-      static_cast<TextureInfoMultiGL *>(texture_info.get());
-  if (!texture_multi_gl) {
-    return;
-  }
+  auto *texture_frame_data =
+      static_cast<TextureInfoFrameData *>(texture_info.get());
+  auto frame_info = texture_frame_data->GetFrameInfo();
 
-  auto textures = texture_multi_gl->GetTextures();
-  if (textures.size() != YUVFrameInfo::kYUVChannels) {
-    return;
-  }
-
-  DCHECK(GetVideoTextureTarget() == texture_multi_gl->Target());
+  DCHECK(GetVideoTextureTarget() == texture_frame_data->Target());
 
   lynx::animax::ScopedGLResetRestore s0(GL_ACTIVE_TEXTURE);
   {
@@ -132,6 +128,11 @@ void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
     lynx::animax::ScopedGLResetRestore s5(GL_SCISSOR_TEST);
     lynx::animax::ScopedGLResetRestore s6(GL_VIEWPORT);
     lynx::animax::ScopedGLResetRestore s7(GL_COLOR_CLEAR_VALUE);
+
+    if (!UpdateTexturesFromYuvFrame(frame_info)) {
+      return;
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
     glUseProgram(program_);
 
@@ -145,7 +146,7 @@ void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
         continue;
       }
       glActiveTexture(GL_TEXTURE0 + texture_units[i]);
-      glBindTexture(GL_TEXTURE_2D, textures[i]);
+      glBindTexture(GL_TEXTURE_2D, textures_[i]);
       glUniform1i(location, texture_units[i]);
     }
 
@@ -156,6 +157,56 @@ void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
   }
+}
+
+bool VideoShaderYUVAndroid::UpdateTexturesFromYuvFrame(
+    const std::shared_ptr<YUVFrameInfo> &frame_info) {
+  if (!Valid() || !frame_info) {
+    return false;
+  }
+
+  if (frame_info->GetWidth() == 0 || frame_info->GetHeight() == 0) {
+    ANIMAX_LOGE("VideoShaderYUVAndroid: invalid frame is provided.");
+    return false;
+  }
+
+  bool needs_init = textures_.empty();
+  if (needs_init) {
+    textures_.resize(YUVFrameInfo::kYUVChannels);
+    glGenTextures(YUVFrameInfo::kYUVChannels, textures_.data());
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+      ANIMAX_LOGE("VideoShaderYUVAndroid: Failed to gen textures.");
+      return false;
+    }
+  }
+
+  bool success = true;
+  for (int ch = 0; ch < YUVFrameInfo::kYUVChannels; ch++) {
+    if (textures_[ch] == 0) {
+      success = false;
+      break;
+    }
+
+    auto width = frame_info->GetChannelDataWidth(ch);
+    auto height = frame_info->GetChannelDataHeight(ch);
+    auto data = frame_info->GetChannelData(ch)->data();
+
+    glBindTexture(GL_TEXTURE_2D, textures_[ch]);
+    if (needs_init) {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
+                   GL_UNSIGNED_BYTE, data);
+    } else {
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED,
+                      GL_UNSIGNED_BYTE, data);
+    }
+  }
+
+  return success;
 }
 
 }  // namespace animax

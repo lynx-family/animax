@@ -17,7 +17,8 @@ VideoShaderAndroid::~VideoShaderAndroid() noexcept {
   }
 }
 
-std::unique_ptr<VideoShader> VideoShader::Make() {
+std::unique_ptr<VideoShader> VideoShader::Make(
+    const AnimaXAbility *ability_ptr) {
   return std::unique_ptr<VideoShaderAndroid>(new VideoShaderAndroid());
 }
 

@@ -9,8 +9,8 @@ render_shared_sources = [
   "drawable_gl.h",
   "drawable_sw.h",
   "texture_info.h",
+  "texture_info_frame_data.h",
   "texture_info_gl.h",
-  "texture_info_multi_gl.h",
 ]
 
 animax_source_set("render") {

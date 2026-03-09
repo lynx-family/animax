@@ -28,9 +28,10 @@ class VideoDecoderCustom {
 
   /**
    * Initialize and create the decoder instance
+   * @param asset Asset to decode.
    * @return true if this decoder created successfully
    */
-  virtual bool CreateDecoder() = 0;
+  virtual bool CreateDecoder(std::shared_ptr<VideoAsset> asset) = 0;
 
   /**
    * Clean up and destroy the decoder instance
@@ -52,19 +53,6 @@ class VideoDecoderCustom {
   virtual std::shared_ptr<YUVFrameInfo> DecodeFrameData(
       std::vector<uint8_t>& data,
       const std::shared_ptr<YUVFrameInfo>& reusable_frame) = 0;
-
-  /**
-   * Update textures from YUV frame data for rendering
-   *
-   * This method takes decoded YUV frame information and converts it into
-   * texture info for GPU rendering.
-   * @param frame_info Decoded YUV frame information containing the planar Y, U,
-   * and V data.
-   * @return texture_info containing the processed texture data ready for
-   * rendering, or nullptr if the operation fails.
-   */
-  virtual std::unique_ptr<TextureInfo> UpdateTexturesFromYuvFrame(
-      const std::shared_ptr<YUVFrameInfo>& frame_info) = 0;
 };
 
 }  // namespace animax

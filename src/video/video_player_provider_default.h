@@ -17,8 +17,9 @@ class VideoPlayerProviderDefault : public VideoPlayerProvider {
     return VideoPlayer::MakeVideoPlayer(ability);
   }
 
-  std::unique_ptr<VideoShader> CreateVideoShader() override {
-    return VideoShader::Make();
+  std::unique_ptr<VideoShader> CreateVideoShader(
+      const AnimaXAbility *ability) override {
+    return VideoShader::Make(ability);
   }
 
   bool IsSupported(const AnimaXAbility *ability,

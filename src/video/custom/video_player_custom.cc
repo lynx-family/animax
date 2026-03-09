@@ -6,7 +6,7 @@
 
 #include "src/base/gl/gl_include.h"
 #include "src/base/log/log.h"
-#include "src/render/texture_info_multi_gl.h"
+#include "src/render/texture_info_frame_data.h"
 #include "src/resource/asset/video_asset.h"
 #include "src/video/custom/video_decoder_custom.h"
 
@@ -45,7 +45,11 @@ std::unique_ptr<TextureInfo> VideoPlayerCustom::UpdateTexture(
 
   display_index_ = index;
   PrepareNextFrame();
-  return decoder_->UpdateTexturesFromYuvFrame(frame_info);
+  return std::make_unique<TextureInfoFrameData>(frame_info, texture_target_);
+}
+
+void VideoPlayerCustom::SetTextureTarget(uint32_t texture_target) {
+  texture_target_ = texture_target;
 }
 
 std::shared_ptr<YUVFrameInfo> VideoPlayerCustom::DecodeAndCacheFrame(
@@ -150,18 +154,17 @@ void VideoPlayerCustom::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   }
 
   asset_ = asset;
-  std::vector<uint8_t> data = asset_->GetVideoParameterSets();
-  if (data.empty()) {
-    ANIMAX_LOGE("VideoPlayerCustom: Failed to get video parameter sets");
-    return;
-  }
-
-  bool ret = decoder_->CreateDecoder();
+  bool ret = decoder_->CreateDecoder(asset);
   if (!ret) {
     ANIMAX_LOGE("VideoPlayerCustom: Failed to create decoder");
     return;
   }
-  decoder_->DecodeFrameData(data, nullptr);
+
+  std::vector<uint8_t> data = asset_->GetVideoParameterSets();
+  if (!data.empty()) {
+    decoder_->DecodeFrameData(data, nullptr);
+  }
+
   PrepareNextFrame();
 }
 

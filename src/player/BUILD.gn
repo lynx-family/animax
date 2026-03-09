@@ -75,5 +75,7 @@ animax_source_set("player") {
     ]
   } else if (is_harmony) {
     sources += [ "harmony/animax_ability_harmony.h" ]
+  } else if (is_win) {
+    sources += [ "win/animax_ability_windows.h" ]
   }
 }

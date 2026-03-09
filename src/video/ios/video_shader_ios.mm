@@ -114,7 +114,9 @@ VideoShaderIOS::VideoShaderIOS()
       h_(0),
       is_valid_(false) {}
 
-std::unique_ptr<VideoShader> VideoShader::Make() { return std::make_unique<VideoShaderIOS>(); }
+std::unique_ptr<VideoShader> VideoShader::Make(const AnimaXAbility *ability_ptr) {
+  return std::make_unique<VideoShaderIOS>();
+}
 
 bool VideoShaderIOS::Valid() { return is_valid_; }
 

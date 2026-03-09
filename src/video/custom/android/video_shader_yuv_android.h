@@ -4,12 +4,15 @@
 
 #ifndef ANIMAX_SRC_VIDEO_CUSTOM_ANDROID_VIDEO_SHADER_YUV_ANDROID_H_
 #define ANIMAX_SRC_VIDEO_CUSTOM_ANDROID_VIDEO_SHADER_YUV_ANDROID_H_
+#include <vector>
 
 #include "include/base/macros.h"
 #include "src/video/video_shader_gl.h"
 
 namespace lynx {
 namespace animax {
+
+class YUVFrameInfo;
 class ANIMAX_EXPORT VideoShaderYUVAndroid : public VideoShaderGL {
  public:
   VideoShaderYUVAndroid() = default;
@@ -20,6 +23,11 @@ class ANIMAX_EXPORT VideoShaderYUVAndroid : public VideoShaderGL {
   GLenum GetVideoTextureBindingPoint() override;
   void Draw(std::unique_ptr<TextureInfo> texture_info,
             const std::array<float, 16> &transform) override;
+
+ private:
+  bool UpdateTexturesFromYuvFrame(
+      const std::shared_ptr<YUVFrameInfo> &frame_info);
+  std::vector<GLuint> textures_;
 };
 
 }  // namespace animax

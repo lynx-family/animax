@@ -30,7 +30,8 @@ class VideoPlayerProvider {
    * @return A unique_ptr to the created VideoShader instance, or nullptr if
    * creation fails.
    */
-  virtual std::unique_ptr<VideoShader> CreateVideoShader() = 0;
+  virtual std::unique_ptr<VideoShader> CreateVideoShader(
+      const AnimaXAbility *ability) = 0;
 
   /**
    * Checks if this provider supports the given ability and video asset.

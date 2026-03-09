@@ -32,7 +32,8 @@ class MockVideoPlayerProvider : public VideoPlayerProvider {
     return nullptr;
   }
 
-  std::unique_ptr<VideoShader> CreateVideoShader() override {
+  std::unique_ptr<VideoShader> CreateVideoShader(
+      const AnimaXAbility *ability) override {
     return std::make_unique<MockVideoShader>();
   }
 
@@ -67,7 +68,7 @@ TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
   auto provider_0 =
       VideoPlayerService::GetInstance().GetProvider(&ability, asset);
   auto player_0 = provider_0->CreateVideoPlayer(&ability);
-  auto shader_0 = provider_0->CreateVideoShader();
+  auto shader_0 = provider_0->CreateVideoShader(&ability);
   EXPECT_EQ(nullptr, player_0);
   EXPECT_EQ(nullptr, shader_0);
 
@@ -86,7 +87,7 @@ TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
   auto provider_1 =
       VideoPlayerService::GetInstance().GetProvider(&ability, asset);
   auto player_1 = provider_1->CreateVideoPlayer(&ability);
-  auto shader_1 = provider_1->CreateVideoShader();
+  auto shader_1 = provider_1->CreateVideoShader(&ability);
   EXPECT_EQ(nullptr, player_1);
   EXPECT_NE(nullptr, shader_1);
 }

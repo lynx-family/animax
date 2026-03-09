@@ -17,7 +17,9 @@ class MockVideoDecoderCustom : public VideoDecoderCustom {
  public:
   bool IsValid() override { return true; }
 
-  bool CreateDecoder() override { return true; }
+  bool CreateDecoder(std::shared_ptr<VideoAsset> asset) override {
+    return true;
+  }
 
   bool DestroyDecoder() override { return true; }
 
@@ -28,7 +30,7 @@ class MockVideoDecoderCustom : public VideoDecoderCustom {
   }
 
   std::unique_ptr<TextureInfo> UpdateTexturesFromYuvFrame(
-      const std::shared_ptr<YUVFrameInfo>& frame_info) override {
+      const std::shared_ptr<YUVFrameInfo>& frame_info) {
     return std::make_unique<TextureInfoGL>(0, 0, 0, 0);
   }
 };

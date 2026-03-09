@@ -24,8 +24,10 @@ class ANIMAX_EXPORT VideoPlayerCustom : public VideoPlayer {
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16>& GetTransform() override;
   void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
+  void SetTextureTarget(uint32_t texture_target);
 
  private:
+  uint32_t texture_target_ = 0;
   // Frame managment
   void ClearAllCachedFrames();
   void CacheFrame(const int32_t target_index,
