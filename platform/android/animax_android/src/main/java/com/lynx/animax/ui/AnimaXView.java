@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -187,6 +188,12 @@ public class AnimaXView
   private void updateSurfaceTexture() {
     SurfaceTexture originSurfaceTexture = getSurfaceTexture();
     if (mSurfaceTexture == null || mSurfaceTexture.equals(originSurfaceTexture)) {
+      return;
+    }
+
+    // SurfaceTexture.isReleased() is available above android 8
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mSurfaceTexture.isReleased()) {
+      AnimaXLog.e(TAG, "Failed to updateSurfaceTexture, texture is released.");
       return;
     }
 
