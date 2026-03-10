@@ -5,6 +5,7 @@
 #ifndef ANIMAX_INCLUDE_PLAYER_ANIMAX_PLAYER_H_
 #define ANIMAX_INCLUDE_PLAYER_ANIMAX_PLAYER_H_
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -342,6 +343,15 @@ class ANIMAX_EXPORT AnimaXPlayer
    * finished.
    */
   void LoadAssetsWithCallback(base::MoveOnlyClosure<void> completion);
+  /**
+   * Get estimated memory usage (in byte)
+   */
+  int64_t GetEstimatedMemoryUsage();
+
+  /**
+   * Set estimated memory usage (in byte)
+   */
+  void SetEstimatedMemoryUsage(int64_t usage);
 
 #ifdef OS_IOS
   /**
@@ -434,6 +444,8 @@ class ANIMAX_EXPORT AnimaXPlayer
   std::shared_ptr<AnimaXPlaybackEventHandler> playback_handler_;
 
   std::shared_ptr<AnimaXPlayerContext> player_context_;
+
+  std::atomic<int64_t> estimated_memory_usage_{0};
 
 #ifdef OS_IOS
   bool is_in_background_ = false;

@@ -35,6 +35,9 @@
 - (void)handleTapAtPoint:(CGPoint)point {
   _hasHandleTap = YES;
 }
+- (int64_t)memoryUsageBytes {
+  return 0;
+}
 @end
 
 @interface AnimaXViewTest : XCTestCase

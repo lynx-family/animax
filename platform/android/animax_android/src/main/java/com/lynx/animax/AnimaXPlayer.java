@@ -652,6 +652,14 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     nativeGetMetricsAsync(mPtr, callback);
   }
 
+  @RestrictTo(RestrictTo.Scope.LIBRARY)
+  public long getMemoryUsageBytes() {
+    if (!checkNativeReady()) {
+      return 0;
+    }
+    return nativeGetMemoryUsageBytes(mPtr);
+  }
+
   private native void nativeGetMetricsAsync(long player, AnimaXMetricsCallback callback);
 
   private native long nativeCreate(long loader, AnimaXContext context);
@@ -747,4 +755,6 @@ public class AnimaXPlayer implements IAnimaXPlayer {
 
   private native void nativeGetKeysForKeyPath(
       long player, AnimaXKeyPath keyPath, AnimaXKeyPathListCallback callback);
+
+  private native long nativeGetMemoryUsageBytes(long player);
 }

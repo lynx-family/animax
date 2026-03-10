@@ -76,6 +76,7 @@ typedef NS_ENUM(NSUInteger, VisibilityState) {
 - (double)durationInMS;
 - (BOOL)isAnimating;
 - (double)currentFrame;
+- (int64_t)memoryUsageBytes;
 
 // Surface
 - (void)adoptAnimaXSurfaceDrawable:(AnimaXSurfaceDrawable *)drawable;

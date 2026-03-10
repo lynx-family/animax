@@ -11,6 +11,8 @@ base_util_shared_sources = [
   "color_util.cc",
   "event_warning_checker.cc",
   "event_warning_checker.h",
+  "memory_calculator.cc",
+  "memory_calculator.h",
   "misc_util.cc",
   "misc_util.h",
   "visibility_state.cc",

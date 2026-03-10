@@ -327,6 +327,10 @@
   return [_player currentFrame];
 }
 
+- (int64_t)memoryUsageBytes {
+  return [_player memoryUsageBytes];
+}
+
 - (void)reload {
   [_player reload];
 }

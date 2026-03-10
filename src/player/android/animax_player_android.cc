@@ -684,3 +684,12 @@ static void GetKeysForKeyPath(JNIEnv* env, jobject jcaller, jlong player,
         callback->OnKeyPathCallback(key_paths);
       });
 }
+
+static jlong GetMemoryUsageBytes(JNIEnv* env, jobject jcaller, jlong player) {
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return 0;
+  }
+
+  return static_cast<jlong>(player_ptr->GetEstimatedMemoryUsage());
+}

@@ -14,11 +14,13 @@ namespace animax {
 class AnimaXRenderer;
 class AnimaXMainController;
 class AnimaXAbility;
+class AnimaXPlayer;
 struct AnimaXPlayerContext
     : public std::enable_shared_from_this<AnimaXPlayerContext> {
   std::weak_ptr<shell::LynxActor<AnimaXRenderer>> weak_renderer_actor;
   std::weak_ptr<shell::LynxActor<AnimaXMainController>> weak_main_controller;
   std::weak_ptr<AnimaXAbility> weak_ability;
+  std::weak_ptr<AnimaXPlayer> weak_player;
 
   ~AnimaXPlayerContext() = default;
 };

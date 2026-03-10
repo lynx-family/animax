@@ -100,6 +100,7 @@ class AnimaXRenderer : public MetricsDataSource {
  private:
   std::unique_ptr<AnimaXSurface> ReleaseSurface();
   void UpdateSurfaceInternal(std::unique_ptr<AnimaXSurface> surface);
+  void UpdateEstimatedMemoryUsage();
   void ResizeCanvas(Canvas& canvas);
   void NotifyFirstFrameIfNeeded();
 
@@ -133,6 +134,8 @@ class AnimaXRenderer : public MetricsDataSource {
   float height_ = 0.f;
   int32_t model_width_ = 0;
   int32_t model_height_ = 0;
+  float scale_factor_x_ = 0.f;
+  float scale_factor_y_ = 0.f;
 
   bool has_rendered_first_frame_ = false;
   std::atomic<bool> is_destroyed_ = false;

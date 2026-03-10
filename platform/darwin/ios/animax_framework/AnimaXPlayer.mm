@@ -322,6 +322,10 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   return _player->GetCurrentFrame();
 }
 
+- (int64_t)memoryUsageBytes {
+  return _player->GetEstimatedMemoryUsage();
+}
+
 #pragma mark - Reload
 - (void)reload {
   _player->Reload();

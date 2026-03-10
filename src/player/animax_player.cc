@@ -76,6 +76,7 @@ void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
   player_context_->weak_renderer_actor = renderer_actor_;
   player_context_->weak_main_controller = controller_actor_;
   player_context_->weak_ability = ability_;
+  player_context_->weak_player = weak_from_this();
 
   renderer_actor_->Act([player_context = player_context_](auto& renderer) {
     renderer->Init(player_context);
@@ -242,6 +243,14 @@ void AnimaXPlayer::UpdateComposition(int32_t src_index,
       [src_index, model = std::move(model)](auto& renderer) mutable {
         renderer->UpdateComposition(src_index, std::move(model));
       });
+}
+
+int64_t AnimaXPlayer::GetEstimatedMemoryUsage() {
+  return estimated_memory_usage_.load();
+}
+
+void AnimaXPlayer::SetEstimatedMemoryUsage(int64_t usage) {
+  estimated_memory_usage_.store(usage);
 }
 
 void AnimaXPlayer::SetSrcPolyfill(

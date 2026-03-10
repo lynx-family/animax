@@ -5,6 +5,7 @@
 #include "src/player/animax_renderer.h"
 
 #include <algorithm>
+#include <sstream>
 #include <utility>
 
 #include "include/player/animax_player.h"
@@ -14,6 +15,7 @@
 #include "src/base/monitor/trace_event.h"
 #include "src/base/thread/thread_assert.h"
 #include "src/base/util/event_warning_checker.h"
+#include "src/base/util/memory_calculator.h"
 #include "src/layer/composition_layer.h"
 #include "src/parser/layer_parser.h"
 #include "src/player/animax_main_controller.h"
@@ -21,6 +23,7 @@
 #include "src/property/animax_property_updater.h"
 #include "src/render/matrix.h"
 #include "src/render/surface.h"
+#include "src/resource/log_util.h"
 
 namespace lynx {
 namespace animax {
@@ -90,6 +93,29 @@ void AnimaXRenderer::CreateSurface(SurfaceCreationFactory creation_factory) {
     UpdateSurfaceInternal(std::move(surface));
   } else {
     ANIMAX_LOGI("CreateSurface failed, surface is null");
+  }
+}
+
+void AnimaXRenderer::UpdateEstimatedMemoryUsage() {
+  MemoryCalculatorParams params;
+  params.model = model_;
+  params.view_width = width_;
+  params.view_height = height_;
+  params.scale_factor_x = scale_factor_x_;
+  params.scale_factor_y = scale_factor_y_;
+
+  if (params.IsValid()) {
+    MemoryUsageInfo info = MemoryCalculator::CalculateMemoryUsage(params);
+    if (info.total_memory > 0) {
+      auto context = weak_context_.lock();
+      if (context) {
+        auto player = context->weak_player.lock();
+        if (player) {
+          player->SetEstimatedMemoryUsage(info.total_memory);
+        }
+      }
+      ANIMAX_RESOURCE_LOGI(info.GetDescription());
+    }
   }
 }
 
@@ -310,6 +336,12 @@ void AnimaXRenderer::ResizeCanvas(Canvas& canvas) {
       scale_factor_y = scale_factor_x;
     default:
       break;
+  }
+
+  if (scale_factor_x_ != scale_factor_x || scale_factor_y_ != scale_factor_y) {
+    scale_factor_x_ = scale_factor_x;
+    scale_factor_y_ = scale_factor_y;
+    UpdateEstimatedMemoryUsage();
   }
 
   // Default to center alignment
