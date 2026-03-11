@@ -35,11 +35,11 @@ podspec_target("animax_podspec") {
     name = "AnimaX"
     version = "1.0.0"
     summary = "The framework of AnimaX."
-    homepage = "https://code.byted.org/lynx/animax"
-    license = "MIT"
+    homepage = "https://github.com/lynx-family/animax"
+    license = "Apache 2.0"
     author = "Lynx"
     source = {
-      git = "git@code.byted.org:lynx/animax.git"
+      git = "git@github.com:lynx-family/animax.git"
     }
     requires_arc = true
     default_subspec = "RenderBackend/Skity"

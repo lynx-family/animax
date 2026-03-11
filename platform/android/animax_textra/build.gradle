@@ -171,7 +171,6 @@ task configGnCompileParas {
 dependencies {
     implementation project(':AnimaXAndroid')
     implementation project(':LynxTextra')
-
-    implementation "org.lynxsdk.lynx:skity-native:1.0.0-beta.6"
+    implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
 }
 
