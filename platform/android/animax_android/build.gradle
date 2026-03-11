@@ -178,8 +178,7 @@ task configGnCompileParas {
 
 dependencies {
     implementation project.ext.appcompat
-    implementation "org.lynxsdk.lynx:skity-native:1.0.0-beta.6"
-
+    implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
     implementation project(':LynxBase')
     implementation project(':LynxTrace')
 }
