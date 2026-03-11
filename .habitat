@@ -1,0 +1,12 @@
+habitat_version = "0.3.146-alpha.2"
+solutions = [
+    {
+        'name': '.',
+        'deps_file': 'DEPS',
+        'url': '',
+        'target_deps_files': {
+            'dev': 'DEPS.dev',
+            'tools_shared': 'DEPS.tools_shared',
+        },
+    }
+]

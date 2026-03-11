@@ -1,0 +1,21 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../animax.gni")
+
+base_monitor_shared_sources = [
+  "animax_metric_names.h",
+  "animax_metrics_listener.h",
+  "animax_metrics_manager.cc",
+  "animax_metrics_manager.h",
+  "metrics_data_source.h",
+  "player_event_tracker.cc",
+  "timestamp_recorder.cc",
+  "timestamp_recorder.h",
+  "trace_event.h",
+  "trace_event_def.h",
+]
+
+animax_source_set("monitor") {
+  sources = base_monitor_shared_sources
+}

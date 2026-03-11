@@ -1,0 +1,48 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+import("AnimaXTextra.gni")
+
+cmake_target("AnimaXTextra") {
+  cmake_version = "3.4.1"
+  target_type = "shared_library"
+  output_name = "animax_textra"
+
+  deps = [
+    "../../../src/layer/textra",
+    "../../../third_party/lynx-textra/platform/android/lynxtextra:lynxtextra",
+    "../animax_android:AnimaXAndroid",
+  ]
+
+  lib_dirs = []
+  libs = [
+    "android",
+    "dl",
+    "log",
+  ]
+
+  configs = [
+    "../../../platform/android:16kb_page",
+    ":animax_textra_config",
+  ]
+}
+
+config("animax_textra_config") {
+  ldflags = []
+  if (!is_debug) {
+    ldflags += [
+      "-O2",
+      "-Wl,--icf=all",
+    ]
+    if (enable_lto) {
+      ldflags += [ "-flto" ]
+    }
+  }
+  ldflags += [
+    "-fno-limit-debug-info",
+    "-Wl,--exclude-libs,ALL,--gc-sections",
+    "-Xlinker",
+    "-Map=output.map",
+  ]
+}

@@ -1,0 +1,41 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+layer_shared_sources = [
+  "alpha_video_layer.cc",
+  "alpha_video_layer.h",
+  "audio_layer.cc",
+  "audio_layer.h",
+  "base_layer.cc",
+  "base_layer.h",
+  "camera_layer.cc",
+  "camera_layer.h",
+  "composition_layer.cc",
+  "composition_layer.h",
+  "font_asset_manager.h",
+  "image_layer.cc",
+  "image_layer.h",
+  "layer_factory.cc",
+  "layer_factory.h",
+  "null_layer.h",
+  "shape_layer.cc",
+  "shape_layer.h",
+  "solid_layer.cc",
+  "solid_layer.h",
+  "text_content.h",
+  "text_content_data_source.cc",
+  "text_content_data_source.h",
+  "text_content_default.cc",
+  "text_content_default.h",
+  "text_helper.cc",
+  "text_helper.h",
+  "text_layer.cc",
+  "text_layer.h",
+  "text_layer_animations.h",
+]
+
+animax_source_set("layer") {
+  sources = layer_shared_sources
+}

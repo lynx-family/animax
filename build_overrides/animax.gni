@@ -1,0 +1,31 @@
+# Copyright 2026 The Flutter Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# animax proj root
+animax_proj_root = rebase_path("../")
+
+# wasm
+animax_wasm_deps = []
+animax_wasm_skity_libs = []
+
+# third party deps
+# textra
+textra_search_path = rebase_path("../third_party/lynx-textra")
+textra_target_name = "lynxtextra"
+textra_source_build = true
+
+# skity
+skity_search_path = rebase_path("../third_party/skity")
+skity_target_name = "skity-native"
+
+# napi
+enable_napi = false
+napi_binding_search_path = rebase_path("../third_party/binding")
+
+# rapid json
+rapidjson_search_path = rebase_path("../third_party/lynx/third_party/rapidjson")
+rapidjson_include_path = rebase_path("../third_party/lynx/third_party")
+
+# lynx base
+lynx_base_search_path = rebase_path("../third_party/lynx")

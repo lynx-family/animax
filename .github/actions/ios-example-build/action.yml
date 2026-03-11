@@ -1,0 +1,39 @@
+name: build ios example
+
+description: build ios example app
+
+inputs:
+  build-params:
+    description: The build params of example we are building.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install Common Dependencies
+      uses: ./animax/.github/actions/common-deps
+    - name: Setup Ruby Cache
+      uses: ./animax/.github/actions/ios-common-deps
+    - name: Install iOS Dependencies
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 3
+        command: |-
+          set -e
+          cd $GITHUB_WORKSPACE/animax
+          source tools/envsetup.sh
+          pushd example/darwin/ios/animax_example
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          bash bundle_install.sh
+          popd
+    - name: Build Example App
+      shell: bash
+      run: |-
+        cd $GITHUB_WORKSPACE/animax
+        source tools/envsetup.sh
+        pushd example/darwin/ios/animax_example
+        xcodebuild -workspace AnimaXExample.xcworkspace -scheme AnimaXExample -configuration Debug -arch arm64 -archivePath build/AnimaXExample.xcarchive -derivedDataPath iOSCoreBuild/DerivedData -resultBundlePath results_bundle -showBuildTimingSummary -sdk iphonesimulator LD_GENERATE_MAP_FILE=YES LD_MAP_FILE_PATH=Build/linkmap.txt -jobs 24 build
+        popd
+        tar --strip-components 10 -czvf AnimaXExample-arm64.app.tar.gz example/darwin/ios/animax_example/iOSCoreBuild/DerivedData/Build/Products/Debug-iphonesimulator/AnimaXExample.app

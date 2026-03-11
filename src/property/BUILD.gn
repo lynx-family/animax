@@ -1,0 +1,47 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+property_shared_sources = [
+  "animax_frame_info.h",
+  "animax_key_path.cc",
+  "animax_player_global.cc",
+  "animax_property_updater.cc",
+  "animax_property_updater.h",
+  "animax_value_callback.h",
+  "animax_value_param.cc",
+  "key_path_element.h",
+  "key_path_resolve_util.cc",
+  "key_path_resolve_util.h",
+  "property_type.h",
+  "property_update_context.cc",
+  "property_update_context.h",
+  "property_update_element.h",
+  "property_update_request.cc",
+  "property_update_response.cc",
+  "property_update_util.cc",
+  "property_update_util.h",
+  "property_updater.h",
+  "resource_property_asset_updater.cc",
+  "resource_property_asset_updater.h",
+]
+
+animax_source_set("property") {
+  sources = property_shared_sources
+
+  if (is_android) {
+    sources += [
+      "android/animax_key_path_android.cc",
+      "android/animax_key_path_android.h",
+      "android/animax_key_path_list_callback_android.cc",
+      "android/animax_key_path_list_callback_android.h",
+      "android/animax_property_callback_android.cc",
+      "android/animax_property_callback_android.h",
+      "android/animax_value_callback_android.cc",
+      "android/animax_value_callback_android.h",
+      "android/animax_value_param_android.cc",
+      "android/animax_value_param_android.h",
+    ]
+  }
+}

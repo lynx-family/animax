@@ -1,0 +1,49 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+content_shared_sources = [
+  "content.h",
+  "content_group.cc",
+  "content_group.h",
+  "effect/blur_element.cc",
+  "effect/blur_element.h",
+  "effect/drop_shadow_element.cc",
+  "effect/drop_shadow_element.h",
+  "gradient/gradient_element.cc",
+  "gradient/gradient_element.h",
+  "gradient/gradient_fill_content.cc",
+  "gradient/gradient_fill_content.h",
+  "gradient/gradient_stroke_content.cc",
+  "gradient/gradient_stroke_content.h",
+  "path/merge_paths_content.cc",
+  "path/merge_paths_content.h",
+  "path/path_util.cc",
+  "path/path_util.h",
+  "path/trim_path_content.cc",
+  "path/trim_path_content.h",
+  "shape/base_stroke_content.cc",
+  "shape/base_stroke_content.h",
+  "shape/ellipse_content.cc",
+  "shape/ellipse_content.h",
+  "shape/fill_content.cc",
+  "shape/fill_content.h",
+  "shape/polystar_content.cc",
+  "shape/polystar_content.h",
+  "shape/rectangle_content.cc",
+  "shape/rectangle_content.h",
+  "shape/repeater_content.cc",
+  "shape/repeater_content.h",
+  "shape/rounded_corners_content.cc",
+  "shape/rounded_corners_content.h",
+  "shape/shape_content.cc",
+  "shape/shape_content.h",
+  "shape/shape_modifier_content.h",
+  "shape/stroke_content.cc",
+  "shape/stroke_content.h",
+]
+
+animax_source_set("content") {
+  sources = content_shared_sources
+}

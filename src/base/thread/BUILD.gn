@@ -1,0 +1,27 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../animax.gni")
+
+base_thread_shared_sources = [
+  "gpu_thread_handler.cc",
+  "gpu_thread_handler.h",
+  "gpu_thread_pool.cc",
+  "gpu_thread_pool.h",
+  "task_runner.cc",
+  "task_runner.h",
+  "thread_assert.cc",
+  "thread_assert.h",
+]
+
+if (is_wasm) {
+  base_thread_shared_sources += [ "web/task_runner_web.cc" ]
+  base_thread_shared_sources -= [
+    "gpu_thread_handler.cc",
+    "task_runner.cc",
+  ]
+}
+
+animax_source_set("thread") {
+  sources = base_thread_shared_sources
+}

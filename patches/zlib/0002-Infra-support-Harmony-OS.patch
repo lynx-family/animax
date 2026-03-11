@@ -1,0 +1,69 @@
+From 07d1265662b7afef82264d9d8ed10012128cc2d5 Mon Sep 17 00:00:00 2001
+From: zsy-jason <186247581+zsy-jason@users.noreply.github.com>
+Date: Wed, 18 Jun 2025 10:00:00 +0800
+Subject: [PATCH] [Infra] support Harmony OS
+
+---
+ BUILD.gn       |  2 ++
+ cpu_features.c | 10 +++++-----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index c8df865..3fe7e96 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -137,6 +137,8 @@ if (use_arm_neon_optimizations) {
+       defines += [ "ARMV8_OS_FUCHSIA" ]
+     } else if (is_win) {
+       defines += [ "ARMV8_OS_WINDOWS" ]
++    } else if (is_harmony) {
++      defines += [ "ARMV8_OS_HARMONY" ]
+     } else {
+       assert(false, "Unsupported ARM OS")
+     }
+diff --git a/cpu_features.c b/cpu_features.c
+index 64e0428..aef24b8 100644
+--- a/cpu_features.c
++++ b/cpu_features.c
+@@ -35,13 +35,13 @@ int ZLIB_INTERNAL x86_cpu_enable_avx512 = 0;
+ 
+ #ifndef CPU_NO_SIMD
+ 
+-#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_FUCHSIA) || defined(ARMV8_OS_IOS)
++#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_FUCHSIA) || defined(ARMV8_OS_IOS) || defined(ARMV8_OS_HARMONY)
+ #include <pthread.h>
+ #endif
+ 
+ #if defined(ARMV8_OS_ANDROID)
+ #include <cpu-features.h>
+-#elif defined(ARMV8_OS_LINUX)
++#elif defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_HARMONY)
+ #include <asm/hwcap.h>
+ #include <sys/auxv.h>
+ #elif defined(ARMV8_OS_FUCHSIA)
+@@ -62,7 +62,7 @@ int ZLIB_INTERNAL x86_cpu_enable_avx512 = 0;
+ static void _cpu_check_features(void);
+ #endif
+ 
+-#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_MACOS) || defined(ARMV8_OS_FUCHSIA) || defined(X86_NOT_WINDOWS) || defined(ARMV8_OS_IOS)
++#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_MACOS) || defined(ARMV8_OS_FUCHSIA) || defined(X86_NOT_WINDOWS) || defined(ARMV8_OS_IOS) || defined(ARMV8_OS_HARMONY)
+ #if !defined(ARMV8_OS_MACOS)
+ // _cpu_check_features() doesn't need to do anything on mac/arm since all
+ // features are known at build time, so don't call it.
+@@ -106,11 +106,11 @@ static void _cpu_check_features(void)
+     uint64_t features = android_getCpuFeatures();
+     arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM_FEATURE_CRC32);
+     arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM_FEATURE_PMULL);
+-#elif defined(ARMV8_OS_LINUX) && defined(__aarch64__)
++#elif (defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_HARMONY)) && defined(__aarch64__)
+     unsigned long features = getauxval(AT_HWCAP);
+     arm_cpu_enable_crc32 = !!(features & HWCAP_CRC32);
+     arm_cpu_enable_pmull = !!(features & HWCAP_PMULL);
+-#elif defined(ARMV8_OS_LINUX) && (defined(__ARM_NEON) || defined(__ARM_NEON__))
++#elif (defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_HARMONY)) && (defined(__ARM_NEON) || defined(__ARM_NEON__))
+     /* Query HWCAP2 for ARMV8-A SoCs running in aarch32 mode */
+     unsigned long features = getauxval(AT_HWCAP2);
+     arm_cpu_enable_crc32 = !!(features & HWCAP2_CRC32);
+-- 
+2.45.2
+

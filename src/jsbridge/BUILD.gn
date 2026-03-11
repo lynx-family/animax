@@ -1,0 +1,28 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+animax_napi_sources = [
+  "bindings/animax/animax_module.cc",
+  "bindings/animax/animax_player_delegate.cc",
+  "bindings/animax/animax_player_delegate.h",
+  "bindings/animax/napi_composition_element.cc",
+  "bindings/animax/napi_composition_element.h",
+  "bindings/animax/napi_on_property_callback.cc",
+  "bindings/animax/napi_on_property_callback.h",
+  "bindings/animax/napi_task_runner.cc",
+  "bindings/animax/napi_task_runner.h",
+  "bindings/animax/napi_value_param.cc",
+  "bindings/animax/napi_value_param.h",
+]
+
+# todo: delete enable_napi after napi was integrated
+if (is_ios && enable_napi) {
+  animax_napi_sources += [ "bindings/animax/ios/use_mod_animax.mm" ]
+}
+
+animax_source_set("jsbridge") {
+  sources = animax_napi_sources
+  deps = [ "$napi_binding_search_path/napi:napi_binding_base" ]
+}

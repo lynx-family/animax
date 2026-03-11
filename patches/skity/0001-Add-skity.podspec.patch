@@ -1,0 +1,305 @@
+From 06cdaab4788bb9afa1a5116ab5755de9de2a9a07 Mon Sep 17 00:00:00 2001
+From: lanjun <lanjunq8@gmail.com>
+Date: Thu, 31 Jul 2025 15:29:35 -0700
+Subject: [PATCH] Add skity.podspec
+
+Change-Id: Ib8044c3f64458654aa68d195e34693ee6fb91b49
+---
+ skity.podspec | 284 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 284 insertions(+)
+ create mode 100644 skity.podspec
+
+diff --git a/skity.podspec b/skity.podspec
+new file mode 100644
+index 0000000..8c5a749
+--- /dev/null
++++ b/skity.podspec
+@@ -0,0 +1,284 @@
++#
++#  Be sure to run `pod spec lint Skity.podspec' to ensure this is a
++#  valid spec and to remove all comments including this before submitting the spec.
++#
++#  To learn more about Podspec attributes see https://guides.cocoapods.org/syntax/podspec.html
++#  To see working Podspecs in the CocoaPods repo see https://github.com/CocoaPods/Specs/
++#
++
++Pod::Spec.new do |spec|
++    spec.name         = "skity"
++    spec.version      = "0.0.1"
++    spec.summary      = "Skity is a light weight 2D vector graphics engine"
++    spec.author       = "Lynx"
++    spec.compiler_flags = "-fno-rtti", "-fno-exceptions"
++    spec.ios.deployment_target = "9.0"
++    spec.osx.deployment_target = "13.0"
++    spec.homepage     = 'https://github.com/lynx-family/skity'
++    spec.source = { :git => "https://github.com/lynx-family/skity.git", :branch => "main" }
++    spec.default_subspecs =  'core', 'glm', 'sw', 'gl', 'mtl', 'framework', 'wgsl'
++  
++    spec.subspec "glm" do |ssp|
++      ssp.source_files = [
++                           "third_party/glm/glm/*.{h,hpp,inl}",
++                           "third_party/glm/glm/**/*.{h,hpp,inl}"   
++                         ]   
++      ssp.public_header_files = [
++                                  "third_party/glm/glm/*.{h,hpp,inl}",
++                                  "third_party/glm/glm/**/*.{h,hpp,inl}"   
++                                ]                       
++      ssp.header_mappings_dir  = 'third_party/glm/'
++    end
++  
++    spec.subspec "log" do |ssp|
++      ssp.private_header_files  = "third_party/fmt/include/fmt/*.{h}"
++      ssp.header_mappings_dir   = "third_party/fmt/include"
++      ssp.source_files          = ""
++      ssp.pod_target_xcconfig   = {
++                                    "GCC_PREPROCESSOR_DEFINITIONS" => 'SKITY_LOG=1 FMT_HEADER_ONLY=1',
++                                    "HEADER_SEARCH_PATHS" => " \"${PODS_TARGET_SRCROOT}/skity/third_party/fmt/include\" "
++                                  }
++    end
++  
++    spec.subspec "wgx" do |ssp|
++      ssp.public_header_files = [ "module/wgx/include/wgsl_cross.h" ]
++      ssp.private_header_files = "module/wgx"
++      ssp.header_mappings_dir = "module/wgx"
++      ssp.source_files = [
++                            "module/wgx/include/wgsl_cross.h",
++                            "module/wgx/wgsl/*.{h,cpp}",
++                            "module/wgx/wgsl/ast/*.{h,cpp}",
++                            "module/wgx/msl/*.{h,cpp}",
++                            "module/wgx/glsl/*.{h,cpp}",
++                         ]
++      ssp.pod_target_xcconfig   = {
++                                    "GCC_PREPROCESSOR_DEFINITIONS" => 'WGX_GLSL=1 WGX_MSL=1',
++                                    "HEADER_SEARCH_PATHS" => "  \"${PODS_TARGET_SRCROOT}/skity/module/wgx\" \
++                                                                \"${PODS_TARGET_SRCROOT}/skity/module/wgx/include\" "
++                                  }
++    end
++  
++    spec.subspec "wgsl" do |ssp|
++      ssp.private_header_files = []
++      ssp.source_files         = [
++                                    "src/render/hw/draw/fragment/wgsl_blur_filter.cc",
++                                    "src/render/hw/draw/fragment/wgsl_blur_filter.hpp",
++                                    "src/render/hw/draw/fragment/wgsl_gradient_fragment.cc",
++                                    "src/render/hw/draw/fragment/wgsl_gradient_fragment.hpp",
++                                    "src/render/hw/draw/fragment/wgsl_image_filter.cc",
++                                    "src/render/hw/draw/fragment/wgsl_image_filter.hpp",
++                                    "src/render/hw/draw/fragment/wgsl_solid_color.cc",
++                                    "src/render/hw/draw/fragment/wgsl_solid_color.hpp",
++                                    "src/render/hw/draw/fragment/wgsl_stencil_fragment.cc",
++                                    "src/render/hw/draw/fragment/wgsl_stencil_fragment.hpp",
++                                    "src/render/hw/draw/fragment/wgsl_text_fragment.cc",
++                                    "src/render/hw/draw/fragment/wgsl_text_fragment.hpp",
++                                    "src/render/hw/draw/fragment/wgsl_texture_fragment.cc",
++                                    "src/render/hw/draw/fragment/wgsl_texture_fragment.hpp",
++                                    "src/render/hw/draw/geometry/wgsl_clip_geometry.cc",
++                                    "src/render/hw/draw/geometry/wgsl_clip_geometry.hpp",
++                                    "src/render/hw/draw/geometry/wgsl_filter_geometry.cc",
++                                    "src/render/hw/draw/geometry/wgsl_filter_geometry.hpp",
++                                    "src/render/hw/draw/geometry/wgsl_gradient_path.cc",
++                                    "src/render/hw/draw/geometry/wgsl_gradient_path.hpp",
++                                    "src/render/hw/draw/geometry/wgsl_path_geometry.cc",
++                                    "src/render/hw/draw/geometry/wgsl_path_geometry.hpp",
++                                    "src/render/hw/draw/geometry/wgsl_text_geometry.cc",
++                                    "src/render/hw/draw/geometry/wgsl_text_geometry.hpp",
++                                    "src/render/hw/draw/geometry/wgsl_texture_path.cc",
++                                    "src/render/hw/draw/geometry/wgsl_texture_path.hpp",
++                                    "src/render/hw/draw/hw_draw_step.cc",
++                                    "src/render/hw/draw/hw_draw_step.hpp",
++                                    "src/render/hw/draw/hw_dynamic_draw.cc",
++                                    "src/render/hw/draw/hw_dynamic_draw.hpp",
++                                    "src/render/hw/draw/hw_dynamic_path_clip.cc",
++                                    "src/render/hw/draw/hw_dynamic_path_clip.hpp",
++                                    "src/render/hw/draw/hw_dynamic_path_draw.cc",
++                                    "src/render/hw/draw/hw_dynamic_path_draw.hpp",
++                                    "src/render/hw/draw/hw_dynamic_text_draw.cc",
++                                    "src/render/hw/draw/hw_dynamic_text_draw.hpp",
++                                    "src/render/hw/draw/hw_wgsl_fragment.hpp",
++                                    "src/render/hw/draw/hw_wgsl_geometry.hpp",
++                                    "src/render/hw/draw/step/**",
++                                    "src/render/hw/draw/wgx_filter.cc",
++                                    "src/render/hw/draw/wgx_filter.hpp",
++                                    "src/render/hw/draw/wgx_utils.cc",
++                                    "src/render/hw/draw/wgx_utils.hpp",
++                                 ]
++      ssp.pod_target_xcconfig   =  { "GCC_PREPROCESSOR_DEFINITIONS" => 'SKITY_WGX=1' }
++           ssp.dependency "skity/wgx"
++    end
++  
++    spec.subspec "sw" do |ssp|
++      ssp.source_files         = "src/render/sw/**/*.{h,hpp,cc}"
++      ssp.private_header_files = "src/render/sw/**/*.{h,hpp}"
++      ssp.header_mappings_dir  = "src/render/sw/"
++      ssp.pod_target_xcconfig  = { "GCC_PREPROCESSOR_DEFINITIONS" => 'SKITY_CPU=1'}
++    end
++  
++    spec.subspec "gl" do |ssp|
++      ssp.source_files         = [
++                                  "src/render/hw/gl/*.{h,hpp,cc}",
++                                  "src/gpu/gl/*.{h,hpp,cc}"
++                                 ]
++      ssp.private_header_files = [
++                                  "src/render/hw/gl/*.{h,hpp}",
++                                  "src/gpu/gl/*.{h,hpp}"
++                                 ]                           
++      ssp.header_mappings_dir  = 'src/render/hw/gl/'
++      ssp.pod_target_xcconfig = { "GCC_PREPROCESSOR_DEFINITIONS" => 'SKITY_OPENGL=1'}
++  
++      ssp.subspec "glad" do |sssp|
++        sssp.source_files  = [
++                               "third_party/glad/include/glad/*.h",
++                               "third_party/glad/include/KHR/*.h",
++                             ]
++        sssp.public_header_files  =  [
++                                        "third_party/glad/include/glad/*.h",
++                                        "third_party/glad/include/KHR/*.h"
++                                      ]
++        sssp.header_mappings_dir  = 'third_party/glad/include/'
++      end
++    end
++  
++    spec.subspec "mtl" do |ssp|
++      ssp.source_files = [
++        "src/render/hw/mtl/*.{h,hpp,mm}",
++        "src/gpu/mtl/*.{h,mm}"
++      ]
++      ssp.private_header_files = [
++        "src/render/hw/mtl/*.{h,hpp}",
++        "src/gpu/mtl/*.{h}"
++      ]
++      ssp.header_mappings_dir  = ''
++      ssp.pod_target_xcconfig = { "GCC_PREPROCESSOR_DEFINITIONS" => 'SKITY_METAL=1'}
++    end
++  
++    spec.subspec "framework" do |ssp|
++      ssp.source_files = "experiment/framework/*.{h,mm}"
++      ssp.public_header_files = "experiment/framework/*.h"
++      ssp.frameworks = "UIKit"
++  
++      ssp.header_mappings_dir  = 'experiment/framework'
++    end
++  
++    spec.subspec "core" do |ssp|
++      ssp.source_files = [
++        "include/skity/**/*.{hpp,h}",
++        "src/base/*.{hpp,cc}",
++        "src/base/platform/posix/*.{hpp,cc}",
++        "src/effect/*.{hpp,cc}",
++        "src/geometry/*.{hpp,cc}",
++        "src/gpu/*.{hpp,cc}",
++        "src/graphic/**/*.{hpp,cc,h}",
++        "src/io/*.{hpp,cc}",
++        "src/recorder/*.{hpp,cc}",
++        "src/render/*.{hpp,cc}",
++        "src/render/text/*.{hpp,cc}",
++        "src/render/text/atlas/*.{hpp,cc}",
++        "src/render/hw/*.{hpp,cc}",
++        "src/render/hw/layer/*.{hpp,cc}",
++        "src/render/hw/draw/*.{hpp,cc}",
++        "src/render/hw/draw/fragment/*.{hpp,cc}",
++        "src/render/hw/draw/fragment/tools/*.hpp",
++        "src/render/hw/draw/geometry/*.{hpp,cc}",
++        "src/render/hw/filters/*.{hpp,cc}",
++        "src/text/*.{hpp,cc}",
++        "src/text/ports/darwin/*.{hpp,cc}",
++        "src/utils/*.{hpp,cc}",
++        "src/logging.{hpp,cc}",
++        "src/tracing.{hpp,cc}",
++      ]
++  
++      # mimic include folder structure for Skity Pod User
++      ssp.header_mappings_dir = 'include/'
++  
++      # exclude software rendering and vulkan related sources
++      ssp.exclude_files =
++      [
++        "src/render/hw/vk/**",
++        "src/render/hw/wasm/**",
++        "include/skity/gpu/gpu_vk_context.hpp",
++        "src/render/hw/draw/fragment/wgsl_blur_filter.cc",
++        "src/render/hw/draw/fragment/wgsl_blur_filter.hpp",
++        "src/render/hw/draw/fragment/wgsl_gradient_fragment.cc",
++        "src/render/hw/draw/fragment/wgsl_gradient_fragment.hpp",
++        "src/render/hw/draw/fragment/wgsl_image_filter.cc",
++        "src/render/hw/draw/fragment/wgsl_image_filter.hpp",
++        "src/render/hw/draw/fragment/wgsl_solid_color.cc",
++        "src/render/hw/draw/fragment/wgsl_solid_color.hpp",
++        "src/render/hw/draw/fragment/wgsl_stencil_fragment.cc",
++        "src/render/hw/draw/fragment/wgsl_stencil_fragment.hpp",
++        "src/render/hw/draw/fragment/wgsl_text_fragment.cc",
++        "src/render/hw/draw/fragment/wgsl_text_fragment.hpp",
++        "src/render/hw/draw/fragment/wgsl_texture_fragment.cc",
++        "src/render/hw/draw/fragment/wgsl_texture_fragment.hpp",
++        "src/render/hw/draw/geometry/wgsl_clip_geometry.cc",
++        "src/render/hw/draw/geometry/wgsl_clip_geometry.hpp",
++        "src/render/hw/draw/geometry/wgsl_filter_geometry.cc",
++        "src/render/hw/draw/geometry/wgsl_filter_geometry.hpp",
++        "src/render/hw/draw/geometry/wgsl_gradient_path.cc",
++        "src/render/hw/draw/geometry/wgsl_gradient_path.hpp",
++        "src/render/hw/draw/geometry/wgsl_path_geometry.cc",
++        "src/render/hw/draw/geometry/wgsl_path_geometry.hpp",
++        "src/render/hw/draw/geometry/wgsl_text_geometry.cc",
++        "src/render/hw/draw/geometry/wgsl_text_geometry.hpp",
++        "src/render/hw/draw/geometry/wgsl_texture_path.cc",
++        "src/render/hw/draw/geometry/wgsl_texture_path.hpp",
++        "src/render/hw/draw/hw_draw_step.cc",
++        "src/render/hw/draw/hw_draw_step.hpp",
++        "src/render/hw/draw/hw_dynamic_draw.cc",
++        "src/render/hw/draw/hw_dynamic_draw.hpp",
++        "src/render/hw/draw/hw_dynamic_path_clip.cc",
++        "src/render/hw/draw/hw_dynamic_path_clip.hpp",
++        "src/render/hw/draw/hw_dynamic_path_draw.cc",
++        "src/render/hw/draw/hw_dynamic_path_draw.hpp",
++        "src/render/hw/draw/hw_dynamic_text_draw.cc",
++        "src/render/hw/draw/hw_dynamic_text_draw.hpp",
++        "src/render/hw/draw/hw_wgsl_fragment.hpp",
++        "src/render/hw/draw/hw_wgsl_geometry.hpp",
++        "src/render/hw/draw/step/**",
++        "src/render/hw/draw/wgx_filter.cc",
++        "src/render/hw/draw/wgx_filter.hpp",
++        "src/render/hw/draw/wgx_utils.cc",
++        "src/render/hw/draw/wgx_utils.hpp",
++      ]
++  
++      ssp.private_header_files =
++      [
++        "src/base/*.{hpp}",
++        "src/effect/*.{hpp}",
++        "src/geometry/*.{hpp}",
++        "src/gpu/*.{hpp}",
++        "src/gpu/gl/*.{hpp}",
++        "src/graphic/*.{hpp}",
++        "src/io/*.{hpp}",
++        "src/render/*.{hpp}",
++        "src/render/text/*.{hpp}",
++        "src/render/text/atlas/*.{hpp}",
++        "src/render/hw/*.{hpp}",
++        "src/render/hw/draw/*.{hpp}",
++        "src/render/hw/draw/fragment/*.{hpp}",
++        "src/render/hw/draw/geometry/*.{hpp}",
++        "src/render/hw/filters/*.{hpp}",
++        "src/render/hw/gl/*.{hpp}",
++        "src/text/*.{hpp}",
++        "src/text/ports/darwin/*.{hpp}",
++      ]
++  
++      ssp.ios.frameworks = 'OpenGLES', 'Metal'
++      ssp.osx.frameworks = 'OpenGL', 'Metal'
++      ssp.requires_arc = true
++      ssp.libraries = "stdc++"
++  
++      ssp.pod_target_xcconfig = {
++                                    "CLANG_CXX_LANGUAGE_STANDARD" => "gnu++17",
++                                    "GCC_PREPROCESSOR_DEFINITIONS" => " $(inherited) \
++                                                                        ENABLE_TEXT_RENDER=1 \
++                                                                        SKITY_STATIC_SHADER=1",
++                                                                       "HEADER_SEARCH_PATHS" => "\"${PODS_TARGET_SRCROOT}\" \"${PODS_TARGET_SRCROOT}/include\" \"${PODS_TARGET_SRCROOT}/third_party/glad/include\" \"${PODS_TARGET_SRCROOT}/third_party/glm\""
++                               }
++    end
++  
++  end
++  
+\ No newline at end of file
+-- 
+2.39.5 (Apple Git-154)
+

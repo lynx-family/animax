@@ -1,0 +1,56 @@
+# Copyright 2026 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+assert(is_apple)
+
+config("darwin_include_config") {
+  if (!defined(include_dirs)) {
+    include_dirs = []
+  }
+}
+
+config("darwin_flag_config") {
+  prefix_header = "common/Lynx-prefix.h"
+
+  if (!defined(cflags_objc)) {
+    cflags_objc = []
+  }
+  if (!defined(cflags_objcc)) {
+    cflags_objcc = []
+  }
+  if (!defined(defines)) {
+    defines = []
+  }
+  cflags_objc += [
+    "-fobjc-arc",
+    "-include",
+    rebase_path(prefix_header, root_build_dir),
+    "-Wno-self-assign-field",
+    "-Wno-shadow-ivar",
+    "-Wno-sign-compare",
+    "-Wno-unused-private-field",
+  ]
+  cflags_objcc += [
+    "-std=gnu++17",
+    "-fobjc-arc",
+    "-include",
+    rebase_path(prefix_header, root_build_dir),
+    "-Wno-self-assign-field",
+    "-Wno-shadow-ivar",
+    "-Wno-sign-compare",
+    "-Wno-unused-private-field",
+  ]
+
+  defines += [ "OS_POSIX=1" ]
+
+  if (is_ios) {
+    defines += [ "OS_IOS=1" ]
+  } else if (is_mac) {
+    defines += [
+      "OS_OSX=1",
+      "NAPI_DISABLE_CPP_EXCEPTIONS",
+      "NAPI_DISABLE_CPP_RTTI",
+    ]
+  }
+}

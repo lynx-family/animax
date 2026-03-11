@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AnimaXView">
+        <attr format="string" name="animax_animationUrl"/>
+        <attr format="boolean" name="animax_autoPlay"/>
+        <attr format="boolean" name="animax_loop"/>
+        <attr format="string" name="animax_objectFit"/>
+    </declare-styleable>
+    <declare-styleable name="AnimaXImageView">
+        <attr format="string" name="animax_image_animationUrl"/>
+        <attr format="boolean" name="animax_image_autoPlay"/>
+        <attr format="boolean" name="animax_image_loop"/>
+        <attr format="string" name="animax_image_objectFit"/>
+    </declare-styleable>
+</resources>

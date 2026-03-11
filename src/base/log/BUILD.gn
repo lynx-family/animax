@@ -1,0 +1,22 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../animax.gni")
+
+base_log_shared_sources = [
+  "animax_log_level.h",
+  "log.h",
+  "log_message.cc",
+]
+
+if (is_ios) {
+  base_log_shared_sources += [ "ios/animax_log_ios.mm" ]
+} else if (is_android) {
+  base_log_shared_sources += [ "android/animax_log_android.cc" ]
+} else if (is_harmony) {
+  base_log_shared_sources += [ "harmony/animax_log_harmony.cc" ]
+}
+
+animax_source_set("log") {
+  sources = base_log_shared_sources
+}

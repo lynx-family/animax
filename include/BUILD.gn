@@ -1,0 +1,35 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../src/animax.gni")
+
+animax_public_headers = [
+  "base/macros.h",
+  "base/visibility_state.h",
+  "base/animax_metrics.h",
+  "base/player_event_tracker.h",
+  "base/util/color_util.h",
+  "base/log/log_message.h",
+  "player/animax_fit_position.h",
+  "player/animax_event.h",
+  "player/animax_player_builder.h",
+  "player/animax_player.h",
+  "player/animax_surface.h",
+  "player/vsync_monitor.h",
+  "resource/bitmap.h",
+  "resource/loader_error.h",
+  "resource/loader.h",
+  "resource/raw_data.h",
+  "resource/resource_task.h",
+  "resource/unzip_task.h",
+  "resource/uri_info.h",
+  "property/animax_key_path.h",
+  "property/animax_player_global.h",
+  "property/animax_value_param.h",
+  "property/property_update_request.h",
+  "property/property_update_response.h",
+]
+
+animax_source_set("include") {
+  sources = animax_public_headers
+}

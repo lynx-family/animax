@@ -1,0 +1,204 @@
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+apply plugin: 'com.android.library'
+apply from: file("../jacoco.gradle")
+apply from: file("../deps.gradle")
+import org.json.simple.JSONObject
+
+ext.ABI_FILTERS = ['armeabi-v7a', 'armeabi', 'arm64-v8a', 'x86']
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    ndkVersion rootProject.ext.ndkVersion
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 22
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+
+        packagingOptions {
+            if(enable_lynx_android_test.toBoolean()) {
+                pickFirst 'lib/*/libc++_shared.so'
+                pickFirst 'lib/*/liblynxtrace.so'
+                pickFirst 'lib/*/libnapi.so'
+                pickFirst 'lib/*/libskity.so'
+                pickFirst 'lib/*/libtttext_lite.so'
+                pickFirst 'lib/*/libanimax.so'
+            } else {
+                exclude 'lib/*/libc++_shared.so'
+                exclude 'lib/*/liblynxtrace.so'
+                exclude 'lib/*/libnapi.so'
+                exclude 'lib/*/libskity.so'
+                exclude 'lib/*/libtttext_lite.so'
+                exclude 'lib/*/libanimax.so'
+            }
+        }
+    }
+
+    flavorDimensions "lynx"
+    productFlavors {
+        asan {
+            dimension "lynx"
+            externalNativeBuild {
+                cmake {
+                    cppFlags  '-fsanitize=address',
+                              '-fsanitize-address-use-after-scope',
+                              '-fPIE',
+                              '-Wl,-ldl',
+                              '-Wl,-llog',
+                              '-Wno-unused-command-line-argument'
+                    arguments '-DANDROID_ARM_MODE=arm',
+                              '-DENABLE_ASAN=true',
+                              '-DANDROID_STL=c++_shared',
+                              '-DFLAVOR_NAME=asan'
+                    abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+                }
+            }
+        }
+        noasan {
+            dimension "lynx"
+            externalNativeBuild {
+                cmake {
+                    cppFlags '-Wl,-ldl',
+                            '-Wno-unused-command-line-argument'
+                    arguments '-DANDROID_STL=c++_shared',
+                              '-DFLAVOR_NAME=noasan'
+                }
+            }
+            getIsDefault().set(true)
+        }
+    }
+
+    buildTypes {
+        release {
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM=android-18',
+                              '-DANDROID_TOOLCHAIN=clang',
+                              '-DANDROID_LD=lld',
+                              '-DANDROID_STL=c++_shared',
+                              '-DLOCAL_ARM_NEON=true',
+                              '-DBUILD_TYPE=release',
+                              '-LH'
+                }
+            }
+            ndk {
+                abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM=android-18',
+                              '-DANDROID_TOOLCHAIN=clang',
+                              '-DANDROID_LD=lld',
+                              '-DANDROID_STL=c++_shared',
+                              '-DLOCAL_ARM_NEON=true',
+                              '-DBUILD_TYPE=debug',
+                              '-LH'
+                    cppFlags  '-g -O0'
+                }
+            }
+            ndk {
+                abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+            }
+            debuggable true
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            // This is an empty CMakeLists. The actual build process is in buildWithGN function
+            // This logic is reserved so that gradle can trigger task of externalNativeBuild
+            path "CMakeLists.txt"
+            version CMAKE_VERSION
+        }
+    }
+
+    buildFeatures {
+        // Enable prefab to link libskity.so in skity AAR
+        prefab true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    configurations {
+        extractJNI
+    }
+}
+
+// Configure the compilation parameters in gn to generate the corresponding CMakeLists.txt files.
+task configGnCompileParas {
+    println "Root project: ${rootProject.name}"
+    def buildVariantList = getFlavorNamesAndBuildTypes(project)
+    def flavorNames = buildVariantList[0]
+    def buildTypes = buildVariantList[1]
+    JSONObject gnBuildArgs_map = new JSONObject()
+    flavorNames.each{
+        JSONObject gnBuildArgsList = new JSONObject()
+        String flavorName = it
+        if (flavorName == "asan") {
+            gnBuildArgsList.put("is_asan", "true")
+        } else {
+            gnBuildArgsList.put("is_asan", "false")
+        }
+
+        buildTypes.each{
+            JSONObject gnBuildArgs_list = new JSONObject(gnBuildArgsList)
+            String buildType = it
+            gnBuildArgs_list.put("build_lepus_compile", "false")
+            gnBuildArgs_list.put("enable_lto", "\"$enable_lto\"")
+            if (buildType == "release") {
+                gnBuildArgs_list.put("is_debug", "false")
+            } else if(buildType == "debug") {
+                gnBuildArgs_list.put("is_debug", "true")
+                if(enable_lynx_android_test.toBoolean()){
+                    gnBuildArgs_list.put("enable_animax_android_testing", "true")
+                }
+            }
+            rootProject.ext.abiList.each { abi -> 
+                gnBuildArgs_map.put(flavorName+buildType+abi, gnBuildArgs_list)
+            }
+        }
+    }
+    writeGnArgs(gnBuildArgs_map.toJSONString())
+}
+
+dependencies {
+    implementation project(':AnimaXAndroid')
+
+    def vmsdk_version = "com.bytedance.lynx:vmsdk:" + rootProject.ext.VMSDK_INSPECTOR_VERSION
+    def vmsdk_android = "com.bytedance.lynx:vmsdk-android:" + rootProject.ext.VMSDK_INSPECTOR_VERSION
+    implementation vmsdk_version
+    implementation vmsdk_android
+    extractJNI vmsdk_version
+}
+
+task extractJNIFiles {
+    doLast {
+        configurations.extractJNI.files.each {
+            def file = it.absoluteFile
+            def packageName = file.name.tokenize('-')[0]
+            println("extractJNI: " + packageName)
+            copy {
+                from zipTree(file)
+                into "$projectDir/build/jniLibs/$packageName/"
+                include "jni/**/*"
+            }
+        }
+    } 
+}
+
+preBuild.dependsOn extractJNIFiles
+tasks.whenTaskAdded { task -> 
+    if (task.name.startsWith('externalNativeBuild')) {
+        task.dependsOn extractJNIFiles
+    }
+}

@@ -1,0 +1,45 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../animax.gni")
+
+textra_shared_sources = [
+  "font_asset_manager_textra.cc",
+  "font_asset_manager_textra.h",
+  "text_content_layout_context.cc",
+  "text_content_layout_context.h",
+  "text_content_textra.cc",
+  "text_content_textra.h",
+  "text_helper_textra.cc",
+  "text_helper_textra.h",
+  "textra_include.h",
+]
+
+animax_source_set("textra") {
+  sources = textra_shared_sources
+
+  if (is_ios) {
+    sources += [ "ios/textra_register.mm" ]
+  } else if (is_android) {
+    sources += [ "android/textra_jni.cc" ]
+  } else if (is_harmony) {
+    sources += [ "harmony/textra_register.cc" ]
+  }
+
+  include_dirs = [ "$textra_search_path/public" ]
+  deps = [ "../../render:skity" ]
+
+  if (textra_source_build && is_android) {
+    deps += [ "$textra_search_path/platform/android/lynxtextra:lynxtextra" ]
+  } else if (!is_harmony) {
+    metadata = {
+      # let the cmake file to find and link libskity
+      find_and_link_packages = [ [
+            textra_target_name,
+            [],
+            "cmake::configd",
+            "$textra_target_name::$textra_target_name",
+          ] ]
+    }
+  }
+}

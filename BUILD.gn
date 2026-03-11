@@ -1,0 +1,15 @@
+# Copyright 2026 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+group("default") {
+  deps = []
+  if (is_android) {
+    deps += [ "./platform/android:Android" ]
+  } else if (is_ios) {
+    deps += [
+      "./platform/darwin/ios:animax_podspec",
+      "./third_party/lynx/base/platform/darwin:lynx_base_podspec",
+      "./third_party/lynx/platform/darwin/ios/lynx_service_api:LynxServiceAPI_podspec",
+    ]
+  }
+}

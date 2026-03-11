@@ -1,0 +1,133 @@
+From ef8c07600ef3fe73313609c6d25ea78c6f4eaccf Mon Sep 17 00:00:00 2001
+From: Lynx <anonymous@example.com>
+Date: Fri, 12 Dec 2025 15:02:37 +0800
+Subject: [PATCH] Fix shorten64to32 and unused variable error
+
+Signed-off-by: aiyongbiao.rick <aiyongbiao.rick@bytedance.com>
+---
+ platform/android/lynxtextra/BUILD.gn     |  6 ++-
+ platform/android/lynxtextra/build.gradle | 56 +++++++++++++++++++++---
+ src/BUILD.gn                             |  8 +++-
+ 3 files changed, 59 insertions(+), 11 deletions(-)
+
+diff --git a/platform/android/lynxtextra/BUILD.gn b/platform/android/lynxtextra/BUILD.gn
+index a8dd87c..44d702d 100644
+--- a/platform/android/lynxtextra/BUILD.gn
++++ b/platform/android/lynxtextra/BUILD.gn
+@@ -4,15 +4,17 @@
+ 
+ import("//config.gni")
+ 
+-shared_library("lynxtextra") {
++cmake_target("lynxtextra") {
++  cmake_version = "3.4.1"
++  target_type = "shared_library"
+   output_name = "lynxtextra"
++
+   deps = [ "../../../src:textlayout" ]
+   libs = [ "log" ]
+   include_dirs = [
+     "src/main/jni/include",
+     "//third_party/icu/source/common",
+   ]
+-  sources = []
+   ldflags = [
+     "-fuse-ld=lld",
+     "-Xlinker",
+diff --git a/platform/android/lynxtextra/build.gradle b/platform/android/lynxtextra/build.gradle
+index d9979c3..258f4ac 100644
+--- a/platform/android/lynxtextra/build.gradle
++++ b/platform/android/lynxtextra/build.gradle
+@@ -12,14 +12,56 @@ android {
+         versionName "1.0"
+         consumerProguardFiles "consumer-rules.pro"
+         buildFeatures {
+-            prefabPublishing true
++            prefabPublishing false
+         }
+-        externalNativeBuild {
+-            cmake {
+-                cppFlags "-std=c++17 -DLOCAL_ARM_NEON=TRUE -Wl,-ldl -Wno-unused-command-line-argument"
+-                arguments "-DANDROID_TOOLCHAIN=clang",
+-                        "-DFLAVOR_NAME=lite"
+-                abiFilters = rootProject.ext.abiList
++    }
++
++    flavorDimensions "lynx"
++    productFlavors {
++        debugMode {
++            dimension "lynx"
++            externalNativeBuild {
++                cmake {
++                    cppFlags '-Wl,-ldl',
++                            '-Wno-unused-command-line-argument'
++                    arguments '-DFLAVOR_NAME=debugMode'
++
++                }
++            }
++        }
++        asan {
++            dimension "lynx"
++            externalNativeBuild {
++                cmake {
++                    cppFlags '-fsanitize=address',
++                            '-fsanitize-address-use-after-scope',
++                            '-fPIE',
++                            '-Wl,-ldl',
++                            '-Wl,-llog',
++                            '-Wno-unused-command-line-argument'
++                    arguments '-DANDROID_ARM_MODE=arm', '-DFLAVOR_NAME=asan'
++                    abiFilters(*rootProject.ext.abiList)
++                }
++            }
++        }
++        noasan {
++            dimension "lynx"
++            externalNativeBuild {
++                cmake {
++                    arguments '-DFLAVOR_NAME=noasan'
++                }
++            }
++        }
++        dev {
++            dimension "lynx"
++            matchingFallbacks = ["noasan"]
++            externalNativeBuild {
++                cmake {
++                    cppFlags '-Wl,-ldl',
++                            '-Wno-unused-command-line-argument'
++                    arguments '-DANDROID_STL='+getCppLib(),
++                            '-DFLAVOR_NAME=dev'
++                }
+             }
+         }
+     }
+diff --git a/src/BUILD.gn b/src/BUILD.gn
+index b08e1df..f0527e2 100644
+--- a/src/BUILD.gn
++++ b/src/BUILD.gn
+@@ -51,8 +51,8 @@ config("textlayout_public") {
+ }
+ config("textlayout_internal") {
+   visibility = [ ":*" ]
+-  cflags = [ "-Wshorten-64-to-32" ]
+-  cflags_cc = [ "-Wshorten-64-to-32" ]
++  # cflags = [ "-Wshorten-64-to-32" ]
++  # cflags_cc = [ "-Wshorten-64-to-32" ]
+   include_dirs = [
+     "$prj_root",
+     "$prj_root/public",
+@@ -303,6 +303,10 @@ source_set("javashaper") {
+     ":icu",
+   ]
+   configs += [ ":textlayout_internal" ]
++  cflags_cc = [
++    "-Wno-shorten-64-to-32",
++    "-Wno-unused-variable", 
++  ]
+   deps = []
+   sources = [
+     "$prj_root/src/ports/shaper/java/java_font_manager.cc",
+-- 
+2.49.0
+

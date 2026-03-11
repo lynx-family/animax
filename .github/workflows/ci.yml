@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - CQ-*
+
+defaults:
+  run:
+    working-directory: animax
+
+jobs:
+  static-check:
+    runs-on: lynx-ubuntu-22.04-medium
+    timeout-minutes: 30
+    steps:
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Download Source
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 2
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: animax
+      - name: Install Common Dependencies
+        uses: ./animax/.github/actions/common-deps
+      - name: Run file type check
+        run: |
+          source tools/envsetup.sh
+          python3 tools_shared/git_lynx.py check --checkers file-type
+      - name: Run cpplint check
+        run: |
+          source tools/envsetup.sh
+          python3 tools_shared/git_lynx.py check --checkers cpplint
+      - name: Run java-lint check
+        run: |
+          source tools/envsetup.sh
+          python3 tools_shared/git_lynx.py check --checkers java-lint
+      - name: Run commit-message check
+        run: |
+          source tools/envsetup.sh
+          python3 tools_shared/git_lynx.py check --checkers commit-message
+      - name: Run coding-style check
+        run: |
+          source tools/envsetup.sh
+          python3 tools_shared/git_lynx.py check --checkers coding-style
+      - name: Run android-check-style check
+        run: |
+          source tools/envsetup.sh
+          python3 tools_shared/git_lynx.py check --checkers android-check-style
+
+  android-example-build:
+    runs-on: lynx-ubuntu-22.04-large
+    timeout-minutes: 60
+    steps:
+      - name: Download Source
+        uses: actions/checkout@v4.2.2
+        with:
+          path: animax
+      - name: Setup gradle cache
+        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        with:
+          path: ~/.gradle/caches/modules-2
+          key: gradle-android-example-build
+      - name: Build Example App
+        uses: ./animax/.github/actions/android-example-build
+        with:
+          abi-list: x86,arm64-v8a
+          build-params: -PIntegrationTest
+
+  ios-example-build:
+    timeout-minutes: 60
+    runs-on: lynx-darwin-14-medium
+    steps:
+      - name: Download Source
+        uses: actions/checkout@v4.2.2
+        with:
+          path: animax
+      - name: Build Example App
+        uses: ./animax/.github/actions/ios-example-build
+      - name: upload artifact
+        uses: lynx-infra/upload-artifact@332ec52e99f7cbf1fbbdc9bcc09280d49147d092
+        continue-on-error: true
+        with:
+          name: ios-example-build-arm64
+          path: '${{ github.workspace }}/animax/AnimaXExample-arm64.app.tar.gz'

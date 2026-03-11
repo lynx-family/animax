@@ -1,0 +1,12 @@
+import os
+import platform
+system = platform.system().lower()
+deps = {
+    "tools_shared": {
+        "type": "solution",
+        "url": "https://github.com/lynx-family/tools-shared.git",
+        "commit": "ae99b7e17727a590896397c88b940ae06d067242",
+        'deps_file': 'dependencies/DEPS',
+        "ignore_in_git": True,
+    },
+}

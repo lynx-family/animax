@@ -1,0 +1,235 @@
+# Copyright 2026 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("//build_overrides/animax.gni")
+import("//config.gni")
+
+animax_base_xcconfig = {
+  HEADER_SEARCH_PATHS = [
+    "//PODS_ROOT/LynxBase/lynx",
+    "//PODS_ROOT/LynxBase",
+  ]
+  GCC_PREPROCESSOR_DEFINITIONS = [
+    "OS_IOS=1",
+    "ENABLE_TRACE_PERFETTO=#{\$enable_trace}",
+  ]
+  OTHER_CPLUSPLUSFLAGS =
+      "-fno-aligned-allocation -fno-c++-static-destructors -std=gnu++17"
+}
+if (!is_debug) {
+  animax_base_xcconfig.GCC_PREPROCESSOR_DEFINITIONS += [ "NDEBUG=1" ]
+}
+
+podspec_target("animax_podspec") {
+  output_name = "AnimaX.podspec"
+  output_path = rebase_path("//")
+
+  # We disable trace in AnimaX since it is only used in fml.
+  global_variables = []
+  if (enable_trace == "perfetto") {
+    global_variables += [ "\$enable_trace = 1" ]
+  } else {
+    global_variables += [ "\$enable_trace = 0" ]
+  }
+  root_specification = {
+    name = "AnimaX"
+    version = "1.0.0"
+    summary = "The framework of AnimaX."
+    homepage = "https://code.byted.org/lynx/animax"
+    license = "MIT"
+    author = "Lynx"
+    source = {
+      git = "git@code.byted.org:lynx/animax.git"
+    }
+    requires_arc = true
+    default_subspec = "RenderBackend/Skity"
+    compiler_flags = [
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wshorten-64-to-32",
+      "-fno-rtti",
+    ]
+    ios = {
+      deployment_target = "10.0"
+    }
+    pod_target_xcconfig = animax_base_xcconfig
+    pod_target_xcconfig.CLANG_CXX_LANGUAGE_STANDARD = "gnu++17"
+  }
+
+  deps = [
+    ":Core",
+    ":Framework",
+    ":RenderBackend",
+    ":Textra",
+    ":ThirdParty",
+    ":Trace",
+  ]
+}
+
+subspec_target("Framework") {
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [
+      "//",
+      "../../../src",
+    ]
+    GCC_PREPROCESSOR_DEFINITIONS = [
+      "RAPIDJSON_HAS_STDSTRING=1",
+      "RAPIDJSON_NAMESPACE=lynx::rapidjson",
+      "RAPIDJSON_NAMESPACE_BEGIN=\\\"namespace lynx{namespace rapidjson{\\\"",
+      "RAPIDJSON_NAMESPACE_END=\\\"}};namespace rapidjson=::lynx::rapidjson;\\\"",
+    ]
+  }
+  deps = [ "./animax_framework:animax_ios_framework" ]
+  dependency = [ "AnimaX/Core" ]
+}
+
+subspec_target("Core") {
+  header_mappings_dir = "."
+  deps = [
+    "../../../include",
+    "../../../src/animation",
+    "../../../src/animator",
+    "../../../src/base/gl",
+    "../../../src/base/log",
+    "../../../src/base/monitor",
+    "../../../src/base/thread",
+    "../../../src/base/util",
+    "../../../src/content",
+    "../../../src/layer",
+    "../../../src/model",
+    "../../../src/parser",
+    "../../../src/player",
+    "../../../src/property",
+    "../../../src/render",
+    "../../../src/render:skity",
+    "../../../src/resource",
+    "../../../src/video",
+  ]
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [
+      "//",
+      "//third_party/lynx",
+    ]
+    GCC_PREPROCESSOR_DEFINITIONS = [
+      "RAPIDJSON_HAS_STDSTRING=1",
+      "RAPIDJSON_NAMESPACE=lynx::rapidjson",
+      "RAPIDJSON_NAMESPACE_BEGIN=\\\"namespace lynx{namespace rapidjson{\\\"",
+      "RAPIDJSON_NAMESPACE_END=\\\"}};namespace rapidjson=::lynx::rapidjson;\\\"",
+    ]
+  }
+  dependency = [
+    "AnimaX/ThirdParty",
+    "SSZipArchive",
+  ]
+}
+
+subspec_target("Textra") {
+  header_mappings_dir = "."
+  deps = [ "../../../src/layer/textra" ]
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [
+      "//",
+      "//PODS_ROOT/LynxTextra/public/",
+    ]
+  }
+  dependency = [
+    "AnimaX/Core",
+    "LynxTextra",
+  ]
+}
+
+subspec_target("ThirdParty") {
+  deps = [
+    ":fml",
+    ":rapidjson",
+  ]
+
+  # todo: delete enable_napi after napi was integrated
+  if (enable_napi) {
+    deps += [ ":NapiBinding" ]
+  }
+}
+
+subspec_target("Trace") {
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [
+      "//PODS_ROOT/LynxBase",
+      "//PODS_ROOT/LynxBase/third_party/lynx",
+      "//PODS_ROOT/Lynx/Trace",
+    ]
+  }
+  header_mappings_dir = "."
+  dependency = [ "Lynx/Trace" ]
+}
+
+subspec_target("RenderBackend") {
+  deps = [
+    ":Skity",
+    ":Software",
+  ]
+}
+
+subspec_target("Software") {
+  pod_target_xcconfig = {
+    GCC_PREPROCESSOR_DEFINITIONS = [ "ENABLE_IOS_SOFTWARE_RENDER=1" ]
+  }
+  dependency = [
+    "AnimaX/Core",
+    "skity",
+  ]
+}
+
+subspec_target("Skity") {
+  header_mappings_dir = "."
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [ "//third_party" ]
+    GCC_PREPROCESSOR_DEFINITIONS = []
+  }
+  deps = [ "../../../src/render:skity" ]
+  dependency = [
+    "AnimaX/Core",
+    "skity",
+  ]
+}
+
+subspec_target("fml") {
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [
+      "//PODS_ROOT/LynxBase",
+      "//PODS_ROOT/LynxBase/third_party/lynx",
+
+      # "//PODS_ROOT/Lynx/Trace",
+    ]
+  }
+
+  # deps = [ "//third_party/base/trace/native:trace_public_headers" ]
+  header_mappings_dir = "."
+  dependency = [
+    "LynxBase/Framework",
+    # "Lynx/Trace"
+  ]
+}
+
+subspec_target("rapidjson") {
+  header_mappings_dir = "."
+  deps = [ rapidjson_search_path ]
+}
+
+subspec_target("NapiBinding") {
+  pod_target_xcconfig = {
+    HEADER_SEARCH_PATHS = [
+      "//PODS_CONFIGURATION_BUILD_DIR/skity/skity.framework/Headers",
+      "//PODS_ROOT/vmsdk/oss/src/napi",
+    ]
+    GCC_PREPROCESSOR_DEFINITIONS = [
+      "NAPI_DISABLE_CPP_RTTI",
+      "NAPI_DISABLE_CPP_EXCEPTIONS",
+      "ENABLE_NAPI_BINDING=1",
+    ]
+  }
+
+  # deps = [ "//third_party/binding/napi:napi_binding_base" ]
+  # dependency = [ "vmsdk/napi/env" ]
+  header_mappings_dir = "."
+}

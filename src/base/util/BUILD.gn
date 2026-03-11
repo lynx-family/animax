@@ -1,0 +1,58 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../animax.gni")
+
+base_util_shared_sources = [
+  "animax_native.cc",
+  "animax_native.h",
+  "buffer_copy_helper.cc",
+  "buffer_copy_helper.h",
+  "color_util.cc",
+  "count_down_event.cc",
+  "count_down_event.h",
+  "event_warning_checker.cc",
+  "event_warning_checker.h",
+  "misc_util.cc",
+  "misc_util.h",
+  "visibility_state.cc",
+  "visibility_state.h",
+]
+
+if (is_ios) {
+  base_util_shared_sources += [
+    "ios/ca_util.h",
+    "ios/ca_util.mm",
+    "ios/lifecycle_manager.h",
+    "ios/lifecycle_manager.mm",
+    "ios/reflect_invoke.h",
+    "ios/reflect_invoke.mm",
+  ]
+} else if (is_android) {
+  base_util_shared_sources += [
+    "android/animax_native_android.cc",
+    "android/hardware_buffer_functions.cc",
+    "android/hardware_buffer_functions.h",
+    "android/java_only_array.cc",
+    "android/java_only_array.h",
+    "android/java_only_map.cc",
+    "android/java_only_map.h",
+    "android/jni_convert_helper.cc",
+    "android/jni_convert_helper.h",
+    "android/jni_helper.cc",
+    "android/jni_helper.h",
+    "android/metrics_callback_android.cc",
+    "android/metrics_callback_android.h",
+    "android/symbol_util.h",
+  ]
+} else if (is_harmony) {
+  base_util_shared_sources += [
+    "harmony/scoped_object_harmony.h",
+    "harmony/xcomponent_adapter.cc",
+    "harmony/xcomponent_adapter.h",
+  ]
+}
+
+animax_source_set("util") {
+  sources = base_util_shared_sources
+}

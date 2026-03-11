@@ -1,0 +1,8 @@
+dictionary ValueParam {
+    ByteString stringValue;
+    double pointX;
+    double pointY;
+    double doubleValue;
+    boolean boolValue;
+    long frameIndex = -1;
+};

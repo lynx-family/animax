@@ -1,0 +1,12 @@
+[ImplementedAs="AnimaXPlayerDelegate"]
+interface CompositionElement {
+    constructor(ByteString id);
+
+    void updateLayerProperty(long type, ByteString layerName, ValueParam param, OnPropertyCallback callback);
+
+    void setResourceProperty(long type, ByteString resourceId, ValueParam param, OnPropertyCallback callback);
+
+    void play();
+};
+
+[HolderStorageNamespace = binding] callback OnPropertyCallback = void (boolean success, long errorType);

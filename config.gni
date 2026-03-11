@@ -1,0 +1,31 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+if (is_android) {
+  import("//build/config/android/config.gni")
+} else if (is_harmony) {
+  import("//build/config/harmony/config.gni")
+}
+if (target_cpu == "arm" || target_cpu == "arm64") {
+  import("//build/config/arm.gni")
+}
+
+declare_args() {
+  # napi config
+  use_primjs_napi = false
+
+  enable_unittests = false
+  enable_16kb_align = true
+  compiler_optimization_level = "Oz"
+
+  # textra
+  use_lru_cache = true
+  boundary_analyst = "simple"
+  dynamic_load_harfbuzz = false
+
+  # lynx base
+  enable_lite = false
+  enable_lite_production = false
+  enable_trace = "none"
+}

@@ -1,0 +1,442 @@
+From 67dd24995c0b1c69517cd6324c19e2f13e52a9a0 Mon Sep 17 00:00:00 2001
+From: "aiyongbiao.rick" <aiyongbiao.rick@bytedance.com>
+Date: Fri, 12 Dec 2025 16:52:30 +0800
+Subject: [PATCH] fix lynxbase is not able to build without lynx
+
+Signed-off-by: aiyongbiao.rick <aiyongbiao.rick@bytedance.com>
+---
+ base/platform/android/BUILD.gn                |  6 +-
+ base/platform/android/build.gradle            |  2 +-
+ base/platform/darwin/BUILD.gn                 |  2 +-
+ base/src/BUILD.gn                             | 89 +------------------
+ base/src/base.gni                             |  4 +
+ base/trace/android/BUILD.gn                   |  8 +-
+ base/trace/android/build.gradle               | 28 +++---
+ base/trace/darwin/BUILD.gn                    |  2 +-
+ base/trace/native/BUILD.gn                    | 33 ++-----
+ .../native/hook_systrace/hook_systrace.gni    |  2 +-
+ base/trace/native/platform/platform.gni       |  2 +-
+ platform/darwin/ios/lynx_service_api/BUILD.gn |  7 +-
+ 12 files changed, 43 insertions(+), 142 deletions(-)
+
+diff --git a/base/platform/android/BUILD.gn b/base/platform/android/BUILD.gn
+index e6c6291f..f642cba6 100644
+--- a/base/platform/android/BUILD.gn
++++ b/base/platform/android/BUILD.gn
+@@ -3,7 +3,7 @@
+ # LICENSE file in the root directory of this source tree.
+ 
+ import("//build/toolchain/clang.gni")
+-import("../../../config.gni")
++import("//config.gni")
+ 
+ assert(is_android)
+ 
+@@ -37,12 +37,12 @@ cmake_target("LynxBase") {
+ 
+   configs = [
+     ":base_android_private_config",
+-    "../../../platform/android:16kb_page",
++    "../../../../../platform/android:16kb_page",
+   ]
+ }
+ 
+ group("base_jni_files") {
+-  exec_script("../../../tools/build_jni/generate_and_register_jni_files.py",
++  exec_script("../../../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
+               [
+                 "-root",
+                 rebase_path("../../../"),
+diff --git a/base/platform/android/build.gradle b/base/platform/android/build.gradle
+index 1240cc67..6c6cc6c3 100644
+--- a/base/platform/android/build.gradle
++++ b/base/platform/android/build.gradle
+@@ -2,7 +2,7 @@
+ // Licensed under the Apache License Version 2.0 that can be found in the
+ // LICENSE file in the root directory of this source tree.
+ apply plugin: 'com.android.library'
+-apply from: '../../../platform/android/publish.gradle'
++apply from: '../../../../../platform/android/publish.gradle'
+ import org.json.simple.JSONObject
+ 
+ android {
+diff --git a/base/platform/darwin/BUILD.gn b/base/platform/darwin/BUILD.gn
+index 5f129d35..5eeb870c 100644
+--- a/base/platform/darwin/BUILD.gn
++++ b/base/platform/darwin/BUILD.gn
+@@ -20,7 +20,7 @@ podspec_target("lynx_base_podspec") {
+   output_path = rebase_path("//")
+   root_specification = {
+     name = "LynxBase"
+-    version = "$lynx_version"
++    version = "1.0.0"
+     summary = "The framework of LynxBase."
+     homepage = "https://github.com/lynx-family/lynx"
+     license = "Apache 2.0"
+diff --git a/base/src/BUILD.gn b/base/src/BUILD.gn
+index 101cabf4..eee7eaf2 100644
+--- a/base/src/BUILD.gn
++++ b/base/src/BUILD.gn
+@@ -2,9 +2,7 @@
+ # Licensed under the Apache License Version 2.0 that can be found in the
+ # LICENSE file in the root directory of this source tree.
+ 
+-import("../../config.gni")
+-import("../../oliver/oliver.gni")
+-import("../../testing/test.gni")
++import("//config.gni")
+ import("../include/base_public_headers.gni")
+ import("base.gni")
+ 
+@@ -29,21 +27,6 @@ group("base_group") {
+   ]
+ }
+ 
+-group("base_for_oliver") {
+-  public_deps = [
+-    ":base_log",
+-    ":base_values",
+-    ":string_utils",
+-    ":time_utils",
+-  ]
+-  if (is_oliver_ssr || is_oliver_node_lynx) {
+-    public_deps += [
+-      ":base_core",
+-      ":base_trace",
+-    ]
+-  }
+-}
+-
+ config("base_public_config") {
+   defines = []
+   cflags = []
+@@ -112,8 +95,6 @@ config("base_log_public_config") {
+   defines = []
+   if (enable_lite && enable_lite_production) {
+     defines += [ "LYNX_MIN_LOG_LEVEL=5" ]
+-  } else if (is_oliver_ssr) {
+-    defines += [ "LYNX_MIN_LOG_LEVEL=5" ]
+   } else if (is_debug) {
+     # In debug mode, logs of all levels will be output.
+     defines += [ "LYNX_MIN_LOG_LEVEL=0" ]
+@@ -316,74 +297,6 @@ lynx_base_source_set("base_core") {
+   }
+ }
+ 
+-if (enable_unittests) {
+-  unittest_exec("base_unittests_exec") {
+-    testonly = true
+-    sources = [
+-      "algorithm_unittest.cc",
+-      "auto_create_optional_unittest.cc",
+-      "auto_reset_unittest.cc",
+-      "boost/unordered_unittest.cc",
+-      "bundled_optional_unittest.cc",
+-      "closure_unittest.cc",
+-      "concurrent_queue_unittest.cc",
+-      "datauri_utils_unittest.cc",
+-      "debug/lynx_error_unittest.cc",
+-      "expected_unittest.cc",
+-      "file_utils_unittest.cc",
+-      "flex_optional_unittest.cc",
+-      "fml/cpu_affinity_unittests.cc",
+-      "fml/hash_combine_unittests.cc",
+-      "fml/memory/ref_counted_unittest.cc",
+-      "fml/memory/task_runner_checker_unittest.cc",
+-      "fml/memory/weak_ptr_unittest.cc",
+-      "fml/message_loop_impl_unittests.cc",
+-      "fml/message_loop_task_queues_merge_unmerge_unittests.cc",
+-      "fml/message_loop_task_queues_unittests.cc",
+-      "fml/message_loop_unittests.cc",
+-      "fml/raster_thread_merger_unittests.cc",
+-      "fml/synchronization/count_down_latch_unittests.cc",
+-      "fml/synchronization/semaphore_unittest.cc",
+-      "fml/synchronization/sync_switch_unittest.cc",
+-      "fml/synchronization/waitable_event_unittest.cc",
+-      "fml/task_runner_unittests.cc",
+-      "fml/task_source_unittests.cc",
+-      "fml/thread_unittests.cc",
+-      "fml/time/chrono_timestamp_provider.cc",
+-      "fml/time/time_delta_unittest.cc",
+-      "fml/time/time_point_unittest.cc",
+-      "fml/time/time_unittest.cc",
+-      "geometry_unittest.cc",
+-      "hybrid_map_unittest.cc",
+-      "linked_hash_map_unittest.cc",
+-      "log/log_stream_unittest.cc",
+-      "lynx_actor_unittest.cc",
+-      "path_utils_unittest.cc",
+-      "sorted_for_each_unittest.cc",
+-      "string/string_number_convert_unittest.cc",
+-      "string/string_utils_unittest.cc",
+-      "thread/timed_task_unittest.cc",
+-      "timer/time_utils_unittest.cc",
+-      "to_underlying_unittest.cc",
+-      "type_traits_addon_unittest.cc",
+-      "value/base_value_unittest.cc",
+-      "value/lynx_value_extended_empty.cc",
+-      "value/path_parser_unittest.cc",
+-      "vector_unittest.cc",
+-      "version_unittest.cc",
+-    ]
+-    if (is_mac) {
+-      sources += [ "fml/platform/darwin/cf_utils_unittests.mm" ]
+-    }
+-    deps = [
+-      ":base_core",
+-      ":base_log",
+-      ":base_values",
+-      "//third_party/googletest:gtest",
+-    ]
+-  }
+-}
+-
+ lynx_base_source_set("string_utils") {
+   visibility = [
+     ":*",
+diff --git a/base/src/base.gni b/base/src/base.gni
+index 91e1a07c..7bce6dc2 100644
+--- a/base/src/base.gni
++++ b/base/src/base.gni
+@@ -48,6 +48,10 @@ template("lynx_base_source_set") {
+     if (defined(invoker.public_configs)) {
+       public_configs += invoker.public_configs
+     }
++    if (!defined(include_dirs)) {
++      include_dirs = []
++    }
++    include_dirs += [ "//third_party/lynx" ]
+     if (is_android) {
+       libs += [ "log" ]
+     }
+diff --git a/base/trace/android/BUILD.gn b/base/trace/android/BUILD.gn
+index b17d9fa8..5d95ea94 100644
+--- a/base/trace/android/BUILD.gn
++++ b/base/trace/android/BUILD.gn
+@@ -3,7 +3,7 @@
+ # LICENSE file in the root directory of this source tree.
+ 
+ import("//build/toolchain/clang.gni")
+-import("../../../config.gni")
++import("//config.gni")
+ 
+ assert(is_android)
+ 
+@@ -15,6 +15,8 @@ config("trace_android_private_config") {
+     "-Map=output.map",
+   ]
+ 
++  include_dirs = [ "//third_party/lynx" ]
++
+   # Specify the symbols that need to be exported in order to hide symbols like `__emutls_get_address` that are not intended to be exported.
+   # lld will export `__emutls_get_address` with enable lto, it's a bug of lld.
+   ldflags +=
+@@ -36,12 +38,12 @@ cmake_target("LynxTrace") {
+ 
+   configs = [
+     ":trace_android_private_config",
+-    "../../../platform/android:16kb_page",
++    "../../../../../platform/android:16kb_page",
+   ]
+ }
+ 
+ group("trace_jni_files") {
+-  exec_script("../../../tools/build_jni/generate_and_register_jni_files.py",
++  exec_script("../../../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
+               [
+                 "-root",
+                 rebase_path("../../../"),
+diff --git a/base/trace/android/build.gradle b/base/trace/android/build.gradle
+index 0f5afc1e..aa236dc5 100644
+--- a/base/trace/android/build.gradle
++++ b/base/trace/android/build.gradle
+@@ -2,7 +2,7 @@
+ // Licensed under the Apache License Version 2.0 that can be found in the
+ // LICENSE file in the root directory of this source tree.
+ apply plugin: 'com.android.library'
+-apply from: '../../../platform/android/publish.gradle'
++apply from: '../../../../../platform/android/publish.gradle'
+ import org.json.simple.JSONObject
+ 
+ ext.ABI_FILTERS = ['armeabi-v7a', 'armeabi', 'arm64-v8a', 'x86']
+@@ -167,20 +167,22 @@ task configGnCompileParas {
+             String buildType = it
+             if (buildType == "release") {
+                 gnBuildArgs_list.put("is_debug", "false")
+-                if (enable_lite_production == "true") {
+-                    gnBuildArgs_list.put("enable_trace", "none")
+-                } else {
+-                    gnBuildArgs_list.put("enable_trace", "\"${enable_trace}\"")
+-                }
++                gnBuildArgs_list.put("enable_trace", "none")
++                // if (enable_lite_production == "true") {
++                //     gnBuildArgs_list.put("enable_trace", "none")
++                // } else {
++                //     gnBuildArgs_list.put("enable_trace", "\"${enable_trace}\"")
++                // }
+             } else if(buildType == "debug") {
+                 gnBuildArgs_list.put("is_debug", "true")
+-                if (enable_lite_production == "true") {
+-                    gnBuildArgs_list.put("enable_trace", "none")
+-                } else if (enable_trace == "none") {
+-                    gnBuildArgs_list.put("enable_trace", "perfetto")
+-                } else {
+-                    gnBuildArgs_list.put("enable_trace", "\"${enable_trace}\"")
+-                }
++                gnBuildArgs_list.put("enable_trace", "none")
++                // if (enable_lite_production == "true") {
++                //     gnBuildArgs_list.put("enable_trace", "none")
++                // } else if (enable_trace == "none") {
++                //     gnBuildArgs_list.put("enable_trace", "none")
++                // } else {
++                //     gnBuildArgs_list.put("enable_trace", "\"${enable_trace}\"")
++                // }
+             }
+             rootProject.ext.abiList.each { abi ->
+                 gnBuildArgs_map.put(flavorName+buildType+abi, gnBuildArgs_list)
+diff --git a/base/trace/darwin/BUILD.gn b/base/trace/darwin/BUILD.gn
+index 986d85b2..66b2a52e 100644
+--- a/base/trace/darwin/BUILD.gn
++++ b/base/trace/darwin/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Licensed under the Apache License Version 2.0 that can be found in the
+ # LICENSE file in the root directory of this source tree.
+ 
+-import("../../../config.gni")
++import("//config.gni")
+ 
+ trace_public_headers = [
+   "LynxTraceController.h",
+diff --git a/base/trace/native/BUILD.gn b/base/trace/native/BUILD.gn
+index f92e9b01..199f90cf 100644
+--- a/base/trace/native/BUILD.gn
++++ b/base/trace/native/BUILD.gn
+@@ -2,14 +2,13 @@
+ # Licensed under the Apache License Version 2.0 that can be found in the
+ # LICENSE file in the root directory of this source tree.
+ 
+-import("../../../config.gni")
+-import("../../../testing/test.gni")
++import("//config.gni")
+ import("hook_systrace/hook_systrace.gni")
+ import("platform/platform.gni")
+ 
+ config("trace_public_config") {
+   include_dirs = [
+-    "../../../third_party/perfetto",
++    "//third_party/perfetto",
+     "$root_gen_dir/lynx",
+   ]
+   defines = []
+@@ -56,6 +55,8 @@ config("trace_private_config") {
+     cflags_cc += [ "-g" ]
+   }
+ 
++  include_dirs = [ "//third_party/lynx" ]
++
+   defines = []
+ }
+ 
+@@ -139,7 +140,7 @@ source_set("trace") {
+ 
+   if (enable_trace == "perfetto") {
+     public_deps += [
+-      "../../../third_party/perfetto/sdk:perfetto",
++      "//third_party/perfetto/sdk:perfetto",
+       "../../../third_party/rapidjson:rapidjson",
+     ]
+   }
+@@ -149,31 +150,11 @@ source_set("trace") {
+     ":trace_private_config",
+     "../../src:base_public_config",
+   ]
++
++  include_dirs = [ "//third_party/lynx" ]
+ }
+ 
+ source_set("trace_public_headers") {
+   sources = trace_public_headers
+   public_configs = [ ":trace_public_config" ]
+ }
+-
+-unittest_set("trace_testset") {
+-  sources = [
+-    "trace_controller_unittest.cc",
+-    "trace_event_unittest.cc",
+-  ]
+-  public_deps = [ ":trace" ]
+-}
+-
+-unittest_exec("trace_unittests_exec") {
+-  sources = []
+-  deps = [
+-    ":trace",
+-    ":trace_testset",
+-  ]
+-}
+-
+-group("trace_tests") {
+-  testonly = true
+-  deps = [ ":trace_unittests_exec" ]
+-  public_deps = [ ":trace_testset" ]
+-}
+diff --git a/base/trace/native/hook_systrace/hook_systrace.gni b/base/trace/native/hook_systrace/hook_systrace.gni
+index ed266cf2..ccd9641e 100644
+--- a/base/trace/native/hook_systrace/hook_systrace.gni
++++ b/base/trace/native/hook_systrace/hook_systrace.gni
+@@ -2,7 +2,7 @@
+ # Licensed under the Apache License Version 2.0 that can be found in the
+ # LICENSE file in the root directory of this source tree.
+ 
+-import("../../../../config.gni")
++import("//config.gni")
+ 
+ hook_systrace_public_headers = []
+ hook_systrace_shared_sources = []
+diff --git a/base/trace/native/platform/platform.gni b/base/trace/native/platform/platform.gni
+index 42bed317..d1f40fca 100644
+--- a/base/trace/native/platform/platform.gni
++++ b/base/trace/native/platform/platform.gni
+@@ -2,7 +2,7 @@
+ # Licensed under the Apache License Version 2.0 that can be found in the
+ # LICENSE file in the root directory of this source tree.
+ 
+-import("../../../../config.gni")
++import("//config.gni")
+ 
+ platform_public_headers = []
+ platform_shared_sources = []
+diff --git a/platform/darwin/ios/lynx_service_api/BUILD.gn b/platform/darwin/ios/lynx_service_api/BUILD.gn
+index 2659525c..0a68a054 100644
+--- a/platform/darwin/ios/lynx_service_api/BUILD.gn
++++ b/platform/darwin/ios/lynx_service_api/BUILD.gn
+@@ -3,8 +3,7 @@
+ # LICENSE file in the root directory of this source tree.
+ 
+ import("//${lynx_dir}/build_overrides/darwin.gni")
+-import("../../../../config.gni")
+-import("../../../../core/Lynx.gni")
++import("//config.gni")
+ 
+ group("LynxServiceAPI") {
+   deps = [ ":LynxServiceAPI_podspec" ]
+@@ -15,7 +14,7 @@ podspec_target("LynxServiceAPI_podspec") {
+   output_path = rebase_path("//")
+   root_specification = {
+     name = "LynxServiceAPI"
+-    version = "$lynx_version"
++    version = "1.0.0"
+     summary = "Service API provided for frameworks such as Lynx/LynxBase"
+     homepage = "https://github.com/lynx-family/lynx"
+     license = "Apache 2.0"
+@@ -69,6 +68,6 @@ subspec_target("Core") {
+   ]
+ }
+ 
+-lynx_core_source_set("lynx_service_api_sources") {
++source_set("lynx_service_api_sources") {
+   sources = lynx_service_api_sources
+ }
+-- 
+2.49.0
+

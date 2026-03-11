@@ -1,0 +1,78 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+video_shared_sources = [
+  "custom/video_decoder_custom.h",
+  "custom/video_player_custom.cc",
+  "custom/video_player_custom.h",
+  "custom/yuv_frame_info.cc",
+  "custom/yuv_frame_info.h",
+  "video_player.h",
+  "video_player_listener.h",
+  "video_player_provider.h",
+  "video_player_provider_default.h",
+  "video_player_service.cc",
+  "video_player_service.h",
+  "video_shader.h",
+]
+
+animax_source_set("video") {
+  sources = video_shared_sources
+
+  if (is_ios) {
+    sources += [
+      "ios/frame_info.h",
+      "ios/metal_shaders.h",
+      "ios/pending_frame_set.cc",
+      "ios/pending_frame_set.h",
+      "ios/video_asset_ios.h",
+      "ios/video_asset_ios.mm",
+      "ios/video_frame.h",
+      "ios/video_frame.mm",
+      "ios/video_frame_cache.h",
+      "ios/video_frame_cache.mm",
+      "ios/video_player_ios.h",
+      "ios/video_player_ios.mm",
+      "ios/video_shader_ios.h",
+      "ios/video_shader_ios.mm",
+    ]
+  } else if (is_android) {
+    sources += [
+      "android/native_player_callback.cc",
+      "android/video_asset_android.cc",
+      "android/video_asset_android.h",
+      "android/video_player_android.cc",
+      "android/video_player_android.h",
+      "android/video_shader_android.cc",
+      "android/video_shader_android.h",
+      "custom/android/video_shader_yuv_android.cc",
+      "custom/android/video_shader_yuv_android.h",
+      "video_shader_gl.cc",
+      "video_shader_gl.h",
+    ]
+  } else if (is_harmony) {
+    sources += [
+      "harmony/video_asset_harmony.cc",
+      "harmony/video_asset_harmony.h",
+      "harmony/video_player_harmony.cc",
+      "harmony/video_player_harmony.h",
+      "harmony/video_shader_harmony.cc",
+      "harmony/video_shader_harmony.h",
+      "video_shader_gl.cc",
+      "video_shader_gl.h",
+    ]
+  } else if (is_wasm) {
+    sources += [
+      "video_shader_gl.cc",
+      "video_shader_gl.h",
+      "web/video_asset_web.cc",
+      "web/video_asset_web.h",
+      "web/video_player_web.cc",
+      "web/video_player_web.h",
+      "web/video_shader_web.cc",
+      "web/video_shader_web.h",
+    ]
+  }
+}

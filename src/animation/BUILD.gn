@@ -1,0 +1,28 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+animation_shared_sources = [
+  "base_keyframe_animation.cc",
+  "base_keyframe_animation.h",
+  "drop_shadow_keyframe_animation.cc",
+  "drop_shadow_keyframe_animation.h",
+  "interpolator/interpolator.cc",
+  "interpolator/interpolator.h",
+  "keyframe_animation.cc",
+  "keyframe_animation.h",
+  "mask_keyframe_animation.h",
+  "shape_keyframe_animation.cc",
+  "shape_keyframe_animation.h",
+  "split_dimension_path_keyframe_animation.cc",
+  "split_dimension_path_keyframe_animation.h",
+  "text_keyframe_animation.cc",
+  "text_keyframe_animation.h",
+  "transform_keyframe_animation.cc",
+  "transform_keyframe_animation.h",
+]
+
+animax_source_set("animation") {
+  sources = animation_shared_sources
+}

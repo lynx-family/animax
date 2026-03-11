@@ -1,0 +1,46 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../animax.gni")
+
+base_gl_shared_sources = [
+  "gl_include.h",
+  "gl_util.cc",
+  "gl_util.h",
+  "scoped_gl_object.cc",
+  "scoped_gl_object.h",
+  "scoped_gl_reset_restore.cc",
+  "scoped_gl_reset_restore.h",
+]
+
+if (is_android) {
+  base_gl_shared_sources += [
+    "android/egl_util.cc",
+    "android/egl_util.h",
+  ]
+} else if (is_harmony) {
+  base_gl_shared_sources += [
+    "harmony/animax_egl_surface.cc",
+    "harmony/animax_egl_surface.h",
+    "harmony/animax_surface_harmony.cc",
+    "harmony/animax_surface_harmony.h",
+    "harmony/egl_util.cc",
+    "harmony/egl_util.h",
+    "harmony/gl_context_harmony.cc",
+    "harmony/gl_context_harmony.h",
+  ]
+}
+
+animax_source_set("gl") {
+  sources = base_gl_shared_sources
+
+  if (enable_unittests) {
+    include_dirs = [ "//third_party/mesa_build_support/include" ]
+    defines = [ "ANIMAX_GL_USE_OSMESA" ]
+    lib_dirs = [ "$root_out_dir" ]
+    libs = [
+      "glapi",
+      "OSMesa",
+    ]
+  }
+}

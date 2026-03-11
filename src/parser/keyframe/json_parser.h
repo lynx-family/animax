@@ -1,0 +1,52 @@
+// Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+// Copyright 2018 Airbnb, Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef ANIMAX_SRC_PARSER_KEYFRAME_JSON_PARSER_H_
+#define ANIMAX_SRC_PARSER_KEYFRAME_JSON_PARSER_H_
+
+#include <vector>
+
+#include "src/model/value/base_value.h"
+#include "third_party/rapidjson/document.h"
+
+namespace lynx {
+namespace animax {
+
+class JsonParser {
+ public:
+  static void JsonToPoints(rapidjson::Value& value, float scale,
+                           std::vector<std::unique_ptr<PointF>>& points);
+  static std::unique_ptr<PointF> JsonToPoint(rapidjson::Value& value,
+                                             float scale);
+  static const std::unique_ptr<PointF> AddPoints(const PointF& point1,
+                                                 const PointF& point2);
+  static float ValueFromObject(rapidjson::Value& value);
+  static int32_t JsonToColor(rapidjson::Value& value);
+
+ private:
+  static std::unique_ptr<PointF> JsonNumbersToPoint(rapidjson::Value& value,
+                                                    float scale);
+  static std::unique_ptr<PointF> JsonArrayToPoint(rapidjson::Value& value,
+                                                  float scale);
+  static std::unique_ptr<PointF> JsonObjectToPoint(rapidjson::Value& value,
+                                                   float scale);
+};
+
+}  // namespace animax
+}  // namespace lynx
+
+#endif  // ANIMAX_SRC_PARSER_KEYFRAME_JSON_PARSER_H_

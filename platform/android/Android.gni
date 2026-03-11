@@ -1,0 +1,11 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+import("//build/toolchain/clang.gni")
+
+vmsdk_native_lib_dir =
+    rebase_path("./animax_napi/build/jniLibs/vmsdk/jni/${android_app_abi}")
+
+lynx_base_native_lib_dir =
+    rebase_path("./animax_android/build/jniLibs/lynx/jni/${android_app_abi}")

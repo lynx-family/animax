@@ -1,0 +1,118 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+render_shared_sources = [
+  "color_filter.h",
+  "drawable.h",
+  "drawable_gl.h",
+  "drawable_sw.h",
+  "texture_info.h",
+  "texture_info_gl.h",
+  "texture_info_multi_gl.h",
+]
+
+animax_source_set("render") {
+  sources = render_shared_sources
+  if (is_ios) {
+    sources += [
+      "drawable_mtl.h",
+      "texture_info_mtl.h",
+    ]
+  }
+}
+
+skity_shared_sources = [
+  "camera.cc",
+  "camera.h",
+  "canvas.cc",
+  "canvas.h",
+  "error_callback.cc",
+  "error_callback.h",
+  "font.cc",
+  "font.h",
+  "gl_device.cc",
+  "gl_device.h",
+  "image.cc",
+  "image.h",
+  "image_gl.cc",
+  "image_gl.h",
+  "mask_filter.cc",
+  "mask_filter.h",
+  "matrix.cc",
+  "matrix.h",
+  "paint.cc",
+  "paint.h",
+  "path.cc",
+  "path.h",
+  "path_effect.cc",
+  "path_effect.h",
+  "path_measure.cc",
+  "path_measure.h",
+  "quaternion.cc",
+  "quaternion.h",
+  "real_context.cc",
+  "real_context.h",
+  "shader.cc",
+  "shader.h",
+  "skity_util.cc",
+  "skity_util.h",
+  "surface.h",
+  "surface_gl.cc",
+  "surface_gl.h",
+  "surface_sw.cc",
+  "surface_sw.h",
+]
+
+animax_source_set("skity") {
+  include_dirs = [
+    "$skity_search_path/include",
+    "$skity_search_path/third_party/glm",
+  ]
+
+  lib_dirs = []
+
+  if (is_win) {
+    include_dirs += [ "//third_party/angle/include" ]
+  } else if (is_harmony) {
+    include_dirs += [ "//third_party/skity/harmony/include" ]
+    lib_dirs += [ "//third_party/skity/harmony/lib" ]
+  }
+
+  sources = skity_shared_sources
+
+  if (is_ios) {
+    sources += [
+      "image_mtl.h",
+      "image_mtl.mm",
+      "surface_mtl.h",
+      "surface_mtl.mm",
+    ]
+  }
+
+  if (enable_unittests) {
+    include_dirs += [ "//third_party/mesa_build_support/include" ]
+    defines = [ "ANIMAX_GL_USE_OSMESA" ]
+    lib_dirs += [ "$root_out_dir" ]
+    libs = [
+      "glapi",
+      "OSMesa",
+    ]
+  } else if (is_wasm) {
+    deps = animax_wasm_deps
+    libs = animax_wasm_skity_libs
+  } else if (is_harmony) {
+    libs = [ "skity" ]
+  } else {
+    metadata = {
+      # let the cmake file to find and link libskity
+      find_and_link_packages = [ [
+            skity_target_name,
+            [],
+            "cmake::configd",
+            "$skity_target_name::skity",
+          ] ]
+    }
+  }
+}

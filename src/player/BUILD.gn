@@ -1,0 +1,78 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../animax.gni")
+
+player_shared_sources = [
+  "animax_ability.h",
+  "animax_composition_loader.cc",
+  "animax_composition_loader.h",
+  "animax_event.cc",
+  "animax_event.h",
+  "animax_event_dispatcher.cc",
+  "animax_event_dispatcher.h",
+  "animax_main_controller.cc",
+  "animax_main_controller.h",
+  "animax_monitor_event.cc",
+  "animax_monitor_event.h",
+  "animax_playback_event_handler.cc",
+  "animax_playback_event_handler.h",
+  "animax_player.cc",
+  "animax_player_builder.cc",
+  "animax_player_context.h",
+  "animax_renderer.cc",
+  "animax_renderer.h",
+  "animax_surface.cc",
+  "layer_event_listener.h",
+  "value_animator_listener.h",
+  "vsync_monitor.cc",
+]
+
+animax_source_set("player") {
+  sources = player_shared_sources
+
+  if (is_ios) {
+    sources += [
+      "ios/animax_ability_ios.h",
+      "ios/animax_surface_ios.h",
+      "ios/animax_surface_ios.mm",
+      "ios/vsync_monitor_ios.h",
+      "ios/vsync_monitor_ios.mm",
+    ]
+  } else if (is_android) {
+    sources += [
+      "android/android_native_window.cc",
+      "android/android_native_window.h",
+      "android/animax_ability_android.cc",
+      "android/animax_ability_android.h",
+      "android/animax_context_android.cc",
+      "android/animax_context_android.h",
+      "android/animax_egl_surface.cc",
+      "android/animax_egl_surface.h",
+      "android/animax_player_android.cc",
+      "android/animax_surface_android.cc",
+      "android/animax_surface_android.h",
+      "android/animax_surface_drawable_android.cc",
+      "android/animax_surface_drawable_android.h",
+      "android/bitmap_buffer.cc",
+      "android/bitmap_buffer.h",
+      "android/bitmap_buffer_group.cc",
+      "android/bitmap_buffer_group.h",
+      "android/first_frame_aware_surface_texture.cc",
+      "android/first_frame_aware_surface_texture.h",
+      "android/gl_context_android.cc",
+      "android/gl_context_android.h",
+      "android/vsync_monitor_android.cc",
+      "android/vsync_monitor_android.h",
+    ]
+  } else if (is_wasm) {
+    sources += [
+      "web/animax_surface_web.cc",
+      "web/animax_surface_web.h",
+      "web/animax_web_gpu_context.cc",
+      "web/animax_web_gpu_context.h",
+      "web/vsync_monitor_web.cc",
+      "web/vsync_monitor_web.h",
+    ]
+  }
+}
