@@ -4,6 +4,9 @@
 
 #include "src/audio/audio_controller.h"
 
+#include <chrono>
+#include <thread>
+
 #include "gtest/gtest.h"
 #include "src/audio/audio_player.h"
 #include "src/resource/asset/audio_asset.h"
@@ -93,4 +96,30 @@ TEST(AudioControllerUnittest, MuteAudio) {
   EXPECT_DOUBLE_EQ(test->GetAudioTime(), 300);
   test->Advance();
   EXPECT_DOUBLE_EQ(test->GetAudioTime(), 400);
+}
+
+TEST(AudioControllerUnittest, FrequentSyncProgress) {
+  auto player = std::make_unique<TestPlayer>();
+  auto test = player.get();
+  auto controller = new AudioController();
+  controller->SetAudioPlayer(std::move(player));
+  controller->OnResume();
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 0);
+  controller->OnProgress(0.1);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 100);
+  controller->OnProgress(0.3);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 300);
+  controller->OnProgress(0.5);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 500);
+  controller->OnProgress(0.6);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 500);
+  std::this_thread::sleep_for(std::chrono::milliseconds(250));
+  controller->OnProgress(0.9);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 900);
+  controller->OnProgress(0.1);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 100);
+  controller->OnProgress(0.5);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 500);
+  controller->OnProgress(0.7);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 500);
 }

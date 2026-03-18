@@ -108,11 +108,8 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
     mAudioTrack.pause();
   }
 
-  public void flush() {
-    if (mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
-      AnimaXLog.e(TAG, "Failed to flush audio renderer, the track is still playing.");
-      return;
-    }
+  public void pauseAndFlush() {
+    pause();
     mAudioTrack.flush();
     mEndPositionInByte = 0;
   }
