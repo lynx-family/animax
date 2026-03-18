@@ -62,13 +62,9 @@ public class AudioPlayer implements IAudioRendererListener {
         / mAudioDataCapacity * mAudioInfo.getDuration() / 1000.0;
   }
 
-  /**
-   * Always call this function after pause().
-   * @param progress progress the animation seek to.
-   */
   @CalledByNative
   public void seekToProgress(double progress) {
-    mRenderer.flush();
+    mRenderer.pauseAndFlush();
     mAudioStartPosition = mRenderer.alignByteToFrames((int) (progress * mAudioDataCapacity));
   }
 

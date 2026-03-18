@@ -18,6 +18,13 @@ animax_source_set("audio") {
       "android/audio_player_android.cc",
       "android/audio_player_android.h",
     ]
+  } else if (is_harmony) {
+    sources += [
+      "harmony/audio_asset_harmony.cc",
+      "harmony/audio_asset_harmony.h",
+      "harmony/audio_player_harmony.cc",
+      "harmony/audio_player_harmony.h",
+    ]
   } else {
     sources += [ "default_audio_player.cc" ]
   }

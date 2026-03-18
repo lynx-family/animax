@@ -19,10 +19,6 @@ void AudioController::OnProgress(double progress) {
 
   // Compares the timestamp of animation and audio.
   if (audio_player_->NeedSync(progress)) {
-    if (is_playing_) {
-      // Call pause before flush the buffer.
-      audio_player_->Pause();
-    }
     // Flush the audio buffer and update the head to current frame.
     audio_player_->SeekToProgress(progress);
   }

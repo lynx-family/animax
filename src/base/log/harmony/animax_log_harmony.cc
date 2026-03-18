@@ -13,11 +13,30 @@ const unsigned int LOG_PRINT_DOMAIN = 0xFF00;
 void lynx::animax::Log(LogMessage* msg) {
   auto* fn = lynx::animax::AnimaXNative::Instance().GetALogFunction();
   auto stream_str = msg->stream().str();
-
-  if (fn == nullptr) {
-    OH_LOG_Print(LOG_APP, LogLevel::LOG_INFO, LOG_PRINT_DOMAIN, "[AnimaX]",
-                 "%{public}s", stream_str.c_str());
-  } else {
+  LogLevel priority = LogLevel::LOG_DEBUG;
+  switch (msg->level()) {
+    case LOG_VERBOSE:
+    case LOG_DEBUG:
+      priority = LogLevel::LOG_DEBUG;
+      break;
+    case LOG_INFO:
+      priority = LogLevel::LOG_INFO;
+      break;
+    case LOG_WARNING:
+      priority = LogLevel::LOG_WARN;
+      break;
+    case LOG_ERROR:
+      priority = LogLevel::LOG_ERROR;
+      break;
+    case LOG_FATAL:
+      priority = LogLevel::LOG_FATAL;
+      break;
+    default:
+      break;
+  }
+  OH_LOG_Print(LOG_APP, priority, LOG_PRINT_DOMAIN, "[AnimaX]", "%{public}s",
+               stream_str.c_str());
+  if (fn != nullptr) {
     fn(msg->level(), "AnimaX", stream_str.c_str());
   }
 }
