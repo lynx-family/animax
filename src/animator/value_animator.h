@@ -121,6 +121,10 @@ class ValueAnimator : public std::enable_shared_from_this<ValueAnimator> {
    * with total loop count.
    */
   void SeekToFrame(double frame, int32_t current_loop_count = 0);
+  /**
+   * Seek to current frame.
+   */
+  void SeekToCurrentFrame();
 
  private:
   enum class State : uint8_t {
