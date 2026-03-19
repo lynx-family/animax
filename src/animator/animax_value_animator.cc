@@ -160,6 +160,8 @@ void AnimaXValueAnimator::OnShow(VisibilityState state) {
   } else if (playing_when_hide_) {
     // Need resume playing status on hide
     impl_->Resume();
+  } else {
+    impl_->SeekToCurrentFrame();
   }
 
   // Reset the flag anyway
