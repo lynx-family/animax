@@ -101,6 +101,10 @@ typedef NS_ENUM(NSUInteger, VisibilityState) {
 - (void)enterForeground;
 - (void)enterBackground;
 
+// Audio
+- (void)setMuted:(BOOL)mute;
+- (void)setEnableAudio:(BOOL)enable;
+
 - (AnimaXContext *)getAnimaXContext;
 
 /**

@@ -25,6 +25,13 @@ animax_source_set("audio") {
       "harmony/audio_player_harmony.cc",
       "harmony/audio_player_harmony.h",
     ]
+  } else if (is_ios) {
+    sources += [
+      "ios/audio_asset_ios.h",
+      "ios/audio_asset_ios.mm",
+      "ios/audio_player_ios.h",
+      "ios/audio_player_ios.mm",
+    ]
   } else {
     sources += [ "default_audio_player.cc" ]
   }

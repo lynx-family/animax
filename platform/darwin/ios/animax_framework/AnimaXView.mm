@@ -388,4 +388,12 @@
   [_player onShow:state];
 }
 
+- (void)setMuted:(BOOL)mute {
+  [_player setMuted:mute];
+}
+
+- (void)setEnableAudio:(BOOL)enable {
+  [_player setEnableAudio:enable];
+}
+
 @end
