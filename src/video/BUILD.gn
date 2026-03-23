@@ -47,8 +47,8 @@ animax_source_set("video") {
       "android/video_player_android.h",
       "android/video_shader_android.cc",
       "android/video_shader_android.h",
-      "custom/android/video_shader_yuv_android.cc",
-      "custom/android/video_shader_yuv_android.h",
+      "custom/video_shader_yuv.cc",
+      "custom/video_shader_yuv.h",
       "video_shader_gl.cc",
       "video_shader_gl.h",
     ]
@@ -73,6 +73,34 @@ animax_source_set("video") {
       "web/video_player_web.h",
       "web/video_shader_web.cc",
       "web/video_shader_web.h",
+    ]
+  } else if (is_win) {
+    sources += [
+      "custom/ffmpeg/ffmpeg_lib_loader.cc",
+      "custom/ffmpeg/ffmpeg_lib_loader.h",
+      "custom/ffmpeg/ffmpeg_video_context.cc",
+      "custom/ffmpeg/ffmpeg_video_context.h",
+      "custom/ffmpeg/video_asset_ffmpeg.cc",
+      "custom/ffmpeg/video_asset_ffmpeg.h",
+      "custom/ffmpeg/video_decoder_ffmpeg.cc",
+      "custom/ffmpeg/video_decoder_ffmpeg.h",
+      "custom/video_shader_yuv.cc",
+      "custom/video_shader_yuv.h",
+      "video_shader_gl.cc",
+      "video_shader_gl.h",
+      "win/video_player_windows.cc",
+      "win/video_player_windows.h",
+      "win/video_shader_windows.cc",
+      "win/video_shader_windows.h",
+    ]
+
+    include_dirs = [
+      "../../../../clay/third_party/uniplayer/win/$target_cpu/ttffmpeg/include",
+    ]
+  } else if (is_mac && !enable_unittests) {
+    sources += [
+      "mac/video_player_mac.cc",
+      "mac/video_player_mac.h",
     ]
   }
 }

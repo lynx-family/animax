@@ -67,6 +67,8 @@ class ANIMAX_EXPORT AnimaXSurface {
   int32_t height_;
 };
 
+ANIMAX_EXPORT std::unique_ptr<skity::GPUContext> MakeGPUContext();
+
 using SurfaceCreationFactory =
     base::MoveOnlyClosure<std::unique_ptr<AnimaXSurface>>;
 

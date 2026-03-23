@@ -4,6 +4,7 @@
 
 #include "src/video/custom/yuv_frame_info.h"
 
+#include <cmath>
 #include <cstring>
 
 namespace lynx {
@@ -16,12 +17,6 @@ uint32_t YUVFrameInfo::GetHeight() const { return height_; }
 void YUVFrameInfo::SetLineSize(uint32_t channel, uint32_t line_size) {
   if (channel >= 0 && channel < kYUVChannels) {
     line_size_[channel] = line_size;
-  }
-}
-
-void YUVFrameInfo::SetLineWidth(uint32_t channel, uint32_t line_width) {
-  if (channel >= 0 && channel < kYUVChannels) {
-    line_width_[channel] = line_width;
   }
 }
 
@@ -45,14 +40,14 @@ uint32_t YUVFrameInfo::GetChannelDataWidth(uint32_t channel) const {
   if (channel < 0 || channel >= kYUVChannels) {
     return 0;
   }
-  return line_width_[channel];
+  return std::ceil(width_ * GetWidthSubsamplingFactor(channel));
 }
 
 uint32_t YUVFrameInfo::GetChannelDataHeight(uint32_t channel) const {
   if (channel < 0 || channel >= kYUVChannels) {
     return 0;
   }
-  return height_ * GetVerticalSubsamplingFactor(channel);
+  return std::ceil(height_ * GetHeightSubsamplingFactor(channel));
 }
 
 bool YUVFrameInfo::UpdateChannelData(uint32_t channel, const uint8_t* buffer) {
@@ -61,7 +56,7 @@ bool YUVFrameInfo::UpdateChannelData(uint32_t channel, const uint8_t* buffer) {
   }
 
   const uint32_t sampling_height = GetChannelDataHeight(channel);
-  const uint32_t src_line_width = line_width_[channel];
+  const uint32_t src_line_width = GetChannelDataWidth(channel);
   const uint32_t src_line_size = line_size_[channel];
 
   if (sampling_height <= 0 || src_line_width == 0 || src_line_size == 0) {
@@ -94,7 +89,7 @@ bool YUVFrameInfo::UpdateChannelData(uint32_t channel, const uint8_t* buffer) {
   return true;
 }
 
-float YUVFrameInfo::GetVerticalSubsamplingFactor(uint32_t channel) const {
+float YUVFrameInfo::GetHeightSubsamplingFactor(uint32_t channel) const {
   if (channel < 0 || channel >= kYUVChannels) {
     return 0.0f;
   }
@@ -110,6 +105,29 @@ float YUVFrameInfo::GetVerticalSubsamplingFactor(uint32_t channel) const {
       return 0.5f;
     case YUVPixFmt::kYUVPixFmtI422:
       return 1.0f;
+    case YUVPixFmt::kYUVPixFmtI444:
+      return 1.0f;
+    default:
+      return 1.0f;
+  }
+}
+
+float YUVFrameInfo::GetWidthSubsamplingFactor(uint32_t channel) const {
+  if (channel < 0 || channel >= kYUVChannels) {
+    return 0.0f;
+  }
+
+  if (channel == 0) {
+    return 1.0f;  // Y plane has no subsampling
+  }
+
+  switch (pix_fmt_) {
+    case YUVPixFmt::kYUVPixFmtI400:
+      return 1.0f;
+    case YUVPixFmt::kYUVPixFmtI420:
+      return 0.5f;
+    case YUVPixFmt::kYUVPixFmtI422:
+      return 0.5f;
     case YUVPixFmt::kYUVPixFmtI444:
       return 1.0f;
     default:

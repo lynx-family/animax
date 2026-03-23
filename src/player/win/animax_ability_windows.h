@@ -5,7 +5,10 @@
 #ifndef ANIMAX_SRC_PLAYER_WIN_ANIMAX_ABILITY_WINDOWS_H_
 #define ANIMAX_SRC_PLAYER_WIN_ANIMAX_ABILITY_WINDOWS_H_
 
+#include <memory>
+
 #include "base/include/fml/task_runner.h"
+#include "include/player/animax_player.h"
 #include "src/base/log/log.h"
 #include "src/player/animax_ability.h"
 
@@ -23,8 +26,13 @@ class AnimaXAbilityWindows : public AnimaXAbility {
     return raster_runner_;
   }
 
+  void SetAnimaXPlayer(std::weak_ptr<AnimaXPlayer> player) { player_ = player; }
+
+  std::weak_ptr<AnimaXPlayer> GetAnimaXPlayer() const { return player_; }
+
  private:
   fml::RefPtr<fml::TaskRunner> raster_runner_;
+  std::weak_ptr<AnimaXPlayer> player_;
 };
 
 }  // namespace animax

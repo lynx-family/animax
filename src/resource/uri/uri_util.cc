@@ -111,7 +111,7 @@ UriInfo::ContentType ParseUriMainResourceContentType(const std::string& uri) {
 }
 
 std::string ParseUriMainResourceBaseUri(const std::string& uri) {
-  if (auto pos = uri.rfind(kPathSeparator); std::string::npos != pos) {
+  if (auto pos = uri.rfind("/"); std::string::npos != pos) {
     return uri.substr(0, pos + 1);
   } else {
     return std::string{};

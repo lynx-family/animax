@@ -69,7 +69,6 @@ class ANIMAX_EXPORT YUVFrameInfo {
   uint32_t GetHeight() const;
 
   void SetLineSize(uint32_t channel, uint32_t line_size);
-  void SetLineWidth(uint32_t channel, uint32_t line_width);
   void SetWidth(uint32_t width);
   void SetHeight(uint32_t height);
   void SetBitDepth(uint32_t bit_depth);
@@ -77,13 +76,13 @@ class ANIMAX_EXPORT YUVFrameInfo {
 
  private:
   uint32_t line_size_[kMaxChannels] = {0};
-  uint32_t line_width_[kMaxChannels] = {0};
   uint32_t width_ = 0;
   uint32_t height_ = 0;
   uint32_t bit_depth_ = 8;
   YUVPixFmt pix_fmt_ = YUVPixFmt::kYUVPixFmtI420;
 
-  float GetVerticalSubsamplingFactor(uint32_t channel) const;
+  float GetWidthSubsamplingFactor(uint32_t channel) const;
+  float GetHeightSubsamplingFactor(uint32_t channel) const;
   std::vector<std::vector<uint8_t>> data_ =
       std::vector<std::vector<uint8_t>>(kYUVChannels, std::vector<uint8_t>());
 };
