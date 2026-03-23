@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/custom/android/video_shader_yuv_android.h"
+#include "src/video/custom/video_shader_yuv.h"
 
 #include "src/base/gl/scoped_gl_reset_restore.h"
 #include "src/base/log/log.h"
@@ -13,7 +13,10 @@
 namespace lynx {
 namespace animax {
 
-VideoShaderYUVAndroid::~VideoShaderYUVAndroid() noexcept {
+VideoShaderYUV::VideoShaderYUV()
+    : texture_locs_(YUVFrameInfo::kYUVChannels, -1) {}
+
+VideoShaderYUV::~VideoShaderYUV() noexcept {
   if (texture_ != 0) {
     glDeleteTextures(1, &texture_);
   }
@@ -22,7 +25,7 @@ VideoShaderYUVAndroid::~VideoShaderYUVAndroid() noexcept {
   }
 }
 
-const char *VideoShaderYUVAndroid::GetVertexShader() const {
+const char *VideoShaderYUV::GetVertexShader() const {
   static const char *vs = R"(#version 300 es
 precision highp float;
 precision mediump int;
@@ -44,7 +47,7 @@ void main() {
   return vs;
 }
 
-const char *VideoShaderYUVAndroid::GetFragmentShader() const {
+const char *VideoShaderYUV::GetFragmentShader() const {
   const char *fragment = R"(#version 300 es
 precision highp float;
 
@@ -101,14 +104,14 @@ void main() {
   return fragment;
 }
 
-GLenum VideoShaderYUVAndroid::GetVideoTextureTarget() { return GL_TEXTURE_2D; }
+GLenum VideoShaderYUV::GetVideoTextureTarget() { return GL_TEXTURE_2D; }
 
-GLenum VideoShaderYUVAndroid::GetVideoTextureBindingPoint() {
+GLenum VideoShaderYUV::GetVideoTextureBindingPoint() {
   return GL_TEXTURE_BINDING_2D;
 }
 
-void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
-                                 const std::array<float, 16> &transform) {
+void VideoShaderYUV::Draw(std::unique_ptr<TextureInfo> texture_info,
+                          const std::array<float, 16> &transform) {
   if (!Valid() || !texture_info) {
     return;
   }
@@ -139,15 +142,16 @@ void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
     const GLint texture_units[YUVFrameInfo::kYUVChannels] = {0, 1, 2};
     const char *texture_names[YUVFrameInfo::kYUVChannels] = {
         "textureY", "textureU", "textureV"};
-
     for (int i = 0; i < YUVFrameInfo::kYUVChannels; ++i) {
-      GLint location = glGetUniformLocation(program_, texture_names[i]);
-      if (location == -1) {
+      if (texture_locs_[i] == -1) {
+        texture_locs_[i] = glGetUniformLocation(program_, texture_names[i]);
+      }
+      if (texture_locs_[i] == -1) {
         continue;
       }
       glActiveTexture(GL_TEXTURE0 + texture_units[i]);
       glBindTexture(GL_TEXTURE_2D, textures_[i]);
-      glUniform1i(location, texture_units[i]);
+      glUniform1i(texture_locs_[i], texture_units[i]);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -159,14 +163,14 @@ void VideoShaderYUVAndroid::Draw(std::unique_ptr<TextureInfo> texture_info,
   }
 }
 
-bool VideoShaderYUVAndroid::UpdateTexturesFromYuvFrame(
+bool VideoShaderYUV::UpdateTexturesFromYuvFrame(
     const std::shared_ptr<YUVFrameInfo> &frame_info) {
   if (!Valid() || !frame_info) {
     return false;
   }
 
   if (frame_info->GetWidth() == 0 || frame_info->GetHeight() == 0) {
-    ANIMAX_LOGE("VideoShaderYUVAndroid: invalid frame is provided.");
+    ANIMAX_LOGE("invalid frame is provided.");
     return false;
   }
 
@@ -176,7 +180,7 @@ bool VideoShaderYUVAndroid::UpdateTexturesFromYuvFrame(
     glGenTextures(YUVFrameInfo::kYUVChannels, textures_.data());
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
-      ANIMAX_LOGE("VideoShaderYUVAndroid: Failed to gen textures.");
+      ANIMAX_LOGE("Failed to gen textures.");
       return false;
     }
   }

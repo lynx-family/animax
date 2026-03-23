@@ -22,7 +22,6 @@ TEST_F(YUVFrameInfoTest, UpdateChannelData) {
   const int line_size = 32;
   frame_info.SetWidth(length);
   frame_info.SetHeight(length);
-  frame_info.SetLineWidth(0, length);
   frame_info.SetLineSize(0, line_size);
 
   std::vector<uint8_t> raw_data = {};
