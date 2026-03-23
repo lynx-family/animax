@@ -326,6 +326,15 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   return _player->GetEstimatedMemoryUsage();
 }
 
+#pragma mark - Audio
+- (void)setMuted:(BOOL)mute {
+  _player->SetMuted(mute);
+}
+
+- (void)setEnableAudio:(BOOL)enable {
+  _player->SetEnableAudio(enable);
+}
+
 #pragma mark - Reload
 - (void)reload {
   _player->Reload();
