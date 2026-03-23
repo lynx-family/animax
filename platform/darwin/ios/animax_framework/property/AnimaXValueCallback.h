@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param frameInfo Information about the current frame
  * @return The value to use for this frame, or nil to use the original value
  */
-- (nullable AnimaXValueParam *)getValue:(AnimaXFrameInfo *)frameInfo NS_REQUIRES_SUPER;
+- (nullable AnimaXValueParam *)getValue:(AnimaXFrameInfo *)frameInfo;
 
 @end
 
