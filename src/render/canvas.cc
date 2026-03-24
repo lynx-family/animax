@@ -57,8 +57,18 @@ void Canvas::DrawImageRect(Image &image, const RectF &src, const RectF &dst,
   auto filter_mode =
       real_context_ ? skity::FilterMode::kLinear : skity::FilterMode::kNearest;
 
-  canvas_->DrawImage(image.GetImage(), SkityUtil::MakeSkityRect(dst),
-                     {filter_mode, skity::MipmapMode::kNone},
+  skity::SamplingOptions options{};
+  options.filter = filter_mode;
+
+#if !defined(ANIMAX_GL_USE_OSMESA) && (defined(OS_WIN) || defined(OS_OSX))
+  // force use linear filter
+  options.filter = skity::FilterMode::kLinear;
+  options.mipmap = skity::MipmapMode::kLinear;
+#else
+  options.mipmap = skity::MipmapMode::kNone;
+#endif
+
+  canvas_->DrawImage(image.GetImage(), SkityUtil::MakeSkityRect(dst), options,
                      &paint.GetPaint());
 }
 
