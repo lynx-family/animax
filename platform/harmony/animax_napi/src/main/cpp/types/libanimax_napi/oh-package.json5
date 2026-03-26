@@ -1,0 +1,6 @@
+{
+  "name": "libanimax_napi.so",
+  "types": "./index.d.ts",
+  "version": "",
+  "description": "animax_napi"
+}

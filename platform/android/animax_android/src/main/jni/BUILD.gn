@@ -6,7 +6,7 @@
 
 import("../../../../../../src/animax.gni")
 
-animax_source_set("build") {
+animax_source_set_ext("build") {
   sources = [
     "gen/AnimaXCloseableBitmapReferenceNativeAdapter_jni.h",
     "gen/AnimaXCloseableBitmapReferenceNativeAdapter_register_jni.h",
@@ -52,6 +52,10 @@ animax_source_set("build") {
     "gen/AnimaXValueParam_register_jni.h",
     "gen/AnimaX_jni.h",
     "gen/AnimaX_register_jni.h",
+    "gen/AudioAsset_jni.h",
+    "gen/AudioAsset_register_jni.h",
+    "gen/AudioPlayer_jni.h",
+    "gen/AudioPlayer_register_jni.h",
     "gen/BaseAbility_jni.h",
     "gen/BaseAbility_register_jni.h",
     "gen/BitmapBufferGroup_jni.h",

@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		360B292A8923011EA126DFF8 /* libPods-AnimaXExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2071F91781515F3794D8915B /* libPods-AnimaXExample.a */; };
-		9F1A2B3D4E5FA6B7089CDEF0 /* export_output in Resources */ = {isa = PBXBuildFile; fileRef = 9F1A2B3D4E5FA6B7089CDEF1 /* export_output */; };
-		9F2884B12EE1C55E0048D5F2 /* KeyPathsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F2884AE2EE1C55E0048D5F2 /* KeyPathsViewController.m */; };
-		9F5F68362F55C76600B928C6 /* dp.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F5F68352F55C76600B928C6 /* dp.json */; };
-		9F5F68382F55C76600B928C7 /* simple_shape.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F5F68372F55C76600B928C7 /* simple_shape.json */; };
+		2BBCB1A52DE6E10600165F92 /* EmptyViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBCB1A42DE6E10600165F92 /* EmptyViewController.m */; };
+		9F3BC9F92F0FEF1C0085B6BE /* ButtonsCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F3BC9F22F0FEF1C0085B6BE /* ButtonsCollectionViewCell.m */; };
+		9F3BC9FA2F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F3BC9F42F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.m */; };
+		9F3BC9FB2F0FEF1C0085B6BE /* LottieAdapterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F3BC9F82F0FEF1C0085B6BE /* LottieAdapterViewController.m */; };
+		9F3BC9FC2F0FEF1C0085B6BE /* KeyPathsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F3BC9F62F0FEF1C0085B6BE /* KeyPathsViewController.m */; };
+		9F691C532E30B55300C80187 /* dp in Resources */ = {isa = PBXBuildFile; fileRef = 9F691C522E30B55300C80187 /* dp */; };
 		9F691C582E30C3DE00C80187 /* PropertyUpdateController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F691C562E30C3DE00C80187 /* PropertyUpdateController.m */; };
 		9F691C592E30C3DE00C80187 /* PropertyCallbackController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F691C572E30C3DE00C80187 /* PropertyCallbackController.m */; };
-		9F69833D2F3A08F100F16A30 /* SideMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F69833C2F3A08F100F16A30 /* SideMenuViewController.m */; };
+		9F8BD6952D3685FD00378D42 /* animation_1.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F8BD6942D3685FD00378D42 /* animation_1.json */; };
 		9FCC95E82D15CD4800E1C72A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FCC95E72D15CD4800E1C72A /* VideoToolbox.framework */; };
 		9FCC95EA2D15CD4E00E1C72A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FCC95E92D15CD4E00E1C72A /* AVFoundation.framework */; };
 		9FCC95EC2D15CD5400E1C72A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FCC95EB2D15CD5400E1C72A /* CoreMedia.framework */; };
@@ -27,25 +28,28 @@
 		9FDE9D5A2D15BEC100763E5D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9FDE9D592D15BEC100763E5D /* Assets.xcassets */; };
 		9FDE9D5D2D15BEC100763E5D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9FDE9D5B2D15BEC100763E5D /* LaunchScreen.storyboard */; };
 		9FDE9D602D15BEC100763E5D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FDE9D5F2D15BEC100763E5D /* main.m */; };
-		9FF76BC92F39DA20008C3B21 /* OptionsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FF76BC82F39DA20008C3B21 /* OptionsViewController.m */; };
-		9FF76BCA2F39DA20008C3B21 /* MultiAnimationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FF76BC62F39DA20008C3B21 /* MultiAnimationViewController.m */; };
+		EB389E616304ABD5AC31E28F /* libPods-AnimaXExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 907486FE5EACBEA6E8D4E116 /* libPods-AnimaXExample.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		013884E5297B2449052E2D95 /* Pods-AnimaXExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.debug.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.debug.xcconfig"; sourceTree = "<group>"; };
-		2071F91781515F3794D8915B /* libPods-AnimaXExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AnimaXExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		867BD44B1CFC5D8A99CB4659 /* Pods-AnimaXExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.release.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.release.xcconfig"; sourceTree = "<group>"; };
-		9F1A2B3D4E5FA6B7089CDEF1 /* export_output */ = {isa = PBXFileReference; lastKnownFileType = folder; name = export_output; path = Assets/export_output; sourceTree = "<group>"; };
-		9F2884AD2EE1C55E0048D5F2 /* KeyPathsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyPathsViewController.h; sourceTree = "<group>"; };
-		9F2884AE2EE1C55E0048D5F2 /* KeyPathsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyPathsViewController.m; sourceTree = "<group>"; };
-		9F5F68352F55C76600B928C6 /* dp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = dp.json; path = Assets/dp.json; sourceTree = "<group>"; };
-		9F5F68372F55C76600B928C7 /* simple_shape.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = simple_shape.json; path = Assets/simple_shape.json; sourceTree = "<group>"; };
+		2BBCB1A32DE6E10600165F92 /* EmptyViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EmptyViewController.h; sourceTree = "<group>"; };
+		2BBCB1A42DE6E10600165F92 /* EmptyViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EmptyViewController.m; sourceTree = "<group>"; };
+		907486FE5EACBEA6E8D4E116 /* libPods-AnimaXExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AnimaXExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		930DDF83FE5203519F68FEDD /* Pods-AnimaXExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.release.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.release.xcconfig"; sourceTree = "<group>"; };
+		9F3BC9F12F0FEF1C0085B6BE /* ButtonsCollectionViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ButtonsCollectionViewCell.h; sourceTree = "<group>"; };
+		9F3BC9F22F0FEF1C0085B6BE /* ButtonsCollectionViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ButtonsCollectionViewCell.m; sourceTree = "<group>"; };
+		9F3BC9F32F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ButtonsCollectionViewDataSource.h; sourceTree = "<group>"; };
+		9F3BC9F42F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ButtonsCollectionViewDataSource.m; sourceTree = "<group>"; };
+		9F3BC9F52F0FEF1C0085B6BE /* KeyPathsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyPathsViewController.h; sourceTree = "<group>"; };
+		9F3BC9F62F0FEF1C0085B6BE /* KeyPathsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyPathsViewController.m; sourceTree = "<group>"; };
+		9F3BC9F72F0FEF1C0085B6BE /* LottieAdapterViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LottieAdapterViewController.h; sourceTree = "<group>"; };
+		9F3BC9F82F0FEF1C0085B6BE /* LottieAdapterViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LottieAdapterViewController.m; sourceTree = "<group>"; };
+		9F691C522E30B55300C80187 /* dp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dp; path = Assets/dp; sourceTree = "<group>"; };
 		9F691C542E30C3DE00C80187 /* PropertyUpdateController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PropertyUpdateController.h; sourceTree = "<group>"; };
 		9F691C552E30C3DE00C80187 /* PropertyCallbackController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PropertyCallbackController.h; sourceTree = "<group>"; };
 		9F691C562E30C3DE00C80187 /* PropertyUpdateController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PropertyUpdateController.m; sourceTree = "<group>"; };
 		9F691C572E30C3DE00C80187 /* PropertyCallbackController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PropertyCallbackController.m; sourceTree = "<group>"; };
-		9F69833B2F3A08F100F16A30 /* SideMenuViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SideMenuViewController.h; sourceTree = "<group>"; };
-		9F69833C2F3A08F100F16A30 /* SideMenuViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SideMenuViewController.m; sourceTree = "<group>"; };
+		9F8BD6942D3685FD00378D42 /* animation_1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = animation_1.json; path = Assets/animation_1.json; sourceTree = "<group>"; };
 		9FCC95E72D15CD4800E1C72A /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		9FCC95E92D15CD4E00E1C72A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		9FCC95EB2D15CD5400E1C72A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -63,10 +67,7 @@
 		9FDE9D5C2D15BEC100763E5D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9FDE9D5E2D15BEC100763E5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9FDE9D5F2D15BEC100763E5D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		9FF76BC52F39DA20008C3B21 /* MultiAnimationViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MultiAnimationViewController.h; sourceTree = "<group>"; };
-		9FF76BC62F39DA20008C3B21 /* MultiAnimationViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MultiAnimationViewController.m; sourceTree = "<group>"; };
-		9FF76BC72F39DA20008C3B21 /* OptionsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OptionsViewController.h; sourceTree = "<group>"; };
-		9FF76BC82F39DA20008C3B21 /* OptionsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OptionsViewController.m; sourceTree = "<group>"; };
+		A20EBC2955AC1E366EC33080 /* Pods-AnimaXExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnimaXExample.debug.xcconfig"; path = "Target Support Files/Pods-AnimaXExample/Pods-AnimaXExample.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,7 +80,7 @@
 				9FCC95EC2D15CD5400E1C72A /* CoreMedia.framework in Frameworks */,
 				9FCC95EA2D15CD4E00E1C72A /* AVFoundation.framework in Frameworks */,
 				9FCC95E82D15CD4800E1C72A /* VideoToolbox.framework in Frameworks */,
-				360B292A8923011EA126DFF8 /* libPods-AnimaXExample.a in Frameworks */,
+				EB389E616304ABD5AC31E28F /* libPods-AnimaXExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,7 +95,7 @@
 				9FCC95EB2D15CD5400E1C72A /* CoreMedia.framework */,
 				9FCC95E92D15CD4E00E1C72A /* AVFoundation.framework */,
 				9FCC95E72D15CD4800E1C72A /* VideoToolbox.framework */,
-				2071F91781515F3794D8915B /* libPods-AnimaXExample.a */,
+				907486FE5EACBEA6E8D4E116 /* libPods-AnimaXExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -113,20 +114,22 @@
 		9FDA73C72D1710E70058EB4C /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
-				9F69833B2F3A08F100F16A30 /* SideMenuViewController.h */,
-				9F69833C2F3A08F100F16A30 /* SideMenuViewController.m */,
-				9FF76BC52F39DA20008C3B21 /* MultiAnimationViewController.h */,
-				9FF76BC62F39DA20008C3B21 /* MultiAnimationViewController.m */,
-				9FF76BC72F39DA20008C3B21 /* OptionsViewController.h */,
-				9FF76BC82F39DA20008C3B21 /* OptionsViewController.m */,
-				9F2884AD2EE1C55E0048D5F2 /* KeyPathsViewController.h */,
-				9F2884AE2EE1C55E0048D5F2 /* KeyPathsViewController.m */,
 				9F691C552E30C3DE00C80187 /* PropertyCallbackController.h */,
 				9F691C572E30C3DE00C80187 /* PropertyCallbackController.m */,
 				9F691C542E30C3DE00C80187 /* PropertyUpdateController.h */,
 				9F691C562E30C3DE00C80187 /* PropertyUpdateController.m */,
+				2BBCB1A32DE6E10600165F92 /* EmptyViewController.h */,
+				2BBCB1A42DE6E10600165F92 /* EmptyViewController.m */,
 				9FDE9D532D15BEC000763E5D /* ViewController.h */,
 				9FDE9D542D15BEC000763E5D /* ViewController.m */,
+				9F3BC9F12F0FEF1C0085B6BE /* ButtonsCollectionViewCell.h */,
+				9F3BC9F22F0FEF1C0085B6BE /* ButtonsCollectionViewCell.m */,
+				9F3BC9F32F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.h */,
+				9F3BC9F42F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.m */,
+				9F3BC9F52F0FEF1C0085B6BE /* KeyPathsViewController.h */,
+				9F3BC9F62F0FEF1C0085B6BE /* KeyPathsViewController.m */,
+				9F3BC9F72F0FEF1C0085B6BE /* LottieAdapterViewController.h */,
+				9F3BC9F82F0FEF1C0085B6BE /* LottieAdapterViewController.m */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -134,9 +137,8 @@
 		9FDE9D412D15BEC000763E5D = {
 			isa = PBXGroup;
 			children = (
-				9F5F68352F55C76600B928C6 /* dp.json */,
-				9F5F68372F55C76600B928C7 /* simple_shape.json */,
-				9F1A2B3D4E5FA6B7089CDEF1 /* export_output */,
+				9F691C522E30B55300C80187 /* dp */,
+				9F8BD6942D3685FD00378D42 /* animation_1.json */,
 				9FDE9D4C2D15BEC000763E5D /* AnimaXExample */,
 				9FDE9D4B2D15BEC000763E5D /* Products */,
 				AAB685425C953026528E4B1A /* Pods */,
@@ -169,8 +171,8 @@
 		AAB685425C953026528E4B1A /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				013884E5297B2449052E2D95 /* Pods-AnimaXExample.debug.xcconfig */,
-				867BD44B1CFC5D8A99CB4659 /* Pods-AnimaXExample.release.xcconfig */,
+				A20EBC2955AC1E366EC33080 /* Pods-AnimaXExample.debug.xcconfig */,
+				930DDF83FE5203519F68FEDD /* Pods-AnimaXExample.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -182,10 +184,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9FDE9D632D15BEC100763E5D /* Build configuration list for PBXNativeTarget "AnimaXExample" */;
 			buildPhases = (
-				681359AD33897F4AB2DE4838 /* [CP] Check Pods Manifest.lock */,
+				B3F5E10BF9332A28AD7C14AE /* [CP] Check Pods Manifest.lock */,
+				1A1B14984B90F47A817170ED /* [CP-User] Hummer-before-hooks */,
 				9FDE9D462D15BEC000763E5D /* Sources */,
 				9FDE9D472D15BEC000763E5D /* Frameworks */,
 				9FDE9D482D15BEC000763E5D /* Resources */,
+				92314DF29E157AD476B32FD6 /* [CP-User] Hummer-after-hooks */,
 			);
 			buildRules = (
 			);
@@ -233,10 +237,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F1A2B3D4E5FA6B7089CDEF0 /* export_output in Resources */,
+				9F691C532E30B55300C80187 /* dp in Resources */,
+				9F8BD6952D3685FD00378D42 /* animation_1.json in Resources */,
 				9FDE9D5D2D15BEC100763E5D /* LaunchScreen.storyboard in Resources */,
-				9F5F68362F55C76600B928C6 /* dp.json in Resources */,
-				9F5F68382F55C76600B928C7 /* simple_shape.json in Resources */,
 				9FDE9D5A2D15BEC100763E5D /* Assets.xcassets in Resources */,
 				9FDE9D582D15BEC000763E5D /* Main.storyboard in Resources */,
 			);
@@ -245,7 +248,27 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		681359AD33897F4AB2DE4838 /* [CP] Check Pods Manifest.lock */ = {
+		1A1B14984B90F47A817170ED /* [CP-User] Hummer-before-hooks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Hummer-before-hooks";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ -f \"${PODS_ROOT}/hummer_before_hooks.sh\" ];then\n  bash \"${PODS_ROOT}/hummer_before_hooks.sh\"\nfi\n";
+		};
+		92314DF29E157AD476B32FD6 /* [CP-User] Hummer-after-hooks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Hummer-after-hooks";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ -f \"${PODS_ROOT}/hummer_after_hooks.sh\" ];then\n  bash \"${PODS_ROOT}/hummer_after_hooks.sh\"\nfi\n";
+		};
+		B3F5E10BF9332A28AD7C14AE /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -274,16 +297,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F69833D2F3A08F100F16A30 /* SideMenuViewController.m in Sources */,
 				9FDE9D552D15BEC000763E5D /* ViewController.m in Sources */,
-				9FF76BC92F39DA20008C3B21 /* OptionsViewController.m in Sources */,
-				9FF76BCA2F39DA20008C3B21 /* MultiAnimationViewController.m in Sources */,
+				2BBCB1A52DE6E10600165F92 /* EmptyViewController.m in Sources */,
 				9FDE9D4F2D15BEC000763E5D /* AppDelegate.m in Sources */,
 				9FDE9D602D15BEC100763E5D /* main.m in Sources */,
 				9FDE9D522D15BEC000763E5D /* SceneDelegate.m in Sources */,
 				9F691C582E30C3DE00C80187 /* PropertyUpdateController.m in Sources */,
 				9F691C592E30C3DE00C80187 /* PropertyCallbackController.m in Sources */,
-				9F2884B12EE1C55E0048D5F2 /* KeyPathsViewController.m in Sources */,
+				9F3BC9F92F0FEF1C0085B6BE /* ButtonsCollectionViewCell.m in Sources */,
+				9F3BC9FA2F0FEF1C0085B6BE /* ButtonsCollectionViewDataSource.m in Sources */,
+				9F3BC9FB2F0FEF1C0085B6BE /* LottieAdapterViewController.m in Sources */,
+				9F3BC9FC2F0FEF1C0085B6BE /* KeyPathsViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -427,14 +451,15 @@
 		};
 		9FDE9D642D15BEC100763E5D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 013884E5297B2449052E2D95 /* Pods-AnimaXExample.debug.xcconfig */;
+			baseConfigurationReference = A20EBC2955AC1E366EC33080 /* Pods-AnimaXExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = X46375UBYG;
+				DEVELOPMENT_TEAM = 45WZWZS9CM;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AnimaXExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -449,6 +474,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lynx.AnimaXExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -456,14 +482,15 @@
 		};
 		9FDE9D652D15BEC100763E5D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 867BD44B1CFC5D8A99CB4659 /* Pods-AnimaXExample.release.xcconfig */;
+			baseConfigurationReference = 930DDF83FE5203519F68FEDD /* Pods-AnimaXExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = X46375UBYG;
+				DEVELOPMENT_TEAM = 45WZWZS9CM;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AnimaXExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -478,6 +505,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lynx.AnimaXExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

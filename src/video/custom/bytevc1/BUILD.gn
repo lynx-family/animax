@@ -1,0 +1,25 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("../../../animax.gni")
+
+video_custom_shared_soruces = [
+  "android/bytevc1_lib_loader.cc",
+  "android/bytevc1_lib_loader.h",
+  "android/video_decoder_bytevc1.cc",
+  "android/video_decoder_bytevc1.h",
+  "android/video_player_provider_bytevc1.cc",
+  "android/video_player_provider_bytevc1.h",
+]
+
+animax_source_set_ext("bytevc1_core") {
+  sources = video_custom_shared_soruces
+}
+
+if (is_android) {
+  video_custom_shared_soruces += [ "android/bytevc1_jni.cc" ]
+}
+
+animax_source_set_ext("bytevc1") {
+  sources = video_custom_shared_soruces
+}

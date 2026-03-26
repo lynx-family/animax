@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:columnCount="3"
+    android:rowCount="3"
+    android:alignmentMode="alignMargins"
+    android:useDefaultMargins="true"
+    android:padding="8dp"
+    android:gravity="center">
+
+    <!-- center -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="center"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_1"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="center" />
+    </LinearLayout>
+
+    <!-- centerCrop -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="centerCrop"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_2"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="centerCrop" />
+    </LinearLayout>
+
+    <!-- centerInside -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="centerInside"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_3"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="centerInside" />
+    </LinearLayout>
+
+    <!-- fitCenter -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="fitCenter"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_4"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+    <!-- fitXY -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="fitXY"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_5"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+    <!-- matrix -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="matrix"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_6"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="matrix" />
+    </LinearLayout>
+
+    <!-- NEW: center (copy of container_1) size 5x5dp -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="center (small)"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_7"
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="center" />
+    </LinearLayout>
+    <!-- NEW: centerInside (copy of container_3) size 5x5dp -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="centerInside (small)"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_8"
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="centerInside" />
+    </LinearLayout>
+    <!-- NEW: contain (fitCenter equivalent) size 5x5dp -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="fitCenter (small)"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp" />
+        <com.lynx.lottieadapter.LottieAdapterView
+            android:id="@+id/animation_container_9"
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+</GridLayout>

@@ -2,23 +2,18 @@
 # Licensed under the Apache License Version 2.0 that can be found in the
 # LICENSE file in the root directory of this source tree.
 
-import("//build_overrides/darwin.gni")
+import("../animax/src/base_targets.gni")
 
-animax_private_config = rebase_path(":animax_private_config")
-animax_public_config = rebase_path(":animax_public_config")
+animax_internal_root = rebase_path("../")
 
-template("animax_source_set") {
-  source_set(target_name) {
+template("animax_source_set_ext") {
+  animax_source_set(target_name) {
     forward_variables_from(invoker,
                            "*",
                            [
                              "configs",
                              "public_configs",
                            ])
-
-    if (!defined(deps)) {
-      deps = []
-    }
     if (!defined(configs)) {
       configs = []
     }
@@ -31,26 +26,9 @@ template("animax_source_set") {
     if (defined(invoker.public_configs)) {
       public_configs += invoker.public_configs
     }
-
-    configs += [ animax_private_config ]
-    public_configs += [ animax_public_config ]
-    if (is_android) {
-      if (!defined(libs)) {
-        libs = []
-      }
-      libs += [ "log" ]
-    } else if (is_apple) {
-      configs += darwin_config
+    if (!defined(include_dirs)) {
+      include_dirs = []
     }
-
-    if (defined(exclude_configs)) {
-      configs -= exclude_configs
-    }
-    if (defined(exclude_deps)) {
-      deps -= exclude_deps
-    }
-    if (defined(exclude_public_configs)) {
-      public_configs -= exclude_public_configs
-    }
+    include_dirs += [ animax_internal_root ]
   }
 }

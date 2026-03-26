@@ -1,0 +1,65 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+lottie_adapter_base_public_headers = [
+  "base/LottieAdapterProtocol.h",
+  "base/LottieAdapterCreator.h",
+  "base/LottieAdapterCreationProtocol.h",
+  "base/LottieAdapterView.h",
+  "base/LottieAdapterFactory.h",
+  "base/LottieValueDelegate.h",
+  "base/LottieKeyPath.h",
+  "base/LottieAdapterOption.h",
+]
+
+lottie_adapter_base_sources = [
+  "base/EmptyLottieAdapter.h",
+  "base/EmptyLottieAdapter.m",
+  "base/LottieAdapterFactory.m",
+  "base/LottieAdapterOption.m",
+  "base/LottieAdapterView.m",
+  "base/LottieKeyPath.m",
+  "base/LottieValueDelegate.m",
+]
+
+subspec_target("lottie_adapter_base") {
+  sources = lottie_adapter_base_sources + lottie_adapter_base_public_headers
+  public_header_files = lottie_adapter_base_public_headers
+}
+
+lottie_adapter_lottie_public_headers = [
+  "lottie/LottieAdapterLottie.h",
+  "lottie/LottieAdapterLottieCreator.h",
+]
+
+lottie_adapter_lottie_sources = [
+  "lottie/LottieAdapterLottie.m",
+  "lottie/LottieAdapterLottieCreator.m",
+]
+
+subspec_target("lottie_adapter_lottie") {
+  sources = lottie_adapter_lottie_sources + lottie_adapter_lottie_public_headers
+  public_header_files = lottie_adapter_lottie_public_headers
+}
+
+lottie_adapter_animax_public_headers = [
+  "animax/LottieAdapterAnimaX.h",
+  "animax/LottieAdapterAnimaXCreator.h",
+  "animax/LottieKeyPathListCallbackAdapter.h",
+  "animax/LottieValueDelegateAdapter.h",
+  "animax/LottiePropertyCallbackAdapter.h",
+]
+
+lottie_adapter_animax_sources = [
+  "animax/LottieAdapterAnimaX.m",
+  "animax/LottieAdapterAnimaXCreator.m",
+  "animax/LottieKeyPathListCallbackAdapter.m",
+  "animax/LottiePropertyCallbackAdapter.m",
+  "animax/LottieValueDelegateAdapter.m",
+]
+
+subspec_target("lottie_adapter_animax") {
+  sources = lottie_adapter_animax_sources + lottie_adapter_animax_public_headers
+  public_header_files = lottie_adapter_animax_public_headers
+}

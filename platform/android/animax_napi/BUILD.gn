@@ -3,6 +3,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+import("../../../../core/Lynx.gni")
 import("AnimaXNapi.gni")
 
 cmake_target("AnimaXNapi") {
@@ -11,11 +12,11 @@ cmake_target("AnimaXNapi") {
   output_name = "animax_napi"
 
   deps = [
-    "../../../src/jsbridge",
+    "../../../../animax/animax/src/jsbridge",
     "../animax_android:AnimaXAndroid",
   ]
 
-  lib_dirs = [ "${vmsdk_native_lib_dir}" ]
+  lib_dirs = [ "${animax_vmsdk_native_lib_dir}" ]
   libs = [
     "napi",
     "EGL",
@@ -42,5 +43,5 @@ cmake_target("AnimaXNapi") {
     "-Xlinker",
     "-Map=output.map",
   ]
-  configs = [ "../../../platform/android:16kb_page" ]
+  configs = [ "../../../../lynx/platform/android:16kb_page" ]
 }

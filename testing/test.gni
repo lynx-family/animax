@@ -1,0 +1,228 @@
+import("../../testing/test.gni")
+
+declare_args() {
+}
+
+animax_unittest_defines = [ "ANIMAX_GL_USE_OSMESA" ]
+animax_path_for_animax_unittest = rebase_path("../")
+root_path_for_animax_unittest = rebase_path("../../")
+
+template("animax_unittest") {
+  mocktest_exec("${target_name}") {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "deps",
+                             "configs",
+                           ])
+    testonly = true
+    if (!defined(invoker.deps)) {
+      deps = []
+    } else {
+      deps = invoker.deps
+    }
+    if (!defined(invoker.defines)) {
+      defines = []
+    } else {
+      defines = invoker.defines
+    }
+    if (!defined(invoker.include_dirs)) {
+      include_dirs = []
+    } else {
+      include_dirs = invoker.include_dirs
+    }
+    if (!defined(invoker.lib_dirs)) {
+      lib_dirs = []
+    } else {
+      lib_dirs = invoker.lib_dirs
+    }
+    if (!defined(invoker.libs)) {
+      libs = []
+    } else {
+      libs = invoker.libs
+    }
+    if (!defined(invoker.ldflags)) {
+      ldflags = []
+    } else {
+      ldflags = invoker.ldflags
+    }
+
+    defines += animax_unittest_defines
+
+    libs += [
+      "glapi",
+      "OSMesa",
+    ]
+
+    lib_dirs += [ "$root_out_dir" ]
+
+    include_dirs += [
+      "//third_party/",
+      animax_path_for_animax_unittest,
+      "$animax_path_for_animax_unittest/animax",
+      "//third_party/mesa_build_support/include",
+      "//third_party/skity/include",
+      "//third_party/skity/third_party/glm",
+      "//third_party/textlayout/textra/public",
+    ]
+
+    deps += [ "$root_path_for_animax_unittest/lynx/third_party/rapidjson" ]
+
+    if (!is_win) {
+      deps += [ "$root_path_for_animax_unittest/krypton/testing:build_mesa3d" ]
+    }
+
+    if (!defined(invoker.configs)) {
+      configs = []
+    } else {
+      configs = invoker.configs
+    }
+    if (!defined(invoker.cflags_cc)) {
+      cflags_cc = []
+    } else {
+      cflags_cc = invoker.cflags_cc
+    }
+    if (!defined(invoker.cflags_objcc)) {
+      cflags_objcc = []
+    } else {
+      cflags_objcc = invoker.cflags_objcc
+    }
+
+    cflags_cc += [
+      "-std=gnu++17",
+      "-Wno-self-move",
+      "-Wno-sign-compare",
+      "-Wno-unused-const-variable",
+      "-Wno-unused-private-field",
+    ]
+
+    if (is_mac) {
+      cflags_objcc = [
+        "-std=gnu++17",
+        "-fobjc-arc",
+      ]
+
+      configs += [
+        "$root_path_for_animax_unittest/platform/darwin:darwin_flag_config",
+      ]
+
+      frameworks = [
+        "AppKit.framework",
+        "CoreText.framework",
+        "CoreGraphics.framework",
+        "JavaScriptCore.framework",
+      ]
+    } else if (is_linux) {
+      ldflags += [
+        # Without this, linker stops for undefined GLIBC symbols
+        # while we actually have the glibc.so of version high enough.
+        "-Wl,--allow-shlib-undefined",
+      ]
+    }
+  }
+}
+
+template("animax_android_unittest") {
+  source_set("${target_name}") {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "deps",
+                             "configs",
+                           ])
+    testonly = false
+    if (!defined(invoker.deps)) {
+      deps = []
+    } else {
+      deps = invoker.deps
+    }
+    if (!defined(invoker.defines)) {
+      defines = []
+    } else {
+      defines = invoker.defines
+    }
+    if (!defined(invoker.include_dirs)) {
+      include_dirs = []
+    } else {
+      include_dirs = invoker.include_dirs
+    }
+    if (!defined(invoker.lib_dirs)) {
+      lib_dirs = []
+    } else {
+      lib_dirs = invoker.lib_dirs
+    }
+    if (!defined(invoker.libs)) {
+      libs = []
+    } else {
+      libs = invoker.libs
+    }
+    if (!defined(invoker.ldflags)) {
+      ldflags = []
+    } else {
+      ldflags = invoker.ldflags
+    }
+
+    defines += [ "ANIMAX_ANDROID_UNITTEST" ]
+
+    lib_dirs += [ "$root_out_dir" ]
+
+    include_dirs += [
+      "//",
+      "$root_path_for_animax_unittest/lynx",
+      "//third_party/",
+      animax_path_for_animax_unittest,
+    ]
+
+    deps += [
+      "//third_party/googletest:gtest_sources",
+      "//third_party/googletest_custom:gtest_custom",
+    ]
+
+    if (!defined(invoker.configs)) {
+      configs = []
+    } else {
+      configs = invoker.configs
+    }
+    if (!defined(invoker.cflags_cc)) {
+      cflags_cc = []
+    } else {
+      cflags_cc = invoker.cflags_cc
+    }
+    if (!defined(invoker.cflags_objcc)) {
+      cflags_objcc = []
+    } else {
+      cflags_objcc = invoker.cflags_objcc
+    }
+
+    cflags_cc += [
+      "-std=gnu++17",
+      "-Wno-self-move",
+    ]
+    if (is_android) {
+      configs += [ "$root_path_for_animax_unittest/animax/animax/src:animax_private_config" ]
+    } else if (is_mac) {
+      cflags_objcc = [
+        "-std=gnu++17",
+        "-fobjc-arc",
+      ]
+
+      configs += [
+        "$root_path_for_animax_unittest/platform/darwin:darwin_flag_config",
+      ]
+
+      deps += [ "$root_path_for_animax_unittest/lynx/core/runtime/bindings/napi:napi_binding_jsc" ]
+
+      frameworks = [
+        "CoreText.framework",
+        "CoreGraphics.framework",
+        "JavaScriptCore.framework",
+      ]
+    } else if (is_linux) {
+      ldflags += [
+        # Without this, linker stops for undefined GLIBC symbols
+        # while we actually have the glibc.so of version high enough.
+        "-Wl,--allow-shlib-undefined",
+      ]
+    }
+  }
+}

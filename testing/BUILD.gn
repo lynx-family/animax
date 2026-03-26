@@ -1,0 +1,180 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("//build/toolchain/clang.gni")
+import("//config.gni")
+import("../src/animax.gni")
+import("./test.gni")
+
+if (is_mac || is_linux) {
+  group("animax_conformance") {
+    testonly = true
+    deps = [ "./conformance_test:animax_conformance_test" ]
+  }
+}
+
+animax_unittest("animax_unittests_exec") {
+  sources = [
+    "$animax_internal_root/testing/animax_unittest_interface_impl.cc",
+    "$animax_internal_root/testing/gtest_expectation.h",
+    "$animax_oss_root/src/audio/audio_controller_unittest.cc",
+    "$animax_oss_root/src/base/gl/gl_util_unittest.cc",
+    "$animax_oss_root/src/base/gl/scoped_gl_object_unittest.cc",
+    "$animax_oss_root/src/base/gl/scoped_gl_reset_restore_unittest.cc",
+    "$animax_oss_root/src/base/monitor/animax_metrics_manager_unittest.cc",
+    "$animax_oss_root/src/base/monitor/player_event_tracker_unittest.cc",
+    "$animax_oss_root/src/base/monitor/timestamp_recorder_unittest.cc",
+    "$animax_oss_root/src/base/thread/gpu_thread_handler_unittest.cc",
+    "$animax_oss_root/src/base/thread/gpu_thread_pool_unittest.cc",
+    "$animax_oss_root/src/base/thread/task_runner_unittest.cc",
+    "$animax_oss_root/src/base/thread/thread_assert_unittest.cc",
+    "$animax_oss_root/src/base/util/buffer_copy_helper_unittest.cc",
+    "$animax_oss_root/src/base/util/color_util_unittest.cc",
+    "$animax_oss_root/src/base/util/event_warning_checker_unittest.cc",
+    "$animax_oss_root/src/base/util/memory_calculator_unittest.cc",
+    "$animax_oss_root/src/base/util/visibility_state_unittest.cc",
+    "$animax_oss_root/src/layer/audio_layer_unittest.cc",
+    "$animax_oss_root/src/layer/text_content_data_source_unittest.cc",
+    "$animax_oss_root/src/layer/text_content_default_unittest.cc",
+    "$animax_oss_root/src/layer/text_helper_unittest.cc",
+    "$animax_oss_root/src/layer/textra/font_asset_manager_textra_unittest.cc",
+    "$animax_oss_root/src/layer/textra/text_helper_textra_unittest.cc",
+    "$animax_oss_root/src/model/value/base_value_unittest.cc",
+    "$animax_oss_root/src/model/value/document_data_unittest.cc",
+    "$animax_oss_root/src/model/value/gradient_color_unittest.cc",
+    "$animax_oss_root/src/model/value/shape_data_unittest.cc",
+    "$animax_oss_root/src/player/animax_event_dispatcher_unittest.cc",
+    "$animax_oss_root/src/player/animax_event_unittest.cc",
+    "$animax_oss_root/src/player/animax_main_controller_unittest.cc",
+    "$animax_oss_root/src/player/animax_playback_event_handler_unittest.cc",
+    "$animax_oss_root/src/player/animax_renderer_unittest.cc",
+    "$animax_oss_root/src/player/animax_surface_unittest.cc",
+    "$animax_oss_root/src/player/vsync_dispatcher_unittest.cc",
+    "$animax_oss_root/src/property/animax_key_path_unittest.cc",
+    "$animax_oss_root/src/property/animax_value_param_unittest.cc",
+    "$animax_oss_root/src/property/key_path_resolve_util_unittest.cc",
+    "$animax_oss_root/src/property/property_update_context_unittest.cc",
+    "$animax_oss_root/src/property/property_update_request_unittest.cc",
+    "$animax_oss_root/src/property/property_update_response_unittest.cc",
+    "$animax_oss_root/src/property/resource_property_asset_updater_unittest.cc",
+    "$animax_oss_root/src/render/skity_log_unittest.cc",
+    "$animax_oss_root/src/resource/asset/font_asset_unittest.cc",
+    "$animax_oss_root/src/resource/asset/image_asset_unittest.cc",
+    "$animax_oss_root/src/resource/asset/video_asset_unittest.cc",
+    "$animax_oss_root/src/resource/bitmap_unittest.cc",
+    "$animax_oss_root/src/resource/composition_loader/composition_asset_loader_unittest.cc",
+    "$animax_oss_root/src/resource/composition_loader/composition_model_pipeline_unittest.cc",
+    "$animax_oss_root/src/resource/composition_loader/json_composition_model_loader_unittest.cc",
+    "$animax_oss_root/src/resource/composition_loader/zip_alpha_video_model_loader_unittest.cc",
+    "$animax_oss_root/src/resource/composition_loader/zip_composition_unzip_loader_unittest.cc",
+    "$animax_oss_root/src/resource/composition_loader/zip_json_model_loader_unittest.cc",
+    "$animax_oss_root/src/resource/loader/all_settled_loader_unittest.cc",
+    "$animax_oss_root/src/resource/loader/exec_loader_unittest.cc",
+    "$animax_oss_root/src/resource/loader/lambda_loader_unittest.cc",
+    "$animax_oss_root/src/resource/loader/loader_example_unittest.cc",
+    "$animax_oss_root/src/resource/loader/pipe_loader_unittest.cc",
+    "$animax_oss_root/src/resource/uri/uri_util_unittest.cc",
+    "$animax_oss_root/src/video/custom/video_player_custom_unittest.cc",
+    "$animax_oss_root/src/video/custom/yuv_frame_info_unittest.cc",
+    "$animax_oss_root/src/video/video_player_service_unittest.cc",
+  ]
+
+  deps = [
+    ":skity-host-prebuild-binary",
+    "$animax_oss_root/src:animax",
+    "$animax_oss_root/src/layer/textra",
+    "//third_party/textlayout/src:textlayout",
+  ]
+}
+
+# Use action to copy skity binary to default and exec path temporarily
+# Will change to use copy task when all targets change to use prebuild skity binary in the future
+action("copy-skity-to-default") {
+  suffix = ".so"
+  if (is_mac || is_ios) {
+    suffix = ".dylib"
+  }
+
+  script = "$animax_internal_root/tools/install_skity_binary.py"
+
+  outputs = [ "$root_out_dir/libskity$suffix.d" ]
+
+  args = [
+    rebase_path("//third_party/skity/host/lib/libskity$suffix"),
+    rebase_path("$root_out_dir/libskity$suffix"),
+  ]
+}
+
+if (is_linux) {
+  action("copy-skity-to-exec") {
+    script = "$animax_internal_root/tools/install_skity_binary.py"
+
+    outputs = [ "$root_out_dir/exe.unstripped/libskity.so.d" ]
+
+    args = [
+      rebase_path("//third_party/skity/host/lib/libskity.so"),
+      rebase_path("$root_out_dir/exe.unstripped/libskity.so"),
+    ]
+  }
+}
+
+config("skity-host-prebuild") {
+  include_dirs = [ "//third_party/skity/host/include" ]
+  lib_dirs = [ "//third_party/skity/host/lib" ]
+  libs = [ "skity" ]
+}
+
+group("skity-host-prebuild-binary") {
+  deps = [ ":copy-skity-to-default" ]
+  if (is_linux) {
+    deps += [ ":copy-skity-to-exec" ]
+  }
+
+  public_configs = [ ":skity-host-prebuild" ]
+}
+
+if (is_android) {
+  animax_android_unittest("animax_android_unittests") {
+    sources = [
+      "gl_test_util_android.cc",
+      "gl_test_util_android.h",
+    ]
+    sources += [
+      "$animax_internal_root/src/video/custom/bytevc1/android/video_decoder_bytevc1_unittest.cc",
+      "$animax_internal_root/src/video/custom/bytevc1/android/video_player_provider_bytevc1_unittest.cc",
+      "$animax_internal_root/testing/android_gtest_example.cc",
+      "$animax_oss_root/src/base/gl/android/egl_util_unittest.cc",
+      "$animax_oss_root/src/base/gl/android/gl_util_android_unittest.cc",
+      "$animax_oss_root/src/base/util/misc_util_unittest.cc",
+      "$animax_oss_root/src/player/android/android_native_window_unittest.cc",
+      "$animax_oss_root/src/player/android/gl_context_android_unittest.cc",
+      "$animax_oss_root/src/resource/resource_loader/android/animax_loader_completion_handler_android_unittest.cc",
+      "$animax_oss_root/src/resource/resource_loader/android/animax_loader_response_android_unittest.cc",
+      "$animax_oss_root/src/resource/resource_loader/android/transform_loaders_unittest.cc",
+    ]
+
+    deps = [ "$animax_internal_root/src/video/custom/bytevc1:bytevc1_core" ]
+  }
+
+  animax_source_set("gtest_testing_animax_android") {
+    sources = [ "gtest_runner_android.cc" ]
+    deps = [
+      ":animax_test_jni_files",
+      "//third_party/googletest:gtest_sources",
+      "//third_party/googletest_custom:gtest_custom",
+    ]
+  }
+
+  group("animax_test_jni_files") {
+    exec_script(
+        "//tools_shared/jni_generator/generate_and_register_jni_files.py",
+        [
+          "-root",
+          rebase_path("//"),
+          "-path",
+          rebase_path("jni_headers/jni_configs.yml"),
+          "--use-base-jni-header",
+        ])
+    public_deps = [ "jni_headers:build" ]
+  }
+}

@@ -1,0 +1,12 @@
+package: lynx/animax_example_android/resource
+
+description: The asset resource of animax android example.
+
+root: '.'
+
+compress: true
+
+install_mode: 'copy'
+data:
+  - dir: 'src/main/assets/'
+  - dir: 'src/main/res/drawable/'

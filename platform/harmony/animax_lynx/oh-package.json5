@@ -1,0 +1,14 @@
+{
+  "name": "@animax/lynx_animax",
+  "version": "@param:dependencies.lynx_version",
+  "main": "src/main/ets/index.ets",
+  "repository": "https://code.byted.org/lynx/template-assembler",
+  "author": "lynx",
+  "license": "Apache-2.0",
+  "description": "LynxAnimaX is the AnimaX component in the Lynx.",
+  "dependencies": {
+    "liblynx_animax.so": "file:./src/main/cpp/types/liblynx_animax",
+    "@lynx/lynx": "@param:dependencies.lynx_version",
+    "@lynx/lynx_base": "@param:dependencies.lynx_version",
+  }
+}

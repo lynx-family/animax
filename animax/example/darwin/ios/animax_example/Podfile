@@ -1,0 +1,42 @@
+source 'https://cdn.cocoapods.org/'
+project './AnimaXExample.xcodeproj'
+
+platform :ios, '13.0'
+
+install!'cocoapods',:deterministic_uuids=>false,
+                    :lock_pod_sources=>false,
+                    :generate_multiple_pod_projects => true,
+                    :incremental_installation=>true,
+                    :warn_for_multiple_pod_sources => false
+
+post_install do |installer|
+  installer.pod_target_subprojects.flat_map { |p| p.targets }.each do |t|
+    t.build_configurations.each do |c|
+      c.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
+    end
+  end
+end
+
+pod_path = '../../../../'
+
+target 'AnimaXExample' do
+  pod 'AnimaX', :path => pod_path, :subspecs => [
+    'Core',
+    'Framework', 
+    'RenderBackend/Skity',
+    'Textra',
+    'ThirdParty'
+  ]
+
+  pod 'skity', '1.0.0-beta.6'
+
+  pod 'LynxTextra', { :path => pod_path + 'third_party/lynx-textra' }
+
+  pod 'LynxBase', { :path => pod_path }, :subspecs => [
+    'Framework',
+  ]
+
+  pod 'LynxServiceAPI', { :path => pod_path }, :subspecs => [
+    'Core',
+  ]
+end

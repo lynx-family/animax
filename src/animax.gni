@@ -1,21 +1,8 @@
-# Copyright 2023 The Lynx Authors. All rights reserved.
-# Licensed under the Apache License Version 2.0 that can be found in the
-# LICENSE file in the root directory of this source tree.
-
-import("//build/toolchain/clang.gni")
-import("//build_overrides/animax.gni")
-import("//config.gni")
+import("../animax/src/animax.gni")
 import("base_targets.gni")
 
-if (is_android) {
-  import("//build/config/android/config.gni")
-} else if (is_harmony) {
-  import("//build/config/harmony/config.gni")
-}
-
-if (target_cpu == "arm" || target_cpu == "arm64") {
-  import("//build/config/arm.gni")
-}
-
 declare_args() {
+  lynx_proj_root = rebase_path("../../")
+  animax_internal_root = rebase_path("../")
+  animax_oss_root = rebase_path("../animax/")
 }

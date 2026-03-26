@@ -1,184 +1,95 @@
 # Copyright 2025 The Lynx Authors. All rights reserved.
 # Licensed under the Apache License Version 2.0 that can be found in the
 # LICENSE file in the root directory of this source tree.
+import("//build/toolchain/clang.gni")
+import("//config.gni")
 import("animax.gni")
 
-group("animax_core") {
-  deps = [
-    "../include",
-    "animation",
-    "animator",
-    "audio",
-    "base",
-    "content",
-    "layer",
-    "model",
-    "parser",
-    "player",
-    "property",
-    "render",
-    "resource",
-    "video",
-  ]
+source_set("animax_bytevc1") {
+  deps = [ "video/custom/bytevc1" ]
 }
 
-source_set("animax") {
-  deps = [
-    ":animax_core",
-    "render:skity",
-  ]
-
-  if (is_win) {
-    deps += [ "//third_party/zlib" ]
-  }
-}
-
-config("animax_private_config") {
-  include_dirs = [
-    ".",
-    "..",
-    animax_proj_root,
-    lynx_base_search_path,
-    rapidjson_include_path,
-    "$skity_search_path/include",
-    "$skity_search_path/third_party/glm",
-    "$textra_search_path/public",
-  ]
-
-  if (is_win) {
-    include_dirs += [ "//third_party/angle/include" ]
-  }
-
-  cflags = [
-    "-Wno-c99-designator",
-    "-Wno-unknown-warning-option",
-    "-Wno-sign-compare",
-    "-Wno-unused-but-set-variable",
-    "-Wno-unused-parameter",
-    "-Wno-unused-private-field",
-    "-Wno-unused-variable",
-    "-Wno-unused-result",
-  ]
-  cflags_cc = []
-  defines = [ "RAPIDJSON_HAS_STDSTRING=1" ]
-
-  if (!is_debug) {
-    defines += [
-      "ANIMAX_MIN_LOG_LEVEL=2",
-      "NDEBUG",
+if (is_wasm) {
+  action("build_skity_wasm") {
+    script = "../tools/build_skity_wasm.py"
+    args = [
+      rebase_path("//third_party/skity", root_build_dir),
+      rebase_path("$root_out_dir/wasm", root_build_dir),
     ]
-  }
-
-  # Shared by android and harmony
-  if (is_android || is_harmony) {
-    defines += [
-      "ENABLE_OPENGLES3=1",
-      "NAPI_DISABLE_CPP_EXCEPTIONS",
-      "NAPI_DISABLE_CPP_RTTI",
-      "GNU_SUPPORT=1",
-    ]
-
     if (is_debug) {
-      defines += [ "ENABLE_LOGGING=1" ]
-    } else {
-      defines += [ "ENABLE_LOGGING=0" ]
+      args += [ "--debug" ]
     }
-
-    # This flags are set by default when build with cmake
-    cflags += [
-      "-fstack-protector-strong",
-      "-no-canonical-prefixes",
-      "-fno-limit-debug-info",
-    ]
-    cflags += [ "-Oz" ]
-    if (!is_asan) {
-      cflags += [ "-fno-sanitize=safe-stack" ]
-    }
-    if (!is_debug) {
-      cflags += [ "-faddrsig" ]
-    }
+    outputs = animax_wasm_skity_libs
   }
 
-  if (is_android) {
-    if (is_debug) {
-      defines += [ "DEBUG_MEMORY" ]
-    }
+  animax_source_set("animax-wasm-source-rtti") {
+    exclude_configs = [ "//build/config/compiler:no_rtti" ]
+    configs = [ "//build/config/compiler:rtti" ]
 
-    defines += [
-      "GNU_SUPPORT=1",
-      "OS_ANDROID=1",
-      "OS_POSIX=1",
+    sources = [
+      "../animax/src/player/web/animax_binding.cc",
+      "../animax/src/player/web/animax_wasm.cc",
+      "../animax/src/player/web/animax_wasm.h",
+      "../animax/src/resource/resource_loader/web/resource_loader_web.cc",
+      "../animax/src/resource/resource_loader/web/resource_loader_web.h",
     ]
-    cflags += [
-      "-fvisibility=hidden",
-      "-fvisibility-inlines-hidden",
-      "-fno-short-enums",
-      "-Wall",
-      "-fno-strict-aliasing",
-      "-Wno-unused-function",
-      "-Wno-pessimizing-move",
-      "-Wno-unused-const-variable",
+
+    deps = [ "$lynx_proj_root/lynx/base/src:base_static" ]
+  }
+
+  executable("animax_wasm") {
+    output_extension = "js"
+
+    configs -= [ "//build/config/compiler:compiler" ]
+
+    deps = [
+      ":animax-wasm-source-rtti",
+      "../animax/src:animax",
     ]
-    cflags_cc += [
+
+    cflags = [
+      "-s",
+      "MAIN_MODULE=1",
+    ]
+
+    ldflags = [
+      "-sEXPORT_ES6=1",
+      "-sUSE_ES6_IMPORT_META=1",
+      "-sEXPORT_NAME=animax_wasm",
       "-std=c++17",
-      "-fno-rtti",
-      "-fno-exceptions",
+      "-sWASM=1",
+      "-sFULL_ES3=1",
+      "-sMODULARIZE=1",
+      "-sGL_PREINITIALIZED_CONTEXT",
+      "-lGL",
+      "-sUSE_WEBGL2=1",
+      "-sMAX_WEBGL_VERSION=2",
+      "--bind",
+      "--no-entry",
+      "--use-port=emdawnwebgpu",
+      "-sEXPORTED_RUNTIME_METHODS=WebGPU,GL",
+      "-sLLD_REPORT_UNDEFINED=1",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sENVIRONMENT=web",
+      "-sUSE_ZLIB=1",
     ]
-    if (is_asan) {
-      cflags += [ "-fno-omit-frame-pointer" ]
+
+    if (is_debug) {
+      ldflags += [
+        "-O0",
+        "-gsource-map",
+        "--emit-symbol-map",
+      ]
     } else {
-      cflags += [
-        "-fomit-frame-pointer",
-        "-fno-sanitize=safe-stack",
+      # Remove the default optimization config causing the issue
+      configs -= [ "//build/config/compiler:optimize" ]
+
+      # Add back standard optimizations without --as-needed
+      cflags += [ "-O3" ]
+      ldflags += [
+        "-O3",
+        "-Wl,--gc-sections",
       ]
     }
-    if (!is_debug) {
-      cflags += [ "-faddrsig" ]
-      if (enable_lto) {
-        cflags += [ "-flto" ]
-      }
-    }
-  } else if (is_ios) {
-    defines += [
-      "OS_IOS=1",
-      "OS_POSIX=1",
-    ]
-  } else if (is_harmony) {
-    defines += [ "OS_HARMONY=1" ]
-  } else if (is_win) {
-    defines += [
-      "OS_WIN=1",
-      "NAPI_DISABLE_CPP_RTTI",
-      "BASE_NO_EXPORT",
-    ]
-    cflags += [ "/EHsc" ]
-  } else if (is_mac) {
-    defines += [
-      "OS_OSX=1",
-      "OS_POSIX=1",
-    ]
-  } else if (is_wasm) {
-    defines += [
-      "OS_WASM=1",
-      "ENABLE_TEXT_RENDER",
-      "SKITY_CPU=1",
-      "SKITY_OPENGL=1",
-    ]
-    if (is_debug) {
-      cflags_cc += [ "-gsource-map" ]
-    }
-    cflags_cc += [ "--use-port=emdawnwebgpu" ]
-  }
-
-  if (use_primjs_napi) {
-    defines += [ "USE_PRIMJS_NAPI" ]
-  }
-}
-
-config("animax_public_config") {
-  defines = []
-  include_dirs = [ ".." ]
-  if (!is_debug) {
-    defines += [ "ANIMAX_MIN_LOG_LEVEL=2" ]
   }
 }

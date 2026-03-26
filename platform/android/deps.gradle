@@ -3,4 +3,25 @@
 // LICENSE file in the root directory of this source tree.
 project.ext {
     appcompat = 'androidx.appcompat:appcompat:1.0.0'
+
+    if ("true" == System.getenv().get("IS_TTP")) {
+        common_monitor = 'com.bytedance.frameworks.core:commonmonitor:5.0.20.1.tiktok-rc.168'
+        bytedance_fresco = 'com.bytedance.fresco:fresco:1.13.66.12-tiktok'
+    } else {
+        common_monitor = 'com.bytedance.frameworks.core:commonmonitor:5.0.18.5'
+        bytedance_fresco = 'com.bytedance.fresco:fresco:1.13.85.2'
+    }
+    
+    // AutoService dependency for service registration
+    auto_service = 'com.google.auto.service:auto-service:1.0-rc5'
+
+    // Skity
+    skity_noasan = "com.bytedance.skity:skity:${project.ext.SKITY_VERSION}"
+    skity_asan = "com.bytedance.skity:skity:${project.ext.SKITY_VERSION}-asan"
+
+    // Textlayout
+    tttext_lite = "com.bytedance.lynx:tttext_lite:${project.ext.TTTEXT_LITE_VERSION}"
+
+    // ByteVc1Dec
+    bytevc1_dec = "com.bytedance:libbytevc1dec:2.4.1-16KB.2-bugfix"
 }

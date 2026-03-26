@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 apply plugin: 'com.android.library'
+apply from: 'https://voffline.byted.org/download/tos/schedule/ttclient-android/publish.gradle'
 apply from: file("../jacoco.gradle")
 apply from: file("../deps.gradle")
 import org.json.simple.JSONObject
@@ -29,9 +30,11 @@ android {
                 pickFirst 'lib/*/libskity.so'
                 pickFirst 'lib/*/libtttext_lite.so'
             } else {
+                exclude 'lib/*/libc++_shared.so'
                 exclude 'lib/*/liblynxtrace.so'
                 exclude 'lib/*/liblynxbase.so'
                 exclude 'lib/*/libskity.so'
+                exclude 'lib/*/libtttext_lite.so'
             }
         }
 
@@ -126,6 +129,15 @@ android {
     }
 
     sourceSets {
+        main {
+            java.srcDirs += ['../../../animax/platform/android/animax_android/src/main/java/']
+            java.excludes += 'com/lynx/animax/util/AnimaX.java'
+            java.excludes += 'com/lynx/animax/service/AnimaXServiceCenter.java'
+
+            assets.srcDirs += ['../../../animax/platform/android/animax_android/src/main/assets']
+            res.srcDirs += ['../../../animax/platform/android/animax_android/src/main/res']
+        }
+
         androidTest {
             assets.srcDirs = ['src/android_test/assets']
             java.srcDirs += ['src/android_test/java/']
@@ -178,7 +190,11 @@ task configGnCompileParas {
 
 dependencies {
     implementation project.ext.appcompat
-    implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
+    // the final integrated apk should use implementation and pick libskity.so
+    // LynxExample deps on asan-version with asan flavor, so we do the same here.
+    noasanImplementation project.ext.skity_noasan
+    asanImplementation project.ext.skity_asan
+
     implementation project(':LynxBase')
     implementation project(':LynxTrace')
 }

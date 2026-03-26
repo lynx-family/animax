@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 apply plugin: 'com.android.library'
+apply from: 'https://voffline.byted.org/download/tos/schedule/ttclient-android/publish.gradle'
 apply from: file("../jacoco.gradle")
 apply from: file("../deps.gradle")
 import org.json.simple.JSONObject
@@ -24,16 +25,15 @@ android {
                 pickFirst 'lib/*/liblynxtrace.so'
                 pickFirst 'lib/*/libnapi.so'
                 pickFirst 'lib/*/libskity.so'
-                pickFirst 'lib/*/liblynxtextra.so'
+                pickFirst 'lib/*/libtttext_lite.so'
                 pickFirst 'lib/*/libanimax.so'
             } else {
                 exclude 'lib/*/libc++_shared.so'
                 exclude 'lib/*/liblynxtrace.so'
                 exclude 'lib/*/libnapi.so'
                 exclude 'lib/*/libskity.so'
+                exclude 'lib/*/libtttext_lite.so'
                 exclude 'lib/*/libanimax.so'
-                // Do not exclude liblynxtextra.so here, because the app may not depend on animax_textra module.
-                // If the app have conflicts on lynxtextra.so, please use pickFirst to resolve it.
             }
         }
     }
@@ -129,6 +129,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    configurations {
+        extractJNI
+    }
 }
 
 // Configure the compilation parameters in gn to generate the corresponding CMakeLists.txt files.
@@ -170,7 +174,8 @@ task configGnCompileParas {
 
 dependencies {
     implementation project(':AnimaXAndroid')
-    implementation project(':LynxTextra')
-    implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
+    noasanImplementation project.ext.skity_noasan
+    asanImplementation project.ext.skity_asan
+    compileOnly project.ext.tttext_lite
 }
 

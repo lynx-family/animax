@@ -6,7 +6,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
-
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
@@ -18,20 +17,13 @@ android {
         versionCode 1
         versionName "1.0"
 
+        missingDimensionStrategy 'lynx', 'noasan'
+
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a", "x86"
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    signingConfigs {
-        release {
-            storeFile file(MYAPP_RELEASE_KEYSTORE_FILE)
-            storePassword MYAPP_RELEASE_STORE_PASSWORD
-            keyAlias MYAPP_RELEASE_KEY_ALIAS
-            keyPassword MYAPP_RELEASE_KEY_PASSWORD
-        }
     }
 
     buildTypes {
@@ -44,8 +36,6 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Sign release so APK can be installed.
-            signingConfig signingConfigs.release
         }
     }
 
@@ -54,25 +44,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    flavorDimensions "lynx"
-    productFlavors {
-        asan {
-            dimension "lynx"
-            matchingFallbacks = ["asan"]
-        }
-        noasan {
-            dimension "lynx"
-            matchingFallbacks= ["noasan"]
-            getIsDefault().set(true)
-        }
-    }
-
     packagingOptions {
         exclude("META-INF/*.kotlin_module")
         exclude("META-INF/aweme/source_info.json")
         pickFirst '**/libc++_shared.so'
         pickFirst '**/libskity.so'
-        pickFirst '**/liblynxtextra.so'
     }
 
     kotlinOptions { jvmTarget = 1.8 }
@@ -81,24 +57,29 @@ android {
 dependencies {
     implementation "androidx.appcompat:appcompat:1.0.0"
     implementation "androidx.recyclerview:recyclerview:1.2.1"
-    implementation "androidx.cardview:cardview:1.0.0"
-    implementation 'com.google.android.material:material:1.4.0'
 
     implementation project(':AnimaXAndroid')
+    implementation project(':AnimaXImageFresco')
     implementation project(':AnimaXTextra')
+    implementation project(':AnimaXMonitorCommon')
+    implementation project(':AnimaXByteVc1')
+    implementation project(':LottieAdapterBase')
+    implementation project(':LottieAdapterLottie')
+    implementation project(':LottieAdapterAnimaX')
 
-    implementation 'com.facebook.fresco:fresco:2.3.0'
-    implementation 'com.facebook.fresco:animated-webp:2.3.0'
-    implementation 'com.facebook.fresco:webpsupport:2.3.0'
-    implementation 'com.facebook.fresco:animated-base:2.3.0'
-    implementation "com.facebook.fresco:imagepipeline:2.3.0"
-    implementation "com.facebook.fresco:drawee:2.3.0"
+    implementation "com.bytedance.skity:skity:${rootProject.ext.SKITY_VERSION}"
+    implementation "com.bytedance.lynx:tttext_lite:${project.ext.TTTEXT_LITE_VERSION}"
 
-    // OkHttp for network requests
-    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation "com.bytedance.fresco:fresco:1.13.13.2"
+    implementation "com.bytedance.fresco:imagepipeline:1.13.13.2"
+    implementation "com.bytedance.fresco:animated-base:1.13.13.2"
+    implementation "com.bytedance.fresco:sr:1.13.13.2"
+    implementation "com.bytedance.fresco:drawee:1.13.13.2"
+    implementation  "com.bytedance.fresco:heif:1.13.13.2"
+    implementation  "com.bytedance.fresco:animated-heif:1.13.13.2"
+    implementation  "com.bytedance.fresco:statistics:1.13.13.2"
 
-    // Color picker
-    implementation 'com.github.yukuku:ambilwarna:2.0.1'
+    implementation "com.airbnb.android:lottie:2.8.3.14-bugfix"
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'androidx.test.ext:junit:1.1.1'

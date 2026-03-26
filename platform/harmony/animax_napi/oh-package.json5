@@ -1,0 +1,13 @@
+{
+  "name": "@animax/animax_napi",
+  "version": "@param:dependencies.lynx_version",
+  "main": "src/main/ets/index.ets",
+  "repository": "https://code.byted.org/lynx/template-assembler",
+  "author": "lynx",
+  "license": "Apache-2.0",
+  "description": "AnimaXNapi is the AnimaX napi component.",
+  "dependencies": {
+    "libanimax_napi.so": "file:./src/main/cpp/types/libanimax_napi",
+    "@animax/lynx_animax": "@param:dependencies.lynx_version",
+  }
+}

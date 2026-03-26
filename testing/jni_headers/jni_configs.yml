@@ -1,0 +1,11 @@
+# gn file configs.
+gn_configs:
+  output_path: animax/testing/jni_headers/BUILD.gn
+  template_name: animax_source_set_ext
+  custom_headers:
+    - animax/src/animax.gni
+# jni files configs.
+jni_class_configs:
+  output_dir: animax/testing/jni_headers/gen
+  jni_classes:
+    - java: animax/platform/android/animax_android/src/android_test/java/com/lynx/animax/GTestRunnerTest.java

@@ -1,0 +1,6 @@
+/build
+/.gradle
+/.cxx
+/CMakeLists_impl
+/assets/
+/res/drawable/

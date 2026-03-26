@@ -1,0 +1,77 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+import("//build/toolchain/clang.gni")
+import("//config.gni")
+
+shared_library("animax_conformance_test") {
+  testonly = true
+  sources = [
+    "../animax_unittest_interface_impl.cc",
+    "animax_renderer_capi.cc",
+    "animax_renderer_capi.h",
+    "animax_renderer_osmesa.cc",
+    "animax_renderer_osmesa.h",
+    "animax_surface_osmesa.cc",
+    "animax_surface_osmesa.h",
+    "frame_progress_converter.cc",
+    "frame_progress_converter.h",
+    "osmesa_context.cc",
+    "osmesa_context.h",
+    "osmesa_surface.cc",
+    "osmesa_surface.h",
+    "resource_pipeline.cc",
+    "resource_pipeline.h",
+  ]
+
+  defines = [ "ANIMAX_GL_USE_OSMESA" ]
+
+  libs = [
+    "glapi",
+    "OSMesa",
+  ]
+
+  lib_dirs = [ "$root_out_dir" ]
+
+  include_dirs = [
+    "//third_party/",
+    "../../",
+    "../../animax",
+    "//third_party/mesa_build_support/include",
+    "//third_party/skity/include",
+    "//third_party/skity/third_party/glm",
+    "//third_party/textlayout/textra/public",
+  ]
+
+  deps = [
+    "../:skity-host-prebuild-binary",
+    "../../../krypton/testing:build_mesa3d",
+    "../../../lynx/base/src:base_static",
+    "../../../lynx/third_party/rapidjson",
+    "../../animax/src:animax",
+    "../../animax/src/layer/textra",
+    "//third_party/libpng",
+    "//third_party/textlayout/src:textlayout",
+  ]
+
+  cflags_cc = [
+    "-std=gnu++17",
+    "-Wno-self-move",
+    "-Wno-sign-compare",
+  ]
+
+  ldflags = [ "-Wl,-rpath,\$ORIGIN" ]
+
+  if (is_mac) {
+    ldflags += [
+      "-framework",
+      "CoreText",
+      "-framework",
+      "CoreGraphics",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "AppKit",
+    ]
+  }
+}

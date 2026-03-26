@@ -1,0 +1,57 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+import("//build/config/harmony/config.gni")
+import("../../../../platform/harmony/harmony.gni")
+import("../../../animax/src/animax.gni")
+
+shared_library("lynx_animax") {
+  output_name = "lynx_animax"
+
+  sources = [
+    "src/main/cpp/ui_animax.cc",
+    "src/main/cpp/ui_animax.h",
+  ]
+
+  include_dirs = [
+    "../../../",
+    "../../../animax/",
+  ]
+
+  deps = [
+    "../../../../lynx/base/platform/harmony:lynx_base",
+    "../../../../platform/harmony:native_lib",
+    "../../../animax/src:animax",
+  ]
+
+  libs = [
+    "EGL",
+    "GLESv3",
+    "ace_ndk.z",
+    "ace_napi.z",
+    "hilog_ndk.z",
+    "native_window",
+    "ohaudio",
+    "ohimage",
+    "pixelmap",
+    "image_source",
+    "native_image",
+    "native_media_acodec",
+    "native_media_avdemuxer",
+    "native_media_core",
+    "native_media_avsource",
+    "native_media_codecbase",
+    "native_media_vdec",
+    "z",
+  ]
+}
+
+source_set("animax_registry") {
+  sources = [
+    "src/main/cpp/registry/animax_registry.cc",
+    "src/main/cpp/registry/animax_registry.h",
+  ]
+
+  include_dirs = [ "../../../" ]
+}

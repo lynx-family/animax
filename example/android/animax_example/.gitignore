@@ -3,3 +3,5 @@
 /.gradle
 /.cxx
 /CMakeLists_impl
+src/main/res/drawable/
+src/main/assets/

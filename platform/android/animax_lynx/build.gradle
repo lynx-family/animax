@@ -1,0 +1,148 @@
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+apply plugin: 'com.android.library'
+apply from: 'https://voffline.byted.org/download/tos/schedule/ttclient-android/publish.gradle'
+apply from: '../jacoco.gradle'
+apply from: file("../deps.gradle")
+
+ext.ABI_FILTERS = ['armeabi-v7a', 'armeabi', 'arm64-v8a', 'x86']
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    ndkVersion rootProject.ext.ndkVersion
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        consumerProguardFiles "consumer-rules.pro"
+
+        packagingOptions {
+            if(enable_lynx_android_test.toBoolean()) {
+                pickFirst 'lib/*/libc++_shared.so'
+                pickFirst 'lib/*/liblynxtrace.so'
+                pickFirst 'lib/*/liblynxbase.so'
+                pickFirst 'lib/*/libnapi.so'
+                pickFirst 'lib/*/libskity.so'
+                pickFirst 'lib/*/libtttext_lite.so'
+            } else {
+                exclude 'lib/*/libc++_shared.so'
+                exclude 'lib/*/liblynxtrace.so'
+                exclude 'lib/*/liblynxbase.so'
+                exclude 'lib/*/libnapi.so'
+                exclude 'lib/*/libskity.so'
+                exclude 'lib/*/libtttext_lite.so'
+            }
+        }
+
+        multiDexEnabled true
+    }
+
+    flavorDimensions "lynx"
+    productFlavors {
+        asan {
+            dimension "lynx"
+            externalNativeBuild {
+                cmake {
+                    cppFlags  '-fsanitize=address',
+                            '-fsanitize-address-use-after-scope',
+                            '-fPIE',
+                            '-Wl,-ldl',
+                            '-Wl,-llog',
+                            '-Wno-unused-command-line-argument'
+                    arguments '-DANDROID_ARM_MODE=arm',
+                            '-DENABLE_ASAN=true',
+                            '-DANDROID_STL='+getCppLib(),
+                            '-DFLAVOR_NAME=asan'
+                    abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+                }
+            }
+        }
+        noasan {
+            dimension "lynx"
+            externalNativeBuild {
+                cmake {
+                    cppFlags '-Wl,-ldl',
+                            '-Wno-unused-command-line-argument'
+                    arguments '-DANDROID_STL='+getCppLib(),
+                            '-DFLAVOR_NAME=noasan'
+                }
+            }
+            getIsDefault().set(true)
+        }
+    }
+
+    buildTypes {
+        release {
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM=android-18',
+                            '-DANDROID_TOOLCHAIN=clang',
+                            '-DANDROID_LD=lld',
+                            '-DANDROID_STL='+getCppLib(),
+                            '-DLOCAL_ARM_NEON=true',
+                            '-DBUILD_TYPE=release',
+                            '-LH'
+                }
+            }
+            ndk {
+                abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM=android-18',
+                            '-DANDROID_TOOLCHAIN=clang',
+                            '-DANDROID_LD=lld',
+                            '-DANDROID_STL='+getCppLib(),
+                            '-DLOCAL_ARM_NEON=true',
+                            '-DBUILD_TYPE=debug',
+                            '-LH'
+                    cppFlags  '-g -O0'
+                }
+            }
+            ndk {
+                abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+            }
+            debuggable true
+        }
+    }
+
+    sourceSets {
+        androidTest {
+            assets.srcDirs = ['src/android_test/assets']
+            java.srcDirs += ['src/android_test/java/']
+            manifest.srcFile 'src/android_test/AndroidManifest.xml'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation project(':LynxAndroid')
+    implementation project(':LynxTrace')
+    implementation project(':LynxBase')
+
+    println('LynxAnimaX LynxProcessor is ON')
+    compileOnly project(':LynxProcessor')
+    annotationProcessor project(':LynxProcessor')
+
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+
+    implementation project(':AnimaXAndroid')
+    api project(':AnimaXImageFresco')
+    api project(':AnimaXNapi')
+    api project(':AnimaXTextra')
+    api project(':AnimaXByteVc1')
+}

@@ -1,0 +1,62 @@
+# Copyright 2023 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+#
+
+import("../../../src/animax.gni")
+import("AnimaXAndroid.gni")
+
+cmake_target("AnimaXAndroid") {
+  cmake_version = "3.4.1"
+  target_type = "shared_library"
+  output_name = "animax"
+
+  deps = [
+    ":animax_jni_files",
+    "../../../src:animax",
+    "../../../third_party/lynx/base/platform/android:LynxBase",
+    "../../../third_party/lynx/base/trace/android:LynxTrace",
+  ]
+
+  libs = [
+    "EGL",
+    "GLESv3",
+    "android",
+    "dl",
+    "log",
+    "jnigraphics",
+  ]
+
+  ldflags = []
+  if (!is_debug) {
+    ldflags += [
+      "-O2",
+      "-Wl,--icf=all",
+    ]
+    if (enable_lto) {
+      ldflags += [ "-flto" ]
+    }
+  } else {
+    ldflags += [ "-O0" ]
+  }
+  ldflags += [
+    "-fno-limit-debug-info",
+    "-Wl,--exclude-libs,ALL,--gc-sections",
+    "-Xlinker",
+    "-Map=output.map",
+  ]
+  configs = [ "../../../platform/android:16kb_page" ]
+}
+
+group("animax_jni_files") {
+  exec_script(
+      "../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
+      [
+        "-root",
+        rebase_path("//"),
+        "-path",
+        rebase_path("./src/main/jni/jni_configs.yml"),
+        "--use-base-jni-header",
+      ])
+  public_deps = [ "src/main/jni:build" ]
+}

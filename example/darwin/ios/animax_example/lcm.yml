@@ -1,0 +1,14 @@
+package: lynx/animax_example_ios/resource
+
+description: The asset resource of animax iOS example.
+
+root: '.'
+
+compress: true
+
+install_mode: 'copy'
+data:
+  - dir: 'AnimaXExample/Assets.xcassets/'
+  - dir: 'AnimaXExample/Base.lproj/'
+  - file: 'AnimaXExample/Info.plist'
+  - dir: 'Assets/'

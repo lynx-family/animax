@@ -1,25 +1,18 @@
-source 'https://cdn.cocoapods.org/'
-project './AnimaXExample.xcodeproj'
+require "../../../../../tools/ios_tools/source_list.rb"
+source "file://" + ENV["COCOAPODS_LOCAL_SOURCE_REPO"]
 
 platform :ios, '13.0'
 
-install!'cocoapods',:deterministic_uuids=>false,
-                    :lock_pod_sources=>false,
-                    :generate_multiple_pod_projects => true,
-                    :incremental_installation=>true,
-                    :warn_for_multiple_pod_sources => false
+install! 'cocoapods', 
+         :deterministic_uuids => false,
+         :generate_multiple_pod_projects => true,
+         :warn_for_multiple_pod_sources => false
 
-post_install do |installer|
-  installer.pod_target_subprojects.flat_map { |p| p.targets }.each do |t|
-    t.build_configurations.each do |c|
-      c.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
-    end
-  end
-end
-
-pod_path = '../../../../'
+pod_path = ENV['OPT_POD_INSTALL'] != 'true' ? "../../../../../" : "../../../../../.pods_opt/"
 
 target 'AnimaXExample' do
+  use_pod 'lottie-ios'
+  
   pod 'AnimaX', :path => pod_path, :subspecs => [
     'Core',
     'Framework', 
@@ -28,15 +21,47 @@ target 'AnimaXExample' do
     'ThirdParty'
   ]
 
-  pod 'skity', '1.0.0-beta.6'
-
-  pod 'LynxTextra', { :path => pod_path + 'third_party/lynx-textra' }
-
-  pod 'LynxBase', { :path => pod_path }, :subspecs => [
-    'Framework',
+  pod 'LynxBase', :path => pod_path, :subspecs => [
+      'Framework',
   ]
 
   pod 'LynxServiceAPI', { :path => pod_path }, :subspecs => [
     'Core',
   ]
+
+  pod 'LottieAdapter', :path => pod_path, :subspecs => [
+    'Common',
+    'Lottie',
+    'AnimaX',
+  ]
+
+  pod 'skity', { :path => '../../../../../third_party/skity' }
+
+  pod 'TTText_lite', :path => '../../../../../third_party/textlayout', :subspecs => [ 'TTText_lite' ]
 end
+
+# By default post_install does not use the arm architecture on the emulator
+post_install do |installer|
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+  end
+  installer.pod_target_subprojects.flat_map { |p| p.targets }.each do |t|
+    t.build_configurations.each do |c|
+      c.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+      c.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
+    end
+  end
+end
+
+# Modify the main project to also exclude arm64 for simulator
+require 'xcodeproj'
+project_path = './AnimaXExample.xcodeproj'
+project = Xcodeproj::Project.open(project_path)
+project.targets.each do |target|
+  if target.name == 'AnimaXExample'
+    target.build_configurations.each do |config|
+      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+    end
+  end
+end
+project.save()

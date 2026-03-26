@@ -3,7 +3,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-import("../../../src/animax.gni")
+import("../../../../core/Lynx.gni")
+import("../../../animax/src/animax.gni")
 import("AnimaXAndroid.gni")
 
 cmake_target("AnimaXAndroid") {
@@ -13,11 +14,11 @@ cmake_target("AnimaXAndroid") {
 
   deps = [
     ":animax_jni_files",
-    "../../../src:animax",
-    "../../../third_party/lynx/base/platform/android:LynxBase",
-    "../../../third_party/lynx/base/trace/android:LynxTrace",
+    "../../../../animax/animax/src:animax",
+    "../../../../base/platform/android:LynxBase",
+    "../../../../base/trace/android:LynxTrace",
   ]
-
+  lib_dirs = []
   libs = [
     "EGL",
     "GLESv3",
@@ -36,8 +37,6 @@ cmake_target("AnimaXAndroid") {
     if (enable_lto) {
       ldflags += [ "-flto" ]
     }
-  } else {
-    ldflags += [ "-O0" ]
   }
   ldflags += [
     "-fno-limit-debug-info",
@@ -45,18 +44,26 @@ cmake_target("AnimaXAndroid") {
     "-Xlinker",
     "-Map=output.map",
   ]
-  configs = [ "../../../platform/android:16kb_page" ]
+  configs = [ "../../../../lynx/platform/android:16kb_page" ]
+
+  if (enable_animax_android_testing) {
+    deps += [
+      "../../../../animax/testing:animax_android_unittests",
+      "../../../../animax/testing:gtest_testing_animax_android",
+      "//third_party/googletest:gtest_sources",
+      "//third_party/googletest_custom:gtest_custom",
+    ]
+  }
 }
 
 group("animax_jni_files") {
-  exec_script(
-      "../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
-      [
-        "-root",
-        rebase_path("//"),
-        "-path",
-        rebase_path("./src/main/jni/jni_configs.yml"),
-        "--use-base-jni-header",
-      ])
+  exec_script("//tools_shared/jni_generator/generate_and_register_jni_files.py",
+              [
+                "-root",
+                rebase_path("//"),
+                "-path",
+                rebase_path("./src/main/jni/jni_configs.yml"),
+                "--use-base-jni-header",
+              ])
   public_deps = [ "src/main/jni:build" ]
 }

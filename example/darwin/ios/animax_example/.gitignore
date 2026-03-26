@@ -24,7 +24,7 @@ Pods/
 Podfile.lock
 
 # Project specific
-/water/
-/water_fault/
-/embed_font/
-*.zip
+Assets.xcassets/
+Base.lproj/
+Info.plist
+/Assets/

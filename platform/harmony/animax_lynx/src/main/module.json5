@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "lynx_animax",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

@@ -1,10 +1,11 @@
-// Copyright 2026 The Lynx Authors. All rights reserved.
+// Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#import <AnimaX/AnimaXAnimationListener.h>
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController <AnimaXAnimationListener>
+@interface ViewController : UIViewController
+
+@property(nonatomic, strong) UIButton *lottieAdapterButton;
 
 @end

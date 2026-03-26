@@ -1,8 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-rootProject.name = "android"
-
 include ':animax_android'
-include ':animax_napi'
-include ':animax_textra'
+include ':animax_image_fresco'
+include ':animax_monitor_common'
+
+rootProject.name = 'AnimaX'

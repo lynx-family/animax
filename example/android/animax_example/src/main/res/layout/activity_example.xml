@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/button_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Switch
+            android:id="@+id/animation_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:text="AnimaX"
+            android:textSize="16sp"/>
+
+        <Button
+            android:id="@+id/gc_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trigger GC"
+            android:textAllCaps="false"
+            android:background="@drawable/gc_button_background"
+            android:textColor="#666666"
+            android:paddingHorizontal="16dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

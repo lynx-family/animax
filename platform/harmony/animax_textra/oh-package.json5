@@ -1,0 +1,13 @@
+{
+  "name": "@animax/animax_textra",
+  "version": "@param:dependencies.lynx_version",
+  "main": "src/main/ets/index.ets",
+  "repository": "https://code.byted.org/lynx/template-assembler",
+  "author": "lynx",
+  "license": "Apache-2.0",
+  "description": "AnimaXTextra is the AnimaX textra component.",
+  "dependencies": {
+    "libanimax_textra.so": "file:./src/main/cpp/types/libanimax_textra",
+    "@animax/lynx_animax": "@param:dependencies.lynx_version",
+  }
+}

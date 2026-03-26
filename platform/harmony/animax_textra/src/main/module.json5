@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "animax_textra",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 apply plugin: 'com.android.library'
+apply from: 'https://voffline.byted.org/download/tos/schedule/ttclient-android/publish.gradle'
 apply from: file("../jacoco.gradle")
 apply from: file("../deps.gradle")
 import org.json.simple.JSONObject
@@ -173,10 +174,12 @@ task configGnCompileParas {
 
 dependencies {
     implementation project(':AnimaXAndroid')
-    // TODO(aiyongbiao.rick): integrate primjs and v8so to support napi on lynx bussiness.
-    implementation 'org.lynxsdk.lynx:primjs:3.6.0-rc.0'
-    extractJNI 'org.lynxsdk.lynx:primjs:3.6.0-rc.0'
-    extractJNI 'org.lynxsdk.lynx:v8so:11.1.277.4'
+
+    def vmsdk_version = "com.bytedance.lynx:vmsdk:" + rootProject.ext.VMSDK_INSPECTOR_VERSION
+    def vmsdk_android = "com.bytedance.lynx:vmsdk-android:" + rootProject.ext.VMSDK_INSPECTOR_VERSION
+    implementation vmsdk_version
+    implementation vmsdk_android
+    extractJNI vmsdk_version
 }
 
 task extractJNIFiles {

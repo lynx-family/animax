@@ -1,51 +1,51 @@
 # jni register file configs.
 jni_register_configs:
-  output_path: platform/android/animax_android/src/main/jni/gen/animax_so_load.cc
+  output_path: animax/platform/android/animax_android/src/main/jni/gen/animax_so_load.cc
   custom_headers:
     - base/include/platform/android/jni_utils.h
   namespaces:
     - animax
 # gn file configs.
 gn_configs:
-  output_path: platform/android/animax_android/src/main/jni/BUILD.gn
-  template_name: animax_source_set
+  output_path: animax/platform/android/animax_android/src/main/jni/BUILD.gn
+  template_name: animax_source_set_ext
   custom_headers:
-    - src/animax.gni
+    - animax/src/animax.gni
 # jni files configs.
 jni_class_configs:
-  output_dir: platform/android/animax_android/src/main/jni/gen
+  output_dir: animax/platform/android/animax_android/src/main/jni/gen
   jni_classes:
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/AnimaXResourceLoader.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/ability/BaseAbility.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/util/AnimaX.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/util/AnimaXLog.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/drawable/FirstFrameAwareSurfaceTexture.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/AnimaXPlayer.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/player/VideoAsset.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/base/bridge/JavaOnlyArray.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/base/bridge/JavaOnlyMap.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/util/AnimaXMetricsCallback.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/drawable/AnimaXSurfaceDrawable.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/drawable/BitmapBufferGroup.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/drawable/BitmapBuffer.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/VSyncMonitor.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/composition/AnimaXComposition.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/player/NativePlayerCallback.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/player/IVideoPlayer.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXKeyPath.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXKeyPathListCallback.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXPropertyCallback.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXValueCallback.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXValueParam.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/composition/AnimaXCompositionNativeCallback.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/composition/AnimaXCompositionFactory.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXCloseableBitmapReferenceNativeAdapter.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoaderCompletionHandler.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoaderRequest.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoaderResponseNativeAdapter.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXResourceLoaderHolder.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXUnzipLoader.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoader.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/ui/AnimaXContext.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/audio/AudioAsset.java
-    - java: platform/android/animax_android/src/main/java/com/lynx/animax/audio/AudioPlayer.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/AnimaXResourceLoader.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/ability/BaseAbility.java
+    - java: animax/platform/android/animax_android/src/main/java/com/lynx/animax/AnimaX.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/util/AnimaXLog.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/drawable/FirstFrameAwareSurfaceTexture.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/AnimaXPlayer.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/player/VideoAsset.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/base/bridge/JavaOnlyArray.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/base/bridge/JavaOnlyMap.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/util/AnimaXMetricsCallback.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/drawable/AnimaXSurfaceDrawable.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/drawable/BitmapBufferGroup.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/drawable/BitmapBuffer.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/VSyncMonitor.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/composition/AnimaXComposition.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/player/NativePlayerCallback.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/player/IVideoPlayer.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXKeyPath.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXKeyPathListCallback.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXPropertyCallback.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXValueCallback.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/property/AnimaXValueParam.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/composition/AnimaXCompositionNativeCallback.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/composition/AnimaXCompositionFactory.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXCloseableBitmapReferenceNativeAdapter.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoaderCompletionHandler.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoaderRequest.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoaderResponseNativeAdapter.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXResourceLoaderHolder.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXUnzipLoader.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/loader/AnimaXLoader.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/ui/AnimaXContext.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/audio/AudioAsset.java
+    - java: animax/animax/platform/android/animax_android/src/main/java/com/lynx/animax/audio/AudioPlayer.java
