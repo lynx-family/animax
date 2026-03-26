@@ -54,6 +54,7 @@ class TextLayer : public BaseLayer {
   KeyframeAnimation* GetAnimationFromAnimatorProperty(
       const TextLayerAnimations::AnimatorProperty& animator,
       LayerPropertyType type);
+  void CheckFontAsset(FontAsset* font_asset);
 
   TextLayerAnimations animations_;
   std::unique_ptr<TextContent> text_content_;

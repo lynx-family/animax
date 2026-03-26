@@ -26,6 +26,8 @@ class Font {
 
   static std::unique_ptr<skity::TypefaceDelegate> MakeFallbackDelegate();
 
+  static bool HasDefaultTypeface();
+
   explicit Font(std::unique_ptr<skity::Font>,
                 std::unique_ptr<skity::FontStyle>);
   ~Font();
@@ -37,6 +39,8 @@ class Font {
   const skity::Font& GetFont() const;
 
   const skity::FontStyle& GetFontStyle() const;
+
+  bool HasValidTypeface() const;
 
  private:
   std::unique_ptr<skity::Font> font_;

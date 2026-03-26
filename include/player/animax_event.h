@@ -45,6 +45,7 @@ enum class EventError : int32_t {
   kSurfaceInitError = 10,
   // kThreadInitError = 11, // Deprecated
   kLibraryInitError = 12,
+  kDefaultFontNotFound = 13,
   kVideoPlayerError = 100,
   kVideoPlayerErrorHasOccurred = 101,
   kVideoPlayerSoftwareRenderingNotSupported = 102,
@@ -57,6 +58,7 @@ enum class EventWarning : int32_t {
   kAssetCountOverLimit = 103,
   kDynamicResourceCannotBeLoaded = 104,
   kAssetLoadFailed = 105,
+  kTextLayerFontInvalid = 106,
   kStartFrameGreaterThanEndFrame = 201,
   kIllegalSubscribedStartFrame = 202,
   kExecuteBeforeReady = 301,

@@ -27,6 +27,8 @@ const char* StringifyEventWarning(EventWarning warning) {
       return "kIllegalSubscribedStartFrame";
     case EventWarning::kAssetLoadFailed:
       return "kAssetLoadFailed";
+    case EventWarning::kTextLayerFontInvalid:
+      return "kTextLayerFontInvalid";
   }
 }
 

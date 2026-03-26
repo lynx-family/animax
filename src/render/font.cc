@@ -136,10 +136,19 @@ std::shared_ptr<Font> Font::MakeFromName(const std::string& family_name,
   skity::FontStyle font_style = ParseFontStyle(style);
   auto typeface = skity::FontManager::RefDefault()->MatchFamilyStyle(
       family_name.c_str(), font_style);
-  typeface =
-      typeface ? typeface : skity::Typeface::GetDefaultTypeface(font_style);
+  if (!typeface) {
+    typeface = skity::Typeface::GetDefaultTypeface(font_style);
+    if (!typeface) {
+      ANIMAX_LOGE("Font::MakeFromName return font for font "
+                  << family_name.c_str() << " get default font null");
+    }
+  }
   return std::make_shared<Font>(std::make_unique<skity::Font>(typeface),
                                 std::make_unique<skity::FontStyle>(font_style));
+}
+
+bool Font::HasDefaultTypeface() {
+  return skity::Typeface::GetDefaultTypeface() != nullptr;
 }
 
 Font::Font(std::unique_ptr<skity::Font> font,
@@ -157,6 +166,8 @@ void Font::SetTextSize(float text_size) { font_->SetSize(text_size); }
 const skity::Font& Font::GetFont() const { return *font_; }
 
 const skity::FontStyle& Font::GetFontStyle() const { return *font_style_; }
+
+bool Font::HasValidTypeface() const { return font_->GetTypeface() != nullptr; }
 
 float Font::MeasureText(const std::string& text) const {
   skity::Paint paint;

@@ -32,6 +32,10 @@ TEST_F(AnimaxEventTest, StringifyEventWarning) {
   EXPECT_STREQ(
       StringifyEventWarning(EventWarning::kIllegalSubscribedStartFrame),
       "kIllegalSubscribedStartFrame");
+  EXPECT_STREQ(StringifyEventWarning(EventWarning::kTextLayerFontInvalid),
+               "kTextLayerFontInvalid");
+  EXPECT_STREQ(StringifyEventWarning(EventWarning::kAssetLoadFailed),
+               "kAssetLoadFailed");
 }
 
 TEST_F(AnimaxEventTest, EventParamValueBasic) {
