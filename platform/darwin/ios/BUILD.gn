@@ -123,6 +123,13 @@ subspec_target("Core") {
     "AnimaX/ThirdParty",
     "SSZipArchive",
   ]
+  frameworks = [
+    "VideoToolbox",
+    "CoreMedia",
+    "AVFoundation",
+    "Accelerate",
+    "AudioToolbox",
+  ]
 }
 
 subspec_target("Textra") {
