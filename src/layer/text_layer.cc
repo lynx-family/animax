@@ -84,6 +84,32 @@ void TextLayer::AddUpdateListenerToAnimatorProperty(
   }
 }
 
+void TextLayer::CheckFontAsset(FontAsset* font_asset) {
+  if (font_asset) {
+    auto* font = font_asset->GetFont();
+    if (font && font->HasValidTypeface()) {
+      return;
+    }
+  }
+  if (!Font::HasDefaultTypeface()) {
+    if (listener_) {
+      listener_->OnLayerError(EventError::kDefaultFontNotFound,
+                              "No default font available");
+    } else {
+      ANIMAX_LOGE(
+          "No default font available. Please register a default (fallback) "
+          "font.");
+    }
+  } else {
+    if (listener_) {
+      listener_->OnLayerWarning(EventWarning::kTextLayerFontInvalid,
+                                "Text layer font is invalid");
+    } else {
+      ANIMAX_LOGW("Text layer font is invalid. Please check the font asset.");
+    }
+  }
+}
+
 void TextLayer::Init() {
   BaseLayer::Init();
 
@@ -93,6 +119,7 @@ void TextLayer::Init() {
   }
   data_source_ = std::make_unique<TextContentDataSource>(
       animations_, composition_.GetFontAssetManager());
+  CheckFontAsset(data_source_->GetFontAsset());
 
   text_content_ = TextHelper::Impl().CreateTextContent(*data_source_);
   text_content_->Init(this);
