@@ -103,8 +103,11 @@
     return;
   }
 
-  CVPixelBufferRef srcBuffer = self.renderPixelBuffer;
-  CVPixelBufferRetain(srcBuffer);
+  CVPixelBufferRef srcBuffer = NULL;
+  @synchronized(self) {
+    srcBuffer = self.renderPixelBuffer;
+    CVPixelBufferRetain(srcBuffer);
+  }
   if (!srcBuffer) {
     return;
   }
@@ -144,8 +147,10 @@
 
   CVPixelBufferRef distBuffer = NULL;
   if (self.backend == AnimaXSoftware && self.renderPixelBuffer) {
-    distBuffer = self.renderPixelBuffer;
-    CVPixelBufferRetain(distBuffer);
+    @synchronized(self) {
+      distBuffer = self.renderPixelBuffer;
+      CVPixelBufferRetain(distBuffer);
+    }
   } else {
     distBuffer = [self acquirePixelBufferFromPool];
     if (!distBuffer) {
@@ -237,8 +242,11 @@
 }
 
 - (void)setRenderPixelBuffer:(CVPixelBufferRef)renderPixelBuffer {
-  if ([self setPixelBuffer:&_renderPixelBuffer newPixelBuffer:renderPixelBuffer] &&
-      renderPixelBuffer) {
+  BOOL changed = NO;
+  @synchronized(self) {
+    changed = [self setPixelBuffer:&_renderPixelBuffer newPixelBuffer:renderPixelBuffer];
+  }
+  if (changed && renderPixelBuffer) {
     self.generation++;
     if (self.backend == AnimaXMetal) {
       [self destroyTexture];
