@@ -44,7 +44,9 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
 
     int bufferSizeInFrame =
         Math.min(2 * (int) Math.ceil(sampleRate / DEFAULT_FPS), audioInfo.getTotalFrames());
-    mMaxBufferSize = bufferSizeInFrame * mBytePerFrame;
+    int minBufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, encodingFormat);
+    int minBufferSizeInFrame = minBufferSize / mBytePerFrame + 1;
+    mMaxBufferSize = Math.max(bufferSizeInFrame, minBufferSizeInFrame) * mBytePerFrame;
     mBuffer = ByteBuffer.allocate(mMaxBufferSize);
 
     AudioAttributes attributes = new AudioAttributes.Builder()
