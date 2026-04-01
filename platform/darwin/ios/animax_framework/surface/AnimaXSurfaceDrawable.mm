@@ -4,6 +4,7 @@
 
 #import <AnimaX/AnimaXSurfaceDrawable.h>
 #import "AnimaXSurfaceDrawable+Internal.h"
+#import "CVPixelBufferWrapper.h"
 
 #include "src/base/log/log.h"
 #include "src/base/util/ios/ca_util.h"
@@ -48,7 +49,6 @@
     if (backend == AnimaXMetal) {
       CVPixelBufferRef buffer = [self createPixelBufferWithWidth:size.width height:size.height];
       [self setBuffer:buffer];
-      CVPixelBufferRelease(buffer);
     }
   }
   return self;
@@ -74,8 +74,18 @@
 }
 
 - (void)setBuffer:(nonnull CVPixelBufferRef)buffer {
-  if (self.bufferWrapper) {
-    self.bufferWrapper.renderPixelBuffer = buffer;
+  if (!self.bufferWrapper) {
+    return;
+  }
+  // When target is Buffer, the caller retains ownership of the buffer and is responsible
+  // for its lifecycle. We wrap with an additional retain (newWrap) so our scope holds
+  // its own independent reference.
+  // When target is View, the buffer is an internally managed intermediate product with
+  // no external owner. We take over ownership directly (newWrapOwned) without extra retain.
+  if (self.target == Buffer) {
+    self.bufferWrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrap:buffer];
+  } else if (self.target == View) {
+    self.bufferWrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
   }
 }
 
@@ -107,7 +117,6 @@
   if (self.target == View && self.backend == AnimaXMetal) {
     CVPixelBufferRef buffer = [self createPixelBufferWithWidth:size.width height:size.height];
     [self setBuffer:buffer];
-    CVPixelBufferRelease(buffer);
   }
   return YES;
 }
