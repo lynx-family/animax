@@ -9,7 +9,7 @@
 #include "src/layer/font_asset_manager.h"
 #include "src/layer/text_content_default.h"
 
-#if defined(OS_IOS)
+#if defined(OS_IOS) || defined(OS_OSX)
 #include <dispatch/dispatch.h>
 
 #include "src/base/util/ios/reflect_invoke.h"
@@ -18,7 +18,7 @@
 namespace lynx {
 namespace animax {
 TextHelper &TextHelper::Impl() {
-#if defined(OS_IOS)
+#if defined(OS_IOS) || defined(OS_OSX)
   static dispatch_once_t once_token;
   dispatch_once(&once_token, ^{
     ReflectInvoke("AnimaXTextraRegister", "registerTextra");
