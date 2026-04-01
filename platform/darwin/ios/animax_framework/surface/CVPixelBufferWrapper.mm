@@ -10,6 +10,9 @@
 #include "src/base/log/log.h"
 #include "src/base/util/buffer_copy_helper.h"
 
+ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
+                                    CVPixelBufferRetain, CVPixelBufferRelease)
+
 @interface CVPixelBufferWrapper ()
 
 @property(atomic, readwrite) NSUInteger generation;
@@ -60,8 +63,8 @@
 }
 
 - (void)destroyPixelBuffers {
-  self.renderPixelBuffer = NULL;
-  self.displayPixelBuffer = NULL;
+  self.renderPixelBufferScope = nil;
+  self.displayPixelBufferScope = nil;
   self.pixelBufferPool = NULL;
 }
 
@@ -103,8 +106,8 @@
     return;
   }
 
-  CVPixelBufferRef srcBuffer = self.renderPixelBuffer;
-  CVPixelBufferRetain(srcBuffer);
+  AnimaXScopedCVPixelBuffer *bufferScoped = self.renderPixelBufferScope;
+  CVPixelBufferRef srcBuffer = bufferScoped.object;
   if (!srcBuffer) {
     return;
   }
@@ -125,7 +128,6 @@
   } else {
     ANIMAX_LOGE("Failed to notify buffer updated: unable to lock src pixel buffer.")
   }
-  CVPixelBufferRelease(srcBuffer);
 }
 
 - (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration
@@ -142,47 +144,42 @@
     return;
   }
 
-  CVPixelBufferRef distBuffer = NULL;
-  if (self.backend == AnimaXSoftware && self.renderPixelBuffer) {
-    distBuffer = self.renderPixelBuffer;
-    CVPixelBufferRetain(distBuffer);
-  } else {
-    distBuffer = [self acquirePixelBufferFromPool];
-    if (!distBuffer) {
-      distBuffer = [CVPixelBufferWrapper createPixelBufferWithWidth:width
-                                                             height:height
-                                                            backend:self.backend];
-    }
-  }
-  [self copyFromPixels:srcPixels width:width height:height stride:stride toBuffer:distBuffer];
-
-  if (!self.targetView) {
+  if (self.backend == AnimaXSoftware && !self.targetView) {
     // only here if using software backend to render buffer.
-    CVPixelBufferRelease(distBuffer);
+    AnimaXScopedCVPixelBuffer *bufferScoped = self.renderPixelBufferScope;
+    [self copyFromPixels:srcPixels
+                   width:width
+                  height:height
+                  stride:stride
+                toBuffer:bufferScoped.object];
     return;
   }
 
-  self.displayPixelBuffer = distBuffer;
+  CVPixelBufferRef distBuffer = [self acquirePixelBufferFromPool];
+  if (!distBuffer) {
+    distBuffer = [CVPixelBufferWrapper createPixelBufferWithWidth:width
+                                                           height:height
+                                                          backend:self.backend];
+  }
+
+  [self copyFromPixels:srcPixels width:width height:height stride:stride toBuffer:distBuffer];
+  self.displayPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:distBuffer];
 
   __weak typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
     __strong typeof(weakSelf) self = weakSelf;
     if (!self) {
-      CVPixelBufferRelease(distBuffer);
       return;
     }
 
     if (currentGeneration != self.generation) {
-      CVPixelBufferRelease(distBuffer);
       return;
     }
     UIView<AnimaXPixelBufferUpdateListener> *view = self.targetView;
     if (!view) {
-      CVPixelBufferRelease(distBuffer);
       return;
     }
-    [view onBufferUpdated:self.displayPixelBuffer];
-    CVPixelBufferRelease(distBuffer);
+    [view onBufferUpdated:self.displayPixelBufferScope];
   });
 }
 
@@ -236,31 +233,19 @@
   CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
 }
 
-- (void)setRenderPixelBuffer:(CVPixelBufferRef)renderPixelBuffer {
-  if ([self setPixelBuffer:&_renderPixelBuffer newPixelBuffer:renderPixelBuffer] &&
-      renderPixelBuffer) {
+- (void)setRenderPixelBufferScope:(AnimaXScopedCVPixelBuffer *)renderPixelBufferScope {
+  if (_renderPixelBufferScope.object == renderPixelBufferScope.object) {
+    return;
+  }
+
+  _renderPixelBufferScope = renderPixelBufferScope;
+  if (renderPixelBufferScope.object) {
     self.generation++;
     if (self.backend == AnimaXMetal) {
       [self destroyTexture];
       [self rebuildMetalTextureIfNeeded];
     }
   }
-}
-
-- (void)setDisplayPixelBuffer:(CVPixelBufferRef)displayPixelBuffer {
-  // only accessed in GPU thread.
-  [self setPixelBuffer:&_displayPixelBuffer newPixelBuffer:displayPixelBuffer];
-}
-
-- (BOOL)setPixelBuffer:(CVPixelBufferRef *)bufferPtr
-        newPixelBuffer:(CVPixelBufferRef)newPixelBuffer {
-  if (*bufferPtr == newPixelBuffer) {
-    return NO;
-  }
-  CVPixelBufferRetain(newPixelBuffer);
-  CVPixelBufferRelease(*bufferPtr);
-  *bufferPtr = newPixelBuffer;
-  return YES;
 }
 
 - (void)rebuildPixelBufferPoolWithWidth:(size_t)width height:(size_t)height {
@@ -322,7 +307,8 @@
 - (void)rebuildMetalTextureIfNeeded {
   DCHECK(self.backend == AnimaXMetal);
 
-  CVPixelBufferRef buffer = self.renderPixelBuffer;
+  AnimaXScopedCVPixelBuffer *bufferScoped = self.renderPixelBufferScope;
+  CVPixelBufferRef buffer = bufferScoped.object;
   if (!buffer) {
     return;
   }

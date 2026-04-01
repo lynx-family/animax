@@ -8,13 +8,13 @@
 
 @interface TestView : UIView <AnimaXPixelBufferUpdateListener>
 @property(nonatomic, assign) BOOL didDraw;
-@property(nonatomic, assign) CVPixelBufferRef displayBuffer;
+@property(nonatomic, strong) AnimaXScopedCVPixelBuffer *displayBufferScope;
 @end
 
 @implementation TestView
-- (void)onBufferUpdated:(CVPixelBufferRef)buffer {
+- (void)onBufferUpdated:(AnimaXScopedCVPixelBuffer *)bufferScope {
   self.didDraw = YES;
-  self.displayBuffer = buffer;
+  self.displayBufferScope = bufferScope;
 }
 @end
 
@@ -39,7 +39,7 @@
   CVPixelBufferWrapper *wrapper = [[CVPixelBufferWrapper alloc] init];
   XCTAssertNotNil(wrapper);
   XCTAssertEqual(wrapper.generation, 0);
-  XCTAssertEqual(nullptr, wrapper.renderPixelBuffer);
+  XCTAssertNil(wrapper.renderPixelBufferScope);
   XCTAssertNil(wrapper.metalTexture);
   XCTAssertEqual(wrapper.backend, AnimaXMetal);
 }
@@ -48,7 +48,7 @@
   CVPixelBufferWrapper *wrapper = [[CVPixelBufferWrapper alloc] initWithView:self.iv];
   XCTAssertNotNil(wrapper);
   XCTAssertEqual(wrapper.generation, 0);
-  XCTAssertEqual(nullptr, wrapper.renderPixelBuffer);
+  XCTAssertNil(wrapper.renderPixelBufferScope);
   XCTAssertNil(wrapper.metalTexture);
   XCTAssertEqual(wrapper.backend, AnimaXMetal);
 }
@@ -61,11 +61,11 @@
   NSUInteger genBefore = wrapper.generation;
   [wrapper resizePixelBufferWrapperWithWidth:width height:height];
   CVPixelBufferRef buffer = [wrapper acquirePixelBufferFromPool];
-  wrapper.renderPixelBuffer = buffer;
-  XCTAssertNotEqual(nullptr, wrapper.renderPixelBuffer);
+  wrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
+  XCTAssertNotNil(wrapper.renderPixelBufferScope);
   XCTAssertTrue(wrapper.generation > genBefore);
-  XCTAssertEqual(CVPixelBufferGetWidth(wrapper.renderPixelBuffer), width);
-  XCTAssertEqual(CVPixelBufferGetHeight(wrapper.renderPixelBuffer), height);
+  XCTAssertEqual(CVPixelBufferGetWidth(wrapper.renderPixelBufferScope.object), width);
+  XCTAssertEqual(CVPixelBufferGetHeight(wrapper.renderPixelBufferScope.object), height);
   XCTAssertNotNil(wrapper.metalTexture);
   XCTAssertEqual(wrapper.metalTexture.width, width);
   XCTAssertEqual(wrapper.metalTexture.height, height);
@@ -77,7 +77,7 @@
   size_t height = 32;
   [wrapper resizePixelBufferWrapperWithWidth:width height:height];
   CVPixelBufferRef buffer = [wrapper acquirePixelBufferFromPool];
-  wrapper.renderPixelBuffer = buffer;
+  wrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
   XCTAssertFalse(self.iv.didDraw);
 
   [wrapper notifyBufferUpdateWithGeneration:wrapper.generation];
@@ -90,7 +90,7 @@
   [self waitForExpectationsWithTimeout:1 handler:nil];
 
   XCTAssertTrue(self.iv.didDraw);
-  XCTAssertEqual(wrapper.displayPixelBuffer, self.iv.displayBuffer);
+  XCTAssertEqual(wrapper.displayPixelBufferScope.object, self.iv.displayBufferScope.object);
 }
 
 - (void)testNotifyBufferWithExpiredGen {
@@ -99,7 +99,7 @@
   size_t height = 32;
   [wrapper resizePixelBufferWrapperWithWidth:width height:height];
   CVPixelBufferRef buffer = [wrapper acquirePixelBufferFromPool];
-  wrapper.renderPixelBuffer = buffer;
+  wrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
   XCTAssertFalse(self.iv.didDraw);
   [wrapper notifyBufferUpdateWithGeneration:wrapper.generation - 1];
   XCTestExpectation *expect = [self expectationWithDescription:@"wait for no image set"];
