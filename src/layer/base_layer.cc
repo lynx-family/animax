@@ -532,6 +532,17 @@ void BaseLayer::HitTest(float x, float y,
   }
 }
 
+bool BaseLayer::GetBoundsByName(const std::string& target_name,
+                                RectF& out_bounds) {
+  if (layer_model_.GetName() != target_name) {
+    return false;
+  }
+
+  GetBounds(rect_, *parent_matrix_, false);
+  out_bounds.Set(rect_);
+  return true;
+}
+
 void InOutAnimationListener::OnValueChanged() {
   auto in_out_value = layer_.in_out_animation_->GetValue().Get();
   layer_.SetVisible(in_out_value == 1.0);

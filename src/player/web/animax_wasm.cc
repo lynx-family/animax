@@ -348,5 +348,17 @@ void AnimaXWasm::UpdateVisibilityStates(uint16_t state) {
   current_visible_states_ = state;
 }
 
+void AnimaXWasm::GetLayerBounds(
+    const std::string& layer_name,
+    std::function<void(bool, float, float, float, float)> js_callback) {
+  player_->GetLayerBounds(
+      layer_name,
+      [js_callback](bool success, float x, float y, float width, float height) {
+        if (js_callback) {
+          js_callback(success, x, y, width, height);
+        }
+      });
+}
+
 }  // namespace animax
 }  // namespace lynx

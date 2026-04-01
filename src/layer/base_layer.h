@@ -139,6 +139,9 @@ class BaseLayer : public Content,
   virtual void HitTest(float x, float y,
                        std::unordered_set<std::string>& hit_layers);
 
+  virtual bool GetBoundsByName(const std::string& target_name,
+                               RectF& out_bounds);
+
  protected:
   friend class InOutAnimationListener;
 

@@ -167,6 +167,18 @@ EMSCRIPTEN_BINDINGS(animax) {
                                          cpp_callback);
               }))
       .function(
+          "getLayerBounds",
+          emscripten::optional_override([](lynx::animax::AnimaXWasm& self,
+                                           const std::string& layer_name_utf8,
+                                           emscripten::val js_callback) {
+            lynx::animax::AnimaXWasm::LayerBoundsCallback cpp_callback =
+                [js_callback](bool success, float x, float y, float width,
+                              float height) {
+                  js_callback(success, x, y, width, height);
+                };
+            self.GetLayerBounds(layer_name_utf8, cpp_callback);
+          }))
+      .function(
           "setResourceProperty",
           emscripten::optional_override(
               [](lynx::animax::AnimaXWasm& self, uint16_t resource_type,

@@ -236,5 +236,20 @@ void CompositionLayer::HitTest(float x, float y,
   }
 }
 
+bool CompositionLayer::GetBoundsByName(const std::string& target_name,
+                                       RectF& out_bounds) {
+  bool result = BaseLayer::GetBoundsByName(target_name, out_bounds);
+  if (result) {
+    return true;
+  }
+  for (auto& layer : layers_) {
+    result = layer->GetBoundsByName(target_name, out_bounds);
+    if (result) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace animax
 }  // namespace lynx

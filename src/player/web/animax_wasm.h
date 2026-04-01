@@ -66,6 +66,11 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
                            const emscripten::val& value,
                            PropertyUpdateCallback callback);
 
+  using LayerBoundsCallback = std::function<void(bool success, float x, float y,
+                                                 float width, float height)>;
+  void GetLayerBounds(const std::string& layer_name_utf8,
+                      LayerBoundsCallback callback);
+
  private:
   std::shared_ptr<AnimaXPlayer> player_;
 

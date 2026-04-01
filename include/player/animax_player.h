@@ -307,6 +307,23 @@ class ANIMAX_EXPORT AnimaXPlayer
    */
   void OnTap(float x, float y);
   /**
+   * Callback for GetLayerBounds result.
+   * params are: success, x, y, width, height
+   */
+  using LayerBoundsCallback =
+      base::MoveOnlyClosure<void, bool, float, float, float, float>;
+  /**
+   * Get the bounds of a specific layer by name.
+   * This is an async operation, result will be returned via callback.
+   *
+   * @param layer_name_utf8 The name of the layer to search for (UTF-8 encoded),
+   * must not be empty
+   * @param callback The callback to receive the result, will be called on the
+   * main thread
+   */
+  void GetLayerBounds(const std::string &layer_name_utf8,
+                      LayerBoundsCallback callback);
+  /**
    * Mark the platform surface as invalid or valid.
    * @param isInvalid True to mark as invalid, false otherwise.
    */
