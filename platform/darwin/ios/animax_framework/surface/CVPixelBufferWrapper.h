@@ -3,13 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 
 #import <AnimaX/AnimaXRenderTypes.h>
+#import <AnimaX/AnimaXScopedObject.h>
+#import <CoreVideo/CVMetalTextureCache.h>
+#import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
+ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
+
 @protocol AnimaXPixelBufferUpdateListener <NSObject>
 
-- (void)onBufferUpdated:(CVPixelBufferRef)buffer;
+- (void)onBufferUpdated:(AnimaXScopedCVPixelBuffer *)bufferScope;
 
 @end
 
@@ -27,14 +32,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, readwrite) AnimaXRenderBackend backend;
 
-// Underlying pixel buffer (NULL until a successful resize). The wrapper retains it internally.
+// Underlying pixel buffer scope (NULL until a successful resize).
 // Note: In software mode, if the wrapper is initialized with a view, it won't have a
-// renderPixelBuffer.
-@property(atomic, readwrite, nullable) CVPixelBufferRef renderPixelBuffer;
+// renderPixelBufferScope.
+@property(atomic, strong, nullable) AnimaXScopedCVPixelBuffer *renderPixelBufferScope;
 
 // Only available when this wrapper is init with a View.
-// The surface produces a copy of renderPixelBuffer and pushes it on displayPixelBuffer.
-@property(atomic, readwrite, nullable) CVPixelBufferRef displayPixelBuffer;
+// The surface produces a copy of renderPixelBufferScope.object and pushes it on
+// displayPixelBufferScope.
+@property(atomic, strong, nullable) AnimaXScopedCVPixelBuffer *displayPixelBufferScope;
 
 // Monotonically increasing frame/version tag.
 // Increment on every resize to invalidate in-flight frames.
@@ -45,11 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
 // Note: In software mode, metalTexture is not created and is unavailable.
 @property(atomic, readonly, nullable) id<MTLTexture> metalTexture;
 
-- (instancetype)initWithView:(nonnull UIView<AnimaXPixelBufferUpdateListener>*)view;
+- (instancetype)initWithView:(nonnull UIView<AnimaXPixelBufferUpdateListener> *)view;
 
 // Called when native rendering is finished. Produce a UIImage and dispatch it to imageView.
 - (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration
-                               srcPixels:(nullable uint8_t*)srcPixels
+                               srcPixels:(nullable uint8_t *)srcPixels
                                    width:(size_t)width
                                   height:(size_t)height
                                   stride:(size_t)stride;
@@ -68,4 +74,5 @@ NS_ASSUME_NONNULL_BEGIN
                                        backend:(AnimaXRenderBackend)backend;
 
 @end
+
 NS_ASSUME_NONNULL_END
