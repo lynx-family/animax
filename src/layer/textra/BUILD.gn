@@ -18,7 +18,7 @@ textra_shared_sources = [
 animax_source_set("textra") {
   sources = textra_shared_sources
 
-  if (is_ios) {
+  if (is_ios || is_mac) {
     sources += [ "ios/textra_register.mm" ]
   } else if (is_android) {
     sources += [ "android/textra_jni.cc" ]

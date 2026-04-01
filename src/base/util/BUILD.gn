@@ -53,6 +53,11 @@ if (is_ios) {
     "harmony/xcomponent_adapter.cc",
     "harmony/xcomponent_adapter.h",
   ]
+} else if (is_mac) {
+  base_util_shared_sources += [
+    "ios/reflect_invoke.h",
+    "ios/reflect_invoke.mm",
+  ]
 }
 
 animax_source_set("util") {
