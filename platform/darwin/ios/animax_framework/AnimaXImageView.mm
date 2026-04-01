@@ -85,14 +85,12 @@
   [self notifyFrameChanged];
 }
 
-- (void)onBufferUpdated:(CVPixelBufferRef)buffer {
-  CVPixelBufferRetain(buffer);
-  if (!buffer) {
+- (void)onBufferUpdated:(AnimaXScopedCVPixelBuffer *)bufferScope {
+  if (!bufferScope.object) {
     return;
   }
   CGImageRef imageRef = NULL;
-  OSStatus status = VTCreateCGImageFromCVPixelBuffer(buffer, NULL, &imageRef);
-  CVPixelBufferRelease(buffer);
+  OSStatus status = VTCreateCGImageFromCVPixelBuffer(bufferScope.object, NULL, &imageRef);
   if (status != noErr || imageRef == NULL) {
     return;
   }

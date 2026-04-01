@@ -37,6 +37,7 @@ animax_framework_public_headers = [
   "surface/AnimaXRenderTypes.h",
   "surface/AnimaXSurfaceDrawable.h",
   "util/AnimaX.h",
+  "util/AnimaXScopedObject.h",
   "util/AnimaXURLUtils.h",
 ]
 
@@ -80,6 +81,7 @@ animax_framework_sources = [
   "surface/CVPixelBufferWrapper.h",
   "surface/CVPixelBufferWrapper.mm",
   "util/AnimaX.mm",
+  "util/AnimaXScopedObject.mm",
   "util/AnimaXThreadSafeDictionary.h",
   "util/AnimaXThreadSafeDictionary.m",
   "util/AnimaXURLUtils.m",
