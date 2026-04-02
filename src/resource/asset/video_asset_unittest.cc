@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "gtest/gtest.h"
+#include "include/resource/raw_data.h"
 #include "src/resource/asset/video_asset_model.h"
 
 using namespace lynx::animax;
@@ -114,4 +115,11 @@ TEST(VideoAssetTest, GetFrameRawData) {
   auto video_asset = CreateTestVideoAsset();
   auto ret = video_asset->GetFrameRawData(0);
   EXPECT_TRUE(ret.empty());
+}
+
+TEST(VideoAssetTest, PrepareFrameData) {
+  auto video_asset = CreateTestVideoAsset();
+  auto raw_data = RawData::MakeRawData(nullptr, 0, nullptr, nullptr);
+  auto ret = video_asset->PrepareFrameData(std::move(raw_data));
+  EXPECT_FALSE(ret);
 }

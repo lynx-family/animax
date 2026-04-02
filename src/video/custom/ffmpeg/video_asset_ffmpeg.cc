@@ -58,7 +58,7 @@ int VideoAssetFFmpeg::GetPrevKeyFrame(const int32_t frame) const {
   }
   auto it = std::upper_bound(key_frames_.begin(), key_frames_.end(), frame);
   if (it == key_frames_.begin()) {
-    return *it;
+    return 0;
   }
   return *--it;
 }

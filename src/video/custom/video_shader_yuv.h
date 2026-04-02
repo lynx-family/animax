@@ -25,11 +25,19 @@ class ANIMAX_EXPORT VideoShaderYUV : public VideoShaderGL {
   void Draw(std::unique_ptr<TextureInfo> texture_info,
             const std::array<float, 16> &transform) override;
 
+  /**
+   * Sets the texture format. Default is GL_RED.
+   *
+   * @param format Texture format to use
+   */
+  void SetTextureFormat(GLenum format);
+
  protected:
   bool UpdateTexturesFromYuvFrame(
       const std::shared_ptr<YUVFrameInfo> &frame_info);
   std::vector<GLuint> textures_;
   std::vector<GLint> texture_locs_;
+  GLenum texture_format_ = GL_RED;
 };
 
 }  // namespace animax

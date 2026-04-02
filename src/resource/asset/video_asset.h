@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "include/resource/raw_data.h"
 #include "src/resource/asset/asset.h"
 #include "src/resource/asset/video_asset_model.h"
 
@@ -44,6 +45,19 @@ class VideoAsset : public BaseAsset<VideoAsset>,
    * @return true if frame data is successfully prepared; false otherwise.
    */
   virtual bool PrepareFrameData(const std::string& video_path) = 0;
+
+  /**
+   * TODO(caitan): Two PrepareFrameData functions should be merged later.
+   * Prepares video frame data for playback from raw data.
+   * This function is platform-specific and left for specific implementation on
+   * different platforms.
+   *
+   * @param raw_data Raw video data.
+   * @return true if frame data is successfully prepared; false otherwise.
+   */
+  virtual bool PrepareFrameData(std::unique_ptr<RawData> raw_data) {
+    return false;
+  }
 
   /**
    * Retrieves the total number of frames in the video.

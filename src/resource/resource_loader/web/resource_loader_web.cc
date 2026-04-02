@@ -4,6 +4,8 @@
 
 #include "src/resource/resource_loader/web/resource_loader_web.h"
 
+#include "include/resource/resource_task.h"
+#include "include/resource/uri_info.h"
 #include "src/base/log/log.h"
 #include "src/resource/loader/exec_loader.h"
 #include "src/resource/loader/lambda_loader.h"
@@ -29,6 +31,12 @@ void ResourceLoaderWeb::Load(ResourceRequest request, CallbackType callback) {
     return;
   }
 
+  // On web platform, video resources cannot be stored in local path,
+  // so they can only be downloaded as raw data.
+  if (request.uri_info.content_type == UriInfo::ContentType::kVideo) {
+    request.type = ResourceRequestType::kLoadRawData;
+  }
+
   switch (request.type) {
     case ResourceRequestType::kLoadRawData:
     case ResourceRequestType::kLoadBitmap: {
@@ -39,6 +47,7 @@ void ResourceLoaderWeb::Load(ResourceRequest request, CallbackType callback) {
       callback_manager->callbacks[callback_id] = callback_info;
       // ANIMAX_LOGI("Load resource, callback_id: " << callback_id);
       loader_impl_(request.uri_info.uri, static_cast<int32_t>(request.type),
+                   static_cast<int32_t>(request.uri_info.content_type),
                    callback_id);
     } break;
     case ResourceRequestType::kDownloadToLocal:

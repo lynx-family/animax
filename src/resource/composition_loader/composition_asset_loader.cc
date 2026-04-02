@@ -106,7 +106,19 @@ class ResourceResponseConsumer : public AssetVisitor {
 
   void Visit(VideoAsset& asset) override {
     if (!error_) {
-      asset.PrepareFrameData(resource_response_.payload.path);
+      switch (resource_response_.payload.type) {
+        case ResourcePayloadType::kRawData:
+          asset.PrepareFrameData(
+              std::move(resource_response_.payload.raw_data));
+          break;
+        case ResourcePayloadType::kFilePath:
+          asset.PrepareFrameData(resource_response_.payload.path);
+          break;
+        default:
+          ANIMAX_LOGE("Unknown video payload type: "
+                      << static_cast<int>(resource_response_.payload.type));
+          break;
+      }
     }
     asset_response_ = {
         .type = ResourceType::kVideo,

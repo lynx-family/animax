@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #include "include/resource/bitmap.h"
+#include "skity/gpu/gpu_context_gl.hpp"
 #include "skity/gpu/gpu_context_web.hpp"
 #include "skity/graphic/image.hpp"
 #include "src/base/log/log.h"
@@ -59,7 +60,22 @@ ImageGL::ImageGL(std::unique_ptr<Bitmap> bitmap, RealContext *real_context) {
 }
 
 ImageGL::ImageGL(TextureInfo *texture, RealContext *real_context) {
-  // do not impl
+  DCHECK(real_context);
+  auto texture_gl = static_cast<TextureInfoGL *>(texture);
+  auto context = real_context->Get();
+  skity::GPUBackendTextureInfoGL texture_info;
+  texture_info.backend = skity::GPUBackendType::kOpenGL;
+  texture_info.format = skity::TextureFormat::kRGBA;
+  texture_info.width = texture_gl->Width();
+  texture_info.height = texture_gl->Height();
+  texture_info.alpha_type = skity::AlphaType::kPremul_AlphaType;
+
+  texture_info.tex_id = texture_gl->ID();
+  texture_info.owned_by_engine = false;
+
+  auto skity_texture = context->WrapTexture(&texture_info);
+
+  image_ = skity::Image::MakeHWImage(skity_texture);
 }
 
 }  // namespace animax

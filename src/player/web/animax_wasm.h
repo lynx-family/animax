@@ -34,8 +34,9 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
       const std::shared_ptr<AnimaXWebGPUContext>& web_gpu_ctx,
       uintptr_t gl_context_handle = 0);
 
-  using ResourceLoaderImpl = std::function<void(
-      const std::string& url, int32_t result_type, int32_t callback_id)>;
+  using ResourceLoaderImpl =
+      std::function<void(const std::string& url, int32_t result_type,
+                         int32_t content_type, int32_t callback_id)>;
   void SetResourceLoaderImpl(ResourceLoaderImpl impl);
 
   static void OnResourceLoadSuccess(int32_t callback_id,

@@ -1,24 +1,25 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-#ifndef ANIMAX_SRC_VIDEO_CUSTOM_FFMPEG_VIDEO_DECODER_FFMPEG_H_
-#define ANIMAX_SRC_VIDEO_CUSTOM_FFMPEG_VIDEO_DECODER_FFMPEG_H_
+#ifndef ANIMAX_SRC_VIDEO_WEB_VIDEO_DECODER_WEB_H_
+#define ANIMAX_SRC_VIDEO_WEB_VIDEO_DECODER_WEB_H_
+
+#include <emscripten/val.h>
 
 #include <memory>
 
-#include "include/player/animax_player.h"
 #include "src/video/custom/video_decoder_custom.h"
+#include "src/video/web/video_api_bridge.h"
 
 namespace lynx {
 namespace animax {
 
-class VideoAssetFFmpeg;
-class FFmpegVideoContext;
+class VideoAssetWeb;
 
-class VideoDecoderFFmpeg final : public VideoDecoderCustom {
+class VideoDecoderWeb final : public VideoDecoderCustom {
  public:
-  VideoDecoderFFmpeg();
-  ~VideoDecoderFFmpeg() override;
+  VideoDecoderWeb();
+  ~VideoDecoderWeb() override;
 
   bool IsValid() override;
 
@@ -31,10 +32,10 @@ class VideoDecoderFFmpeg final : public VideoDecoderCustom {
       const std::shared_ptr<YUVFrameInfo>& reusable_frame) override;
 
  private:
-  std::unique_ptr<FFmpegVideoContext> video_context_;
+  VideoDecoderPtr decoder_;
 };
 
 }  // namespace animax
 }  // namespace lynx
 
-#endif  // ANIMAX_SRC_VIDEO_CUSTOM_FFMPEG_VIDEO_DECODER_FFMPEG_H_
+#endif  // ANIMAX_SRC_VIDEO_WEB_VIDEO_DECODER_WEB_H_
