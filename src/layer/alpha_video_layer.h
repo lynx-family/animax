@@ -38,6 +38,7 @@ class AlphaVideoLayer : public BaseLayer, public VideoPlayerListener {
 
  private:
   void AttachAssetOnce();
+  void UpdateDownsampleSize(int32_t canvas_width, int32_t canvas_height);
 
   Image* UpdateCompositeImage(RealContext* real_context);
   Image* GetCompositeImage(RealContext* real_context);
@@ -47,6 +48,11 @@ class AlphaVideoLayer : public BaseLayer, public VideoPlayerListener {
   float scale_ = 1.0;
   RectF src_;
   RectF dst_;
+  int32_t canvas_width_ = 0;
+  int32_t canvas_height_ = 0;
+  int32_t downsample_width_ = 0;
+  int32_t downsample_height_ = 0;
+  bool enable_downsample_ = false;
 
   std::shared_ptr<VideoAsset> video_asset_;
   std::unique_ptr<VideoShader> video_shader_;
