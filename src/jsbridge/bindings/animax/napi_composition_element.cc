@@ -157,6 +157,7 @@ void NapiCompositionElement::Init(std::unique_ptr<AnimaXPlayerDelegate> impl) {
   DCHECK(!impl_);
 
   impl_ = std::move(impl);
+
   // We only associate and call OnWrapped() once, when we init the root base.
   impl_->AssociateWithWrapper(this);
 }
