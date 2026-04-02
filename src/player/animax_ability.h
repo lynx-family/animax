@@ -11,6 +11,12 @@ namespace animax {
 class AnimaXAbility {
  public:
   virtual ~AnimaXAbility() = default;
+
+  /**
+   * Get whether video downsampling is enabled
+   * @return True if video downsampling is enabled, false otherwise
+   */
+  virtual bool IsDownsampleVideoEnabled() const { return false; }
 };
 
 }  // namespace animax

@@ -31,6 +31,8 @@ class VideoPlayerIOS : public VideoPlayer {
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16> &GetTransform() override;
   void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
+  void UpdateOutputFrameSize(const int32_t width,
+                             const int32_t height) override;
 
  private:
   friend VideoPlayerErrorReporter;
@@ -68,6 +70,9 @@ class VideoPlayerIOS : public VideoPlayer {
   static constexpr int32_t kMaxRetryCount = 5;
   int32_t decoder_retry_count_ = 0;
   mutable std::shared_mutex mutex_;
+
+  int32_t output_width_ = 0;
+  int32_t output_height_ = 0;
 };
 
 }  // namespace animax

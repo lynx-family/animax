@@ -19,6 +19,8 @@ class AnimaXAbilityIOS : public AnimaXAbility {
     DCHECK(context);
   }
 
+  bool IsDownsampleVideoEnabled() const override;
+
  private:
   AnimaXContext* context_;
 };

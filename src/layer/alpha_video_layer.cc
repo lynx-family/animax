@@ -8,6 +8,7 @@
 
 #include "src/base/thread/thread_assert.h"
 #include "src/base/util/event_warning_checker.h"
+#include "src/player/animax_ability.h"
 #include "src/resource/asset/video_asset.h"
 #include "src/video/video_player.h"
 #include "src/video/video_player_service.h"
@@ -47,6 +48,11 @@ void AlphaVideoLayer::AttachAssetOnce() {
   if (!player || !video_asset_ || has_attach_ || !video_asset_->IsValid()) {
     return;
   }
+
+  if (ability) {
+    enable_downsample_ = ability->IsDownsampleVideoEnabled();
+  }
+
   ANIMAX_LOGI("AttachAssetOnce on video: " << video_asset_->Model().id);
   auto provider = VideoPlayerService::GetInstance().GetProvider(ability.get(),
                                                                 video_asset_);
@@ -76,6 +82,14 @@ void AlphaVideoLayer::AttachAssetOnce() {
       float(video_asset_->GetAlphaHeight()) / video_height};
   int32_t composite_texture_width = video_asset_->GetRgbWidth();
   int32_t composite_texture_height = video_asset_->GetRgbHeight();
+
+  bool is_downsample_size_valid =
+      enable_downsample_ && downsample_width_ > 0 && downsample_height_ > 0;
+  if (is_downsample_size_valid) {
+    composite_texture_width = downsample_width_;
+    composite_texture_height = downsample_height_;
+  }
+
   video_shader_->Init(composite_texture_width, composite_texture_height,
                       rgb_frame, a_frame);
   if (!video_shader_->Valid()) {
@@ -86,6 +100,10 @@ void AlphaVideoLayer::AttachAssetOnce() {
   DCHECK(video_player_);
   video_player_->SetListener(this);
   video_player_->AttachAsset(video_asset_);
+
+  if (is_downsample_size_valid) {
+    video_player_->UpdateOutputFrameSize(downsample_width_, downsample_height_);
+  }
 
   has_attach_ = true;
 }
@@ -100,6 +118,35 @@ void AlphaVideoLayer::GetBounds(RectF& out_bounds, Matrix& parent_matrix,
   }
 }
 
+void AlphaVideoLayer::UpdateDownsampleSize(int32_t canvas_width,
+                                           int32_t canvas_height) {
+  if (canvas_width <= 0 || canvas_height <= 0 || !video_asset_) {
+    return;
+  }
+
+  int32_t video_width = video_asset_->GetRgbWidth();
+  int32_t video_height = video_asset_->GetRgbHeight();
+  int32_t downsample_width = 0;
+  int32_t downsample_height = 0;
+  if (canvas_width < video_width && canvas_height < video_height) {
+    downsample_width = canvas_width;
+    downsample_height = canvas_height;
+  }
+
+  if (downsample_width != downsample_width_ ||
+      downsample_height != downsample_height_) {
+    downsample_width_ = downsample_width;
+    downsample_height_ = downsample_height;
+    has_attach_ = false;
+    image_.reset();
+    video_shader_.reset();
+    video_player_.reset();
+
+    ANIMAX_LOGI("UpdateDownsampleSize: " << downsample_width_ << "*"
+                                         << downsample_height_);
+  }
+}
+
 void AlphaVideoLayer::DrawLayer(Canvas& canvas, Matrix& parent_matrix,
                                 int32_t parent_alpha) {
   auto image = UpdateCompositeImage(canvas.GetRealContext());
@@ -111,10 +158,31 @@ void AlphaVideoLayer::DrawLayer(Canvas& canvas, Matrix& parent_matrix,
 
   canvas.Save();
   canvas.Concat(parent_matrix);
+
+  auto dst_width = static_cast<int>(video_asset_->GetRgbWidth() * scale_);
+  auto dst_height = static_cast<int>(video_asset_->GetRgbHeight() * scale_);
+  if (enable_downsample_) {
+    if (canvas_width_ != canvas.GetWidth() ||
+        canvas_height_ != canvas.GetHeight()) {
+      canvas_width_ = canvas.GetWidth();
+      canvas_height_ = canvas.GetHeight();
+
+      auto current_matrix = canvas.GetMatrix();
+      RectF video_canvas_rect(0, 0, dst_width, dst_height);
+      current_matrix->MapRect(video_canvas_rect);
+
+      UpdateDownsampleSize(video_canvas_rect.GetWidth(),
+                           video_canvas_rect.GetHeight());
+      image = UpdateCompositeImage(canvas.GetRealContext());
+      if (image == nullptr) {
+        return;
+      }
+    }
+  }
+
   src_.Set(0, 0, static_cast<int>(image->GetWidth()),
            static_cast<int>(image->GetHeight()));
-  dst_.Set(0, 0, static_cast<int>(video_asset_->GetRgbWidth() * scale_),
-           static_cast<int>(video_asset_->GetRgbHeight() * scale_));
+  dst_.Set(0, 0, dst_width, dst_height);
 
   canvas.DrawImageRect(*image, src_, dst_, *paint_);
   canvas.Restore();

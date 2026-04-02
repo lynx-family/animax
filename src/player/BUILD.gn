@@ -36,6 +36,7 @@ animax_source_set("player") {
   if (is_ios) {
     sources += [
       "ios/animax_ability_ios.h",
+      "ios/animax_ability_ios.mm",
       "ios/animax_surface_ios.h",
       "ios/animax_surface_ios.mm",
       "ios/vsync_dispatcher_ios.mm",

@@ -50,6 +50,13 @@ class VideoPlayer {
    */
   void SetListener(VideoPlayerListener *listener) { listener_ = listener; }
 
+  /**
+   * Update output frame size for downsampling
+   * @param size output frame size
+   */
+  virtual void UpdateOutputFrameSize(const int32_t width,
+                                     const int32_t height) {}
+
  protected:
   VideoPlayer() { ANIMAX_LOGI("Video player is created, this: " << this); }
 

@@ -95,6 +95,14 @@ VideoPlayerIOS::VideoPlayerIOS()
   transform_[15] = 1.f;
 }
 
+void VideoPlayerIOS::UpdateOutputFrameSize(const int32_t width, const int32_t height) {
+  if (width != output_width_ || height != output_height_) {
+    should_restart_ = true;
+    output_width_ = width;
+    output_height_ = height;
+  }
+}
+
 VideoPlayerIOS::~VideoPlayerIOS() {
   ThreadAssert::Assert(ThreadAssert::Type::kGPU);
   current_frame_ = nullptr;
@@ -167,8 +175,8 @@ std::unique_ptr<TextureInfo> VideoPlayerIOS::UpdateTexture(const int32_t frame) 
     MoveFrameFromCache(presentation_frame);
     error_reporter_->HasDrewOnce();
     PrepareNextFrame(presentation_frame);
-    return std::make_unique<TextureInfoMTL>(current_frame_->GetMTLTexture(),
-                                            asset_->GetVideoWidth(), asset_->GetVideoHeight());
+    return std::make_unique<TextureInfoMTL>(current_frame_->GetMTLTexture(), output_width_,
+                                            output_height_);
   }
   if (!flush_result.required_frame_pending) {
     int32_t frame_to_decode = GetNextFrameToDecode(presentation_frame);
@@ -198,8 +206,7 @@ std::unique_ptr<TextureInfo> VideoPlayerIOS::UpdateTexture(const int32_t frame) 
     // time out
     DCHECK(flush_result.required_frame_pending);
   }
-  return std::make_unique<TextureInfoMTL>(texture, asset_->GetVideoWidth(),
-                                          asset_->GetVideoHeight());
+  return std::make_unique<TextureInfoMTL>(texture, output_width_, output_height_);
 }
 
 PendingFrameSet::FlushResult VideoPlayerIOS::FlushPendingFrameSet(
@@ -310,6 +317,8 @@ void VideoPlayerIOS::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   }
 
   asset_ = asset_ios;
+  output_width_ = asset_->GetVideoWidth();
+  output_height_ = asset_->GetVideoHeight();
   ResetSession();
   PrepareNextFrame(0);
 }
@@ -321,13 +330,21 @@ void VideoPlayerIOS::ResetSession() {
       .decompressionOutputCallback = AnimaXVideoDecompression,
       .decompressionOutputRefCon = nullptr,
   };
+
+  NSMutableDictionary *pixelBufferAttrs = [@{
+    (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
+    (id)kCVPixelBufferMetalCompatibilityKey : @YES,
+    (id)kCVPixelBufferIOSurfacePropertiesKey : @{},
+  } mutableCopy];
+
+  if (output_width_ > 0 && output_height_ > 0) {
+    pixelBufferAttrs[(id)kCVPixelBufferWidthKey] = @(output_width_);
+    pixelBufferAttrs[(id)kCVPixelBufferHeightKey] = @(output_height_);
+  }
+
   OSStatus status = VTDecompressionSessionCreate(
-      kCFAllocatorDefault, asset_->GetFormatDescription(), nullptr, (__bridge CFDictionaryRef) @{
-        (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
-        (id)kCVPixelBufferMetalCompatibilityKey : @YES,
-        (id)kCVPixelBufferIOSurfacePropertiesKey : @{},
-      },
-      &callback, &session_);
+      kCFAllocatorDefault, asset_->GetFormatDescription(), nullptr,
+      (__bridge CFDictionaryRef)pixelBufferAttrs, &callback, &session_);
   if (!session_) {
     error_reporter_->ReportErrorOnce("video toolbox create status: " + std::to_string(status) +
                                          ", session: " + std::to_string(!!session_),
