@@ -27,8 +27,9 @@ class ResourceLoaderWeb : public Loader<ResourceRequest, ResourceResponse> {
 
   void Load(ResourceRequest request, CallbackType callback) override;
 
-  using ResourceLoaderImpl = std::function<void(
-      const std::string& url, int32_t result_type, int32_t callback_id)>;
+  using ResourceLoaderImpl =
+      std::function<void(const std::string& url, int32_t result_type,
+                         int32_t content_type, int32_t callback_id)>;
   void SetLoaderImpl(ResourceLoaderImpl impl);
 
   struct ResourceLoadResult {

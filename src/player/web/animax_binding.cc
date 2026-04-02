@@ -146,10 +146,10 @@ EMSCRIPTEN_BINDINGS(animax) {
       .function("setResourceLoaderImpl",
                 emscripten::optional_override([](lynx::animax::AnimaXWasm& self,
                                                  emscripten::val js_func) {
-                  auto func = [js_func](const std::string& url,
-                                        int32_t resultType,
-                                        int32_t callbackId) {
-                    js_func(url, resultType, callbackId);
+                  auto func = [js_func](
+                                  const std::string& url, int32_t result_type,
+                                  int32_t content_type, int32_t callback_id) {
+                    js_func(url, result_type, content_type, callback_id);
                   };
                   self.SetResourceLoaderImpl(func);
                 }))

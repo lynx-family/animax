@@ -18,7 +18,13 @@ ThreadAssert::Type ThreadAssert::GetCurrent() { return *Get(); }
 
 void ThreadAssert::Init(const Type type) { *Get() = type; }
 
-void ThreadAssert::Assert(const Type type) { DCHECK(*Get() == type); }
+void ThreadAssert::Assert(const Type type) {
+  // On Web platform, thread assert is not supported, since all thread are
+  // actually the same type.
+#ifndef OS_WASM
+  DCHECK(*Get() == type);
+#endif
+}
 
 }  // namespace animax
 }  // namespace lynx

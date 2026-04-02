@@ -14,9 +14,13 @@ namespace lynx {
 namespace animax {
 
 VideoShaderYUV::VideoShaderYUV()
-    : texture_locs_(YUVFrameInfo::kYUVChannels, -1) {}
+    : texture_locs_(YUVFrameInfo::kYUVChannels, -1), texture_format_(GL_RED) {}
 
-VideoShaderYUV::~VideoShaderYUV() noexcept {
+void VideoShaderYUV::SetTextureFormat(GLenum format) {
+  texture_format_ = format;
+}
+
+VideoShaderYUV::~VideoShaderYUV() {
   if (texture_ != 0) {
     glDeleteTextures(1, &texture_);
   }
@@ -202,10 +206,10 @@ bool VideoShaderYUV::UpdateTexturesFromYuvFrame(
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
-                   GL_UNSIGNED_BYTE, data);
+      glTexImage2D(GL_TEXTURE_2D, 0, texture_format_, width, height, 0,
+                   texture_format_, GL_UNSIGNED_BYTE, data);
     } else {
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED,
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, texture_format_,
                       GL_UNSIGNED_BYTE, data);
     }
   }

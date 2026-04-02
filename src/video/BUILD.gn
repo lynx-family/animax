@@ -65,15 +65,14 @@ animax_source_set("video") {
     ]
   } else if (is_wasm) {
     sources += [
+      "custom/video_shader_yuv.cc",
+      "custom/video_shader_yuv.h",
       "video_shader_gl.cc",
       "video_shader_gl.h",
-      "web/video_asset_web.cc",
-      "web/video_asset_web.h",
-      "web/video_player_web.cc",
-      "web/video_player_web.h",
-      "web/video_shader_web.cc",
-      "web/video_shader_web.h",
+      "web/video_api_bridge.h",
     ]
+
+    deps = [ ":wasm-rtti-video" ]
   } else if (is_win) {
     sources += [
       "custom/ffmpeg/ffmpeg_lib_loader.cc",
@@ -103,4 +102,17 @@ animax_source_set("video") {
       "mac/video_player_mac.h",
     ]
   }
+}
+
+animax_source_set("wasm-rtti-video") {
+  exclude_configs = [ "//build/config/compiler:no_rtti" ]
+  configs = [ "//build/config/compiler:rtti" ]
+
+  sources = [
+    "web/video_asset_web.cc",
+    "web/video_asset_web.h",
+    "web/video_decoder_web.cc",
+    "web/video_decoder_web.h",
+    "web/video_player_web.cc",
+  ]
 }

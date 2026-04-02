@@ -122,5 +122,24 @@ animax_source_set("resource") {
       "resource_loader/harmony/unzip_util.cc",
       "resource_loader/harmony/unzip_util.h",
     ]
+  } else if (is_wasm) {
+    sources -= [
+      "asset/video_asset.cc",
+      "asset/video_asset.h",
+    ]
+
+    deps = [ ":wasm-rtti-resource" ]
   }
+}
+
+animax_source_set("wasm-rtti-resource") {
+  exclude_configs = [ "//build/config/compiler:no_rtti" ]
+  configs = [ "//build/config/compiler:rtti" ]
+
+  sources = [
+    "asset/video_asset.cc",
+    "asset/video_asset.h",
+    "resource_loader/web/resource_loader_web.cc",
+    "resource_loader/web/resource_loader_web.h",
+  ]
 }

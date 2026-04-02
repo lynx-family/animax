@@ -2,54 +2,30 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/web/video_player_web.h"
+#include <memory>
 
-#include "src/base/gl/scoped_gl_reset_restore.h"
-#include "src/base/log/log.h"
-#include "src/base/thread/thread_assert.h"
-#include "src/render/texture_info_gl.h"
-#include "src/video/web/video_asset_web.h"
+#include "src/video/custom/video_player_custom.h"
+#include "src/video/custom/video_shader_yuv.h"
+#include "src/video/video_player.h"
+#include "src/video/video_shader.h"
+#include "src/video/web/video_decoder_web.h"
 
 namespace lynx {
 namespace animax {
 
-VideoPlayerWeb::VideoPlayerWeb(const AnimaXAbility *ability_ptr) {
-  transform_.fill(0.f);
-}
-
-VideoPlayerWeb::~VideoPlayerWeb() {}
-
-std::unique_ptr<TextureInfo> VideoPlayerWeb::UpdateTexture(
-    const int32_t frame) {
-  const int32_t to_frame = frame;
-  DCHECK(0 <= to_frame && to_frame < asset_->GetFrameCount());
-  if (current_frame_ == to_frame) {
-    // don't need draw
-    return nullptr;
-  }
-  // TODO(caitan): video texture on web is not support, implement it later
-  return std::make_unique<TextureInfoGL>(
-      video_texture_, asset_->GetVideoWidth(), asset_->GetVideoHeight(), 0);
-}
-
-const std::array<float, 16> &VideoPlayerWeb::GetTransform() {
-  return transform_;
-}
-
-void VideoPlayerWeb::AttachAsset(std::shared_ptr<VideoAsset> asset) {
-  DCHECK(asset);
-  asset_ = std::static_pointer_cast<VideoAssetWeb>(asset);
-}
-
-void VideoPlayerWeb::NotifyErrorEvent(const std::string &err_msg) {
-  if (listener_) {
-    listener_->OnVideoPlayerError(err_msg);
-  }
-}
-
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    const AnimaXAbility *ability_ptr) {
-  return std::unique_ptr<VideoPlayerWeb>(new VideoPlayerWeb(ability_ptr));
+    const AnimaXAbility* ability_ptr) {
+  auto decoder = std::make_unique<VideoDecoderWeb>();
+  auto player = std::make_unique<VideoPlayerCustom>(std::move(decoder));
+  player->SetTextureTarget(GL_TEXTURE_2D);
+  return player;
+}
+
+std::unique_ptr<VideoShader> VideoShader::Make(
+    const AnimaXAbility* ability_ptr) {
+  auto shader = std::make_unique<VideoShaderYUV>();
+  shader->SetTextureFormat(GL_LUMINANCE);
+  return shader;
 }
 
 }  // namespace animax
