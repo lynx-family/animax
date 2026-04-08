@@ -141,9 +141,15 @@ void VideoShaderGL::Draw(std::unique_ptr<TextureInfo> texture_info,
 }
 
 std::unique_ptr<Image> VideoShaderGL::GetOutputImage(RealContext *context) {
-  if (texture_ == 0 || context->GetBackendType() != ContextBackend::kOpenGL) {
+  if (texture_ == 0) {
     return std::unique_ptr<Image>();
   }
+
+#if !defined(OS_WIN)
+  if (context->GetBackendType() != ContextBackend::kOpenGL) {
+    return std::unique_ptr<Image>();
+  }
+#endif
 
   TextureInfoGL info(texture_, w_, h_, GL_TEXTURE_2D);
   return std::make_unique<ImageGL>(&info, context);
