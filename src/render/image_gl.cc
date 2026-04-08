@@ -18,9 +18,13 @@ namespace animax {
 #if !defined(ANIMAX_GL_USE_OSMESA) && (defined(OS_WIN) || defined(OS_OSX))
 struct SkityPromiseContext {
   std::shared_ptr<skity::Pixmap> pixmap;
+  std::shared_ptr<TextureInfoGL> texture_info;
 
   explicit SkityPromiseContext(std::shared_ptr<skity::Pixmap> p)
       : pixmap(std::move(p)) {}
+
+  explicit SkityPromiseContext(std::shared_ptr<TextureInfoGL> t)
+      : texture_info(std::move(t)) {}
 
   ~SkityPromiseContext() = default;
 };
@@ -33,19 +37,35 @@ std::shared_ptr<skity::Texture> GeneratePromiseTexture(void *data,
 
   auto promise_context = reinterpret_cast<SkityPromiseContext *>(data);
 
-  skity::TextureDescriptor desc{};
-  desc.format = skity::Texture::FormatFromColorType(
-      promise_context->pixmap->GetColorType());
-  desc.width = promise_context->pixmap->Width();
-  desc.height = promise_context->pixmap->Height();
-  desc.alpha_type = promise_context->pixmap->GetAlphaType();
-  desc.mipmapped = true;
+  if (promise_context->pixmap) {
+    skity::TextureDescriptor desc{};
+    desc.format = skity::Texture::FormatFromColorType(
+        promise_context->pixmap->GetColorType());
+    desc.width = promise_context->pixmap->Width();
+    desc.height = promise_context->pixmap->Height();
+    desc.alpha_type = promise_context->pixmap->GetAlphaType();
+    desc.mipmapped = true;
 
-  auto texture = ctx->CreateTextureWithDesc(&desc);
+    auto texture = ctx->CreateTextureWithDesc(&desc);
 
-  texture->UploadImage(promise_context->pixmap);
+    texture->UploadImage(promise_context->pixmap);
 
-  return texture;
+    return texture;
+  } else if (promise_context->texture_info) {
+    skity::GPUBackendTextureInfoGL sk_texture_info;
+    sk_texture_info.backend = skity::GPUBackendType::kOpenGL;
+    sk_texture_info.format = skity::TextureFormat::kRGBA;
+    sk_texture_info.width = promise_context->texture_info->Width();
+    sk_texture_info.height = promise_context->texture_info->Height();
+    sk_texture_info.alpha_type = skity::AlphaType::kPremul_AlphaType;
+
+    sk_texture_info.tex_id = promise_context->texture_info->ID();
+    sk_texture_info.owned_by_engine = false;
+
+    return ctx->WrapTexture(&sk_texture_info);
+  }
+
+  return {};
 }
 
 void ReleasePromiseContext(void *data) {
@@ -81,30 +101,13 @@ ImageGL::ImageGL(std::unique_ptr<Bitmap> bitmap, RealContext *real_context) {
 #if !defined(ANIMAX_GL_USE_OSMESA) && (defined(OS_WIN) || defined(OS_OSX))
   // Mipmap is helpful when image is scaled down to a smaller size.
   // But cost 30% more memory usage, so only use in special platform
-  if (gpu_ctx) {
-    skity::TextureDescriptor desc{};
-    desc.format = skity::Texture::FormatFromColorType(pixmap->GetColorType());
-    desc.width = pixmap->Width();
-    desc.height = pixmap->Height();
-    desc.alpha_type = pixmap->GetAlphaType();
-    // enable mipmap creation and let the engine calculate the mipmap level
-    // count
-    desc.mipmapped = true;
 
-    auto texture = gpu_ctx->CreateTextureWithDesc(&desc);
-    if (texture) {
-      texture->DeferredUploadImage(std::move(pixmap));
+  auto promise = new SkityPromiseContext(pixmap);
 
-      image_ = skity::Image::MakeHWImage(std::move(texture));
-    }
-  } else {
-    auto promise = new SkityPromiseContext(pixmap);
-
-    image_ = skity::Image::MakePromiseTextureImage2(
-        skity::Texture::FormatFromColorType(pixmap->GetColorType()),
-        pixmap->Width(), pixmap->Height(), pixmap->GetAlphaType(),
-        &GeneratePromiseTexture, &ReleasePromiseContext, promise);
-  }
+  image_ = skity::Image::MakePromiseTextureImage2(
+      skity::Texture::FormatFromColorType(pixmap->GetColorType()),
+      pixmap->Width(), pixmap->Height(), pixmap->GetAlphaType(),
+      &GeneratePromiseTexture, &ReleasePromiseContext, promise);
 #else
   image_ = skity::Image::MakeImage(pixmap, gpu_ctx);
 #endif
@@ -112,8 +115,21 @@ ImageGL::ImageGL(std::unique_ptr<Bitmap> bitmap, RealContext *real_context) {
 
 ImageGL::ImageGL(TextureInfo *texture, RealContext *real_context) {
   ThreadAssert::Assert(ThreadAssert::Type::kGPU);
-  DCHECK(real_context);
   auto texture_gl = static_cast<TextureInfoGL *>(texture);
+
+#if !defined(ANIMAX_GL_USE_OSMESA) && (defined(OS_WIN) || defined(OS_OSX))
+  // On Windows & macOS, context is null, so texture needs to be generated
+  // based on promise.
+  auto texture_gl_shared = std::make_shared<TextureInfoGL>(
+      texture_gl->ID(), texture_gl->Width(), texture_gl->Height(), 0);
+  auto promise = new SkityPromiseContext(texture_gl_shared);
+
+  image_ = skity::Image::MakePromiseTextureImage2(
+      skity::TextureFormat::kRGBA, texture_gl->Width(), texture_gl->Height(),
+      skity::AlphaType::kPremul_AlphaType, &GeneratePromiseTexture,
+      &ReleasePromiseContext, promise);
+#else
+  DCHECK(real_context);
   auto context = real_context->Get();
   skity::GPUBackendTextureInfoGL texture_info;
   texture_info.backend = skity::GPUBackendType::kOpenGL;
@@ -128,6 +144,7 @@ ImageGL::ImageGL(TextureInfo *texture, RealContext *real_context) {
   auto skity_texture = context->WrapTexture(&texture_info);
 
   image_ = skity::Image::MakeHWImage(skity_texture);
+#endif
 }
 
 }  // namespace animax
