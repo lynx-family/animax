@@ -85,6 +85,9 @@ std::unique_ptr<AnimaXSurface> AnimaXRenderer::ReleaseSurface() {
 }
 
 void AnimaXRenderer::CreateSurface(SurfaceCreationFactory creation_factory) {
+  if (is_destroyed_) {
+    return;
+  }
   ReleaseSurface();
   ANIMAX_TRACE_EVENT_BEGIN(kCreateSurface);
   auto surface = creation_factory();
@@ -120,6 +123,9 @@ void AnimaXRenderer::UpdateEstimatedMemoryUsage() {
 }
 
 void AnimaXRenderer::UpdateSurface(SurfaceUpdateFactory update_factory) {
+  if (is_destroyed_) {
+    return;
+  }
   auto old_surface = ReleaseSurface();
   auto old_surface_valid = old_surface && old_surface->Valid();
   std::unique_ptr<AnimaXSurface> new_surface;
