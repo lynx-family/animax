@@ -20,7 +20,7 @@ class ANIMAX_EXPORT TextContent {
 
   void Init(TextLayer* layer) { layer_ = layer; };
   virtual void Draw(Canvas& canvas, int32_t alpha) = 0;
-  virtual void GetRect(RectF& out_rect){};
+  virtual bool GetRect(RectF& out_rect) = 0;
 
  protected:
   TextLayer* layer_ = nullptr;

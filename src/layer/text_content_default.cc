@@ -39,6 +39,52 @@ void TextContentDefault::Draw(Canvas& canvas, int32_t alpha) {
   DrawTextWithFont(data_source_.GetDocumentData(), *font_asset, canvas);
 }
 
+bool TextContentDefault::GetRect(RectF& out_rect) {
+  out_rect.Set(0.f, 0.f, 0.f, 0.f);
+  auto* font_asset = data_source_.GetFontAsset();
+  if (!font_asset || !font_asset->GetFont()) {
+    return false;
+  }
+
+  const auto& document_data = data_source_.GetDocumentData();
+  auto font = font_asset->GetFont();
+  DCHECK(font);
+
+  float text_size = data_source_.GetTextSize();
+  font->SetTextSize(text_size);
+
+  constexpr float text_size_scale = 100.f;
+  float tracking = data_source_.GetTracking() * text_size / text_size_scale;
+  bool has_line = false;
+  float left = 0.f, top = 0.f, right = 0.f, bottom = 0.f;
+
+  ForEachLayoutLine(document_data, *font_asset, tracking,
+                    [&](const TextSubLine& line, float x, float y) {
+                      float line_left = x;
+                      float line_top = y - document_data.GetSize();
+                      float line_right = x + line.width_;
+                      float line_bottom =
+                          line_top + document_data.GetLineHeight();
+                      if (!has_line) {
+                        left = line_left;
+                        top = line_top;
+                        right = line_right;
+                        bottom = line_bottom;
+                        has_line = true;
+                      } else {
+                        left = std::min(left, line_left);
+                        top = std::min(top, line_top);
+                        right = std::max(right, line_right);
+                        bottom = std::max(bottom, line_bottom);
+                      }
+                    });
+  if (!has_line) {
+    return false;
+  }
+  out_rect.Set(left, top, right, bottom);
+  return true;
+}
+
 void TextContentDefault::ConfigurePaint(int32_t alpha) {
   fill_paint_.SetColor(Color(data_source_.GetColor()));
   fill_paint_.SetAlpha(alpha);
@@ -63,13 +109,25 @@ void TextContentDefault::DrawTextWithFont(const DocumentData& document_data,
   auto font = font_asset.GetFont();
   DCHECK(font);
 
-  auto& text = document_data.GetText();
   float text_size = data_source_.GetTextSize();
   font->SetTextSize(text_size);
 
   constexpr float text_size_scale = 100.f;
   float tracking = data_source_.GetTracking() * text_size / text_size_scale;
+  ForEachLayoutLine(document_data, font_asset, tracking,
+                    [&](const TextSubLine& line, float x, float y) {
+                      canvas.Save();
+                      canvas.Translate(x, y);
+                      DrawFontTextLine(line.text_, document_data, canvas,
+                                       tracking, *font);
+                      canvas.Restore();
+                    });
+}
 
+void TextContentDefault::ForEachLayoutLine(
+    const DocumentData& document_data, FontAsset& font_asset, float tracking,
+    const std::function<void(const TextSubLine&, float, float)>& visitor) {
+  auto& text = document_data.GetText();
   std::vector<std::string> text_lines;
   base::SplitString(text, '\r', text_lines);
   auto text_line_count = text_lines.size();
@@ -84,11 +142,9 @@ void TextContentDefault::DrawTextWithFont(const DocumentData& document_data,
                             lines);
     for (auto& line : lines) {
       line_index++;
-
-      canvas.Save();
-      OffsetCanvas(canvas, document_data, line_index, line->width_);
-      DrawFontTextLine(line->text_, document_data, canvas, tracking, *font);
-      canvas.Restore();
+      float x = 0.f, y = 0.f;
+      GetLineOffset(document_data, line_index, line->width_, x, y);
+      visitor(*line, x, y);
     }
   }
 }
@@ -168,9 +224,9 @@ void TextContentDefault::SplitGlyphTextIntoLines(
   }
 }
 
-void TextContentDefault::OffsetCanvas(Canvas& canvas,
-                                      const DocumentData& document_data,
-                                      int32_t line_index, float line_width) {
+void TextContentDefault::GetLineOffset(const DocumentData& document_data,
+                                       int32_t line_index, float line_width,
+                                       float& out_x, float& out_y) {
   auto* position = document_data.GetBoxPosition();
   auto* size = document_data.GetBoxSize();
   auto baseline_shift = document_data.GetBaselineShift();
@@ -186,16 +242,16 @@ void TextContentDefault::OffsetCanvas(Canvas& canvas,
   float box_width = (size && !size->IsEmpty()) ? size->GetX() : 0.f;
   switch (document_data.GetJustification()) {
     case DocumentJustification::kRightAlign:
-      canvas.Translate(line_start + box_width - line_width, line_offset);
+      out_x = line_start + box_width - line_width;
       break;
     case DocumentJustification::kCenter:
-      canvas.Translate(line_start + box_width / 2.0 - line_width / 2.0,
-                       line_offset);
+      out_x = line_start + box_width / 2.0f - line_width / 2.0f;
       break;
     default:
-      canvas.Translate(line_start, line_offset);
+      out_x = line_start;
       break;
   }
+  out_y = line_offset;
 }
 
 TextContentDefault::TextSubLine& TextContentDefault::EnsureEnoughSubLines(

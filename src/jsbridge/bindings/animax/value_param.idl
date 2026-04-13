@@ -5,4 +5,5 @@ dictionary ValueParam {
     double doubleValue;
     boolean boolValue;
     long frameIndex = -1;
+    long valueApplyMode = 0; // enum: set = 0, add = 1, only for pointX, pointY and doubleValue
 };

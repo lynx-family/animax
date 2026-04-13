@@ -144,6 +144,7 @@
   [self addButtonWithTitle:@"Set Opacity 50%" action:@selector(setOpacity50)];
   [self addButtonWithTitle:@"Set Anchor Point" action:@selector(setAnchorPoint)];
   [self addButtonWithTitle:@"Move Position" action:@selector(movePosition)];
+  [self addButtonWithTitle:@"Move Position (Add)" action:@selector(movePositionAdd)];
   [self addButtonWithTitle:@"Scale 150%" action:@selector(scale150)];
   [self addButtonWithTitle:@"Rotate 45°" action:@selector(rotate45)];
   [self addButtonWithTitle:@"Skew 15°" action:@selector(skew15)];
@@ -152,11 +153,13 @@
   [self addButtonWithTitle:@"End Opacity 20%" action:@selector(endOpacity20)];
   [self addButtonWithTitle:@"Rotate X 90°" action:@selector(rotateX90)];
   [self addButtonWithTitle:@"Rotate Y 45°" action:@selector(rotateY45)];
+  [self addButtonWithTitle:@"Rotate Y 45° (Add)" action:@selector(rotateY45Add)];
   [self addButtonWithTitle:@"Rotate Z 180°" action:@selector(rotateZ180)];
 
   // Text properties
   [self addButtonWithTitle:@"Set Text \"UPDATED\"" action:@selector(setTextUpdated)];
   [self addButtonWithTitle:@"Text Size 72px" action:@selector(textSize72)];
+  [self addButtonWithTitle:@"Text Size 10px (Add)" action:@selector(textSize10Add)];
   [self addButtonWithTitle:@"Text Color Red" action:@selector(textColorRed)];
   [self addButtonWithTitle:@"Text Tracking 5" action:@selector(textTracking5)];
 
@@ -240,6 +243,17 @@
                               callback:self];
 }
 
+- (void)movePositionAdd {
+  [self.animaXView
+      updateLayerProperty:self.keyPath
+             propertyType:LayerPropertyTypeTransformPosition
+                    value:[AnimaXValueParam paramWithCoordinateX:20.0
+                                                               y:20.0
+                                                       applyMode:AnimaXValueApplyModeAdd
+                                                     targetFrame:kAnimaXValueFrameIndexAll]
+                 callback:self];
+}
+
 - (void)scale150 {
   [self.animaXView updateLayerProperty:self.keyPath
                           propertyType:LayerPropertyTypeTransformScale
@@ -296,6 +310,15 @@
                               callback:self];
 }
 
+- (void)rotateY45Add {
+  [self.animaXView updateLayerProperty:self.keyPath
+                          propertyType:LayerPropertyTypeTransformRotationY
+                                 value:[AnimaXValueParam paramWithNumber:45.0
+                                                               applyMode:AnimaXValueApplyModeAdd
+                                                             targetFrame:kAnimaXValueFrameIndexAll]
+                              callback:self];
+}
+
 - (void)rotateZ180 {
   [self.animaXView updateLayerProperty:self.keyPath
                           propertyType:LayerPropertyTypeTransformRotationZ
@@ -316,6 +339,15 @@
   [self.animaXView updateLayerProperty:self.keyPath
                           propertyType:LayerPropertyTypeTextSize
                                  value:[AnimaXValueParam paramWithNumber:72.0]
+                              callback:self];
+}
+
+- (void)textSize10Add {
+  [self.animaXView updateLayerProperty:self.keyPath
+                          propertyType:LayerPropertyTypeTextSize
+                                 value:[AnimaXValueParam paramWithNumber:10.0
+                                                               applyMode:AnimaXValueApplyModeAdd
+                                                             targetFrame:kAnimaXValueFrameIndexAll]
                               callback:self];
 }
 

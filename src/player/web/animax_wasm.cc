@@ -113,12 +113,20 @@ std::unique_ptr<AnimaXValueParam> ToAnimaXValueParam(
         value["boolValue"].as<bool>(),
         value.hasOwnProperty("frameIndex") ? value["frameIndex"].as<int>() : 0);
   } else if (value.hasOwnProperty("pointX") && value.hasOwnProperty("pointY")) {
+    auto apply_mode = value.hasOwnProperty("valueApplyMode")
+                          ? static_cast<AnimaXValueParam::ApplyMode>(
+                                value["valueApplyMode"].as<int32_t>())
+                          : AnimaXValueParam::ApplyMode::kSet;
     return std::make_unique<AnimaXValueParam>(
-        value["pointX"].as<double>(), value["pointY"].as<double>(),
+        value["pointX"].as<double>(), value["pointY"].as<double>(), apply_mode,
         value.hasOwnProperty("frameIndex") ? value["frameIndex"].as<int>() : 0);
   } else if (value.hasOwnProperty("doubleValue")) {
+    auto apply_mode = value.hasOwnProperty("valueApplyMode")
+                          ? static_cast<AnimaXValueParam::ApplyMode>(
+                                value["valueApplyMode"].as<int32_t>())
+                          : AnimaXValueParam::ApplyMode::kSet;
     return std::make_unique<AnimaXValueParam>(
-        value["doubleValue"].as<double>(),
+        value["doubleValue"].as<double>(), apply_mode,
         value.hasOwnProperty("frameIndex") ? value["frameIndex"].as<int>() : 0);
   }
   return std::make_unique<AnimaXValueParam>();
@@ -346,6 +354,18 @@ void AnimaXWasm::UpdateVisibilityStates(uint16_t state) {
   }
 
   current_visible_states_ = state;
+}
+
+void AnimaXWasm::GetLayerBounds(
+    const std::string& layer_name_utf8, uint16_t bounds_space,
+    std::function<void(bool, float, float, float, float)> js_callback) {
+  player_->GetLayerBounds(
+      layer_name_utf8, static_cast<LayerBoundsSpace>(bounds_space),
+      [js_callback](bool success, float x, float y, float width, float height) {
+        if (js_callback) {
+          js_callback(success, x, y, width, height);
+        }
+      });
 }
 
 }  // namespace animax

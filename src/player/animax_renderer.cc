@@ -272,6 +272,15 @@ void AnimaXRenderer::OnTap(float x, float y) {
   });
 }
 
+bool AnimaXRenderer::GetLayerBounds(const std::string& layer_name,
+                                    LayerBoundsSpace bounds_space,
+                                    RectF& out_bounds) {
+  if (!layer_ || layer_name.empty()) {
+    return false;
+  }
+  return layer_->GetBoundsByName(layer_name, bounds_space, out_bounds);
+}
+
 void AnimaXRenderer::SetObjectFit(const ObjectFit object_fit) {
   object_fit_ = object_fit;
 }

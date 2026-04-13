@@ -78,24 +78,31 @@ AnimaXValueParam::AnimaXValueParam(const std::string& value,
                                    int32_t target_frame)
     : type_(Type::kString), string_value_(value), target_frame_(target_frame) {}
 
-AnimaXValueParam::AnimaXValueParam(double value, int32_t target_frame)
-    : type_(Type::kNumber), number_value_(value), target_frame_(target_frame) {}
+AnimaXValueParam::AnimaXValueParam(double value, ApplyMode apply_mode,
+                                   int32_t target_frame)
+    : type_(Type::kNumber),
+      number_value_(value),
+      apply_mode_(apply_mode),
+      target_frame_(target_frame) {}
 
 AnimaXValueParam::AnimaXValueParam(bool value, int32_t target_frame)
     : type_(Type::kBoolean),
       number_value_(value ? 1.0 : 0.0),
       target_frame_(target_frame) {}
 
-AnimaXValueParam::AnimaXValueParam(double x, double y, int32_t target_frame)
+AnimaXValueParam::AnimaXValueParam(double x, double y, ApplyMode apply_mode,
+                                   int32_t target_frame)
     : type_(Type::kCoordinate),
       coordinate_value_(PointF(static_cast<float>(x), static_cast<float>(y))),
+      apply_mode_(apply_mode),
       target_frame_(target_frame) {}
 
 AnimaXValueParam::AnimaXValueParam(double x, double y, double z,
-                                   int32_t target_frame)
+                                   ApplyMode apply_mode, int32_t target_frame)
     : type_(Type::kCoordinate),
       coordinate_value_(PointF(static_cast<float>(x), static_cast<float>(y),
                                static_cast<float>(z))),
+      apply_mode_(apply_mode),
       target_frame_(target_frame) {}
 
 AnimaXValueParam::AnimaXValueParam(int32_t color, int32_t target_frame)
@@ -121,6 +128,7 @@ AnimaXValueParam& AnimaXValueParam::operator=(
     number_value_ = std::move(other.number_value_);
     coordinate_value_ = std::move(other.coordinate_value_);
     color_value_ = std::move(other.color_value_);
+    apply_mode_ = other.apply_mode_;
     target_frame_ = other.target_frame_;
   }
   return *this;
@@ -195,25 +203,28 @@ std::unique_ptr<AnimaXValueParam> AnimaXValueParam::FromValue(
   switch (value_type) {
     case ValueType::kFloat: {
       auto* float_value = static_cast<const Float*>(value);
-      return std::make_unique<AnimaXValueParam>(float_value->Get());
+      return std::make_unique<AnimaXValueParam>(float_value->Get(),
+                                                ApplyMode::kSet);
     }
 
     case ValueType::kInteger: {
       auto* int_value = static_cast<const Integer*>(value);
       return std::make_unique<AnimaXValueParam>(
-          static_cast<double>(int_value->Get()));
+          static_cast<double>(int_value->Get()), ApplyMode::kSet);
     }
 
     case ValueType::kPoint: {
       auto* point_value = static_cast<const PointF*>(value);
       return std::make_unique<AnimaXValueParam>(
-          point_value->GetX(), point_value->GetY(), point_value->GetZ());
+          point_value->GetX(), point_value->GetY(), point_value->GetZ(),
+          ApplyMode::kSet);
     }
 
     case ValueType::kScale: {
       auto* scale_value = static_cast<const ScaleF*>(value);
       return std::make_unique<AnimaXValueParam>(
-          scale_value->GetX(), scale_value->GetY(), scale_value->GetZ());
+          scale_value->GetX(), scale_value->GetY(), scale_value->GetZ(),
+          ApplyMode::kSet);
     }
 
     case ValueType::kColor: {

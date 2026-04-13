@@ -43,6 +43,13 @@ class ANIMAX_EXPORT AnimaXValueParam {
     kNull
   };
 
+  enum class ApplyMode {
+    // Replace the original value directly.
+    kSet,
+    // Add the provided value to the original value.
+    kAdd,
+  };
+
   struct ColorFilterParam {
     int32_t color;
     int32_t mode;
@@ -68,9 +75,11 @@ class ANIMAX_EXPORT AnimaXValueParam {
   /**
    * Creates a AnimaXValueParam from a numeric value
    * @param value Numeric value
+   * @param apply_mode Apply mode for this value
    * @param target_frame Frame number at which this value should be applied
    */
   explicit AnimaXValueParam(double value,
+                            ApplyMode apply_mode = ApplyMode::kSet,
                             int32_t target_frame = kFrameIndexAll);
 
   /**
@@ -84,9 +93,11 @@ class ANIMAX_EXPORT AnimaXValueParam {
    * Creates a AnimaXValueParam from a point (x,y coordinates)
    * @param x X coordinate
    * @param y Y coordinate
-   * @param target_frame Frame number at which this value should be applied
+   * @param apply_mode Apply mode for this value
+   * @param target_frame Frame number at which this value should be
    */
   explicit AnimaXValueParam(double x, double y,
+                            ApplyMode apply_mode = ApplyMode::kSet,
                             int32_t target_frame = kFrameIndexAll);
 
   /**
@@ -94,9 +105,11 @@ class ANIMAX_EXPORT AnimaXValueParam {
    * @param x X coordinate
    * @param y Y coordinate
    * @param z Z coordinate
+   * @param apply_mode Apply mode for this value
    * @param target_frame Frame number at which this value should be applied
    */
   explicit AnimaXValueParam(double x, double y, double z,
+                            ApplyMode apply_mode = ApplyMode::kSet,
                             int32_t target_frame = kFrameIndexAll);
 
   /**
@@ -265,12 +278,19 @@ class ANIMAX_EXPORT AnimaXValueParam {
   bool CopyTo(double* target) const;
   bool CopyTo(bool* target) const;
 
+  /**
+   * Gets the apply mode of this value.
+   * @return The ApplyMode enum value representing the apply mode.
+   */
+  ApplyMode GetApplyMode() const { return apply_mode_; }
+
  private:
   Type type_;
   std::optional<std::string> string_value_;
   std::optional<double> number_value_;
   std::optional<PointF> coordinate_value_;
   std::optional<Color> color_value_;
+  ApplyMode apply_mode_ = ApplyMode::kSet;
   int32_t target_frame_;
 };
 

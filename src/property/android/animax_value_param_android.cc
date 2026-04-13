@@ -5,6 +5,7 @@
 #include "src/property/android/animax_value_param_android.h"
 
 #include "base/include/platform/android/jni_convert_helper.h"
+#include "include/property/animax_value_param.h"
 #include "platform/android/animax_android/src/main/jni/gen/AnimaXValueParam_jni.h"
 #include "platform/android/animax_android/src/main/jni/gen/AnimaXValueParam_register_jni.h"
 #include "src/model/value/base_value.h"
@@ -47,7 +48,9 @@ AnimaXValueParamAndroid::AnimaXValueParamAndroid(JNIEnv* env,
           case Type::kNumber: {
             auto number_value =
                 Java_AnimaXValueParam_getNumberValue(env, value_param);
-            return AnimaXValueParam(number_value, target_frame);
+            auto apply_mode = static_cast<ApplyMode>(
+                Java_AnimaXValueParam_getApplyModeIndex(env, value_param));
+            return AnimaXValueParam(number_value, apply_mode, target_frame);
           }
           case Type::kBoolean: {
             auto bool_value =
@@ -59,7 +62,9 @@ AnimaXValueParamAndroid::AnimaXValueParamAndroid(JNIEnv* env,
             float x = Java_AnimaXValueParam_getX(env, value_param);
             float y = Java_AnimaXValueParam_getY(env, value_param);
             float z = Java_AnimaXValueParam_getZ(env, value_param);
-            return AnimaXValueParam(x, y, z, target_frame);
+            auto apply_mode = static_cast<ApplyMode>(
+                Java_AnimaXValueParam_getApplyModeIndex(env, value_param));
+            return AnimaXValueParam(x, y, z, apply_mode, target_frame);
           }
           case Type::kColor: {
             int32_t color =

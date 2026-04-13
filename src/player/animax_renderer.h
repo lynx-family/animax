@@ -14,6 +14,7 @@
 #include "include/player/animax_surface.h"
 #include "src/base/monitor/metrics_data_source.h"
 #include "src/base/monitor/timestamp_recorder.h"
+#include "src/model/rect_model.h"
 #include "src/property/property_updater.h"
 
 namespace lynx {
@@ -59,6 +60,8 @@ class AnimaXRenderer : public MetricsDataSource {
 
   // Tap event handler
   void OnTap(float x, float y);
+  bool GetLayerBounds(const std::string& layer_name,
+                      LayerBoundsSpace bounds_space, RectF& out_bounds);
 
   // Object fit and position
   void SetObjectFit(const ObjectFit object_fit);

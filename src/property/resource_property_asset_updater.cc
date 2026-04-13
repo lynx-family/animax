@@ -12,6 +12,21 @@
 
 namespace lynx {
 namespace animax {
+namespace {
+template <typename T, typename ValueT>
+inline bool ApplyNumericProperty(T& target_value, const ValueT& value) {
+  T input_value{};
+  if (!value.CopyTo(&input_value)) {
+    return false;
+  }
+  if (value.GetApplyMode() == AnimaXValueParam::ApplyMode::kAdd) {
+    target_value += input_value;
+  } else {
+    target_value = input_value;
+  }
+  return true;
+}
+}  // namespace
 void ResourcePropertyAssetUpdator::Visit(FontAsset& asset) {
   auto asset_model = asset.Model();
   bool success = true;
@@ -29,7 +44,7 @@ void ResourcePropertyAssetUpdator::Visit(FontAsset& asset) {
       break;
     }
     case ResourcePropertyType::kFontAscent: {
-      success = context_.GetValue().CopyTo(&asset_model.ascent);
+      success = ApplyNumericProperty(asset_model.ascent, context_.GetValue());
       break;
     }
     default: {
@@ -56,11 +71,11 @@ void ResourcePropertyAssetUpdator::Visit(ImageAsset& asset) {
       break;
     }
     case ResourcePropertyType::kImageWidth: {
-      success = context_.GetValue().CopyTo(&asset_model.width);
+      success = ApplyNumericProperty(asset_model.width, context_.GetValue());
       break;
     }
     case ResourcePropertyType::kImageHeight: {
-      success = context_.GetValue().CopyTo(&asset_model.height);
+      success = ApplyNumericProperty(asset_model.height, context_.GetValue());
       break;
     }
     default: {

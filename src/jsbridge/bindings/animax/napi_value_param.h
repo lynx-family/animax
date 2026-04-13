@@ -55,6 +55,11 @@ class ValueParam {
     return stringValue_;
   }
 
+  bool hasValueApplyMode() const { return has_valueApplyMode_; }
+  int32_t valueApplyMode() const {
+    return valueApplyMode_;
+  }
+
   // Dictionary name
   static constexpr const char* DictionaryName() {
     return "ValueParam";
@@ -67,6 +72,7 @@ class ValueParam {
   bool has_pointX_ = false;
   bool has_pointY_ = false;
   bool has_stringValue_ = false;
+  bool has_valueApplyMode_ = true;
 
   bool boolValue_;
   double doubleValue_;
@@ -74,6 +80,7 @@ class ValueParam {
   double pointX_;
   double pointY_;
   std::string stringValue_;
+  int32_t valueApplyMode_ = 0;
 };
 
 }  // namespace animax

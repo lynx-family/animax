@@ -11,6 +11,7 @@
 #include "include/property/animax_value_param.h"
 #include "include/property/property_update_request.h"
 #include "include/property/property_update_response.h"
+#include "src/jsbridge/bindings/animax/napi_on_layer_bounds_callback.h"
 #include "src/jsbridge/bindings/animax/napi_on_property_callback.h"
 #include "src/jsbridge/bindings/animax/napi_task_runner.h"
 #include "src/jsbridge/bindings/animax/napi_value_param.h"
@@ -28,11 +29,15 @@ std::unique_ptr<AnimaXValueParam> ToAnimaXValueParam(const ValueParam& value) {
     return std::make_unique<AnimaXValueParam>(value.boolValue(),
                                               value.frameIndex());
   } else if (value.hasPointX() && value.hasPointY()) {
-    return std::make_unique<AnimaXValueParam>(value.pointX(), value.pointY(),
-                                              value.frameIndex());
+    return std::make_unique<AnimaXValueParam>(
+        value.pointX(), value.pointY(),
+        static_cast<AnimaXValueParam::ApplyMode>(value.valueApplyMode()),
+        value.frameIndex());
   } else if (value.hasDoubleValue()) {
-    return std::make_unique<AnimaXValueParam>(value.doubleValue(),
-                                              value.frameIndex());
+    return std::make_unique<AnimaXValueParam>(
+        value.doubleValue(),
+        static_cast<AnimaXValueParam::ApplyMode>(value.valueApplyMode()),
+        value.frameIndex());
   }
   return std::make_unique<AnimaXValueParam>();
 }
@@ -46,7 +51,9 @@ std::unique_ptr<AnimaXValueParam> ToAnimaXValueParamForLayer(
     case LayerPropertyType::kDropShadowColor:
       if (value.hasDoubleValue()) {
         return std::make_unique<AnimaXValueParam>(
-            static_cast<int32_t>(value.doubleValue()), value.frameIndex());
+            static_cast<int32_t>(value.doubleValue()),
+            static_cast<AnimaXValueParam::ApplyMode>(value.valueApplyMode()),
+            value.frameIndex());
       } else if (value.hasStringValue()) {
         int32_t color_value = ColorUtil::ParseHexColor(value.stringValue());
         return std::make_unique<AnimaXValueParam>(color_value,
@@ -178,6 +185,26 @@ void AnimaXPlayerDelegate::Play() {
   if (player) {
     player->Play();
   }
+}
+
+void AnimaXPlayerDelegate::GetLayerBounds(
+    const Napi::String& layer_name, const Napi::Number& layer_bounds_space,
+    std::unique_ptr<NapiOnLayerBoundsCallback> callback) {
+  auto shared_player = weak_player_.lock();
+  if (!shared_player || !callback) {
+    return;
+  }
+  auto task_runner = NapiTaskRunner{callback->Env(nullptr)};
+  shared_player->GetLayerBounds(
+      layer_name.Utf8Value(),
+      static_cast<LayerBoundsSpace>(layer_bounds_space.Int32Value()),
+      [callback = std::move(callback), task_runner = std::move(task_runner)](
+          bool success, float x, float y, float width, float height) mutable {
+        task_runner.PostTask(
+            [success, x, y, width, height, callback = std::move(callback)]() {
+              callback->Invoke(success, x, y, width, height);
+            });
+      });
 }
 }  // namespace animax
 }  // namespace lynx

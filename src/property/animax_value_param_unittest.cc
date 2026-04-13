@@ -48,14 +48,16 @@ TEST(AnimaXValueParamTest, ConstructorNumber) {
 
   EXPECT_NEAR(param.GetNumberValue(), 42.5, 0.001);
   EXPECT_EQ(param.GetType(), AnimaXValueParam::Type::kNumber);
+  EXPECT_EQ(param.GetApplyMode(), AnimaXValueParam::ApplyMode::kSet);
   EXPECT_EQ(param.GetTargetFrame(), AnimaXValueParam::kFrameIndexAll);
 }
 
 TEST(AnimaXValueParamTest, ConstructorNumberWithTargetFrame) {
-  AnimaXValueParam param(123.456, 50);
+  AnimaXValueParam param(123.456, AnimaXValueParam::ApplyMode::kAdd, 50);
 
   EXPECT_TRUE(param.IsNumber());
   EXPECT_NEAR(param.GetNumberValue(), 123.456, 0.001);
+  EXPECT_EQ(param.GetApplyMode(), AnimaXValueParam::ApplyMode::kAdd);
   EXPECT_EQ(param.GetTargetFrame(), 50);
 }
 
@@ -104,15 +106,17 @@ TEST(AnimaXValueParamTest, ConstructorCoordinate) {
   EXPECT_NEAR(param.GetY(), 20.7, 0.001);
   EXPECT_DOUBLE_EQ(param.GetZ(), 0.0);
   EXPECT_EQ(param.GetType(), AnimaXValueParam::Type::kCoordinate);
+  EXPECT_EQ(param.GetApplyMode(), AnimaXValueParam::ApplyMode::kSet);
 }
 
 TEST(AnimaXValueParamTest, ConstructorCoordinateWithTargetFrame) {
-  AnimaXValueParam param(5.0, 15.0, 0.0, 30);
+  AnimaXValueParam param(5.0, 15.0, 0.0, AnimaXValueParam::ApplyMode::kAdd, 30);
 
   EXPECT_TRUE(param.IsCoordinate());
   EXPECT_DOUBLE_EQ(param.GetX(), 5.0);
   EXPECT_DOUBLE_EQ(param.GetY(), 15.0);
   EXPECT_DOUBLE_EQ(param.GetZ(), 0.0);
+  EXPECT_EQ(param.GetApplyMode(), AnimaXValueParam::ApplyMode::kAdd);
   EXPECT_EQ(param.GetTargetFrame(), 30);
 }
 

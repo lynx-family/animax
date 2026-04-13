@@ -8,7 +8,12 @@ interface CompositionElement {
 
     void submitResourcePropertiesUpdate(OnPropertyCallback callback);
 
+    // layerBoundsSpace : enum Parent = 0 (Default), Root = 1
+    void getLayerBounds(ByteString layerName, long layerBoundsSpace, OnLayerBoundsCallback callback);
+
     void play();
 };
 
 [HolderStorageNamespace = binding] callback OnPropertyCallback = void (boolean success, long errorType);
+
+[HolderStorageNamespace = binding] callback OnLayerBoundsCallback = void (boolean success, float x, float y, float width, float height);
