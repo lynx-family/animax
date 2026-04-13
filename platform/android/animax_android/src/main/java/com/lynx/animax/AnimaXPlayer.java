@@ -53,6 +53,7 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   private boolean mIsPlatformSurfaceInitiallyInvalid = false;
 
   private CleanupReference mCleanUpReference = null;
+  private CleanupOnUiThread mCleanupOnUiThread = null;
   private @Nullable AnimaXComposition mAnimaXComposition;
 
   // mVisibilityFlag defaults to 0, where 0 means visible and 1 means invisible.
@@ -60,6 +61,9 @@ public class AnimaXPlayer implements IAnimaXPlayer {
 
   private static class CleanupOnUiThread implements Runnable {
     private long mNativePtr;
+    // Written by destroyNativePlayer() on worker thread, read by run() after GC.
+    // No concurrent access (GC implies unreachable), volatile for cross-thread visibility.
+    private volatile boolean mDestroyCalled = false;
 
     public CleanupOnUiThread(long nativePtr) {
       mNativePtr = nativePtr;
@@ -70,9 +74,20 @@ public class AnimaXPlayer implements IAnimaXPlayer {
       if (mNativePtr == 0) {
         return;
       }
+      if (!mDestroyCalled) {
+        destroyNativePlayer();
+      }
+      nativeDeletePtr(mNativePtr);
+      mNativePtr = 0;
+    }
+
+    public void destroyNativePlayer() {
+      if (mNativePtr == 0 || mDestroyCalled) {
+        return;
+      }
       AnimaXLog.i(TAG, "Call nativeDestroy.");
       nativeDestroy(mNativePtr);
-      mNativePtr = 0;
+      mDestroyCalled = true;
     }
   }
 
@@ -120,7 +135,8 @@ public class AnimaXPlayer implements IAnimaXPlayer {
         mAbility.getService(IAnimaXResourceFactoryService.class);
     mResourceLoaderHolder = new AnimaXResourceLoaderHolder(resourceFactory);
     mPtr = nativeCreate(mResourceLoaderHolder.getNativePtr(), mAnimaXContext);
-    mCleanUpReference = new CleanupReference(this, new CleanupOnUiThread(mPtr), true);
+    mCleanupOnUiThread = new CleanupOnUiThread(mPtr);
+    mCleanUpReference = new CleanupReference(this, mCleanupOnUiThread, true);
 
     if (!hasInitialized()) {
       AnimaXLog.e(TAG, "init fail");
@@ -182,7 +198,10 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     }
 
     mAbility.release();
-    mCleanUpReference.cleanupNow();
+    if (mCleanupOnUiThread != null) {
+      mCleanupOnUiThread.destroyNativePlayer();
+      mCleanupOnUiThread = null;
+    }
     if (mResourceLoaderHolder != null) {
       mResourceLoaderHolder.release();
       mResourceLoaderHolder = null;
@@ -741,6 +760,8 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   private native void nativePlaySegment(long player, int startFrame, int endFrame);
 
   private static native void nativeDestroy(long player);
+
+  private static native void nativeDeletePtr(long player);
 
   private native void nativeReload(long player);
 

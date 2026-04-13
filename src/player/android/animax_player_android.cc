@@ -4,6 +4,8 @@
 
 #include <android/native_window_jni.h>
 
+#include <memory>
+
 #include "base/include/fml/synchronization/waitable_event.h"
 #include "base/include/platform/android/jni_convert_helper.h"
 #include "include/player/animax_player.h"
@@ -124,7 +126,7 @@ std::shared_ptr<lynx::animax::AnimaXPlayer> GetAnimaXPlayerSharedPtr(
   if (!player_ptr_ptr) {
     return nullptr;
   }
-  return *player_ptr_ptr;
+  return std::atomic_load(player_ptr_ptr);
 }
 
 std::unique_ptr<lynx::animax::AnimaXSurface> ResizeAnimaXSurface(
@@ -224,104 +226,125 @@ static void UpdateAnimaXSurface(JNIEnv* env, jobject jcaller, jlong player,
 
 static void SetAutoPlay(JNIEnv* env, jobject jcaller, jlong player,
                         jboolean enable) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetAutoplay(enable);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetAutoplay(enable);
 }
 
 static void SetSpeed(JNIEnv* env, jobject jcaller, jlong player, jfloat speed) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetSpeed(speed);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetSpeed(speed);
 }
 
 static void SetProgress(JNIEnv* env, jobject jcaller, jlong player,
                         jfloat progress) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetProgress(progress);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetProgress(progress);
 }
 
 static void SetObjectFit(JNIEnv* env, jobject jcaller, jlong player,
                          jint objectFit) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetObjectFit(static_cast<lynx::animax::ObjectFit>(objectFit));
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetObjectFit(static_cast<lynx::animax::ObjectFit>(objectFit));
 }
 
 static void SetObjectPosition(JNIEnv* env, jobject jcaller, jlong player,
                               jint objectPosition) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)
-      ->SetObjectPosition(
-          static_cast<lynx::animax::ObjectPosition>(objectPosition));
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetObjectPosition(
+      static_cast<lynx::animax::ObjectPosition>(objectPosition));
 }
 
 static void SetKeepLastFrame(JNIEnv* env, jobject jcaller, jlong player,
                              jboolean enable) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetKeepLastFrame(enable);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetKeepLastFrame(enable);
 }
 
 static void SetJson(JNIEnv* env, jobject jcaller, jlong player, jstring json) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  if (json) {
-    const char* json_str = env->GetStringUTFChars(json, JNI_FALSE);
-    (*player_ptr)->SetJson(json_str);
-    env->ReleaseStringUTFChars(json, json_str);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr || !json) {
+    return;
   }
+  const char* json_str = env->GetStringUTFChars(json, JNI_FALSE);
+  player_ptr->SetJson(json_str);
+  env->ReleaseStringUTFChars(json, json_str);
 }
 
 static void SetLoop(JNIEnv* env, jobject jcaller, jlong player,
                     jboolean enable) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetLoop(enable);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetLoop(enable);
 }
 
 static void SetLoopCount(JNIEnv* env, jobject jcaller, jlong player,
                          jint loopCount) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetLoopCount(loopCount);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetLoopCount(loopCount);
 }
 
 static void SetSrc(JNIEnv* env, jobject jcaller, jlong player, jstring src) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
   std::string source =
       lynx::base::android::JNIConvertHelper::ConvertToString(env, src);
-  (*player_ptr)->SetSrc(source);
+  player_ptr->SetSrc(source);
 }
 
 static void SetComposition(JNIEnv* env, jobject jcaller, jlong player,
                            jlong composition) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  if (composition) {
-    auto* ptr_holder =
-        reinterpret_cast<std::shared_ptr<lynx::animax::CompositionModel>*>(
-            composition);
-    (*player_ptr)->SetComposition(*ptr_holder);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr || !composition) {
+    return;
   }
+  auto* ptr_holder =
+      reinterpret_cast<std::shared_ptr<lynx::animax::CompositionModel>*>(
+          composition);
+  player_ptr->SetComposition(*ptr_holder);
 }
 
 static void SetImageFolder(JNIEnv* env, jobject jcaller, jlong player,
                            jstring image_folder) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
   std::string folder =
       lynx::base::android::JNIConvertHelper::ConvertToString(env, image_folder);
-  (*player_ptr)->SetImageFolder(std::move(folder));
+  player_ptr->SetImageFolder(std::move(folder));
 }
 
 static void SetSrcPolyfill(JNIEnv* env, jobject jcaller, jlong player,
                            jobject polyfillMap) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
 
   std::unordered_map<std::string, std::string> polyfill;
   auto keys =
@@ -354,105 +377,135 @@ static void SetSrcPolyfill(JNIEnv* env, jobject jcaller, jlong player,
     }
   }
 
-  (*player_ptr)->SetSrcPolyfill(polyfill);
+  player_ptr->SetSrcPolyfill(polyfill);
 }
 
 static void SetAutoReverse(JNIEnv* env, jobject jcaller, jlong player,
                            jboolean isAutoReverse) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetAutoReverse(isAutoReverse);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetAutoReverse(isAutoReverse);
 }
 
 static void SetDynamicResource(JNIEnv* env, jobject jcaller, jlong player,
                                jboolean dynamic) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetDynamicResource(dynamic);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetDynamicResource(dynamic);
 }
 
 static void SetMuted(JNIEnv* env, jobject jcaller, jlong player,
                      jboolean mute) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetMuted(mute);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetMuted(mute);
 }
 
 static void SetEnableAudio(JNIEnv* env, jobject jcaller, jlong player,
                            jboolean enable) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetEnableAudio(enable);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetEnableAudio(enable);
 }
 
 static void SetStartFrame(JNIEnv* env, jobject jcaller, jlong player,
                           jint startFrame) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetStartFrame(startFrame);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetStartFrame(startFrame);
 }
 
 static void SetEndFrame(JNIEnv* env, jobject jcaller, jlong player,
                         jint endFrame) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetEndFrame(endFrame);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetEndFrame(endFrame);
 }
 
 static void Play(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Play();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Play();
 }
 
 static void Pause(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Pause();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Pause();
 }
 
 static void Resume(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Resume();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Resume();
 }
 
 static void Stop(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Stop();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Stop();
 }
 
 static jdouble GetDurationMs(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  return (*player_ptr)->GetDurationMs();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return 0;
+  }
+  return player_ptr->GetDurationMs();
 }
 
 static jboolean IsAnimating(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  return (*player_ptr)->IsAnimating();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return false;
+  }
+  return player_ptr->IsAnimating();
 }
 
 static void Seek(JNIEnv* env, jobject jcaller, jlong player, jint frame) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Seek(frame);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Seek(frame);
 }
 
 static void SubscribeUpdateEvent(JNIEnv* env, jobject jcaller, jlong player,
                                  jint frame) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SubscribeUpdateEvent(frame);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SubscribeUpdateEvent(frame);
 }
 
 static void UnsubscribeUpdateEvent(JNIEnv* env, jobject jcaller, jlong player,
                                    jint frame) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->UnsubscribeUpdateEvent(frame);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->UnsubscribeUpdateEvent(frame);
 }
 
 static void SubscribeUpdateEvents(JNIEnv* env, jobject jcaller, jlong player,
@@ -463,48 +516,71 @@ static void SubscribeUpdateEvents(JNIEnv* env, jobject jcaller, jlong player,
                                     frame_players + frame_array_len);
   env->ReleaseIntArrayElements(frames, frame_players, JNI_ABORT);
 
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SubscribeUpdateEvents(std::move(frame_set), subscribe);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SubscribeUpdateEvents(std::move(frame_set), subscribe);
 }
 
 static jdouble GetCurrentFrame(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  return (*player_ptr)->GetCurrentFrame();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return 0;
+  }
+  return player_ptr->GetCurrentFrame();
 }
 
 static void PlaySegment(JNIEnv* env, jobject jcaller, jlong player,
                         jint start_frame, jint end_frame) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  return (*player_ptr)->PlaySegment(start_frame, end_frame);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->PlaySegment(start_frame, end_frame);
 }
 
 static void Destroy(JNIEnv* env, jclass jcaller, jlong player) {
   auto* player_ptr =
       reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Destroy();
+  if (!player_ptr) {
+    return;
+  }
+
+  auto player_shared_ptr = std::atomic_exchange(
+      player_ptr, std::shared_ptr<lynx::animax::AnimaXPlayer>{nullptr});
+  if (player_shared_ptr) {
+    player_shared_ptr->Destroy();
+  }
+}
+
+static void DeletePtr(JNIEnv* env, jclass jcaller, jlong player) {
+  auto* player_ptr =
+      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
   delete player_ptr;
 }
 
 static void Reload(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Reload();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Reload();
 }
 
 lynx::animax::android::JavaOnlyMap GetEventTrackingMapInternal(JNIEnv* env,
                                                                jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  lynx::animax::android::JavaOnlyMap jni_map;
+  if (!player_ptr) {
+    return jni_map;
+  }
   std::array<bool, lynx::animax::PlayerEventTracker::kNumEventTypes> events =
-      (*player_ptr)->GetEventTrackingArray();
+      player_ptr->GetEventTrackingArray();
   const std::array<std::string,
                    lynx::animax::PlayerEventTracker::kNumEventTypes>&
-      event_names = (*player_ptr)->GetEventNames();
+      event_names = player_ptr->GetEventNames();
 
-  lynx::animax::android::JavaOnlyMap jni_map;
   for (size_t i = 0; i < lynx::animax::PlayerEventTracker::kNumEventTypes;
        i++) {
     jni_map.PushInt(event_names[i], events[i]);
@@ -519,47 +595,61 @@ static jobject GetEventTrackingMap(JNIEnv* env, jobject jcaller, jlong player) {
 
 static void SetFpsEventInterval(JNIEnv* env, jobject jcaller, jlong player,
                                 jlong interval) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetFpsEventInterval(interval);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetFpsEventInterval(interval);
 }
 
 static void SetMaxFrameRate(JNIEnv* env, jobject jcaller, jlong player,
                             jdouble maxFrameRate) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->SetMaxFrameRate(maxFrameRate);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->SetMaxFrameRate(maxFrameRate);
 }
 
 static void OnShow(JNIEnv* env, jobject jcaller, jlong player, jlong state) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->OnShow(static_cast<lynx::animax::VisibilityState>(state));
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->OnShow(static_cast<lynx::animax::VisibilityState>(state));
 }
 
 static void OnHide(JNIEnv* env, jobject jcaller, jlong player, jlong state) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->OnHide(static_cast<lynx::animax::VisibilityState>(state));
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->OnHide(static_cast<lynx::animax::VisibilityState>(state));
 }
 
 static void Cancel(JNIEnv* env, jobject jcaller, jlong player) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->Stop();
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->Stop();
 }
 
 static void OnTap(JNIEnv* env, jobject jcaller, jlong player, jfloat x,
                   jfloat y) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
-  (*player_ptr)->OnTap(x, y);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
+  player_ptr->OnTap(x, y);
 }
 
 static void GetMetricsAsync(JNIEnv* env, jobject jcaller, jlong player,
                             jobject callback) {
-  auto* player_ptr =
-      reinterpret_cast<std::shared_ptr<lynx::animax::AnimaXPlayer>*>(player);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return;
+  }
   lynx::base::android::ScopedGlobalJavaRef<jobject> global_ref_to_callback{
       env, callback};
   lynx::base::android::ScopedGlobalJavaRef<jobject>
@@ -587,7 +677,7 @@ static void GetMetricsAsync(JNIEnv* env, jobject jcaller, jlong player,
         shared_java_callback->OnMetricsReady(java_metrics_map.jni_object());
       };
 
-  (*player_ptr)->ExportDataFromMetricsManager(std::move(java_callback_wrapper));
+  player_ptr->ExportDataFromMetricsManager(std::move(java_callback_wrapper));
 }
 
 static void UpdateLayerProperty(JNIEnv* env, jobject jcaller, jlong player,
