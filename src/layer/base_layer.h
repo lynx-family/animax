@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_set>
 
+#include "include/player/animax_fit_position.h"
 #include "src/animation/base_keyframe_animation.h"
 #include "src/animation/keyframe_animation.h"
 #include "src/animation/mask_keyframe_animation.h"
@@ -138,6 +139,10 @@ class BaseLayer : public Content,
 
   virtual void HitTest(float x, float y,
                        std::unordered_set<std::string>& hit_layers);
+
+  virtual bool GetBoundsByName(const std::string& layer_name,
+                               LayerBoundsSpace bounds_space,
+                               RectF& out_bounds);
 
  protected:
   friend class InOutAnimationListener;

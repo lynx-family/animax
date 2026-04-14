@@ -68,9 +68,9 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   drawer.DrawLayoutPage(layout_region);
 }
 
-void TextContentTextra::GetRect(RectF& out_rect) {
+bool TextContentTextra::GetRect(RectF& out_rect) {
   if (!layout_context_) {
-    return;
+    return false;
   }
   auto& document_data = data_source_.GetDocumentData();
   double x = 0, y = 0, w = 0, h = 0;
@@ -111,6 +111,7 @@ void TextContentTextra::GetRect(RectF& out_rect) {
   }
 
   out_rect.Set(x, y, x + w, y + h);
+  return true;
 }
 
 void TextContentTextra::ConfigurePlatformPainter(

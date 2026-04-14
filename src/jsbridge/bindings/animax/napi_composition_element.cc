@@ -17,6 +17,7 @@
 
 #include "src/base/log/log.h"
 #include "src/jsbridge/bindings/animax/animax_player_delegate.h"
+#include "src/jsbridge/bindings/animax/napi_on_layer_bounds_callback.h"
 #include "src/jsbridge/bindings/animax/napi_on_property_callback.h"
 #include "src/jsbridge/bindings/animax/napi_value_param.h"
 #include "third_party/binding/napi/exception_message.h"
@@ -231,6 +232,27 @@ Value NapiCompositionElement::SubmitResourcePropertiesUpdateMethod(const Callbac
   return info.Env().Undefined();
 }
 
+Value NapiCompositionElement::GetLayerBoundsMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 3) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "GetLayerBounds", "3");
+    return Value();
+  }
+
+  auto arg0_layerName = NativeValueTraits<IDLString>::NativeValue(info, 0);
+
+  auto arg1_layerBoundsSpace = NativeValueTraits<IDLNumber>::NativeValue(info, 1);
+
+  auto arg2_callback = NativeValueTraits<IDLFunction<NapiOnLayerBoundsCallback>>::NativeValue(info, 2);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->GetLayerBounds(std::move(arg0_layerName), arg1_layerBoundsSpace, std::move(arg2_callback));
+  return info.Env().Undefined();
+}
+
 Value NapiCompositionElement::PlayMethod(const CallbackInfo& info) {
   DCHECK(impl_);
 
@@ -245,7 +267,7 @@ Napi::Class* NapiCompositionElement::Class(Napi::Env env) {
     return clazz;
   }
 
-  base::InlineVector<Wrapped::PropertyDescriptor, 4> props;
+  base::InlineVector<Wrapped::PropertyDescriptor, 5> props;
 
   // Attributes
 
@@ -253,6 +275,7 @@ Napi::Class* NapiCompositionElement::Class(Napi::Env env) {
   AddInstanceMethod(props, "updateLayerProperty", &NapiCompositionElement::UpdateLayerPropertyMethod);
   AddInstanceMethod(props, "setResourceProperty", &NapiCompositionElement::SetResourcePropertyMethod);
   AddInstanceMethod(props, "submitResourcePropertiesUpdate", &NapiCompositionElement::SubmitResourcePropertiesUpdateMethod);
+  AddInstanceMethod(props, "getLayerBounds", &NapiCompositionElement::GetLayerBoundsMethod);
   AddInstanceMethod(props, "play", &NapiCompositionElement::PlayMethod);
 
   // Cache the class

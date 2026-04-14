@@ -9,6 +9,8 @@ animax_napi_sources = [
   "bindings/animax/animax_player_delegate.h",
   "bindings/animax/napi_composition_element.cc",
   "bindings/animax/napi_composition_element.h",
+  "bindings/animax/napi_on_layer_bounds_callback.cc",
+  "bindings/animax/napi_on_layer_bounds_callback.h",
   "bindings/animax/napi_on_property_callback.cc",
   "bindings/animax/napi_on_property_callback.h",
   "bindings/animax/napi_task_runner.cc",

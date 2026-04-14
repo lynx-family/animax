@@ -532,6 +532,24 @@ void BaseLayer::HitTest(float x, float y,
   }
 }
 
+bool BaseLayer::GetBoundsByName(const std::string& layer_name,
+                                LayerBoundsSpace bounds_space,
+                                RectF& out_bounds) {
+  if (layer_model_.GetName() != layer_name) {
+    return false;
+  }
+
+  if (bounds_space == LayerBoundsSpace::kRoot) {
+    GetBounds(out_bounds, *parent_matrix_, false);
+    return true;
+  }
+
+  // LayerBoundsSpace::kParent
+  static Matrix kIdentityMatrix;
+  GetBounds(out_bounds, kIdentityMatrix, false);
+  return true;
+}
+
 void InOutAnimationListener::OnValueChanged() {
   auto in_out_value = layer_.in_out_animation_->GetValue().Get();
   layer_.SetVisible(in_out_value == 1.0);
