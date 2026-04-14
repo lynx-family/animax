@@ -53,6 +53,10 @@ class CompositionLayer : public BaseLayer, public LayerEventListener {
   void HitTest(float x, float y,
                std::unordered_set<std::string>& hit_layers) override;
 
+  bool GetBoundsByName(const std::string& layer_name,
+                       LayerBoundsSpace bounds_space,
+                       RectF& out_bounds) override;
+
  private:
   void DrawLayerInner(Canvas& canvas, Matrix& matrix, int32_t parent_alpha);
 

@@ -18,6 +18,7 @@
 #ifndef ANIMAX_SRC_LAYER_TEXT_CONTENT_DEFAULT_H_
 #define ANIMAX_SRC_LAYER_TEXT_CONTENT_DEFAULT_H_
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -39,6 +40,7 @@ class TextContentDefault : public TextContent {
   ~TextContentDefault() = default;
 
   void Draw(Canvas& canvas, int32_t alpha) override;
+  bool GetRect(RectF& out_rect) override;
 
  private:
   struct TextSubLine {
@@ -58,6 +60,12 @@ class TextContentDefault : public TextContent {
                                std::vector<TextSubLine*>& text_lines);
   void OffsetCanvas(Canvas& canvas, const DocumentData& document_data,
                     int32_t line_index, float line_width);
+
+  void GetLineOffset(const DocumentData& document_data, int32_t line_index,
+                     float line_width, float& out_x, float& out_y);
+  void ForEachLayoutLine(
+      const DocumentData& document_data, FontAsset& font_asset, float tracking,
+      const std::function<void(const TextSubLine&, float, float)>& visitor);
 
   void DrawFontTextLine(const std::u32string& text,
                         const DocumentData& document_data, Canvas& canvas,

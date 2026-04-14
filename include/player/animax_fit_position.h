@@ -72,6 +72,16 @@ enum class ObjectPosition : uint8_t {
                  // the onscreen surface.
 };
 
+/**
+ * Describe the coordinate space of the layer bounds.
+ * Default: kParent
+ * Used to get the bounds of the layer for position alignment.
+ */
+enum class LayerBoundsSpace : uint8_t {
+  kParent = 0,  // (Default) Bounds in the parent layer's coordinate space.
+  kRoot = 1,    // Bounds in the top-level/root coordinate space.
+};
+
 }  // namespace animax
 }  // namespace lynx
 

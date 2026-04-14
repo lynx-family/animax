@@ -568,6 +568,32 @@ void AnimaXPlayer::OnTap(float x, float y) {
   renderer_actor_->Act([x, y](auto& renderer) { renderer->OnTap(x, y); });
 }
 
+void AnimaXPlayer::GetLayerBounds(const std::string& layer_name,
+                                  LayerBoundsSpace bounds_space,
+                                  LayerBoundsCallback callback) {
+  auto invoke_callback = [callback = std::move(callback)](
+                             bool success, float x = 0.f, float y = 0.f,
+                             float width = 0.f, float height = 0.f) mutable {
+    if (callback != nullptr) {
+      callback(success, x, y, width, height);
+    }
+  };
+
+  if (layer_name.empty()) {
+    invoke_callback(false);
+    return;
+  }
+
+  renderer_actor_->Act([layer_name, bounds_space,
+                        invoke_callback = std::move(invoke_callback)](
+                           auto& renderer) mutable {
+    RectF bounds;
+    bool success = renderer->GetLayerBounds(layer_name, bounds_space, bounds);
+    invoke_callback(success, bounds.GetLeft(), bounds.GetTop(),
+                    bounds.GetWidth(), bounds.GetHeight());
+  });
+}
+
 void AnimaXPlayer::MarkPlatformSurfaceAsInvalid(bool isInvalid) {
   renderer_actor_->Act([isInvalid](auto& renderer) {
     renderer->MarkPlatformSurfaceAsInvalid(isInvalid);
