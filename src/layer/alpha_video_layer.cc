@@ -43,7 +43,8 @@ void AlphaVideoLayer::AttachAssetOnce() {
     return;
   }
   auto ability = context->weak_ability.lock();
-  if (!video_asset_ || has_attach_ || !video_asset_->IsValid()) {
+  auto player = context->weak_player.lock();
+  if (!player || !video_asset_ || has_attach_ || !video_asset_->IsValid()) {
     return;
   }
   ANIMAX_LOGI("AttachAssetOnce on video: " << video_asset_->Model().id);
