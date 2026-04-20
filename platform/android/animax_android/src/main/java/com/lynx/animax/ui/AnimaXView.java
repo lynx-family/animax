@@ -400,7 +400,9 @@ public class AnimaXView
   }
 
   @Override
-  public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+  public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+    mPlayer.getAnimaXContext().getAbility().trySendFirstFrame();
+  }
 
   @Override
   public void release() {

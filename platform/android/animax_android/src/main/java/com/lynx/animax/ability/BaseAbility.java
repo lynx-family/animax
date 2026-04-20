@@ -51,6 +51,9 @@ public class BaseAbility {
   private final MonitorAbilityDelegate mMonitorDelegate =
       new MonitorAbilityDelegate(mServiceRegistry);
 
+  private boolean mShouldSendFirstFrame = false;
+  private AnimaXParam mFirstFrameParam;
+
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void initAnimaXPlayer(@NonNull AnimaXPlayer player) {
     mMonitorDelegate.setAnimaXPlayer(player);
@@ -224,7 +227,11 @@ public class BaseAbility {
       }
       case FIRST_FRAME: {
         AnimaXParam param = new AnimaXParam(params);
-        notifyListeners(listener -> listener.onFirstFrame(param));
+        if (mShouldSendFirstFrame) {
+          notifyListeners(listener -> listener.onFirstFrame(param));
+        } else {
+          mFirstFrameParam = param;
+        }
         break;
       }
       case WARNING: {
@@ -266,5 +273,16 @@ public class BaseAbility {
 
   public MonitorAbilityDelegate getMonitorDelegate() {
     return mMonitorDelegate;
+  }
+
+  public void markShouldSendFirstFrame() {
+    mShouldSendFirstFrame = true;
+  }
+
+  public void trySendFirstFrame() {
+    if (mFirstFrameParam != null) {
+      notifyListeners(listener -> listener.onFirstFrame(mFirstFrameParam));
+      mFirstFrameParam = null;
+    }
   }
 }

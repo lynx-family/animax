@@ -119,6 +119,7 @@ public class AnimaXImageView extends View implements IAnimaXView, IAnimaXPlayerD
 
     // Additional setup
     animaXContext.getAbility().setCompositionReadyListener(this);
+    animaXContext.getAbility().markShouldSendFirstFrame();
 
     // Some host contexts may have abnormal states that prevent normal attribute retrieval,
     // potentially causing NullPointerException when calling getContext() or accessing theme.
