@@ -4,7 +4,6 @@
 
 #include "src/player/animax_renderer.h"
 
-#include <algorithm>
 #include <sstream>
 #include <utility>
 
@@ -16,10 +15,12 @@
 #include "src/base/thread/thread_assert.h"
 #include "src/base/util/event_warning_checker.h"
 #include "src/base/util/memory_calculator.h"
+#include "src/base/util/object_fit_util.h"
 #include "src/layer/composition_layer.h"
 #include "src/parser/layer_parser.h"
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
+#include "src/player/animax_poster_renderer.h"
 #include "src/property/animax_property_updater.h"
 #include "src/render/matrix.h"
 #include "src/render/surface.h"
@@ -29,8 +30,10 @@ namespace lynx {
 namespace animax {
 
 AnimaXRenderer::AnimaXRenderer(
-    std::weak_ptr<AnimaXPlaybackEventHandler> weak_playback_handler)
-    : weak_playback_handler_(std::move(weak_playback_handler)) {
+    std::weak_ptr<AnimaXPlaybackEventHandler> weak_playback_handler,
+    std::weak_ptr<AnimaXPosterRenderer> poster_renderer)
+    : weak_playback_handler_(std::move(weak_playback_handler)),
+      poster_renderer_(poster_renderer) {
   property_updater_ = std::make_unique<AnimaXPropertyUpdater>(*this);
   gpu_thread_recorder_.SetFPSListener(weak_playback_handler_);
 }
@@ -214,6 +217,21 @@ void AnimaXRenderer::Render(double progress) {
     return;
   }
 
+  if (surface_->Type() == AnimaXBackend::kEmpty) {
+    auto poster_renderer = poster_renderer_.lock();
+    if (!poster_renderer) {
+      return;
+    }
+    auto creation_factory = poster_renderer->RequestGPURendering();
+    if (!creation_factory) {
+      return;
+    }
+    CreateSurface(std::move(creation_factory));
+    if (surface_->Type() == AnimaXBackend::kEmpty) {
+      return;
+    }
+  }
+
   ANIMAX_TRACE_EVENT(kRenderFrame);
 
   ANIMAX_TRACE_EVENT_BEGIN(kInterpolateFrame);
@@ -327,78 +345,19 @@ void AnimaXRenderer::ResizeCanvas(Canvas& canvas) {
     return;
   }
 
-  float scale_factor_x = 1.f;
-  float scale_factor_y = 1.f;
+  auto layout =
+      CalculateObjectFitLayout(width_, height_, model_width_, model_height_,
+                               object_fit_, object_position_);
 
-  // Determine scale factors based on object fit mode
-  switch (object_fit_) {
-    case ObjectFit::kCover:
-      scale_factor_x = std::max(width_ / model_width_, height_ / model_height_);
-      scale_factor_y = scale_factor_x;
-      break;
-    case ObjectFit::kContain:
-      scale_factor_x = std::min(width_ / model_width_, height_ / model_height_);
-      scale_factor_y = scale_factor_x;
-      break;
-    case ObjectFit::kFill:
-      scale_factor_x = width_ / model_width_;
-      scale_factor_y = height_ / model_height_;
-      break;
-    case ObjectFit::kScaleDown:
-      scale_factor_x = std::min(
-          1.f, std::min(width_ / model_width_, height_ / model_height_));
-      scale_factor_y = scale_factor_x;
-    default:
-      break;
-  }
-
-  if (scale_factor_x_ != scale_factor_x || scale_factor_y_ != scale_factor_y) {
-    scale_factor_x_ = scale_factor_x;
-    scale_factor_y_ = scale_factor_y;
+  if (scale_factor_x_ != layout.scale_x || scale_factor_y_ != layout.scale_y) {
+    scale_factor_x_ = layout.scale_x;
+    scale_factor_y_ = layout.scale_y;
     UpdateEstimatedMemoryUsage();
   }
 
-  // Default to center alignment
-  float dx = (width_ - scale_factor_x * model_width_) / 2.f;
-  float dy = (height_ - scale_factor_y * model_height_) / 2.f;
-
-  // Adjust translation based on object position
-  switch (object_position_) {
-    case ObjectPosition::kLeft:
-      dx = 0.f;
-      break;
-    case ObjectPosition::kRight:
-      dx = width_ - scale_factor_x * model_width_;
-      break;
-    case ObjectPosition::kTop:
-      dy = 0.f;
-      break;
-    case ObjectPosition::kBottom:
-      dy = height_ - scale_factor_y * model_height_;
-      break;
-    case ObjectPosition::kTopLeft:
-      dx = dy = 0.f;
-      break;
-    case ObjectPosition::kTopRight:
-      dx = width_ - scale_factor_x * model_width_;
-      dy = 0.f;
-      break;
-    case ObjectPosition::kBottomLeft:
-      dx = 0.f;
-      dy = height_ - scale_factor_y * model_height_;
-      break;
-    case ObjectPosition::kBottomRight:
-      dx = width_ - scale_factor_x * model_width_;
-      dy = height_ - scale_factor_y * model_height_;
-      break;
-    case ObjectPosition::kCenter:
-    default:
-      break;
-  }
-
   canvas.ResetMatrix();
-  canvas.Translate(dx, dy);
-  canvas.Scale(scale_factor_x, scale_factor_y);
+  canvas.Translate(layout.rect.GetLeft(), layout.rect.GetTop());
+  canvas.Scale(layout.scale_x, layout.scale_y);
 }
 
 void AnimaXRenderer::NotifyFirstFrameIfNeeded() {

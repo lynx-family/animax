@@ -35,6 +35,8 @@ enum class AnimaXBackend {
   /// GPU renderer using WebGPU API
   /// Only available in browser environment
   kWebGPU,
+  /// Empty placeholder surface used for ownership handoff or no-op rendering.
+  kEmpty,
 };
 
 class ANIMAX_EXPORT AnimaXSurface {

@@ -15,6 +15,7 @@ enum class ResourceRequestType {
   kInvalid = 0,
   kLoadRawData,
   kLoadBitmap,
+  kLoadPosterBitmap,
   kDownloadToLocal,
 };
 
@@ -30,6 +31,7 @@ struct ResourceRequest {
 enum class ResourcePayloadType {
   kRawData = 0,
   kBitmap,
+  kPosterBitmap,
   kFilePath,
   kEnumCount,
   kInvalid = kEnumCount,

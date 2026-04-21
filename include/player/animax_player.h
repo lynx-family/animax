@@ -39,6 +39,7 @@ class GPUThreadHolder;
 class AnimaXEventDispatcher;
 class AnimaXPlaybackEventHandler;
 class AnimaXMainController;
+class AnimaXPosterRenderer;
 class AnimaXRenderer;
 class AnimaXCompositionLoader;
 class AnimaXPlayerBuilder;
@@ -109,6 +110,11 @@ class ANIMAX_EXPORT AnimaXPlayer
    * @param json JSON string.
    */
   void SetJson(std::string json);
+  /**
+   * Set the poster source from a file path or URL.
+   * @param poster Source string path or URL.
+   */
+  void SetPoster(const std::string &poster);
   /**
    * Enable or disable looping of the animation.
    * @param loop True to enable looping, false to disable.
@@ -469,6 +475,8 @@ class ANIMAX_EXPORT AnimaXPlayer
   std::shared_ptr<AnimaXPlayerContext> player_context_;
 
   std::atomic<int64_t> estimated_memory_usage_{0};
+
+  std::shared_ptr<AnimaXPosterRenderer> poster_renderer_;
 
 #ifdef OS_IOS
   bool is_in_background_ = false;

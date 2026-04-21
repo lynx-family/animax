@@ -46,7 +46,7 @@ TransformRequestAndroid AnimaXLoaderResponseToTransformRequestAndroid(
       break;
     case ResourceRequestType::kLoadRawData:
       transform_request.output_type = ResourcePayloadType::kRawData;
-    case ResourceRequestType::kInvalid:
+    default:
       break;
   }
 

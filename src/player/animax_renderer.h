@@ -32,11 +32,13 @@ class AnimaXMetricsManager;
 class Canvas;
 class AnimaXPropertyUpdater;
 class AudioController;
+class AnimaXPosterRenderer;
 
 class AnimaXRenderer : public MetricsDataSource {
  public:
-  explicit AnimaXRenderer(
-      std::weak_ptr<AnimaXPlaybackEventHandler> weak_playback_handler);
+  AnimaXRenderer(
+      std::weak_ptr<AnimaXPlaybackEventHandler> weak_playback_handler,
+      std::weak_ptr<AnimaXPosterRenderer> poster_renderer);
   ~AnimaXRenderer();
 
   void Init(std::shared_ptr<AnimaXPlayerContext>);
@@ -149,6 +151,8 @@ class AnimaXRenderer : public MetricsDataSource {
   // audio
   std::vector<std::weak_ptr<AudioController>> audio_controllers_;
   bool mute_ = false;
+
+  std::weak_ptr<AnimaXPosterRenderer> poster_renderer_;
 };
 
 }  // namespace animax

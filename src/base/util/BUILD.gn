@@ -15,6 +15,8 @@ base_util_shared_sources = [
   "memory_calculator.h",
   "misc_util.cc",
   "misc_util.h",
+  "object_fit_util.cc",
+  "object_fit_util.h",
   "visibility_state.cc",
   "visibility_state.h",
 ]
