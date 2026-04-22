@@ -8,6 +8,7 @@
 // URL Related Keys
 NSString *const AnimaXMonitorSourceUrl = @"src_url";
 NSString *const AnimaXMonitorPageUrl = @"page_url";
+NSString *const AnimaXMonitorIntegrationType = @"integration_type";
 
 // Associated Object Key
 void const *AnimaXMonitorUrlHolderKey = &AnimaXMonitorUrlHolderKey;

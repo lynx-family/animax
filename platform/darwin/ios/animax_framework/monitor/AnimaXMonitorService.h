@@ -8,6 +8,7 @@
 // URL Related Keys
 FOUNDATION_EXPORT NSString *const AnimaXMonitorSourceUrl;
 FOUNDATION_EXPORT NSString *const AnimaXMonitorPageUrl;
+FOUNDATION_EXPORT NSString *const AnimaXMonitorIntegrationType;
 
 // Associated Object Key
 FOUNDATION_EXPORT void const *AnimaXMonitorUrlHolderKey;

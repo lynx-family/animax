@@ -3,17 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #import <AnimaX/DefaultAnimaXAbility.h>
-#import <AnimaX/DefaultAnimaXMonitorService.h>
 
 @implementation DefaultAnimaXAbility
-
-- (instancetype)init {
-  self = [super init];
-  if (self) {
-    DefaultAnimaXMonitorService *monitor = [[DefaultAnimaXMonitorService alloc] init];
-    [self registerService:@protocol(AnimaXMonitorService) withImpl:monitor];
-  }
-  return self;
-}
 
 @end

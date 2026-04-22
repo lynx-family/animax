@@ -4,7 +4,6 @@
 
 #import <AnimaX/AnimaXMonitorAbilityDelegate.h>
 #import <AnimaX/AnimaXMonitorService.h>
-#import <AnimaX/DefaultAnimaXMonitorService.h>
 #import "include/player/animax_player.h"
 
 #include "src/base/monitor/animax_metrics_manager.h"
@@ -61,9 +60,6 @@ static const NSTimeInterval AnimaXMonitorMaximumPlayCount = 5;
     _platformReportItems = [NSMutableDictionary dictionary];
     _stayDurationStartTimestamp = CACurrentMediaTime() * 1000;
     _lastPlayReportTimestamp = CACurrentMediaTime() * 1000;
-    // Register default monitor as DefaultAnimaXMonitorService
-    DefaultAnimaXMonitorService *monitor = [[DefaultAnimaXMonitorService alloc] init];
-    [_serviceRegistry registerService:@protocol(AnimaXMonitorService) withImpl:monitor];
   }
   return self;
 }
