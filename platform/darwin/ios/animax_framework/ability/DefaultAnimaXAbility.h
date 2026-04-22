@@ -6,9 +6,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Report to Slardar
- */
 @interface DefaultAnimaXAbility : BaseAnimaXAbility
 
 @end

@@ -20,6 +20,7 @@ public final class AnimaXMonitorUtil {
   public static final String KEY_PAGE_URL = "page_url";
   public static final String KEY_CODE = "code";
   public static final String KEY_MESSAGE = "msg";
+  public static final String KEY_INTEGRATION_TYPE = "integration_type";
 
   // names for triggers used in different circumstances
   // Triggers, along with events and metrics, will be reported to the outside world.

@@ -16,6 +16,9 @@ extern const std::string kPerformanceEventName;
 // event: animax_error
 extern const std::string kErrorEventName;
 
+// integration_type: default
+extern const std::string kDefaultIntegrationType;
+
 }  // namespace animax
 }  // namespace lynx
 
