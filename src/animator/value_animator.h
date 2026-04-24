@@ -122,9 +122,9 @@ class ValueAnimator : public std::enable_shared_from_this<ValueAnimator> {
    */
   void SeekToFrame(double frame, int32_t current_loop_count = 0);
   /**
-   * Seek to current frame.
+   * Rerender animation.
    */
-  void SeekToCurrentFrame();
+  void Rerender();
 
  private:
   enum class State : uint8_t {

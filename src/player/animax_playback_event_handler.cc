@@ -122,5 +122,12 @@ void AnimaXPlaybackEventHandler::OnFps(float fps,
   }
 }
 
+void AnimaXPlaybackEventHandler::OnRerender() {
+  auto renderer_actor = weak_renderer_actor.lock();
+  if (renderer_actor) {
+    renderer_actor->Act([](auto& renderer) { renderer->OnRerender(); });
+  }
+}
+
 }  // namespace animax
 }  // namespace lynx

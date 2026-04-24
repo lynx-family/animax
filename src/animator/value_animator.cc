@@ -118,8 +118,10 @@ bool ValueAnimator::UpdateNextFrameNs(double current_time_ms) {
   return false;
 }
 
-void ValueAnimator::SeekToCurrentFrame() {
-  SeekToFrame(current_frame_, current_loop_count_);
+void ValueAnimator::Rerender() {
+  if (auto listener = listener_.lock()) {
+    listener->OnRerender();
+  }
 }
 
 double ValueAnimator::GetProgress() const {

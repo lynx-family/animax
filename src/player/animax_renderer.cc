@@ -71,10 +71,7 @@ void AnimaXRenderer::UpdateSurfaceInternal(
   } else {
     // When the surface changes, seek to the current frame, ensure it is
     // rendered on the new surface.
-    if (controller_actor) {
-      controller_actor->Act(
-          [](auto& controller) { controller->SeekToCurrentFrame(); });
-    }
+    OnRerender();
   }
 }
 
@@ -283,10 +280,12 @@ bool AnimaXRenderer::GetLayerBounds(const std::string& layer_name,
 
 void AnimaXRenderer::SetObjectFit(const ObjectFit object_fit) {
   object_fit_ = object_fit;
+  OnRerender();
 }
 
 void AnimaXRenderer::SetObjectPosition(const ObjectPosition object_position) {
   object_position_ = object_position;
+  OnRerender();
 }
 
 void AnimaXRenderer::EnsureSubscribeValidOrWarn() {
@@ -523,6 +522,16 @@ void AnimaXRenderer::SetMuted(bool mute) {
   for (auto weak_controller : audio_controllers_) {
     if (auto controller = weak_controller.lock()) {
       controller->SetMuted(mute_);
+    }
+  }
+}
+
+void AnimaXRenderer::OnRerender() {
+  if (has_rendered_first_frame_) {
+    auto controller_actor = weak_controller_actor_.lock();
+    if (controller_actor) {
+      controller_actor->Act(
+          [](auto& controller) { controller->SeekToCurrentFrame(); });
     }
   }
 }
