@@ -42,6 +42,7 @@ class AnimaXPlaybackEventHandler
   void OnCancel() override;
   void OnWarning(const EventWarning warning,
                  const std::string& warning_msg) override;
+  void OnRerender() override;
 
   // LayerEventListener overrides
   void OnLayerError(const EventError err, const std::string& err_msg) override;

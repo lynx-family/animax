@@ -67,6 +67,12 @@ class ValueAnimatorListener {
    */
   virtual void OnWarning(const EventWarning warning,
                          const std::string &warning_msg) = 0;
+  /**
+   * Notify animation need rerender
+   * You will be notified when you resize the animation or turn the animation
+   * into visible from invisible.
+   */
+  virtual void OnRerender() = 0;
 };
 
 }  // namespace animax

@@ -98,6 +98,7 @@ class AnimaXRenderer : public MetricsDataSource {
   void OnEnd();
   void OnCancel();
   void SetMuted(bool mute);
+  void OnRerender();
 
  private:
   std::unique_ptr<AnimaXSurface> ReleaseSurface();
