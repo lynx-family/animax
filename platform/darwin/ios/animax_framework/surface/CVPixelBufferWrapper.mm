@@ -199,6 +199,10 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
 
 - (void)resizePixelBufferWrapperWithWidth:(size_t)width height:(size_t)height {
   [self rebuildPixelBufferPoolWithWidth:width height:height];
+  if (self.backend == AnimaXMetal) {
+    [self destroyTexture];
+    [self rebuildMetalTextureIfNeeded];
+  }
 }
 
 #pragma mark - CVPixelBuffer
@@ -241,10 +245,6 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   _renderPixelBufferScope = renderPixelBufferScope;
   if (renderPixelBufferScope.object) {
     self.generation++;
-    if (self.backend == AnimaXMetal) {
-      [self destroyTexture];
-      [self rebuildMetalTextureIfNeeded];
-    }
   }
 }
 

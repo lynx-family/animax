@@ -59,9 +59,11 @@
   size_t width = 64;
   size_t height = 32;
   NSUInteger genBefore = wrapper.generation;
-  [wrapper resizePixelBufferWrapperWithWidth:width height:height];
-  CVPixelBufferRef buffer = [wrapper acquirePixelBufferFromPool];
+  CVPixelBufferRef buffer = [CVPixelBufferWrapper createPixelBufferWithWidth:width
+                                                                      height:height
+                                                                     backend:AnimaXMetal];
   wrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
+  [wrapper resizePixelBufferWrapperWithWidth:width height:height];
   XCTAssertNotNil(wrapper.renderPixelBufferScope);
   XCTAssertTrue(wrapper.generation > genBefore);
   XCTAssertEqual(CVPixelBufferGetWidth(wrapper.renderPixelBufferScope.object), width);
