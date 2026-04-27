@@ -179,12 +179,12 @@ void UpdateProperty(std::shared_ptr<AnimaXPlayer> player,
 base::NoDestructor<std::map<AnimaXPlayer*, AnimaXWasm::EventCallback>>
     AnimaXWasm::event_callback_map_;
 
-AnimaXWasm::AnimaXWasm() {
-  ANIMAX_LOGI("AnimaXWasm constructor");
+AnimaXWasm::AnimaXWasm(float scale) {
+  ANIMAX_LOGI("AnimaXWasm constructor, scale: " << scale);
   resource_loader_ = std::make_shared<ResourceLoaderWeb>();
 
   AnimaXPlayerBuilder builder;
-  builder.SetScale(1)
+  builder.SetScale(scale)
       .SetResourceLoader(resource_loader_)
       .AddEventListener([](AnimaXPlayer* player, const Event event,
                            const animax::EventParamMap& params) {
