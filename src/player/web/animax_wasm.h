@@ -24,7 +24,7 @@ class ResourceLoaderWeb;
 
 class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
  public:
-  AnimaXWasm();
+  explicit AnimaXWasm(float scale);
   ~AnimaXWasm();
 
   std::shared_ptr<AnimaXPlayer> GetPlayer() { return player_; }

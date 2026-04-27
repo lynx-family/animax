@@ -113,7 +113,7 @@ EMSCRIPTEN_BINDINGS(animax) {
 
   emscripten::class_<lynx::animax::AnimaXWasm>("AnimaXWasm")
       .smart_ptr<std::shared_ptr<lynx::animax::AnimaXWasm>>("AnimaXWasm")
-      .constructor<>()
+      .constructor<float>()
       .class_function("onResourceLoadSuccess",
                       &lynx::animax::AnimaXWasm::OnResourceLoadSuccess,
                       emscripten::allow_raw_pointer<emscripten::arg<1>>())
