@@ -45,7 +45,7 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
 // Monotonically increasing frame/version tag.
 // Increment on every resize to invalidate in-flight frames.
 // UI updates must match current generation; mismatched frames are dropped.
-@property(atomic, readonly) NSUInteger generation;
+@property(atomic, readwrite) NSUInteger generation;
 
 // Metal texture created from the pixel buffer (nil until a successful resize).
 // Note: In software mode, metalTexture is not created and is unavailable.

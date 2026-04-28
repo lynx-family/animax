@@ -15,7 +15,6 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
 
 @interface CVPixelBufferWrapper ()
 
-@property(atomic, readwrite) NSUInteger generation;
 @property(atomic, readwrite, nullable) id<MTLTexture> metalTexture;
 
 @property(nonatomic, assign, nullable) CVMetalTextureCacheRef textureCache;
@@ -235,17 +234,6 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   }
   lynx::animax::BufferCopyHelper::CopyBuffer(pixels, dstPixels, height, stride, dstStride);
   CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
-}
-
-- (void)setRenderPixelBufferScope:(AnimaXScopedCVPixelBuffer *)renderPixelBufferScope {
-  if (_renderPixelBufferScope.object == renderPixelBufferScope.object) {
-    return;
-  }
-
-  _renderPixelBufferScope = renderPixelBufferScope;
-  if (renderPixelBufferScope.object) {
-    self.generation++;
-  }
 }
 
 - (void)rebuildPixelBufferPoolWithWidth:(size_t)width height:(size_t)height {
