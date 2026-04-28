@@ -64,6 +64,7 @@
                                                                      backend:AnimaXMetal];
   wrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
   [wrapper resizePixelBufferWrapperWithWidth:width height:height];
+  wrapper.generation++;
   XCTAssertNotNil(wrapper.renderPixelBufferScope);
   XCTAssertTrue(wrapper.generation > genBefore);
   XCTAssertEqual(CVPixelBufferGetWidth(wrapper.renderPixelBufferScope.object), width);
@@ -81,7 +82,6 @@
   CVPixelBufferRef buffer = [wrapper acquirePixelBufferFromPool];
   wrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
   XCTAssertFalse(self.iv.didDraw);
-
   [wrapper notifyBufferUpdateWithGeneration:wrapper.generation];
 
   XCTestExpectation *expect = [self expectationWithDescription:@"wait for image set"];

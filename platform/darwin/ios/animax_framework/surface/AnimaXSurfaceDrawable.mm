@@ -87,6 +87,7 @@
   } else if (self.target == View) {
     self.bufferWrapper.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
   }
+  self.bufferWrapper.generation++;
 }
 
 #pragma mark Reconfigure
