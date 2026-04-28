@@ -19,6 +19,7 @@
 #include "src/base/thread/task_runner.h"
 #include "src/player/web/animax_surface_web.h"
 #include "src/player/web/animax_web_gpu_context.h"
+#include "src/render/web/font_registry_web.h"
 #include "src/resource/resource_loader/web/resource_loader_web.h"
 
 namespace lynx {
@@ -239,22 +240,36 @@ void AnimaXWasm::SetEventCallback(EventCallback callback) {
   event_callback_map_->emplace(player_.get(), callback);
 }
 
-bool AnimaXWasm::SetDefaultTypefaceWithData(const emscripten::val& buffer) {
+bool AnimaXWasm::RegisterFontWithData(const std::string& family_name,
+                                      bool is_default,
+                                      int32_t fallback_priority,
+                                      const emscripten::val& buffer) {
   auto data = emscripten::convertJSArrayToNumberVector<uint8_t>(buffer);
   if (data.empty()) {
-    ANIMAX_LOGI("SetDefaultTypefaceWithData failed, data is empty");
+    ANIMAX_LOGE("RegisterFontWithData failed, data is empty, family_name: "
+                << family_name);
     return false;
   }
 
-  auto raw_data = skity::Data::MakeWithCopy(data.data(), data.size());
-  auto typeface = skity::Typeface::MakeFromData(raw_data);
-  if (!typeface) {
-    ANIMAX_LOGI("SetDefaultTypefaceWithData failed, MakeFromData failed");
+  auto result = FontRegistryWeb::Get().RegisterFontData(
+      family_name, data.data(), data.size(), is_default, fallback_priority);
+  if (!result) {
+    ANIMAX_LOGE("RegisterFontWithData failed, family_name: " << family_name);
     return false;
   }
 
-  skity::FontManager::RefDefault()->SetDefaultTypeface(typeface);
-  ANIMAX_LOGI("SetDefaultTypefaceWithData success");
+  if (is_default) {
+    auto raw_data = skity::Data::MakeWithCopy(data.data(), data.size());
+    auto typeface = skity::Typeface::MakeFromData(raw_data);
+    if (typeface) {
+      skity::FontManager::RefDefault()->SetDefaultTypeface(typeface);
+    } else {
+      ANIMAX_LOGE(
+          "RegisterFontWithData failed to set default typeface, "
+          "family_name: "
+          << family_name);
+    }
+  }
   return true;
 }
 

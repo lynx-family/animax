@@ -8,6 +8,7 @@
 #include <string>
 
 #include "skity/text/typeface.hpp"
+#include "src/layer/textra/textra_font_manager_factory.h"
 #include "src/layer/textra/textra_include.h"
 #include "src/render/font.h"
 
@@ -99,8 +100,7 @@ void *FontAssetManagerTextra::GetFontMgrCollection() {
   if (font_mgr_collection_ != nullptr) {
     return font_mgr_collection_.get();
   }
-  auto *collection =
-      new TTFontMgrCollection(std::make_shared<TTSkityFontManager>());
+  auto *collection = new TTFontMgrCollection(CreateTextraFontManager());
   collection->SetAssetFontManager(std::make_shared<TTTextAssetFontManager>(
       font_asset_map_, asset_font_name_suffix_));
   font_mgr_collection_.reset(collection);

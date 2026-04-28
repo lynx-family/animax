@@ -13,6 +13,7 @@
 #include "skity/text/text_blob.hpp"
 #include "skity/text/utf.hpp"
 #include "src/base/log/log.h"
+#include "src/render/font_typeface_provider.h"
 
 namespace lynx {
 namespace animax {
@@ -134,8 +135,15 @@ std::shared_ptr<Font> Font::MakeFont(const void* bytes, size_t len,
 std::shared_ptr<Font> Font::MakeFromName(const std::string& family_name,
                                          const std::string& style) {
   skity::FontStyle font_style = ParseFontStyle(style);
-  auto typeface = skity::FontManager::RefDefault()->MatchFamilyStyle(
-      family_name.c_str(), font_style);
+  auto typeface =
+      FontTypefaceProvider::MatchFamilyStyle(family_name.c_str(), font_style);
+  if (!typeface) {
+    typeface = skity::FontManager::RefDefault()->MatchFamilyStyle(
+        family_name.c_str(), font_style);
+  }
+  if (!typeface) {
+    typeface = FontTypefaceProvider::GetDefaultTypeface(font_style);
+  }
   if (!typeface) {
     typeface = skity::Typeface::GetDefaultTypeface(font_style);
     if (!typeface) {
@@ -187,6 +195,12 @@ float Font::MeasureText(const std::string& text) const {
 
 std::shared_ptr<skity::Typeface> FallbackTypefaceDelegate::Fallback(
     skity::Unichar code_point, skity::Paint const& text_paint) {
+  auto provider_typeface = FontTypefaceProvider::MatchFamilyStyleCharacter(
+      nullptr, skity::FontStyle(), code_point);
+  if (provider_typeface) {
+    return provider_typeface;
+  }
+
   auto font_manager = skity::FontManager::RefDefault();
 
   return font_manager->MatchFamilyStyleCharacter(0, skity::FontStyle(), nullptr,
