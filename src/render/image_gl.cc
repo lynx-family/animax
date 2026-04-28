@@ -114,7 +114,6 @@ ImageGL::ImageGL(std::unique_ptr<Bitmap> bitmap, RealContext *real_context) {
 }
 
 ImageGL::ImageGL(TextureInfo *texture, RealContext *real_context) {
-  ThreadAssert::Assert(ThreadAssert::Type::kGPU);
   auto texture_gl = static_cast<TextureInfoGL *>(texture);
 
 #if !defined(ANIMAX_GL_USE_OSMESA) && (defined(OS_WIN) || defined(OS_OSX))

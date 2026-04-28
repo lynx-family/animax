@@ -15,6 +15,7 @@
 #include "src/player/animax_event_dispatcher.h"
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
+#include "src/player/animax_poster_renderer.h"
 #include "src/player/animax_renderer.h"
 #include "src/resource/log_util.h"
 
@@ -67,9 +68,13 @@ void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
     });
   }
 
+  poster_renderer_ = std::shared_ptr<AnimaXPosterRenderer>(
+      new AnimaXPosterRenderer(builder.resource_loader_, playback_handler_));
+
   // Create renderer actor for GPU thread operations.
   renderer_actor_ = std::make_shared<shell::LynxActor<AnimaXRenderer>>(
-      std::unique_ptr<AnimaXRenderer>(new AnimaXRenderer(playback_handler_)),
+      std::unique_ptr<AnimaXRenderer>(
+          new AnimaXRenderer(playback_handler_, poster_renderer_)),
       gpu_thread_holder_->Get());
 
   player_context_ = std::make_shared<AnimaXPlayerContext>();
@@ -111,6 +116,7 @@ void AnimaXPlayer::Destroy() {
       [](auto& controller) { controller->ClearEventListeners(); });
   renderer_actor_->Impl()->MarkDestroyed();
   renderer_actor_->Act([](auto& renderer) { renderer->Destroy(); });
+  poster_renderer_->Invalidate();
 }
 
 void AnimaXPlayer::Reload() {
@@ -121,15 +127,19 @@ void AnimaXPlayer::Reload() {
 }
 
 void AnimaXPlayer::CreateSurface(SurfaceCreationFactory creation_factory) {
+  auto factory = poster_renderer_->WrapSurfaceCreationForPoster(
+      std::move(creation_factory));
   renderer_actor_->Act(
-      [creation_factory = std::move(creation_factory)](auto& renderer) mutable {
+      [creation_factory = std::move(factory)](auto& renderer) mutable {
         renderer->CreateSurface(std::move(creation_factory));
       });
 }
 
 void AnimaXPlayer::UpdateSurface(SurfaceUpdateFactory update_factory) {
+  auto factory =
+      poster_renderer_->WrapSurfaceUpdateForPoster(std::move(update_factory));
   renderer_actor_->Act(
-      [update_factory = std::move(update_factory)](auto& renderer) mutable {
+      [update_factory = std::move(factory)](auto& renderer) mutable {
         renderer->UpdateSurface(std::move(update_factory));
       });
 }
@@ -214,6 +224,10 @@ void AnimaXPlayer::SetSrc(const std::string& src) {
           player->OnCompositionLoaded(src_index, res, error);
         });
   });
+}
+
+void AnimaXPlayer::SetPoster(const std::string& poster) {
+  poster_renderer_->SetPoster(poster);
 }
 
 void AnimaXPlayer::SetImageFolder(std::string image_folder) {
@@ -437,11 +451,13 @@ void AnimaXPlayer::SetKeepLastFrame(const bool keep_last_frame) {
 }
 
 void AnimaXPlayer::SetObjectFit(const ObjectFit object_fit) {
+  poster_renderer_->SetObjectFit(object_fit);
   renderer_actor_->Act(
       [object_fit](auto& renderer) { renderer->SetObjectFit(object_fit); });
 }
 
 void AnimaXPlayer::SetObjectPosition(const ObjectPosition object_position) {
+  poster_renderer_->SetObjectPosition(object_position);
   renderer_actor_->Act([object_position](auto& renderer) {
     renderer->SetObjectPosition(object_position);
   });
@@ -548,6 +564,7 @@ double AnimaXPlayer::GetCurrentFrame() {
 void AnimaXPlayer::OnShow(VisibilityState state) {
   ANIMAX_LOGI("OnShow with state: " << StringifyVisibilityState(state)
                                     << ", this: " << this);
+  poster_renderer_->TryRerenderPoster();
   controller_actor_->Act(
       [state](auto& controller) { controller->OnShow(state); });
 }

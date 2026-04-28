@@ -80,6 +80,7 @@ void AlphaVideoLayer::AttachAssetOnce() {
                       rgb_frame, a_frame);
   if (!video_shader_->Valid()) {
     VideoPlayerListener::OnVideoPlayerError("video shader init error");
+    return;
   }
 
   video_player_ = provider->CreateVideoPlayer(ability.get());
