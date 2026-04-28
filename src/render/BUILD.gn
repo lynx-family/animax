@@ -32,6 +32,8 @@ skity_shared_sources = [
   "error_callback.h",
   "font.cc",
   "font.h",
+  "font_typeface_provider.cc",
+  "font_typeface_provider.h",
   "gl_device.cc",
   "gl_device.h",
   "image.cc",
@@ -92,8 +94,16 @@ animax_source_set("skity") {
       "surface_mtl.mm",
     ]
   } else if (is_wasm) {
-    sources += [ "web/image_gl_web.cc" ]
-    sources -= [ "image_gl.cc" ]
+    sources += [
+      "web/font_registry_web.cc",
+      "web/font_registry_web.h",
+      "web/font_typeface_provider_web.cc",
+      "web/image_gl_web.cc",
+    ]
+    sources -= [
+      "font_typeface_provider.cc",
+      "image_gl.cc",
+    ]
   }
 
   if (enable_unittests) {

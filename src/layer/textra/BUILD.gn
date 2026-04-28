@@ -12,6 +12,8 @@ textra_shared_sources = [
   "text_content_textra.h",
   "text_helper_textra.cc",
   "text_helper_textra.h",
+  "textra_font_manager_factory.cc",
+  "textra_font_manager_factory.h",
   "textra_include.h",
 ]
 
@@ -24,6 +26,9 @@ animax_source_set("textra") {
     sources += [ "android/textra_jni.cc" ]
   } else if (is_harmony) {
     sources += [ "harmony/textra_register.cc" ]
+  } else if (is_wasm) {
+    sources += [ "web/textra_font_manager_factory_web.cc" ]
+    sources -= [ "textra_font_manager_factory.cc" ]
   }
 
   include_dirs = [ "$textra_search_path/public" ]
@@ -41,5 +46,20 @@ animax_source_set("textra") {
             "$textra_target_name::$textra_target_name",
           ] ]
     }
+  }
+}
+
+if (is_wasm) {
+  animax_source_set("textra-wasm-sources") {
+    sources = textra_shared_sources + [
+                "web/textra_font_manager_factory_web.cc",
+                "web/textra_wasm_register.cc",
+              ]
+    sources -= [ "textra_font_manager_factory.cc" ]
+
+    cflags = [ "-fPIC" ]
+    cflags_cc = [ "-fno-exceptions" ]
+    include_dirs = [ "$textra_search_path/public" ]
+    deps = [ "$textra_search_path/src:textlayout" ]
   }
 }

@@ -119,8 +119,8 @@ EMSCRIPTEN_BINDINGS(animax) {
                       emscripten::allow_raw_pointer<emscripten::arg<1>>())
       .class_function("onResourceLoadError",
                       &lynx::animax::AnimaXWasm::OnResourceLoadError)
-      .class_function("setDefaultTypefaceWithData",
-                      &lynx::animax::AnimaXWasm::SetDefaultTypefaceWithData)
+      .class_function("registerFontWithData",
+                      &lynx::animax::AnimaXWasm::RegisterFontWithData)
       .function("getPlayer", &lynx::animax::AnimaXWasm::GetPlayer)
       .function(
           "setSurfaceWithCanvas",

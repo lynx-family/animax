@@ -46,7 +46,9 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
   static void OnResourceLoadError(int32_t callback_id,
                                   const std::string& error_message);
 
-  static bool SetDefaultTypefaceWithData(const emscripten::val& buffer);
+  static bool RegisterFontWithData(const std::string& family_name,
+                                   bool is_default, int32_t fallback_priority,
+                                   const emscripten::val& buffer);
 
   using EventCallback = std::function<void(const std::string& event_name,
                                            const emscripten::val& params)>;
