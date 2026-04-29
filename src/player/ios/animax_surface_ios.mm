@@ -113,6 +113,11 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
     // Step3: Update
     ResizeBufferWrapper();
     texture_mtl_ = pixel_buffer_wrapper_.metalTexture;
+    if (!texture_mtl_ || texture_mtl_.width != Width() || texture_mtl_.height != Height()) {
+      texture_mtl_ = nil;
+      skity_surface_mtl_.reset();
+      return;
+    }
     auto drawable =
         DrawableMTL(DrawableMTLBackendType::kTexture, nil, texture_mtl_, Width(), Height());
     skity_surface_mtl_ = std::make_unique<SkitySurfaceMTL>(drawable);

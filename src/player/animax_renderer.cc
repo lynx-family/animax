@@ -207,7 +207,8 @@ void AnimaXRenderer::StartAnimation() {
 }
 
 void AnimaXRenderer::Render(double progress) {
-  if (is_destroyed_ || !surface_ || is_invalid_platform_surface_) {
+  if (is_destroyed_ || !surface_ || !surface_->Valid() ||
+      is_invalid_platform_surface_) {
     return;
   }
 
