@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <utility>
 
 #include "include/player/animax_fit_position.h"
 #include "src/animation/base_keyframe_animation.h"
@@ -112,7 +113,9 @@ class BaseLayer : public Content,
    * make sure listener is valid in the lifecycle of layer.
    * @param listener a layer event listener
    */
-  void SetEventListener(LayerEventListener* listener) { listener_ = listener; }
+  void SetEventListener(std::weak_ptr<LayerEventListener> listener) {
+    weak_listener_ = std::move(listener);
+  }
 
   /**
    * Set AnimaXPlayerContext
@@ -187,7 +190,7 @@ class BaseLayer : public Content,
 
   float blur_mask_filter_radius_ = 0.0;
   std::unique_ptr<MaskFilter> blur_mask_filter_;
-  LayerEventListener* listener_ = nullptr;
+  std::weak_ptr<LayerEventListener> weak_listener_;
   std::weak_ptr<AnimaXPlayerContext> weak_context_;
 };
 

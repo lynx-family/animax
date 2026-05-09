@@ -183,10 +183,7 @@ void AnimaXRenderer::StartAnimation() {
   layer_ = std::unique_ptr<CompositionLayer>(
       new CompositionLayer(*layer_model_, *model_));
   layer_->SetLayerModels(model_->GetLayers());
-  auto playback_handler = weak_playback_handler_.lock();
-  if (playback_handler) {
-    layer_->SetEventListener(playback_handler.get());
-  }
+  layer_->SetEventListener(weak_playback_handler_);
   layer_->SetPlayerContext(weak_context_);
   layer_->Init();
 
