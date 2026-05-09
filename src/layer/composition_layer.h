@@ -11,7 +11,6 @@
 #include "src/layer/base_layer.h"
 #include "src/layer/camera_layer.h"
 #include "src/model/value/base_value.h"
-#include "src/player/layer_event_listener.h"
 #include "src/render/camera.h"
 
 namespace lynx {
@@ -20,7 +19,7 @@ namespace animax {
 class CompositionModel;
 class LayerModel;
 
-class CompositionLayer : public BaseLayer, public LayerEventListener {
+class CompositionLayer : public BaseLayer {
  public:
   CompositionLayer(LayerModel& layer_model, CompositionModel& composition);
   ~CompositionLayer() override = default;
@@ -40,11 +39,6 @@ class CompositionLayer : public BaseLayer, public LayerEventListener {
 
   void GetBounds(RectF& out_bounds, Matrix& parent_matrix,
                  bool apply_parent) override;
-
-  void OnLayerError(const EventError err, const std::string& err_msg) override;
-
-  void OnLayerWarning(const EventWarning warning,
-                      const std::string& warning_msg) override;
 
   void ResolveChildKeyPath(const AnimaXKeyPath& path, int32_t depth,
                            ResolvedKeyPathElements& match_elements,
