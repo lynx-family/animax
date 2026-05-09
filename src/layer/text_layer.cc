@@ -92,18 +92,18 @@ void TextLayer::CheckFontAsset(FontAsset* font_asset) {
     }
   }
   if (!Font::HasDefaultTypeface()) {
-    if (listener_) {
-      listener_->OnLayerError(EventError::kDefaultFontNotFound,
-                              "No default font available");
+    if (auto listener = weak_listener_.lock()) {
+      listener->OnLayerError(EventError::kDefaultFontNotFound,
+                             "No default font available");
     } else {
       ANIMAX_LOGE(
           "No default font available. Please register a default (fallback) "
           "font.");
     }
   } else {
-    if (listener_) {
-      listener_->OnLayerWarning(EventWarning::kTextLayerFontInvalid,
-                                "Text layer font is invalid");
+    if (auto listener = weak_listener_.lock()) {
+      listener->OnLayerWarning(EventWarning::kTextLayerFontInvalid,
+                               "Text layer font is invalid");
     } else {
       ANIMAX_LOGW("Text layer font is invalid. Please check the font asset.");
     }

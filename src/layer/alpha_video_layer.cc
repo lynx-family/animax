@@ -236,15 +236,15 @@ void AlphaVideoLayer::OnVideoPlayerError(EventError error,
                                          const std::string& err_msg) {
   ANIMAX_LOGE("OnVideoPlayerError, code:" << static_cast<int32_t>(error)
                                           << ", message: " << err_msg);
-  if (listener_) {
-    listener_->OnLayerError(error, err_msg);
+  if (auto listener = weak_listener_.lock()) {
+    listener->OnLayerError(error, err_msg);
   }
 }
 
 void AlphaVideoLayer::OnVideoPlayerWarning(lynx::animax::EventWarning warning,
                                            const std::string& warning_msg) {
-  if (listener_) {
-    listener_->OnLayerWarning(warning, warning_msg);
+  if (auto listener = weak_listener_.lock()) {
+    listener->OnLayerWarning(warning, warning_msg);
   }
 }
 

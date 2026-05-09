@@ -38,7 +38,7 @@ void CompositionLayer::Init() {
       continue;
     }
     layer->SetCompositionLayer(this);
-    layer->SetEventListener(this);
+    layer->SetEventListener(weak_listener_);
     layer->SetPlayerContext(weak_context_);
     layer->Init();
     switch (cur_model.GetLayerType()) {
@@ -202,20 +202,6 @@ void CompositionLayer::GetBounds(RectF& out_bounds, Matrix& parent_matrix,
     rect_.Set(0, 0, 0, 0);
     (*it)->GetBounds(rect_, *bounds_matrix_, true);
     out_bounds.Union(rect_);
-  }
-}
-
-void CompositionLayer::OnLayerError(const EventError err,
-                                    const std::string& err_msg) {
-  if (listener_) {
-    listener_->OnLayerError(err, err_msg);
-  }
-}
-
-void CompositionLayer::OnLayerWarning(const lynx::animax::EventWarning warning,
-                                      const std::string& warning_msg) {
-  if (listener_) {
-    listener_->OnLayerWarning(warning, warning_msg);
   }
 }
 
