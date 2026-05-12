@@ -19,6 +19,10 @@ base_util_shared_sources = [
   "visibility_state.h",
 ]
 
+if (is_android || is_harmony) {
+  base_util_shared_sources += [ "symbol_util.h" ]
+}
+
 if (is_ios) {
   base_util_shared_sources += [
     "ios/ca_util.h",
@@ -43,13 +47,14 @@ if (is_ios) {
     "android/jni_helper.h",
     "android/metrics_callback_android.cc",
     "android/metrics_callback_android.h",
-    "android/symbol_util.h",
   ]
 } else if (is_harmony) {
   base_util_shared_sources += [
     "harmony/frame_listener_adapter.cc",
     "harmony/frame_listener_adapter.h",
     "harmony/scoped_object_harmony.h",
+    "harmony/video_decoder_sync_api_harmony.cc",
+    "harmony/video_decoder_sync_api_harmony.h",
     "harmony/xcomponent_adapter.cc",
     "harmony/xcomponent_adapter.h",
   ]
