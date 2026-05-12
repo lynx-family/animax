@@ -29,7 +29,7 @@ static const NSTimeInterval AnimaXMonitorMaximumPlayCount = 5;
 @interface AnimaXMonitorAbilityDelegate ()
 
 @property(nonatomic, strong, readonly) AnimaXServiceRegistry *serviceRegistry;
-@property(nonatomic, assign) lynx::animax::AnimaXPlayer *player;
+@property(nonatomic, assign) std::shared_ptr<lynx::animax::AnimaXPlayer> player;
 @property(nonatomic, assign) BOOL hasReportedFirstPlay;
 
 @property(nonatomic, strong, readonly) NSMutableDictionary *platformReportItems;
@@ -71,7 +71,7 @@ static const NSTimeInterval AnimaXMonitorMaximumPlayCount = 5;
 #pragma mark - Configuration
 
 - (void)setAnimaXPlayer:(void *)player {
-  _player = static_cast<lynx::animax::AnimaXPlayer *>(player);
+  _player = *(static_cast<std::shared_ptr<lynx::animax::AnimaXPlayer> *>(player));
 }
 
 - (void)updateUrl:(NSString *)url {
@@ -191,11 +191,10 @@ static void TransferNativeMetricsIntoPlatform(
   }
 
   lynx::animax::ExternalMetricsReadyCallback callback =
-      [trigger, monitor, event_array = _player->GetEventTrackingArray(),
-       event_names = _player->GetEventNames(),
+      [trigger, monitor, player = _player,
        metricsDict](const lynx::animax::MetricsMap &native_metrics_map) {
-        TransferNativeMetricsIntoPlatform(native_metrics_map, metricsDict, event_array,
-                                          event_names);
+        TransferNativeMetricsIntoPlatform(native_metrics_map, metricsDict,
+                                          player->GetEventTrackingArray(), player->GetEventNames());
 
         // Add trigger information
         [metricsDict setObject:trigger forKey:AnimaXMonitorKey];
