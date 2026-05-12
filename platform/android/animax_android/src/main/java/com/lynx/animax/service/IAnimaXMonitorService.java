@@ -12,26 +12,7 @@ import com.lynx.animax.monitor.MetricsAndEventStore;
  */
 @Keep
 public interface IAnimaXMonitorService extends IAnimaXService {
-  final class UrlHolder {
-    private String mCurrentUrl = "unknown";
-
-    public String getCurrentUrl() {
-      return mCurrentUrl;
-    }
-
-    public void setCurrentUrl(String url) {
-      if (url != null) {
-        this.mCurrentUrl = url;
-      }
-    }
-  }
-
-  UrlHolder URL_HOLDER = new UrlHolder();
-
-  default UrlHolder getUrlHolder() {
-    return URL_HOLDER;
-  }
-
+  void setCurrentUrl(String url);
   void reportError(AnimaXErrorParam errorInfo);
   void reportPerformanceMetrics(MetricsAndEventStore metrics);
 }

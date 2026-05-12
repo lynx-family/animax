@@ -36,6 +36,8 @@ public final class AnimaXMonitorUtil {
   public static final long MINIMUM_INTERVAL_TIME = 5 * 60 * 1000;
   public static final long MAXIMUM_PLAY_COUNT = 5;
 
+  public static final String SRC_URL_UNKNOWN = "unknown";
+
   public static String clearUrlQuery(String originUrl) {
     try {
       if (originUrl != null && !originUrl.isEmpty()) {
@@ -59,5 +61,9 @@ public final class AnimaXMonitorUtil {
     }
 
     return jsonObject;
+  }
+
+  public static boolean isValidSrc(String src) {
+    return !SRC_URL_UNKNOWN.equals(src);
   }
 }
