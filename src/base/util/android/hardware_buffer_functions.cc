@@ -8,7 +8,7 @@
 #include <sys/system_properties.h>
 
 #include "src/base/log/log.h"
-#include "src/base/util/android/symbol_util.h"
+#include "src/base/util/symbol_util.h"
 
 namespace lynx {
 namespace animax {

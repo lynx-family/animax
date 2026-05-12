@@ -56,6 +56,12 @@ animax_source_set("video") {
     sources += [
       "harmony/video_asset_harmony.cc",
       "harmony/video_asset_harmony.h",
+      "harmony/video_codec_manager_async_harmony.cc",
+      "harmony/video_codec_manager_factory_harmony.cc",
+      "harmony/video_codec_manager_factory_harmony.h",
+      "harmony/video_codec_manager_harmony.cc",
+      "harmony/video_codec_manager_harmony.h",
+      "harmony/video_codec_manager_sync_harmony.cc",
       "harmony/video_player_harmony.cc",
       "harmony/video_player_harmony.h",
       "harmony/video_shader_harmony.cc",
