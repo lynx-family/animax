@@ -96,14 +96,14 @@ public class MonitorAbilityDelegate extends AnimationListenerAdapter {
   }
 
   /**
-   * Updates the current URL in the monitor service's URL holder.
+   * Updates the current URL in the monitor service.
    *
    * @param url The URL to be updated
    */
   public void updateUrl(String url) {
     IAnimaXMonitorService monitor = mServiceRegistry.getService(IAnimaXMonitorService.class);
     if (url != null && monitor != null) {
-      monitor.getUrlHolder().setCurrentUrl(url);
+      monitor.setCurrentUrl(url);
     }
   }
 
