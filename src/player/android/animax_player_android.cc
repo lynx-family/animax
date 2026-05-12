@@ -662,7 +662,7 @@ static void GetMetricsAsync(JNIEnv* env, jobject jcaller, jlong player,
           std::move(global_ref_to_java_events_map));
 
   auto java_callback_wrapper =
-      [shared_java_callback = std::move(shared_java_callback)](
+      [player_ptr, shared_java_callback = std::move(shared_java_callback)](
           const lynx::animax::MetricsMap& metrics_map) mutable {
         lynx::animax::android::JavaOnlyMap java_metrics_map;
         for (const auto& [key, value] : metrics_map) {
