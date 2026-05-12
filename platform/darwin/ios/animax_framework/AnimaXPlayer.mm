@@ -374,7 +374,7 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   _resourceLoader = [AnimaXResourceLoaderHolder loaderForPlayer:&builder context:_context];
 
   _player = builder.Build();
-  [[self.context monitorDelegate] setAnimaXPlayer:_player.get()];
+  [[self.context monitorDelegate] setAnimaXPlayer:&_player];
   lynx::animax::LifecycleManager::Instance().AddListener(_player);
 }
 
