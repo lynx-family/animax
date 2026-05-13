@@ -7,8 +7,6 @@ buildscript {
         compileSdkVersion = 30
         ndkVersion = '21.1.6352462'
         abiList = ['armeabi-v7a', 'arm64-v8a', 'x86']
-
-        pythonExec = project.file(python_exec).absolutePath
     }
 
     repositories {
@@ -22,6 +20,8 @@ buildscript {
         classpath 'com.googlecode.json-simple:json-simple:1.1.1'
     }
 }
+ext.pythonEnvScriptPath = "../../../../tools/env.sh"
+apply from: file("../../../../lynx/tools/android_tools/gradle/python_env.gradle")
 
 allprojects {
     repositories {
@@ -75,7 +75,7 @@ ext.getFlavorNamesAndBuildTypes = { Project project ->
 ext.writeGnArgs = { String gnArgs ->
     exec {
         workingDir "../../"
-        commandLine pythonExec, "tools_shared/android_tools/write_gn_args.py", "--gn-args", gnArgs.replaceAll('"', '#')
+        rootProject.ext.configurePythonExec(delegate, "tools_shared/android_tools/write_gn_args.py", "--gn-args", gnArgs.replaceAll('"', '#'))
     }
 }
 
@@ -91,7 +91,7 @@ task generateAllGnCmakeTargets {
     }
     exec {
         workingDir "../../"
-        commandLine pythonExec, "tools_shared/android_tools/generate_cmake_scripts_from_gn.py"
+        rootProject.ext.configurePythonExec(delegate, "tools_shared/android_tools/generate_cmake_scripts_from_gn.py")
         println commandLine
     }
 }
@@ -102,7 +102,7 @@ task clean(type: Delete) {
     doLast {
         exec {
             workingDir "../../"
-            commandLine pythonExec, "tools_shared/android_tools/generate_cmake_scripts_from_gn.py", "--clean"
+            rootProject.ext.configurePythonExec(delegate, "tools_shared/android_tools/generate_cmake_scripts_from_gn.py", "--clean")
             println commandLine
         }
     }
