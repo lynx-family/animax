@@ -84,7 +84,14 @@ void TextLayer::AddUpdateListenerToAnimatorProperty(
   }
 }
 
-void TextLayer::CheckFontAsset(FontAsset* font_asset) {
+void TextLayer::CheckFontAsset() {
+#ifdef OS_WASM
+  // Lazy font check - only execute once
+  if (font_checked_ || !data_source_) {
+    return;
+  }
+  font_checked_ = true;
+  auto* font_asset = data_source_->GetFontAsset();
   if (font_asset) {
     auto* font = font_asset->GetFont();
     if (font && font->HasValidTypeface()) {
@@ -108,6 +115,7 @@ void TextLayer::CheckFontAsset(FontAsset* font_asset) {
       ANIMAX_LOGW("Text layer font is invalid. Please check the font asset.");
     }
   }
+#endif
 }
 
 void TextLayer::Init() {
@@ -119,7 +127,6 @@ void TextLayer::Init() {
   }
   data_source_ = std::make_unique<TextContentDataSource>(
       animations_, composition_.GetFontAssetManager());
-  CheckFontAsset(data_source_->GetFontAsset());
 
   text_content_ = TextHelper::Impl().CreateTextContent(*data_source_);
   text_content_->Init(this);
@@ -137,6 +144,7 @@ void TextLayer::DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) {
   if (!text_content_) {
     return;
   }
+  CheckFontAsset();
   canvas.Save();
   canvas.Concat(matrix);
   text_content_->Draw(canvas, alpha);
@@ -151,6 +159,7 @@ void TextLayer::ApplyEffects(Paint& paint) {
 
 void TextLayer::GetBounds(RectF& out_bounds, Matrix& parent_matrix,
                           bool apply_parent) {
+  CheckFontAsset();
   BaseLayer::GetBounds(out_bounds, parent_matrix, apply_parent);
   auto& bounds = composition_.GetBounds();
   out_bounds.Set(0, 0, bounds.GetWidth(), bounds.GetHeight());
