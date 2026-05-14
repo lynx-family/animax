@@ -54,12 +54,15 @@ class TextLayer : public BaseLayer {
   KeyframeAnimation* GetAnimationFromAnimatorProperty(
       const TextLayerAnimations::AnimatorProperty& animator,
       LayerPropertyType type);
-  void CheckFontAsset(FontAsset* font_asset);
+  void CheckFontAsset();
 
   TextLayerAnimations animations_;
   std::unique_ptr<TextContent> text_content_;
   std::unique_ptr<TextContentDataSource> data_source_;
   std::unique_ptr<BlurElement> blur_element_;
+#ifdef OS_WASM
+  bool font_checked_ = false;
+#endif
 };
 
 }  // namespace animax
