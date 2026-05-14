@@ -195,9 +195,8 @@ void AnimaXPlayer::SetSrc(const std::string& src) {
     return;
   }
   auto src_index = source_state_.GetIndex();
-  ANIMAX_RESOURCE_LOGI("SetSrc index: "
-                       << src_index << ", new src: " << src
-                       << (old_src.empty() ? "" : ", old src: " + old_src));
+  ANIMAX_RESOURCE_LOGI("SetSrc index: " << src_index << ", new src: " << src
+                                        << ", old src: " << old_src);
 
   controller_actor_->Act(
       [src](auto& controller) { controller->SetCurrentSrc(src); });
