@@ -43,6 +43,8 @@ public class DeviceUtil {
 
   private static boolean sHasInitLowDensity = false;
   private static boolean sIsLowDensity = false;
+  private static boolean sIsMiuiInited = false;
+  private static boolean sIsMiui = false;
 
   /**
    * Determines whether the texture needs to try updating the surface texture when the view is
@@ -125,6 +127,19 @@ public class DeviceUtil {
 
   public static boolean needTextureDestroyWorkaround() {
     return sTextureDestroyWorkaround;
+  }
+
+  public static synchronized boolean isMiui() {
+    if (!sIsMiuiInited) {
+      try {
+        Class.forName("miui.os.Build");
+        sIsMiui = true;
+      } catch (Throwable e) {
+        // ignore
+      }
+      sIsMiuiInited = true;
+    }
+    return sIsMiui;
   }
 
   /**

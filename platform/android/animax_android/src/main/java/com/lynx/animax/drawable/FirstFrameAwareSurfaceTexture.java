@@ -282,6 +282,59 @@ public class FirstFrameAwareSurfaceTexture
     }
   }
 
+  /**
+   * Clears MIUI OS 16+ TextureViewStub's frame callback cache to avoid Handler/View leaks.
+   *
+   * MIUI adds SurfaceTexture#mTextureViewStub. Its TextureViewStubImpl stores both
+   * mOnFrameAvailableHandler and mUpdateListener for TextureView frame readiness optimization.
+   * However, TextureViewStubImpl#release() does not clear these fields, and MIUI's
+   * SurfaceTexture#setOnFrameAvailableListener(null) only clears SurfaceTexture's own handler.
+   *
+   * FirstFrameAwareSurfaceTexture already dispatches frame callbacks through its own weak Handler,
+   * so AnimaX does not need this vendor callback cache. Clearing only these two cached callback
+   * fields avoids the leak without releasing TextureViewStub or changing SurfaceTexture ownership.
+   */
+  public void clearMiuiStubCallbackIfNeeded() {
+    if (Build.VERSION.SDK_INT < 36 || !DeviceUtil.isMiui()) {
+      return;
+    }
+    try {
+      Field textureViewStubField = SurfaceTexture.class.getDeclaredField("mTextureViewStub");
+      textureViewStubField.setAccessible(true);
+      Object textureViewStub = textureViewStubField.get(this);
+      clearMiuiStubCallback(textureViewStub);
+    } catch (Throwable e) {
+      AnimaXLog.e(TAG, "clearMiuiStubCallbackIfNeeded fail: " + e.getMessage());
+    }
+  }
+
+  private void clearMiuiStubCallback(@Nullable Object textureViewStub) throws Exception {
+    if (textureViewStub == null) {
+      AnimaXLog.i(TAG, "clearMiuiStubCallbackIfNeeded: Skipped, stub is null.");
+      return;
+    }
+
+    Field handlerField = textureViewStub.getClass().getDeclaredField("mOnFrameAvailableHandler");
+    handlerField.setAccessible(true);
+    Object originHandler = handlerField.get(textureViewStub);
+
+    Field updateListenerField = textureViewStub.getClass().getDeclaredField("mUpdateListener");
+    updateListenerField.setAccessible(true);
+    Object originUpdateListener = updateListenerField.get(textureViewStub);
+
+    java.lang.reflect.Method method =
+        textureViewStub.getClass().getMethod("setOnFrameAvailableHandler", Handler.class);
+    method.setAccessible(true);
+    method.invoke(textureViewStub, (Handler) null);
+
+    updateListenerField.set(textureViewStub, null);
+    AnimaXLog.i(TAG,
+        "clearMiuiStubCallbackIfNeeded: Finished cleanup, origin handler: " + originHandler
+            + ", origin update listener: " + originUpdateListener
+            + ", current handler: " + handlerField.get(textureViewStub)
+            + ", current update listener: " + updateListenerField.get(textureViewStub));
+  }
+
   @Override
   @CalledByNative
   public synchronized void release() {
