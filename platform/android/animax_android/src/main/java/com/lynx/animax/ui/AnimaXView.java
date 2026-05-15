@@ -202,6 +202,7 @@ public class AnimaXView
     }
 
     setSurfaceTexture(mSurfaceTexture);
+    mSurfaceTexture.clearMiuiStubCallbackIfNeeded();
   }
 
   @Override
