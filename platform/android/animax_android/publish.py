@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--lite', default=False, action='store_true')
     parser.add_argument('--cxxstatic', default=False, action='store_true')
     parser.add_argument('--enable_16kb', default=False, action='store_true')
+    parser.add_argument('--enable_packrel', default=False, action='store_true')
     parser.add_argument('--disable_publish', default=False, action='store_true')
 
     args, unknown = parser.parse_known_args()
@@ -41,6 +42,7 @@ def main():
 -PVERSION={version}
 {param_true_if("enable_cxx_static", cxxstatic_build)}
 {param_true_if("enable_16kb_align", args.enable_16kb)}
+{param_true_if("enable_packrel", args.enable_packrel)}
 {param_true_if("disable_publish", args.disable_publish)}
 """.replace("\n", " ")
 
