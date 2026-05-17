@@ -17,6 +17,7 @@ declare_args() {
 
   enable_unittests = false
   enable_16kb_align = true
+  enable_packrel = false
   compiler_optimization_level = "Oz"
 
   # textra
