@@ -171,7 +171,7 @@ TEST(CompositionAssetLoaderTest, LoadCompositionAssetAllFailure) {
   auto resource_loader = std::make_shared<MockResourceLoader>();
   EXPECT_CALL(*resource_loader, Load(_, _))
       .WillRepeatedly(Invoke([](auto req, auto callback) {
-        callback({}, LoaderError{.code = kUserDefined, kErrorMessage});
+        callback({}, LoaderError{kUserDefined, kErrorMessage});
       }));
   auto listener = std::make_shared<MockResourceLoaderListener>();
   EXPECT_CALL(*listener, OnResourceLoaderTraceEvent(
@@ -261,7 +261,7 @@ TEST(CompositionAssetLoaderTest, LoadCompositionAssetAllFailureNoListener) {
   auto resource_loader = std::make_shared<MockResourceLoader>();
   EXPECT_CALL(*resource_loader, Load(_, _))
       .WillRepeatedly(Invoke([](auto req, auto callback) {
-        callback({}, LoaderError{.code = kUserDefined, kErrorMessage});
+        callback({}, LoaderError{kUserDefined, kErrorMessage});
       }));
   auto composition_asset_loader =
       CompositionAssetLoader::Make<CompositionAssetLoader>(resource_loader);
@@ -294,7 +294,7 @@ TEST(CompositionAssetLoaderTest,
           }
           case lynx::animax::ResourceRequestType::kLoadBitmap: {
             if (req.uri_info.uri == kFailImageAssetURI) {
-              callback({}, LoaderError{.code = kInvalidImage, kErrorMessage});
+              callback({}, LoaderError{kInvalidImage, kErrorMessage});
             } else {
               callback(
                   ResourceResponse{
