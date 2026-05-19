@@ -11,6 +11,7 @@ public class VideoPlayerConfig {
   private VideoPlayerType mPlayerType = VideoPlayerType.DEFAULT;
   private long mVideoFrameTimeout = 0;
   private long mSurfaceDestroyTimeout = 0;
+  private boolean mVideoThreadAccelerate = true;
 
   public VideoPlayerConfig(@NonNull ServiceRegistry serviceRegistry) {
     this.mServiceRegistry = serviceRegistry;
@@ -41,6 +42,14 @@ public class VideoPlayerConfig {
   }
 
   /**
+   * Sets whether to use codec thread pool acceleration.
+   * @param videoThreadAccelerate True to use codec thread pool acceleration.
+   */
+  public void setVideoThreadAccelerate(boolean videoThreadAccelerate) {
+    this.mVideoThreadAccelerate = videoThreadAccelerate;
+  }
+
+  /**
    * Gets the player type.
    * @return The VideoPlayerType configured for this player.
    */
@@ -62,6 +71,14 @@ public class VideoPlayerConfig {
    */
   public long getSurfaceDestroyTimeout() {
     return mSurfaceDestroyTimeout;
+  }
+
+  /**
+   * Gets whether codec thread pool acceleration is enabled.
+   * @return True if codec thread pool acceleration is enabled.
+   */
+  public boolean isVideoThreadAccelerate() {
+    return mVideoThreadAccelerate;
   }
 
   /**

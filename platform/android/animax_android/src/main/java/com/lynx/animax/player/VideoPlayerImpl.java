@@ -28,6 +28,7 @@ public class VideoPlayerImpl extends AbsVideoPlayer
   // A wrapper class of MediaCodec which manages the allocation/initialization/release/decoding
   // operations of a decoder.
   private CodecManager mCodecManager;
+  private final int mCodecThreadIndex;
 
   // Calling thread is the same as GL Thread. A different naming is for better extensibility.
   private Handler mCallingThreadHandler;
@@ -37,6 +38,8 @@ public class VideoPlayerImpl extends AbsVideoPlayer
   public VideoPlayerImpl(long nativePlayer, @NonNull VideoPlayerConfig config) {
     super(nativePlayer, config);
     initCodecThread();
+    mCodecThreadIndex =
+        CodecThreadManager.getInstance().obtainThreadIndex(mConfig.isVideoThreadAccelerate());
     postToCodecThread(new Runnable() {
       @Override
       public void run() {
@@ -120,7 +123,7 @@ public class VideoPlayerImpl extends AbsVideoPlayer
     mIsDestroyed = true;
 
     final CountDownLatch latch = new CountDownLatch(1);
-    CodecThreadManager.getInstance().postAtFrontAndClearQueue(new Runnable() {
+    CodecThreadManager.getInstance().postAtFrontAndClearQueue(mCodecThreadIndex, new Runnable() {
       @Override
       public void run() {
         if (mCodecManager != null) {
@@ -209,7 +212,7 @@ public class VideoPlayerImpl extends AbsVideoPlayer
     if (mIsDestroyed) {
       return;
     }
-    CodecThreadManager.getInstance().runNowOrPostToCodecThread(r);
+    CodecThreadManager.getInstance().runNowOrPostToCodecThread(mCodecThreadIndex, r);
   }
 
   private void postToCodecThreadWhenCodecReady(Runnable r) {
@@ -244,6 +247,6 @@ public class VideoPlayerImpl extends AbsVideoPlayer
   }
 
   private void ensureCurrentThreadIsCodecThread() {
-    CodecThreadManager.getInstance().ensureOnCodecThread();
+    CodecThreadManager.getInstance().ensureOnCodecThread(mCodecThreadIndex);
   }
 }
