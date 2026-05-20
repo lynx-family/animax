@@ -39,11 +39,11 @@ bool VideoPlayerService::RegisterProvider(
 }
 
 std::shared_ptr<VideoPlayerProvider> VideoPlayerService::GetProvider(
-    const AnimaXAbility* ability, std::shared_ptr<VideoAsset> asset) {
+    std::shared_ptr<AnimaXAbility> ability, std::shared_ptr<VideoAsset> asset) {
   if (ability && asset) {
     std::shared_lock lock(mutex_);
     for (const auto& [key, provider] : providers_) {
-      if (provider->IsSupported(ability, asset)) {
+      if (provider->IsSupported(ability.get(), asset.get())) {
         ANIMAX_LOGI("VideoPlayerService: get provider: " + key);
         return provider;
       }

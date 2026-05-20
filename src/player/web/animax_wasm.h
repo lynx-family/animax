@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "base/include/no_destructor.h"
@@ -81,7 +82,9 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
 
   uint16_t current_visible_states_ = 0;
 
-  static base::NoDestructor<std::map<AnimaXPlayer*, EventCallback>>
+  static base::NoDestructor<
+      std::map<std::weak_ptr<AnimaXPlayer>, EventCallback,
+               std::owner_less<std::weak_ptr<AnimaXPlayer>>>>
       event_callback_map_;
 };
 

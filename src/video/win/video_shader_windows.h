@@ -18,7 +18,7 @@ namespace animax {
 
 class VideoShaderWindows : public VideoShaderYUV {
  public:
-  explicit VideoShaderWindows(const AnimaXAbility *ability_ptr);
+  explicit VideoShaderWindows(std::shared_ptr<AnimaXAbility> ability);
   ~VideoShaderWindows() override;
   void Init(int32_t w, int32_t h, const std::array<float, 4> &rgb_frame,
             const std::array<float, 4> &a_frame) override;
@@ -29,7 +29,7 @@ class VideoShaderWindows : public VideoShaderYUV {
   void PostToRasterThread(base::MoveOnlyClosure<void> task);
 
   fml::RefPtr<fml::TaskRunner> raster_runner_;
-  const AnimaXAbilityWindows *ability_windows_;
+  std::shared_ptr<AnimaXAbilityWindows> ability_windows_;
   std::weak_ptr<AnimaXPlayer> weak_player_;
 };
 

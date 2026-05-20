@@ -46,7 +46,8 @@ class VideoPlayerService {
    * @return A pointer to the VideoPlayerProvider instance.
    */
   std::shared_ptr<VideoPlayerProvider> GetProvider(
-      const AnimaXAbility* ability, std::shared_ptr<VideoAsset> asset);
+      std::shared_ptr<AnimaXAbility> ability,
+      std::shared_ptr<VideoAsset> asset);
 
  private:
   VideoPlayerService()

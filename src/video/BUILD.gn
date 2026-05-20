@@ -10,7 +10,6 @@ video_shared_sources = [
   "custom/yuv_frame_info.cc",
   "custom/yuv_frame_info.h",
   "video_player.h",
-  "video_player_listener.h",
   "video_player_provider.h",
   "video_player_provider_default.h",
   "video_player_service.cc",

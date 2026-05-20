@@ -4,6 +4,7 @@
 #include "src/video/win/video_shader_windows.h"
 
 #include <memory>
+#include <utility>
 
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
@@ -14,10 +15,11 @@
 namespace lynx {
 namespace animax {
 
-VideoShaderWindows::VideoShaderWindows(const AnimaXAbility *ability_ptr)
+VideoShaderWindows::VideoShaderWindows(std::shared_ptr<AnimaXAbility> ability)
     : VideoShaderYUV() {
   ANIMAX_LOGI("[VideoShader] Initializing YUV video shader");
-  ability_windows_ = static_cast<const AnimaXAbilityWindows *>(ability_ptr);
+  ability_windows_ =
+      std::static_pointer_cast<AnimaXAbilityWindows>(std::move(ability));
   DCHECK(ability_windows_);
   raster_runner_ = ability_windows_->GetRasterRunner();
   DCHECK(raster_runner_);

@@ -10,8 +10,8 @@
 
 #include "src/base/log/log.h"
 #include "src/player/animax_ability.h"
+#include "src/player/layer_event_listener.h"
 #include "src/render/texture_info.h"
-#include "src/video/video_player_listener.h"
 
 namespace lynx {
 namespace animax {
@@ -23,7 +23,7 @@ class VideoPlayer {
     ANIMAX_LOGI("Video player is destroyed, this: " << this);
   }
   static std::unique_ptr<VideoPlayer> MakeVideoPlayer(
-      const AnimaXAbility *ability_ptr);
+      std::shared_ptr<AnimaXAbility> ability);
 
   /**
    * Let player decode specific frame, and return that texture
@@ -44,11 +44,12 @@ class VideoPlayer {
    */
   virtual void AttachAsset(std::shared_ptr<VideoAsset> asset) = 0;
   /**
-   * Set video player listener
-   * make sure listener is valid in the lifecycle of video player.
-   * @param listener a video player listener
+   * Set layer event listener
+   * @param listener a layer event listener
    */
-  void SetListener(VideoPlayerListener *listener) { listener_ = listener; }
+  void SetListener(std::weak_ptr<LayerEventListener> listener) {
+    weak_listener_ = std::move(listener);
+  }
 
   /**
    * Update output frame size for downsampling
@@ -60,7 +61,7 @@ class VideoPlayer {
  protected:
   VideoPlayer() { ANIMAX_LOGI("Video player is created, this: " << this); }
 
-  VideoPlayerListener *listener_ = nullptr;
+  std::weak_ptr<LayerEventListener> weak_listener_;
 };
 
 }  // namespace animax

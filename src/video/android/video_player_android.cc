@@ -5,6 +5,7 @@
 #include "src/video/android/video_player_android.h"
 
 #include <cstring>
+#include <utility>
 
 #include "base/include/platform/android/scoped_java_ref.h"
 #include "platform/android/animax_android/src/main/jni/gen/IVideoPlayer_jni.h"
@@ -19,11 +20,11 @@
 namespace lynx {
 namespace animax {
 
-VideoPlayerAndroid::VideoPlayerAndroid(const AnimaXAbility *ability_ptr) {
+VideoPlayerAndroid::VideoPlayerAndroid(std::shared_ptr<AnimaXAbility> ability) {
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
-  if (ability_ptr) {
-    auto *android_ability =
-        static_cast<const AnimaXAbilityAndroid *>(ability_ptr);
+  if (ability) {
+    auto android_ability =
+        std::static_pointer_cast<AnimaXAbilityAndroid>(std::move(ability));
     if (android_ability) {
       player_.Reset(env, android_ability->CreateVideoPlayer(
                              reinterpret_cast<jlong>(this)));
@@ -96,15 +97,15 @@ void VideoPlayerAndroid::AttachAsset(std::shared_ptr<VideoAsset> asset) {
 }
 
 void VideoPlayerAndroid::NotifyErrorEvent(const std::string &err_msg) {
-  if (listener_) {
-    listener_->OnVideoPlayerError(err_msg);
+  if (auto listener = weak_listener_.lock()) {
+    listener->OnLayerError(EventError::kVideoPlayerError, err_msg);
   }
 }
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    const AnimaXAbility *ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   return std::unique_ptr<VideoPlayerAndroid>(
-      new VideoPlayerAndroid(ability_ptr));
+      new VideoPlayerAndroid(std::move(ability)));
 }
 
 }  // namespace animax

@@ -4,6 +4,8 @@
 
 #include "src/video/video_player_service.h"
 
+#include <memory>
+
 #include "gtest/gtest.h"
 
 using namespace lynx::animax;
@@ -28,17 +30,16 @@ class MockVideoShader : public VideoShader {
 class MockVideoPlayerProvider : public VideoPlayerProvider {
  public:
   std::unique_ptr<VideoPlayer> CreateVideoPlayer(
-      const AnimaXAbility *ability) override {
+      std::shared_ptr<AnimaXAbility> ability) override {
     return nullptr;
   }
 
   std::unique_ptr<VideoShader> CreateVideoShader(
-      const AnimaXAbility *ability) override {
+      std::shared_ptr<AnimaXAbility> ability) override {
     return std::make_unique<MockVideoShader>();
   }
 
-  bool IsSupported(const AnimaXAbility *ability,
-                   std::shared_ptr<VideoAsset> asset) override {
+  bool IsSupported(AnimaXAbility *ability, VideoAsset *asset) override {
     return true;
   }
 };
@@ -62,13 +63,13 @@ std::unique_ptr<MockVideoPlayerProvider> CreateTestVideoPlayerProvider() {
 }
 
 TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
-  auto ability = AnimaXAbility();
+  auto ability = std::make_shared<AnimaXAbility>();
   auto asset = MockVideoAsset::Make(VideoAssetModel());
 
   auto provider_0 =
-      VideoPlayerService::GetInstance().GetProvider(&ability, asset);
-  auto player_0 = provider_0->CreateVideoPlayer(&ability);
-  auto shader_0 = provider_0->CreateVideoShader(&ability);
+      VideoPlayerService::GetInstance().GetProvider(ability, asset);
+  auto player_0 = provider_0->CreateVideoPlayer(ability);
+  auto shader_0 = provider_0->CreateVideoShader(ability);
   EXPECT_EQ(nullptr, player_0);
   EXPECT_EQ(nullptr, shader_0);
 
@@ -85,9 +86,9 @@ TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
   EXPECT_EQ(false, ret);
 
   auto provider_1 =
-      VideoPlayerService::GetInstance().GetProvider(&ability, asset);
-  auto player_1 = provider_1->CreateVideoPlayer(&ability);
-  auto shader_1 = provider_1->CreateVideoShader(&ability);
+      VideoPlayerService::GetInstance().GetProvider(ability, asset);
+  auto player_1 = provider_1->CreateVideoPlayer(ability);
+  auto shader_1 = provider_1->CreateVideoShader(ability);
   EXPECT_EQ(nullptr, player_1);
   EXPECT_NE(nullptr, shader_1);
 }

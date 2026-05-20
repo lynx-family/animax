@@ -360,16 +360,16 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
       .SetAbility(std::make_shared<lynx::animax::AnimaXAbilityIOS>(_context));
 
   __weak typeof(self) weakSelf = self;
-  builder.AddEventListener(
-      [weakSelf](AnimaXPlayer * /*player*/, const Event event, const EventParamMap &params) {
-        if (!weakSelf) {
-          return;
-        }
-        NSDictionary *eventParams = lynx::animax::MapToNSDictionary(params);
-        dispatch_async(dispatch_get_main_queue(), ^{
-          [weakSelf onEvent:event params:eventParams];
-        });
-      });
+  builder.AddEventListener([weakSelf](std::weak_ptr<AnimaXPlayer> /*player*/, const Event event,
+                                      const EventParamMap &params) {
+    if (!weakSelf) {
+      return;
+    }
+    NSDictionary *eventParams = lynx::animax::MapToNSDictionary(params);
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [weakSelf onEvent:event params:eventParams];
+    });
+  });
 
   _resourceLoader = [AnimaXResourceLoaderHolder loaderForPlayer:&builder context:_context];
 
