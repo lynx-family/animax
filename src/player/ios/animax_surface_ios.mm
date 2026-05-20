@@ -84,10 +84,7 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
  public:
   AnimaXPixelBufferSurfaceIOSMetal(const ReconfigureDescription& desc, CVPixelBufferWrapper* buffer)
       : AnimaXPixelBufferSurfaceIOS(desc, buffer) {
-    texture_mtl_ = pixel_buffer_wrapper_.metalTexture;
-    auto drawable =
-        DrawableMTL(DrawableMTLBackendType::kTexture, nil, texture_mtl_, Width(), Height());
-    skity_surface_mtl_ = std::make_unique<SkitySurfaceMTL>(drawable);
+    CreateDrawSurface();
   }
 
   ~AnimaXPixelBufferSurfaceIOSMetal() override{};
@@ -108,10 +105,17 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
     AnimaXSurface::Resize(desc.size.width, desc.size.height);
 
     // Step2: Destroy the Skia / Skity Surface While Maintaining the GPU Context
-    skity_surface_mtl_->Destroy();
+    if (skity_surface_mtl_) {
+      skity_surface_mtl_->Destroy();
+    }
 
     // Step3: Update
     ResizeBufferWrapper();
+    CreateDrawSurface();
+  }
+
+ private:
+  void CreateDrawSurface() {
     texture_mtl_ = pixel_buffer_wrapper_.metalTexture;
     if (!texture_mtl_ || texture_mtl_.width != Width() || texture_mtl_.height != Height()) {
       texture_mtl_ = nil;
@@ -123,8 +127,6 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
     skity_surface_mtl_ = std::make_unique<SkitySurfaceMTL>(drawable);
     DCHECK(Valid());
   }
-
- private:
   id<MTLTexture> texture_mtl_;
   std::unique_ptr<Surface> skity_surface_mtl_{nullptr};
 };

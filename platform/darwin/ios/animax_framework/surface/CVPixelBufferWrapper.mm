@@ -222,7 +222,7 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
     return;
   }
   size_t dstStride = CVPixelBufferGetBytesPerRow(buffer);
-  CVReturn rc = CVPixelBufferLockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
+  CVReturn rc = CVPixelBufferLockBaseAddress(buffer, 0);
   if (rc != kCVReturnSuccess) {
     ANIMAX_LOGE("Failed to copy from pixels: unable to lock buffer.")
     return;
@@ -230,10 +230,11 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   uint8_t *dstPixels = (uint8_t *)CVPixelBufferGetBaseAddress(buffer);
   if (!dstPixels) {
     ANIMAX_LOGE("Failed to copy from pixels: unable to get pixels of buffer.")
+    CVPixelBufferUnlockBaseAddress(buffer, 0);
     return;
   }
   lynx::animax::BufferCopyHelper::CopyBuffer(pixels, dstPixels, height, stride, dstStride);
-  CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
+  CVPixelBufferUnlockBaseAddress(buffer, 0);
 }
 
 - (void)rebuildPixelBufferPoolWithWidth:(size_t)width height:(size_t)height {
@@ -276,11 +277,13 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
 
 - (void)createTextureCacheIfNeeded {
   if (self.textureCache) {
+    ANIMAX_LOGI("Texture cache already exists.")
     return;
   }
 
   id<MTLDevice> device = MTLCreateSystemDefaultDevice();
   if (!device) {
+    ANIMAX_LOGE("Failed to create Metal device.")
     return;
   }
   CVMetalTextureCacheRef cache = nullptr;
@@ -288,6 +291,7 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   if (rc == kCVReturnSuccess && cache) {
     self.textureCache = cache;
   } else if (cache) {
+    ANIMAX_LOGE("Failed to create Metal texture cache.")
     CFRelease(cache);
   }
 }
@@ -298,6 +302,7 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   AnimaXScopedCVPixelBuffer *bufferScoped = self.renderPixelBufferScope;
   CVPixelBufferRef buffer = bufferScoped.object;
   if (!buffer) {
+    ANIMAX_LOGE("Render buffer is destroyed.")
     return;
   }
 
@@ -315,6 +320,8 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
                                                 MTLPixelFormatBGRA8Unorm, w, h, 0, &cvTex);
   if (rc == kCVReturnSuccess && cvTex) {
     self.metalTexture = CVMetalTextureGetTexture(cvTex);
+  } else {
+    ANIMAX_LOGE("Failed to create texture.")
   }
 
   if (cvTex) {
