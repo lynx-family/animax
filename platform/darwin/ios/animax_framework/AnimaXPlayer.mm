@@ -366,8 +366,16 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
           return;
         }
         NSDictionary *eventParams = lynx::animax::MapToNSDictionary(params);
+        __strong typeof(weakSelf) self = weakSelf;
+        if (!self) {
+          return;
+        }
         dispatch_async(dispatch_get_main_queue(), ^{
-          [weakSelf onEvent:event params:eventParams];
+          __strong typeof(weakSelf) self = weakSelf;
+          if (!self) {
+            return;
+          }
+          [self onEvent:event params:eventParams];
         });
       });
 
