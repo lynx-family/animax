@@ -18,7 +18,7 @@ VideoShaderHarmony::~VideoShaderHarmony() noexcept {
 }
 
 std::unique_ptr<VideoShader> VideoShader::Make(
-    const AnimaXAbility *ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   return std::unique_ptr<VideoShaderHarmony>(new VideoShaderHarmony());
 }
 

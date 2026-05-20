@@ -4,6 +4,8 @@
 
 #include "src/video/harmony/video_player_harmony.h"
 
+#include <utility>
+
 #include "src/base/gl/scoped_gl_reset_restore.h"
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
@@ -21,10 +23,10 @@ constexpr const int32_t kSurfaceUpdateRetryCount = 2;
 
 }  // namespace
 
-VideoPlayerHarmony::VideoPlayerHarmony(const AnimaXAbility *ability_ptr) {
-  if (ability_ptr) {
-    auto *harmony_ability =
-        static_cast<const AnimaXAbilityHarmony *>(ability_ptr);
+VideoPlayerHarmony::VideoPlayerHarmony(std::shared_ptr<AnimaXAbility> ability) {
+  if (ability) {
+    auto harmony_ability =
+        std::static_pointer_cast<AnimaXAbilityHarmony>(std::move(ability));
     if (harmony_ability) {
       auto timeout = harmony_ability->GetVideoFrameTimeout();
       if (timeout > 0) {
@@ -164,12 +166,6 @@ void VideoPlayerHarmony::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   ANIMAX_LOGE("AttachAsset success, gl_error:" << glGetError());
 }
 
-void VideoPlayerHarmony::NotifyErrorEvent(const std::string &err_msg) {
-  if (listener_) {
-    listener_->OnVideoPlayerError(err_msg);
-  }
-}
-
 void VideoPlayerHarmony::InitCodecManager() {
   if (data_ == nullptr || native_window_ == nullptr ||
       codec_manager_ != nullptr || !asset_->IsValid()) {
@@ -184,8 +180,9 @@ void VideoPlayerHarmony::InitCodecManager() {
 }
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    const AnimaXAbility *ability_ptr) {
-  return std::make_unique<VideoPlayerHarmony>(ability_ptr);
+    std::shared_ptr<AnimaXAbility> ability) {
+  return std::unique_ptr<VideoPlayer>(
+      new VideoPlayerHarmony(std::move(ability)));
 }
 
 }  // namespace animax

@@ -14,7 +14,7 @@ namespace animax {
 class VideoAssetAndroid;
 class VideoPlayerAndroid : public VideoPlayer {
  public:
-  VideoPlayerAndroid(const AnimaXAbility *ability_ptr);
+  explicit VideoPlayerAndroid(std::shared_ptr<AnimaXAbility> ability);
   ~VideoPlayerAndroid() override;
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;

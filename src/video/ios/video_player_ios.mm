@@ -59,8 +59,8 @@ void VideoPlayerErrorReporter::ReportHasDrawnOnceAfterError() {
     const auto err_msg =
         std::string("Error has occurred before HasDrewOnce called, has decode frame error: ") +
         std::to_string(error_reported_.count(Error::kDecodeFrameError));
-    if (player_->listener_) {
-      player_->listener_->OnVideoPlayerError(err_msg);
+    if (auto listener = player_->weak_listener_.lock()) {
+      listener->OnLayerError(EventError::kVideoPlayerError, err_msg);
     }
   }
 }
@@ -75,8 +75,8 @@ void VideoPlayerErrorReporter::ReportErrorOnce(const std::string &err_msg, const
   }
   error_reported_.insert(err_code);
   Log(err_msg);
-  if (player_->listener_) {
-    player_->listener_->OnVideoPlayerError(err_msg);
+  if (auto listener = player_->weak_listener_.lock()) {
+    listener->OnLayerError(EventError::kVideoPlayerError, err_msg);
   }
 }
 
@@ -413,7 +413,7 @@ CMSampleBufferRef VideoPlayerIOS::PrepareFrameData(const FrameInfo &frame_info) 
 
 const std::array<float, 16> &VideoPlayerIOS::GetTransform() { return transform_; }
 
-std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(const AnimaXAbility *ability_ptr) {
+std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(std::shared_ptr<AnimaXAbility> ability) {
   return std::make_unique<VideoPlayerIOS>();
   ;
 }

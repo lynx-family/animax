@@ -54,12 +54,12 @@ void AlphaVideoLayer::AttachAssetOnce() {
   }
 
   ANIMAX_LOGI("AttachAssetOnce on video: " << video_asset_->Model().id);
-  auto provider = VideoPlayerService::GetInstance().GetProvider(ability.get(),
-                                                                video_asset_);
+  auto provider =
+      VideoPlayerService::GetInstance().GetProvider(ability, video_asset_);
   if (!provider) {
     return;
   }
-  video_shader_ = provider->CreateVideoShader(ability.get());
+  video_shader_ = provider->CreateVideoShader(ability);
 
   DCHECK(video_shader_);
   int32_t video_width = video_asset_->GetVideoWidth();
@@ -67,7 +67,9 @@ void AlphaVideoLayer::AttachAssetOnce() {
   EventWarningChecker::CheckIllegalAlphaVideoSize(
       video_width, video_height,
       [this](EventWarning warning, const std::string& warning_msg) {
-        OnVideoPlayerWarning(warning, warning_msg);
+        if (auto listener = weak_listener_.lock()) {
+          listener->OnLayerWarning(warning, warning_msg);
+        }
       });
 
   std::array<float, 4> rgb_frame{
@@ -93,12 +95,18 @@ void AlphaVideoLayer::AttachAssetOnce() {
   video_shader_->Init(composite_texture_width, composite_texture_height,
                       rgb_frame, a_frame);
   if (!video_shader_->Valid()) {
-    VideoPlayerListener::OnVideoPlayerError("video shader init error");
+    ANIMAX_LOGE("OnLayerError, code: "
+                << static_cast<int32_t>(EventError::kVideoPlayerError)
+                << ", message: video shader init error");
+    if (auto listener = weak_listener_.lock()) {
+      listener->OnLayerError(EventError::kVideoPlayerError,
+                             "video shader init error");
+    }
   }
 
-  video_player_ = provider->CreateVideoPlayer(ability.get());
+  video_player_ = provider->CreateVideoPlayer(std::move(ability));
   DCHECK(video_player_);
-  video_player_->SetListener(this);
+  video_player_->SetListener(weak_listener_);
   video_player_->AttachAsset(video_asset_);
 
   if (is_downsample_size_valid) {
@@ -230,22 +238,6 @@ Image* AlphaVideoLayer::GetCompositeImage(RealContext* real_context) {
     image_ = video_shader_->GetOutputImage(real_context);
   }
   return image_.get();
-}
-
-void AlphaVideoLayer::OnVideoPlayerError(EventError error,
-                                         const std::string& err_msg) {
-  ANIMAX_LOGE("OnVideoPlayerError, code:" << static_cast<int32_t>(error)
-                                          << ", message: " << err_msg);
-  if (auto listener = weak_listener_.lock()) {
-    listener->OnLayerError(error, err_msg);
-  }
-}
-
-void AlphaVideoLayer::OnVideoPlayerWarning(lynx::animax::EventWarning warning,
-                                           const std::string& warning_msg) {
-  if (auto listener = weak_listener_.lock()) {
-    listener->OnLayerWarning(warning, warning_msg);
-  }
 }
 
 }  // namespace animax

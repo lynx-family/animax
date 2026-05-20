@@ -85,7 +85,7 @@ void AnimaXEventDispatcher::NotifyEvent(Event event,
   controller_.MarkEvent(event);
   auto params_map = ConvertEventParamsIntoMap(event, std::move(params));
   for (const auto& listener : event_listeners_) {
-    listener(player.get(), event, params_map);
+    listener(weak_player_, event, params_map);
   }
 }
 

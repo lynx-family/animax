@@ -105,8 +105,8 @@ static jlong Create(JNIEnv* env, jobject jcaller, jlong loader,
   }
 
   builder.AddEventListener([android_ability = std::move(android_ability)](
-                               AnimaXPlayer* /*player*/, const Event event,
-                               const EventParamMap& params) {
+                               std::weak_ptr<AnimaXPlayer> /*player*/,
+                               const Event event, const EventParamMap& params) {
     lynx::animax::android::JavaOnlyMap jni_map;
     ConvertEventParamMapToJavaOnlyMap(params, jni_map);
     android_ability->SendEvent(static_cast<uint8_t>(event),

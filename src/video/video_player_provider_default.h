@@ -5,6 +5,8 @@
 #ifndef ANIMAX_SRC_VIDEO_VIDEO_PLAYER_PROVIDER_DEFAULT_H_
 #define ANIMAX_SRC_VIDEO_VIDEO_PLAYER_PROVIDER_DEFAULT_H_
 
+#include <utility>
+
 #include "src/video/video_player_provider.h"
 
 namespace lynx {
@@ -13,17 +15,16 @@ namespace animax {
 class VideoPlayerProviderDefault : public VideoPlayerProvider {
  public:
   std::unique_ptr<VideoPlayer> CreateVideoPlayer(
-      const AnimaXAbility *ability) override {
-    return VideoPlayer::MakeVideoPlayer(ability);
+      std::shared_ptr<AnimaXAbility> ability) override {
+    return VideoPlayer::MakeVideoPlayer(std::move(ability));
   }
 
   std::unique_ptr<VideoShader> CreateVideoShader(
-      const AnimaXAbility *ability) override {
-    return VideoShader::Make(ability);
+      std::shared_ptr<AnimaXAbility> ability) override {
+    return VideoShader::Make(std::move(ability));
   }
 
-  bool IsSupported(const AnimaXAbility *ability,
-                   std::shared_ptr<VideoAsset> asset) override {
+  bool IsSupported(AnimaXAbility* ability, VideoAsset* asset) override {
     return true;
   }
 };

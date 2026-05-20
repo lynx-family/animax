@@ -13,12 +13,12 @@ namespace lynx {
 namespace animax {
 
 std::unique_ptr<VideoShader> VideoShader::Make(
-    const AnimaXAbility* ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   return nullptr;
 }
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    const AnimaXAbility* ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   return nullptr;
 }
 

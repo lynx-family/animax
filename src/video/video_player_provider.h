@@ -23,7 +23,7 @@ class VideoPlayerProvider {
    * creation fails.
    */
   virtual std::unique_ptr<VideoPlayer> CreateVideoPlayer(
-      const AnimaXAbility *ability) = 0;
+      std::shared_ptr<AnimaXAbility> ability) = 0;
 
   /**
    * Creates video shader instance based on the provided player and asset.
@@ -31,7 +31,7 @@ class VideoPlayerProvider {
    * creation fails.
    */
   virtual std::unique_ptr<VideoShader> CreateVideoShader(
-      const AnimaXAbility *ability) = 0;
+      std::shared_ptr<AnimaXAbility> ability) = 0;
 
   /**
    * Checks if this provider supports the given ability and video asset.
@@ -40,8 +40,7 @@ class VideoPlayerProvider {
    * @return true if this provider supports the ability and asset, false
    * otherwise.
    */
-  virtual bool IsSupported(const AnimaXAbility *ability,
-                           std::shared_ptr<VideoAsset> asset) = 0;
+  virtual bool IsSupported(AnimaXAbility* ability, VideoAsset* asset) = 0;
 };
 }  // namespace animax
 }  // namespace lynx

@@ -14,7 +14,7 @@ namespace lynx {
 namespace animax {
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    const AnimaXAbility* ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   auto decoder = std::make_unique<VideoDecoderWeb>();
   auto player = std::make_unique<VideoPlayerCustom>(std::move(decoder));
   player->SetTextureTarget(GL_TEXTURE_2D);
@@ -22,7 +22,7 @@ std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
 }
 
 std::unique_ptr<VideoShader> VideoShader::Make(
-    const AnimaXAbility* ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   auto shader = std::make_unique<VideoShaderYUV>();
   shader->SetTextureFormat(GL_LUMINANCE);
   return shader;

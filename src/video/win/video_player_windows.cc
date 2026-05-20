@@ -4,6 +4,7 @@
 #include "src/video/win/video_player_windows.h"
 
 #include <memory>
+#include <utility>
 
 #include "src/base/gl/gl_util.h"
 #include "src/base/log/log.h"
@@ -18,7 +19,7 @@ namespace lynx {
 namespace animax {
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    const AnimaXAbility* ability_ptr) {
+    std::shared_ptr<AnimaXAbility> ability) {
   auto decoder = std::make_unique<VideoDecoderFFmpeg>();
   auto player = std::make_unique<VideoPlayerCustom>(std::move(decoder));
   player->SetTextureTarget(GL_TEXTURE_2D);
@@ -26,8 +27,8 @@ std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
 }
 
 std::unique_ptr<VideoShader> VideoShader::Make(
-    const AnimaXAbility* ability_ptr) {
-  return std::make_unique<VideoShaderWindows>(ability_ptr);
+    std::shared_ptr<AnimaXAbility> ability) {
+  return std::make_unique<VideoShaderWindows>(std::move(ability));
 }
 
 }  // namespace animax

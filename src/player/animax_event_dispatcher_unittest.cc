@@ -21,7 +21,8 @@ using ::testing::Return;
 
 class MockEventListener {
  public:
-  MOCK_METHOD(void, Call, (AnimaXPlayer*, Event, const EventParamMap&));
+  MOCK_METHOD(void, Call,
+              (std::weak_ptr<AnimaXPlayer>, Event, const EventParamMap&));
 };
 
 class MockVSyncMonitor : public VSyncMonitor {
@@ -42,17 +43,17 @@ class AnimaXEventDispatcherTest : public ::testing::Test {
  protected:
   AnimaXEventDispatcherTest() {
     mock_vsync_monitor_ = std::make_shared<MockVSyncMonitor>();
-    player_ =
-        AnimaXPlayerBuilder()
-            .SetScale(1.0f)
-            .SetVSyncMonitor(mock_vsync_monitor_)
-            .EnableMultiThreadAccelerate(false)
-            .DisablePlaybackOnAssetLoadFailure(false)
-            .SetResourceLoader(nullptr)
-            .SetUnzipLoader(nullptr)
-            .SetAbility(nullptr)
-            .AddEventListener([](AnimaXPlayer*, Event, const EventParamMap&) {})
-            .Build();
+    player_ = AnimaXPlayerBuilder()
+                  .SetScale(1.0f)
+                  .SetVSyncMonitor(mock_vsync_monitor_)
+                  .EnableMultiThreadAccelerate(false)
+                  .DisablePlaybackOnAssetLoadFailure(false)
+                  .SetResourceLoader(nullptr)
+                  .SetUnzipLoader(nullptr)
+                  .SetAbility(nullptr)
+                  .AddEventListener([](std::weak_ptr<AnimaXPlayer>, Event,
+                                       const EventParamMap&) {})
+                  .Build();
     test_controller_ = std::make_unique<TestAnimaXMainController>(
         player_, mock_vsync_monitor_);
     dispatcher_ = std::make_unique<AnimaXEventDispatcher>(
@@ -68,7 +69,8 @@ class AnimaXEventDispatcherTest : public ::testing::Test {
 };
 
 TEST_F(AnimaXEventDispatcherTest, AddEventListener_AddsListener) {
-  EventListener listener = [](AnimaXPlayer*, Event, const EventParamMap&) {};
+  EventListener listener = [](std::weak_ptr<AnimaXPlayer>, Event,
+                              const EventParamMap&) {};
 
   dispatcher_->AddEventListener(std::move(listener));
 
@@ -78,7 +80,8 @@ TEST_F(AnimaXEventDispatcherTest, AddEventListener_AddsListener) {
 }
 
 TEST_F(AnimaXEventDispatcherTest, ClearEventListeners_RemovesAllListeners) {
-  EventListener listener = [](AnimaXPlayer*, Event, const EventParamMap&) {};
+  EventListener listener = [](std::weak_ptr<AnimaXPlayer>, Event,
+                              const EventParamMap&) {};
 
   dispatcher_->AddEventListener(std::move(listener));
   dispatcher_->ClearEventListeners();
@@ -166,8 +169,8 @@ TEST_F(AnimaXEventDispatcherTest, SetSpeed_UpdatesSpeed) {
 }
 
 TEST_F(AnimaXEventDispatcherTest, NotifyError_NotifiesErrorEvent) {
-  EventListener mock_listener = [](AnimaXPlayer* player, Event event,
-                                   const EventParamMap& params) {
+  EventListener mock_listener = [](std::weak_ptr<AnimaXPlayer> player,
+                                   Event event, const EventParamMap& params) {
     EXPECT_EQ(event, Event::kError);
     EXPECT_TRUE(params.find(EventKeys::kCode) != params.end());
     EXPECT_TRUE(params.find(EventKeys::kMessage) != params.end());
@@ -180,8 +183,8 @@ TEST_F(AnimaXEventDispatcherTest, NotifyError_NotifiesErrorEvent) {
 TEST_F(AnimaXEventDispatcherTest, NotifyTap_NotifiesTapEvent) {
   std::unordered_set<std::string> hit_layers = {"layer1", "layer2"};
 
-  EventListener mock_listener = [](AnimaXPlayer* player, Event event,
-                                   const EventParamMap& params) {
+  EventListener mock_listener = [](std::weak_ptr<AnimaXPlayer> player,
+                                   Event event, const EventParamMap& params) {
     EXPECT_EQ(event, Event::kTapLayer);
     EXPECT_TRUE(params.find(EventKeys::kLayerList) != params.end());
   };
@@ -191,8 +194,8 @@ TEST_F(AnimaXEventDispatcherTest, NotifyTap_NotifiesTapEvent) {
 }
 
 TEST_F(AnimaXEventDispatcherTest, NotifyWarning_NotifiesWarningEvent) {
-  EventListener mock_listener = [](AnimaXPlayer* player, Event event,
-                                   const EventParamMap& params) {
+  EventListener mock_listener = [](std::weak_ptr<AnimaXPlayer> player,
+                                   Event event, const EventParamMap& params) {
     EXPECT_EQ(event, Event::kWarning);
     EXPECT_TRUE(params.find(EventKeys::kCode) != params.end());
     EXPECT_TRUE(params.find(EventKeys::kMessage) != params.end());
@@ -204,8 +207,8 @@ TEST_F(AnimaXEventDispatcherTest, NotifyWarning_NotifiesWarningEvent) {
 }
 
 TEST_F(AnimaXEventDispatcherTest, NotifyFrameEvent_NotifiesFrameEvent) {
-  EventListener mock_listener = [](AnimaXPlayer* player, Event event,
-                                   const EventParamMap& params) {
+  EventListener mock_listener = [](std::weak_ptr<AnimaXPlayer> player,
+                                   Event event, const EventParamMap& params) {
     EXPECT_EQ(event, Event::kReady);
     EXPECT_TRUE(params.find(EventKeys::kCurrent) != params.end());
   };
@@ -215,8 +218,8 @@ TEST_F(AnimaXEventDispatcherTest, NotifyFrameEvent_NotifiesFrameEvent) {
 }
 
 TEST_F(AnimaXEventDispatcherTest, NotifyFps_NotifiesFpsEvent) {
-  EventListener mock_listener = [](AnimaXPlayer* player, Event event,
-                                   const EventParamMap& params) {
+  EventListener mock_listener = [](std::weak_ptr<AnimaXPlayer> player,
+                                   Event event, const EventParamMap& params) {
     EXPECT_EQ(event, Event::kFps);
     EXPECT_TRUE(params.find(EventKeys::kCurrent) != params.end());
     EXPECT_TRUE(params.find(EventKeys::kMaxDropRate) != params.end());

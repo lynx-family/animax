@@ -177,7 +177,9 @@ void UpdateProperty(std::shared_ptr<AnimaXPlayer> player,
 
 }  // namespace
 
-base::NoDestructor<std::map<AnimaXPlayer*, AnimaXWasm::EventCallback>>
+base::NoDestructor<
+    std::map<std::weak_ptr<AnimaXPlayer>, AnimaXWasm::EventCallback,
+             std::owner_less<std::weak_ptr<AnimaXPlayer>>>>
     AnimaXWasm::event_callback_map_;
 
 AnimaXWasm::AnimaXWasm(float scale) {
@@ -187,9 +189,10 @@ AnimaXWasm::AnimaXWasm(float scale) {
   AnimaXPlayerBuilder builder;
   builder.SetScale(scale)
       .SetResourceLoader(resource_loader_)
-      .AddEventListener([](AnimaXPlayer* player, const Event event,
+      .AddEventListener([](std::weak_ptr<AnimaXPlayer> weak_player,
+                           const Event event,
                            const animax::EventParamMap& params) {
-        auto it = event_callback_map_->find(player);
+        auto it = event_callback_map_->find(weak_player);
         if (it != event_callback_map_->end() && it->second) {
           it->second(GetEventName(event), ConvertParamsToJsObject(params));
         }
@@ -199,7 +202,7 @@ AnimaXWasm::AnimaXWasm(float scale) {
 
 AnimaXWasm::~AnimaXWasm() {
   ANIMAX_LOGI("AnimaXWasm destructor");
-  event_callback_map_->erase(player_.get());
+  event_callback_map_->erase(player_);
 }
 
 void AnimaXWasm::SetSurfaceWithCanvas(
@@ -237,7 +240,7 @@ void AnimaXWasm::SetResourceLoaderImpl(ResourceLoaderImpl impl) {
 
 void AnimaXWasm::SetEventCallback(EventCallback callback) {
   ANIMAX_LOGI("SetEventCallback success");
-  event_callback_map_->emplace(player_.get(), callback);
+  (*event_callback_map_)[player_] = callback;
 }
 
 bool AnimaXWasm::RegisterFontWithData(const std::string& family_name,

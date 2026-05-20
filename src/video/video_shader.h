@@ -19,7 +19,8 @@ class RealContext;
 
 class VideoShader {
  public:
-  static std::unique_ptr<VideoShader> Make(const AnimaXAbility *ability_ptr);
+  static std::unique_ptr<VideoShader> Make(
+      std::shared_ptr<AnimaXAbility> ability);
   VideoShader() = default;
   virtual ~VideoShader() = default;
 

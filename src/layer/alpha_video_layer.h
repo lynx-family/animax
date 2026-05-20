@@ -12,7 +12,6 @@
 #include "src/render/paint.h"
 #include "src/resource/asset/video_asset.h"
 #include "src/video/video_player.h"
-#include "src/video/video_player_listener.h"
 #include "src/video/video_shader.h"
 
 namespace lynx {
@@ -20,7 +19,7 @@ namespace animax {
 class VideoShader;
 class VideoPlayer;
 
-class AlphaVideoLayer : public BaseLayer, public VideoPlayerListener {
+class AlphaVideoLayer : public BaseLayer {
  public:
   AlphaVideoLayer(LayerModel& layer_model, CompositionModel& composition);
   ~AlphaVideoLayer() override = default;
@@ -29,12 +28,6 @@ class AlphaVideoLayer : public BaseLayer, public VideoPlayerListener {
   void GetBounds(RectF& out_bounds, Matrix& parent_matrix,
                  bool apply_parent) override;
   void DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) override;
-
-  void OnVideoPlayerError(EventError error,
-                          const std::string& err_msg) override;
-
-  void OnVideoPlayerWarning(EventWarning warning,
-                            const std::string& warning_msg) override;
 
  private:
   void AttachAssetOnce();

@@ -103,8 +103,8 @@ struct EventKeys {
 class AnimaXPlayer;
 
 using EventParamMap = std::map<std::string, EventParamValue>;
-using EventListener = base::MoveOnlyClosure<void, AnimaXPlayer*, const Event,
-                                            const EventParamMap&>;
+using EventListener = base::MoveOnlyClosure<void, std::weak_ptr<AnimaXPlayer>,
+                                            const Event, const EventParamMap&>;
 
 }  // namespace animax
 }  // namespace lynx

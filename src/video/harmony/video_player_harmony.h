@@ -25,7 +25,7 @@ class VideoCodecManagerHarmony;
 
 class VideoPlayerHarmony : public VideoPlayer {
  public:
-  explicit VideoPlayerHarmony(const AnimaXAbility *ability_ptr);
+  explicit VideoPlayerHarmony(std::shared_ptr<AnimaXAbility> ability);
   ~VideoPlayerHarmony() override;
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
@@ -35,8 +35,6 @@ class VideoPlayerHarmony : public VideoPlayer {
   const std::array<float, 16> &GetTransform() override;
 
   void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
-
-  void NotifyErrorEvent(const std::string &err_msg);
 
  private:
   // Create the native window by creating texture id and native image.
