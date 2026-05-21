@@ -15,6 +15,25 @@ posix_absolute_path() {
   echo $ABSOLUTE_PATH_OF_FILE
 }
 
+prepend_pythonpath_if_exists() {
+  local python_path="$1"
+  if [[ ! -d "$python_path" ]]; then
+    return 0
+  fi
+
+  python_path="$(cd "$python_path" 1>/dev/null && pwd -P)" || return 0
+  case ":${PYTHONPATH:-}:" in
+    *":$python_path:"*) ;;
+    *)
+      if [[ -n "${PYTHONPATH:-}" ]]; then
+        export PYTHONPATH="$python_path:$PYTHONPATH"
+      else
+        export PYTHONPATH="$python_path"
+      fi
+      ;;
+  esac
+}
+
 lynx_envsetup() {
   local SCRIPT_ABSOLUTE_PATH="$(posix_absolute_path $1)"
   local TOOLS_ABSOLUTE_PATH="$(dirname $SCRIPT_ABSOLUTE_PATH)"
@@ -28,6 +47,9 @@ lynx_envsetup() {
   export COREPACK_HOME="${BUILDTOOLS_DIR}/corepack"
 
   export PATH="${LYNX_DIR}/tools_shared:$PATH"
+  prepend_pythonpath_if_exists "${LYNX_DIR}/third_party/py_deps"
+  prepend_pythonpath_if_exists "${LYNX_DIR}/third_party/lynx/third_party/py_deps"
+  prepend_pythonpath_if_exists "${LYNX_DIR}/../../lynx/third_party/py_deps"
 }
 
 function android_env_setup() {
@@ -71,14 +93,5 @@ function download_tools_shared_if_needed() {
   fi
 }
 
-function python_env_setup() {
-  download_tools_shared_if_needed
-
-  VENV_PATH=$LYNX_DIR/.venv
-  python3 $LYNX_DIR/tools_shared/vpython_tools/vpython_env_setup.py --root_dir $LYNX_DIR --requirements-path $LYNX_DIR/tools/vpython_tools/requirements.txt
-  source $VENV_PATH/bin/activate
-}
-
 lynx_envsetup "${BASH_SOURCE:-$0}"
 android_env_setup "${BASH_SOURCE:-$0}"
-python_env_setup
