@@ -66,12 +66,10 @@ struct MetalResourceManager {
     [pipeline_descriptor.colorAttachments[0] setPixelFormat:MTLPixelFormatBGRA8Unorm];
 
     // Apply blend configuration
-    [pipeline_descriptor.colorAttachments[0] setSourceRGBBlendFactor:MTLBlendFactorSourceAlpha];
-    [pipeline_descriptor.colorAttachments[0] setSourceAlphaBlendFactor:MTLBlendFactorSourceAlpha];
-    [pipeline_descriptor.colorAttachments[0]
-        setDestinationRGBBlendFactor:MTLBlendFactorOneMinusSourceAlpha];
-    [pipeline_descriptor.colorAttachments[0]
-        setDestinationAlphaBlendFactor:MTLBlendFactorOneMinusSourceAlpha];
+    [pipeline_descriptor.colorAttachments[0] setSourceRGBBlendFactor:MTLBlendFactorOne];
+    [pipeline_descriptor.colorAttachments[0] setSourceAlphaBlendFactor:MTLBlendFactorOne];
+    [pipeline_descriptor.colorAttachments[0] setDestinationRGBBlendFactor:MTLBlendFactorZero];
+    [pipeline_descriptor.colorAttachments[0] setDestinationAlphaBlendFactor:MTLBlendFactorZero];
     [pipeline_descriptor.colorAttachments[0] setBlendingEnabled:YES];
     [pipeline_descriptor.colorAttachments[0] setRgbBlendOperation:MTLBlendOperationAdd];
     [pipeline_descriptor.colorAttachments[0] setAlphaBlendOperation:MTLBlendOperationAdd];
