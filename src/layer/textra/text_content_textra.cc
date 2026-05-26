@@ -121,14 +121,14 @@ void TextContentTextra::ConfigurePlatformPainter(
 
   // fill color
   Color fill_color = Color(data_source.GetColor());
-  fill_color.SetA(alpha);
+  fill_color.SetA(alpha * fill_color.GetA() / 255);
   paint_->SetFillColor(fill_color);
 
   float width = data_source.GetStrokeWidth();
   // stroke color and stroke width
   if (width > 0) {
     Color stroke_color = Color(data_source.GetStrokeColor());
-    stroke_color.SetA(alpha);
+    stroke_color.SetA(alpha * stroke_color.GetA() / 255);
     paint_->SetStrokeColor(stroke_color);
     paint_->SetStrokeWidth(width);
     // stroke overfill
