@@ -21,6 +21,7 @@ struct TextLayerAnimations {
     std::unique_ptr<ColorKeyframeAnimation> stroke_color;
     std::unique_ptr<FloatKeyframeAnimation> stroke_width;
     std::unique_ptr<FloatKeyframeAnimation> tracking;
+    std::unique_ptr<FloatKeyframeAnimation> skew;
     std::unique_ptr<FloatKeyframeAnimation> text_size_callback;
   };
   std::vector<AnimatorProperty> animator_property_list;

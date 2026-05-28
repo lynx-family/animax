@@ -5,16 +5,16 @@ Subject: [PATCH] Fix shorten64to32 and unused variable error
 
 Signed-off-by: RickAi <RickAi@users.noreply.github.com>
 ---
- platform/android/lynxtextra/BUILD.gn     |  6 ++-
- platform/android/lynxtextra/build.gradle | 56 +++++++++++++++++++++---
- src/BUILD.gn                             |  8 +++-
- 3 files changed, 59 insertions(+), 11 deletions(-)
+ platform/android/lynxtextra/BUILD.gn     |  5 +--
+ platform/android/lynxtextra/build.gradle | 61 +++++++++++++++++++++++++++-----
+ src/BUILD.gn                             | 26 ++++++++------
+ 3 files changed, 71 insertions(+), 21 deletions(-)
 
 diff --git a/platform/android/lynxtextra/BUILD.gn b/platform/android/lynxtextra/BUILD.gn
-index a8dd87c..44d702d 100644
+index a8dd87c..34ff75b 100644
 --- a/platform/android/lynxtextra/BUILD.gn
 +++ b/platform/android/lynxtextra/BUILD.gn
-@@ -4,15 +4,17 @@
+@@ -4,7 +4,9 @@
  
  import("//config.gni")
  
@@ -23,10 +23,9 @@ index a8dd87c..44d702d 100644
 +  cmake_version = "3.4.1"
 +  target_type = "shared_library"
    output_name = "lynxtextra"
-+
    deps = [ "../../../src:textlayout" ]
    libs = [ "log" ]
-   include_dirs = [
+@@ -12,7 +14,6 @@ shared_library("lynxtextra") {
      "src/main/jni/include",
      "//third_party/icu/source/common",
    ]
@@ -35,23 +34,29 @@ index a8dd87c..44d702d 100644
      "-fuse-ld=lld",
      "-Xlinker",
 diff --git a/platform/android/lynxtextra/build.gradle b/platform/android/lynxtextra/build.gradle
-index d9979c3..258f4ac 100644
+index bca3b29..8d7dca8 100644
 --- a/platform/android/lynxtextra/build.gradle
 +++ b/platform/android/lynxtextra/build.gradle
-@@ -12,14 +12,56 @@ android {
+@@ -14,14 +14,7 @@ android {
          versionName "1.0"
          consumerProguardFiles "consumer-rules.pro"
          buildFeatures {
 -            prefabPublishing true
-+            prefabPublishing false
-         }
+-        }
 -        externalNativeBuild {
 -            cmake {
 -                cppFlags "-std=c++17 -DLOCAL_ARM_NEON=TRUE -Wl,-ldl -Wno-unused-command-line-argument"
--                arguments "-DANDROID_TOOLCHAIN=clang",
--                        "-DFLAVOR_NAME=lite"
+-                arguments "-DANDROID_TOOLCHAIN=clang"
 -                abiFilters = rootProject.ext.abiList
-+    }
+-            }
++            prefabPublishing false
+         }
+     }
+ 
+@@ -49,6 +42,56 @@ android {
+             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+         }
+     }
 +
 +    flavorDimensions "lynx"
 +    productFlavors {
@@ -62,7 +67,6 @@ index d9979c3..258f4ac 100644
 +                    cppFlags '-Wl,-ldl',
 +                            '-Wno-unused-command-line-argument'
 +                    arguments '-DFLAVOR_NAME=debugMode'
-+
 +                }
 +            }
 +        }
@@ -99,35 +103,70 @@ index d9979c3..258f4ac 100644
 +                    arguments '-DANDROID_STL='+getCppLib(),
 +                            '-DFLAVOR_NAME=dev'
 +                }
-             }
-         }
-     }
++            }
++        }
++    }
++
+     externalNativeBuild {
+         cmake {
+             path "CMakeLists.txt"
+@@ -73,4 +116,4 @@ android {
+ 
+ dependencies {
+     testImplementation 'androidx.test.ext:junit:1.1.2'
+-}
+\ No newline at end of file
++}
 diff --git a/src/BUILD.gn b/src/BUILD.gn
-index b08e1df..f0527e2 100644
+index b17079b..b20cd91 100644
 --- a/src/BUILD.gn
 +++ b/src/BUILD.gn
-@@ -51,8 +51,8 @@ config("textlayout_public") {
+@@ -12,10 +12,12 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-if (target_cpu == "wasm") {
+-  import("//config.gni")
+-} else {
+-  import("../config.gni")
++import("//config.gni")
++
++if (!defined(is_lvgl)) {
++  declare_args() {
++    is_lvgl = false
++  }
+ }
+ 
+ declare_args() {
+@@ -64,12 +66,12 @@ config("textlayout_public") {
  }
  config("textlayout_internal") {
    visibility = [ ":*" ]
 -  cflags = [ "-Wshorten-64-to-32" ]
 -  cflags_cc = [ "-Wshorten-64-to-32" ]
+-  if (target_cpu == "wasm") {
+-    cflags += [ "-fPIC" ]
+-    cflags_cc += [ "-fno-exceptions" ]
+-  }
 +  # cflags = [ "-Wshorten-64-to-32" ]
 +  # cflags_cc = [ "-Wshorten-64-to-32" ]
++  # if (target_cpu == "wasm") {
++  #   cflags += [ "-fPIC" ]
++  #   cflags_cc += [ "-fno-exceptions" ]
++  # }
    include_dirs = [
      "$prj_root",
      "$prj_root/public",
-@@ -303,6 +303,10 @@ source_set("javashaper") {
+@@ -358,6 +360,10 @@ source_set("javashaper") {
      ":icu",
    ]
    configs += [ ":textlayout_internal" ]
 +  cflags_cc = [
 +    "-Wno-shorten-64-to-32",
-+    "-Wno-unused-variable", 
++    "-Wno-unused-variable",
 +  ]
    deps = []
    sources = [
      "$prj_root/src/ports/shaper/java/java_font_manager.cc",
 -- 
 2.49.0
-

@@ -30,6 +30,7 @@ class ANIMAX_EXPORT TextContentDataSource {
   int32_t GetStrokeColor() const;
   float GetStrokeWidth() const;
   float GetTracking() const;
+  float GetSkew() const;
   float GetTextSize() const;
   std::string GetFontName() const;
   void* GetFontMgrCollection() const;

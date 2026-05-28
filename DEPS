@@ -115,7 +115,7 @@ deps = {
     'third_party/lynx-textra': {
         "type": "solution",
         "url": "https://github.com/lynx-family/lynx-textra.git",
-        "commit": "9d26418825ad2c7d6b8064fceef86b0e65f433ca",
+        "commit": "9762a397d32c832e6e60e2e87b6a51225cb1b931",
         "deps_file": "DEPS",
         'patches': [
             os.path.join(root_dir, 'patches', 'lynx-textra', '*.patch')

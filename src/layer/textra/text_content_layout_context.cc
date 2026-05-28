@@ -4,6 +4,9 @@
 
 #include "src/layer/textra/text_content_layout_context.h"
 
+#include <cmath>
+
+#include "src/content/path/path_util.h"
 #include "src/layer/text_content_data_source.h"
 #include "src/layer/text_layer.h"
 #include "src/model/value/document_data.h"
@@ -64,6 +67,11 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
 
   ttoffice::tttext::Style style;
   style.SetLetterSpacing(tracking);
+
+  float skew = data_source.GetSkew();
+  if (skew != 0.f) {
+    style.SetTextSkew(-std::tan(PathUtil::ToRadians(skew)));
+  }
 
   // Set font descriptor
   ttoffice::tttext::FontDescriptor font_descriptor;
