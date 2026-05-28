@@ -4,7 +4,9 @@
 
 #include "src/resource/composition_loader/zip_json_model_loader.h"
 
-#include <filesystem>
+#include <unistd.h>
+
+#include <cstdio>
 #include <fstream>
 #include <string>
 #include <string_view>
@@ -31,20 +33,21 @@ class MockResourceLoader : public Loader<ResourceRequest, ResourceResponse> {
 
 class ZipJSONModelLoaderTest : public ::testing::Test {
  protected:
-  std::filesystem::path unzip_dir_path{};
+  std::string unzip_dir_path;
   bool is_unzip_dir_setup = false;
 
   void SetUp() override {
-    unzip_dir_path = std::filesystem::temp_directory_path() /
-                     "animax_test_zip_json_model_loader_unittest";
-    std::filesystem::create_directories(unzip_dir_path);
+    char temp_dir_template[] =
+        "/tmp/animax_test_zip_json_model_loader_unittest.XXXXXX";
+    auto* created_dir = mkdtemp(temp_dir_template);
+    ASSERT_NE(nullptr, created_dir);
+    unzip_dir_path = created_dir;
   }
 
   void TearDown() override {
-    // remove all files in the unzip dir
-    std::filesystem::remove_all(unzip_dir_path);
-    // remove the unzip dir itself
-    std::filesystem::remove(unzip_dir_path);
+    const auto config_file_path = unzip_dir_path + "/config.json";
+    std::remove(config_file_path.c_str());
+    rmdir(unzip_dir_path.c_str());
   }
 
   void SetupUnzipDir() {
@@ -53,13 +56,14 @@ class ZipJSONModelLoaderTest : public ::testing::Test {
     }
 
     // Create a JSON file in unzip dir
-    const auto config_file_path = unzip_dir_path / "config.json";
-    std::ofstream out(config_file_path);
+    const auto config_file_path = unzip_dir_path + "/config.json";
+    std::ofstream out(config_file_path.c_str());
     out << lottie_json_str;
     out.close();
+    is_unzip_dir_setup = true;
   }
 
-  std::string UnzipDirPath() { return unzip_dir_path.string(); }
+  std::string UnzipDirPath() { return unzip_dir_path; }
 };
 
 TEST_F(ZipJSONModelLoaderTest, LoadFromUnzipDirWithConfigJSON) {
