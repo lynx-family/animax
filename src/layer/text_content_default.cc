@@ -86,12 +86,10 @@ bool TextContentDefault::GetRect(RectF& out_rect) {
 }
 
 void TextContentDefault::ConfigurePaint(int32_t alpha) {
-  Color fill_color = Color(data_source_.GetColor());
-  fill_color.SetA(alpha * fill_color.GetA() / 255);
-  fill_paint_.SetColor(fill_color);
-  Color stroke_color = Color(data_source_.GetStrokeColor());
-  stroke_color.SetA(alpha * stroke_color.GetA() / 255);
-  stroke_paint_.SetColor(stroke_color);
+  fill_paint_.SetColor(Color(data_source_.GetColor()));
+  fill_paint_.SetAlpha(alpha);
+  stroke_paint_.SetStrokeColor(Color(data_source_.GetStrokeColor()));
+  stroke_paint_.SetAlpha(alpha);
   float width = data_source_.GetStrokeWidth();
   if (width > 0) {
     stroke_paint_.SetStrokeWidth(width);
