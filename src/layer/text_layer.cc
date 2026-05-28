@@ -65,6 +65,11 @@ TextLayerAnimations::AnimatorProperty TextLayer::CreateAnimator(
     animator.tracking = tracking->CreateAnimation();
     AddAnimation(animator.tracking.get());
   }
+  auto* skew = text_property->GetSkew();
+  if (skew) {
+    animator.skew = skew->CreateAnimation();
+    AddAnimation(animator.skew.get());
+  }
   return animator;
 }
 
@@ -81,6 +86,9 @@ void TextLayer::AddUpdateListenerToAnimatorProperty(
   }
   if (animator.tracking) {
     animator.tracking->AddUpdateListener(this);
+  }
+  if (animator.skew) {
+    animator.skew->AddUpdateListener(this);
   }
 }
 

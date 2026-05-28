@@ -64,6 +64,16 @@ float TextContentDataSource::GetTracking() const {
   return tracking;
 }
 
+float TextContentDataSource::GetSkew() const {
+  for (auto it = animations_.animator_property_list.rbegin();
+       it != animations_.animator_property_list.rend(); ++it) {
+    if (it->skew) {
+      return it->skew->GetValue().Get();
+    }
+  }
+  return 0.f;
+}
+
 float TextContentDataSource::GetTextSize() const {
   for (auto it = animations_.animator_property_list.rbegin();
        it != animations_.animator_property_list.rend(); ++it) {

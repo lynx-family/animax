@@ -49,6 +49,7 @@ AnimatableTextPropertiesParser::ParseAnimatableTextProperty(
   std::unique_ptr<AnimatableColorValue> stroke;
   std::unique_ptr<AnimatableFloatValue> stroke_width;
   std::unique_ptr<AnimatableFloatValue> tracking;
+  std::unique_ptr<AnimatableFloatValue> skew;
 
   const auto& object = value.GetObject();
   for (auto it = object.MemberBegin(); it != object.MemberEnd(); it++) {
@@ -61,11 +62,13 @@ AnimatableTextPropertiesParser::ParseAnimatableTextProperty(
       stroke_width = AnimatableValueParser::ParseFloat(it->value, composition);
     } else if (strcmp(key, "t") == 0) {
       tracking = AnimatableValueParser::ParseFloat(it->value, composition);
+    } else if (strcmp(key, "sk") == 0) {
+      skew = AnimatableValueParser::ParseFloat(it->value, composition, false);
     }
   }
   return std::make_unique<AnimatableTextProperty>(
       std::move(color), std::move(stroke), std::move(stroke_width),
-      std::move(tracking));
+      std::move(tracking), std::move(skew));
 }
 
 }  // namespace animax

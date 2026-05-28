@@ -36,11 +36,13 @@ class AnimatableTextProperty {
   AnimatableTextProperty(std::unique_ptr<AnimatableColorValue> color,
                          std::unique_ptr<AnimatableColorValue> stroke,
                          std::unique_ptr<AnimatableFloatValue> stroke_width,
-                         std::unique_ptr<AnimatableFloatValue> tracking)
+                         std::unique_ptr<AnimatableFloatValue> tracking,
+                         std::unique_ptr<AnimatableFloatValue> skew)
       : color_(std::move(color)),
         stroke_(std::move(stroke)),
         stroke_width_(std::move(stroke_width)),
-        tracking_(std::move(tracking)) {}
+        tracking_(std::move(tracking)),
+        skew_(std::move(skew)) {}
 
   AnimatableColorValue* GetColor() const {
     return color_ ? color_.get() : nullptr;
@@ -54,12 +56,16 @@ class AnimatableTextProperty {
   AnimatableFloatValue* GetTracking() const {
     return tracking_ ? tracking_.get() : nullptr;
   }
+  AnimatableFloatValue* GetSkew() const {
+    return skew_ ? skew_.get() : nullptr;
+  }
 
  private:
   std::unique_ptr<AnimatableColorValue> color_;
   std::unique_ptr<AnimatableColorValue> stroke_;
   std::unique_ptr<AnimatableFloatValue> stroke_width_;
   std::unique_ptr<AnimatableFloatValue> tracking_;
+  std::unique_ptr<AnimatableFloatValue> skew_;
 };
 
 using AnimatableTextPropertyList =
