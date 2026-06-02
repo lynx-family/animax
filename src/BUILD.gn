@@ -173,6 +173,12 @@ config("animax_private_config") {
   if (use_primjs_napi) {
     defines += [ "USE_PRIMJS_NAPI" ]
   }
+
+  if (enable_trace == "perfetto") {
+    defines += [ "ENABLE_TRACE_PERFETTO=1" ]
+  } else if (enable_trace == "systrace") {
+    defines += [ "ENABLE_TRACE_SYSTRACE=1" ]
+  }
 }
 
 config("animax_public_config") {
