@@ -1,6 +1,6 @@
 name: build android sdk
 
-description: build android sdk and publish aar to maven if build-type is 'release'
+description: build android sdk release assets
 
 inputs:
   version:
@@ -13,33 +13,126 @@ inputs:
   signingPassword:
     description: The password of the sdk to publish
     required: false
+    default: ''
   signingSecretKey:
     description: The secret key of the sdk to publish
     required: false
+    default: ''
   abiList:
     description: The abi list of the sdk to publish
     required: false
-    default: 'armeabi-v7a'
+    default: 'armeabi-v7a,arm64-v8a,x86_64'
+  package_maven:
+    description: Whether to stage Maven repository zip files.
+    required: false
+    default: 'true'
+
+outputs:
+  aar_paths:
+    description: Newline separated AAR files prepared for GitHub Release.
+    value: ${{ steps.package.outputs.aar_paths }}
+  maven_artifact_list:
+    description: JSON array of local Maven staging zip files.
+    value: ${{ steps.package.outputs.maven_artifact_list }}
 
 runs:
   using: composite
   steps:
     - name: Build artifact
+      id: package
       shell: bash
       run: |-
         cd $GITHUB_WORKSPACE/animax
         source tools/envsetup.sh
+        VERSION="$INPUT_VERSION"
+        if [[ -z "$VERSION" ]]; then
+          echo "Missing required input: version" >&2
+          exit 1
+        fi
+        ABI_LIST="$INPUT_ABI_LIST"
+        TEXTRA_VERSION=$(awk -F= '/^TEXTRA_VERSION=/{print $2}' versions.properties | tr -d '[:space:]')
+        if [[ -z "$TEXTRA_VERSION" ]]; then
+          echo "Missing TEXTRA_VERSION in versions.properties" >&2
+          exit 1
+        fi
+        ANDROID_RELEASE_DIR="$GITHUB_WORKSPACE/animax/out/release/android"
+        rm -rf "$ANDROID_RELEASE_DIR"
+        mkdir -p "$ANDROID_RELEASE_DIR"
+        rm -f platform/android/build/artifact-list platform/android/build/*.zip
+        rm -f platform/android/animax_*/build/artifact-list platform/android/animax_*/build/*.zip
+
+        if [[ ",$ABI_LIST," == *",x86,"* ]]; then
+          echo "::notice::AnimaX Android native modules do not publish x86 AAR slices; use x86_64 for simulator artifacts."
+        fi
+        if [[ ",$ABI_LIST," == *",x86_64,"* ]]; then
+          echo "::notice::LynxTextra ${TEXTRA_VERSION} does not ship an x86_64 Prefab slice, so AnimaXTextra publishes only supported ABI slices."
+        fi
+
         pushd platform/android
-        ./gradlew assembleAllModulesRelease -Penable_trace=none -PabiList=${{ inputs.abiList }} -PbuildLynxDebugSo -no-daemon
-        ./gradlew assembleAllModulesDevRelease -Penable_trace=perfetto -PabiList=${{ inputs.abiList }} -no-daemon
-        ./gradlew publishAllModules \
-          -Pversion=${{ inputs.version || '0.0.1-alpha.1' }} \
-          -Psigning.keyId=${{ inputs.signingKeyId }} \
-          -Psigning.password=${{ inputs.signingPassword }} \
-          -Psigning.secretKey=${{ inputs.signingSecretKey }}
-        ./gradlew publishAllModulesDevRelease \
-          -Pversion="${{ inputs.version || '0.0.1-alpha.1' }}-dev" \
-          -Psigning.keyId=${{ inputs.signingKeyId }} \
-          -Psigning.password=${{ inputs.signingPassword }} \
-          -Psigning.secretKey=${{ inputs.signingSecretKey }}
+        chmod +x ./gradlew
+        ./gradlew \
+          assembleAllModulesRelease \
+          -Penable_trace=none \
+          -PabiList="$ABI_LIST" \
+          -PbuildLynxDebugSo \
+          --no-daemon
+
+        if [[ "${{ inputs.package_maven }}" == "true" ]]; then
+          ./gradlew \
+            stageReleaseMavenArtifacts \
+            -Penable_trace=none \
+            -PabiList="$ABI_LIST" \
+            -PbuildLynxDebugSo \
+            -PVERSION="$VERSION" \
+            -Psigning.keyId="$SIGNING_KEY_ID" \
+            -Psigning.password="$SIGNING_PASSWORD" \
+            -Psigning.secretKey="$SIGNING_SECRET_KEY" \
+            --no-daemon
+          ./gradlew :zipArtifacts :getArtifactList -PVERSION="$VERSION" --no-daemon
+        fi
         popd
+
+        copy_aar() {
+          module_dir="$1"
+          artifact_name="$2"
+          aar_path=$(find "platform/android/$module_dir/build/outputs/aar" -name "*noasan-release.aar" | head -n 1)
+          if [[ -z "$aar_path" ]]; then
+            echo "No release AAR found for $module_dir" >&2
+            exit 1
+          fi
+          cp "$aar_path" "$ANDROID_RELEASE_DIR/${artifact_name}-${VERSION}.aar"
+        }
+
+        copy_aar "animax_android" "animax-sdk"
+        copy_aar "animax_textra" "animax-textra"
+
+        {
+          echo "aar_paths<<EOF"
+          find "$ANDROID_RELEASE_DIR" -name "*.aar" | sort
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
+        artifact_list=$(python3 - "$GITHUB_WORKSPACE/animax/platform/android" "${{ inputs.package_maven }}" <<'PY'
+        import json
+        import pathlib
+        import sys
+
+        root = pathlib.Path(sys.argv[1])
+        package_maven = sys.argv[2] == "true"
+        artifact_paths = []
+        if package_maven:
+            artifact_list = root / "build" / "artifact-list"
+            if artifact_list.is_file():
+                artifact_paths.extend(json.loads(artifact_list.read_text()))
+            if not artifact_paths:
+                raise SystemExit("No Maven artifact zip files were staged.")
+        print(json.dumps(artifact_paths))
+        PY
+        )
+        echo "maven_artifact_list=$artifact_list" >> "$GITHUB_OUTPUT"
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_ABI_LIST: ${{ inputs.abiList }}
+        SIGNING_KEY_ID: ${{ inputs.signingKeyId }}
+        SIGNING_PASSWORD: ${{ inputs.signingPassword }}
+        SIGNING_SECRET_KEY: ${{ inputs.signingSecretKey }}

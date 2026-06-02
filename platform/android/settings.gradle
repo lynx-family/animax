@@ -3,6 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 rootProject.name = "android"
 
-include ':animax_android'
-include ':animax_napi'
-include ':animax_textra'
+include ':AnimaXAndroid'
+project(":AnimaXAndroid").projectDir = new File(rootProject.projectDir, './animax_android')
+include ':AnimaXNapi'
+project(":AnimaXNapi").projectDir = new File(rootProject.projectDir, './animax_napi')
+include ':AnimaXTextra'
+project(":AnimaXTextra").projectDir = new File(rootProject.projectDir, './animax_textra')

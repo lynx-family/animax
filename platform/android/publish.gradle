@@ -6,11 +6,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 import org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency
 import org.gradle.api.internal.artifacts.dependencies.DefaultProjectDependency
-
-def aarPathList=""
-
-def baseVersion = findProperty("version")
-def devVersion = "${baseVersion}-dev"
+import groovy.json.JsonOutput
 
 def getAARPath(buildPath, boolean isDev = false) {
     def filePattern
@@ -27,6 +23,15 @@ def getAARPath(buildPath, boolean isDev = false) {
     return fileTree.files[0]
 }
 
+boolean isPublishModule() {
+    def releaseModulePaths = rootProject.ext.has('releaseModulePaths') ? rootProject.ext.releaseModulePaths : [':AnimaXAndroid', ':AnimaXTextra'] as Set
+    def releaseModuleNames = rootProject.ext.has('releaseModuleNames') ? rootProject.ext.releaseModuleNames : ['AnimaXAndroid', 'AnimaXTextra'] as Set
+    def releaseArtifactNames = rootProject.ext.has('releaseArtifactNames') ? rootProject.ext.releaseArtifactNames : ['animax-sdk', 'animax-textra'] as Set
+    return releaseModulePaths.contains(project.path) &&
+            releaseModuleNames.contains(project.name) &&
+            releaseArtifactNames.contains(project.findProperty('ARTIFACT_NAME'))
+}
+
 boolean isJavaModule() {
     boolean result = ((project.plugins.hasPlugin('java-library')
             || project.plugins.hasPlugin('java'))
@@ -37,6 +42,19 @@ boolean isJavaModule() {
 boolean isAndroidModule() {
     boolean result = project.plugins.hasPlugin('com.android.library')
     return result
+}
+
+boolean shouldConfigurePublishing() {
+    def runTasks = gradle.startParameter.taskNames.toString().toLowerCase()
+    return runTasks.contains("publish") || runTasks.contains("stagereleasemavenartifacts")
+}
+
+def getReleaseVersion() {
+    def releaseVersion = findProperty("VERSION") ?: findProperty("version")
+    if (!releaseVersion) {
+        throw new GradleException("Missing VERSION. Please pass -PVERSION=<ver>")
+    }
+    return releaseVersion
 }
 
 boolean hasDevFlavor() {
@@ -97,29 +115,36 @@ def addDependenciesToPom(Node pomNode) {
             if (configurations.api.dependencies.contains(dependency)) {
                 scope = "compile"
             }
-            def project = project(":${dependency.dependencyProject.path}")
-            def artifactId = project.findProperty('ARTIFACT_NAME')
-            def groupId = project.findProperty('ARTIFACT_GROUP')
+            def dependencyProject = dependency.dependencyProject
+            def artifactId = dependencyProject.findProperty('ARTIFACT_NAME')
+            def groupId = dependencyProject.findProperty('ARTIFACT_GROUP')
+            def dependencyVersion = dependency.version
+            if (dependencyVersion == null || dependencyVersion == "unspecified") {
+                dependencyVersion = getReleaseVersion()
+            }
+            if (artifactId == null || groupId == null || dependencyVersion == null) {
+                logger.lifecycle("Skip dependency ${dependencyProject.path} in pom because Maven coordinates are incomplete.")
+                return
+            }
             def dependencyNode = dependenciesNode.appendNode('dependency')
             dependencyNode.appendNode('groupId', groupId)
             dependencyNode.appendNode('artifactId', artifactId)
-            dependencyNode.appendNode('version', dependency.version)
+            dependencyNode.appendNode('version', dependencyVersion)
             dependencyNode.appendNode('scope', scope)
         }
     }
 }
 
 afterEvaluate {
-    def runTasks = gradle.startParameter.taskNames.toString().toLowerCase()
-    // Only tasks whose names contain "publish" can be triggered to avoid other Gradle tasks from executing this section of logic.
-    if (runTasks.contains("publish")) {
+    // Configure publications only for explicit Maven staging/publish tasks.
+    if (shouldConfigurePublishing() && isPublishModule()) {
         publishing {
             publications {
                 if (isJavaModule()) {
                     "jar"(MavenPublication) {
                         groupId ARTIFACT_GROUP
                         artifactId ARTIFACT_NAME
-                        version findProperty("version")
+                        version getReleaseVersion()
                         from components.java
                         task sourceJar(type: Jar) {
                             if (project.gradle.gradleVersion >= '8.0') {
@@ -175,7 +200,7 @@ afterEvaluate {
                     release(MavenPublication) {
                         groupId ARTIFACT_GROUP
                         artifactId ARTIFACT_NAME
-                        version findProperty("version")
+                        version getReleaseVersion()
                         artifact(getAARPath("$project.buildDir/outputs/aar"))
                         // collect source jar and add it into the component artifact.
                         Task sourceJar = createSourceJar("release-source")
@@ -220,7 +245,7 @@ afterEvaluate {
                     devRelease(MavenPublication) {
                         groupId ARTIFACT_GROUP
                         artifactId ARTIFACT_NAME
-                        version findProperty("version")
+                        version getReleaseVersion()
                         artifact(getAARPath("$project.buildDir/outputs/aar", true))
                         // collect source jar and add it into the component artifact.
                         Task sourceJarDev = createSourceJar("dev-sources")
@@ -273,5 +298,35 @@ afterEvaluate {
         task.doFirst {
             repository.url = "$project.buildDir/release/${publication.version}"
         }
+    }
+}
+
+def artifactList = []
+
+task zipArtifacts {
+    onlyIf {
+        isPublishModule()
+    }
+    doLast {
+        def artifactPath = "${project.buildDir}/release"
+        def version = getReleaseVersion()
+        def zipPath = file("${project.buildDir}/${project.ARTIFACT_NAME}-${version}.zip")
+        if (!file(artifactPath).exists()) {
+            throw new GradleException("No Maven release directory found at ${artifactPath}")
+        }
+        ant.zip(destfile: zipPath, basedir: artifactPath)
+        artifactList.add(zipPath.absolutePath)
+    }
+}
+
+task getArtifactList {
+    onlyIf {
+        isPublishModule()
+    }
+    dependsOn(zipArtifacts)
+    doLast {
+        println "artifactInfo: ${artifactList}"
+        File file = new File("${project.buildDir}/artifact-list")
+        file.text = JsonOutput.toJson(artifactList)
     }
 }

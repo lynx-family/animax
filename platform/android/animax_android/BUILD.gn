@@ -14,9 +14,9 @@ cmake_target("AnimaXAndroid") {
   deps = [
     ":animax_jni_files",
     "../../../src:animax",
-    "../../../third_party/lynx/base/platform/android:LynxBase",
-    "../../../third_party/lynx/base/trace/android:LynxTrace",
   ]
+
+  lib_dirs = [ "${lynx_base_native_lib_dir}" ]
 
   libs = [
     "EGL",
@@ -24,6 +24,8 @@ cmake_target("AnimaXAndroid") {
     "android",
     "dl",
     "log",
+    "lynxbase",
+    "lynxtrace",
     "jnigraphics",
   ]
 

@@ -5,12 +5,11 @@
 
 set -euo pipefail
 
-root_dir=$(pwd)/../../../../
-root_dir=$(readlink -f $root_dir)
+root_dir=$(cd "$(pwd)/../../../../" && pwd -P)
 echo "root_dir: $root_dir"
 command="pod install --verbose --repo-update"
 project_name="AnimaXExample.xcodeproj"
-enable_trace=true
+enable_trace=false
 
 # Prepare CocoaPods environment
 export COCOAPODS_CONVERT_GIT_TO_HTTP=false
@@ -21,7 +20,8 @@ usage() {
   echo "Usage: $0 [OPTIONS]"
   echo "Options:"
   echo "  -h, --help         Show this help message"
-  echo "  --disable-trace    Disable trace (no perfetto)"
+  echo "  --enable-trace     Enable trace/perfetto"
+  echo "  --disable-trace    Disable trace/perfetto (default)"
 }
 
 handle_options() {
@@ -30,6 +30,9 @@ handle_options() {
       -h|--help)
         usage
         exit 0
+        ;;
+      --enable-trace)
+        enable_trace=true
         ;;
       --disable-trace)
         enable_trace=false
@@ -44,14 +47,15 @@ handle_options() {
 
 handle_options "$@"
 
-enable_trace_param=$([ "$enable_trace" = false ] && echo "--enable-trace" || echo "")
+enable_trace_param=""
+if [ "$enable_trace" = true ]; then
+  enable_trace_param="--enable-trace"
+fi
 
 pushd "$root_dir"
-gn_root_dir=$(readlink -f $root_dir)
+gn_root_dir=$(pwd -P)
 echo "gn_root_dir: $gn_root_dir"
 python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root "$gn_root_dir" $enable_trace_param --target //platform/darwin/ios:animax_podspec
-python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root "$gn_root_dir" $enable_trace_param --target //third_party/lynx/base/platform/darwin:lynx_base_podspec 
-python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root "$gn_root_dir" $enable_trace_param --target //third_party/lynx/platform/darwin/ios/lynx_service_api:LynxServiceAPI_podspec
 popd
 
 bundle install -V --path="$root_dir"

@@ -1,7 +1,27 @@
 source 'https://cdn.cocoapods.org/'
 project './AnimaXExample.xcodeproj'
 
+def load_dependency_versions(path)
+  versions = {}
+  File.foreach(path) do |line|
+    line = line.strip
+    next if line.empty? || line.start_with?('#')
+
+    key, value = line.split('=', 2)
+    next if key.nil? || value.nil?
+    versions[key.strip] = value.strip
+  end
+  versions
+end
+
+pod_path = '../../../../'
+dependency_versions = load_dependency_versions(File.expand_path(File.join(pod_path, 'versions.properties'), __dir__))
+
 platform :ios, '13.0'
+
+LYNX_VERSION = dependency_versions.fetch('LYNX_VERSION')
+TEXTRA_VERSION = dependency_versions.fetch('TEXTRA_VERSION')
+SKITY_VERSION = dependency_versions.fetch('SKITY_VERSION')
 
 install!'cocoapods',:deterministic_uuids=>false,
                     :lock_pod_sources=>false,
@@ -17,8 +37,6 @@ post_install do |installer|
   end
 end
 
-pod_path = '../../../../'
-
 target 'AnimaXExample' do
   pod 'AnimaX', :path => pod_path, :subspecs => [
     'Core',
@@ -28,15 +46,7 @@ target 'AnimaXExample' do
     'ThirdParty'
   ]
 
-  pod 'skity', '1.0.0-beta.6'
-
-  pod 'LynxTextra', { :path => pod_path + 'third_party/lynx-textra' }
-
-  pod 'LynxBase', { :path => pod_path }, :subspecs => [
-    'Framework',
-  ]
-
-  pod 'LynxServiceAPI', { :path => pod_path }, :subspecs => [
-    'Core',
-  ]
+  pod 'skity', SKITY_VERSION
+  pod 'LynxTextra', TEXTRA_VERSION
+  pod 'LynxBase/Framework', LYNX_VERSION
 end

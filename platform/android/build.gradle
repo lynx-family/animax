@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
 buildscript {
     ext {
         kotlin_version = '1.5.32'
@@ -53,7 +54,6 @@ ext.getFlavorNamesAndBuildTypes = { Project project ->
         buildTypes << buildType.name
     }
     def runTasks = gradle.startParameter.taskNames.toString().toLowerCase()
-    // For composite build scenario, we need to get the tasks from the parent project.
     if (runTasks == "[]") {
         if (gradle.parent != null) {
             runTasks = gradle.parent.startParameter.taskNames.toString().toLowerCase()
@@ -62,9 +62,6 @@ ext.getFlavorNamesAndBuildTypes = { Project project ->
     if (runTasks.contains("generateAllGnCmakeTargets".toLowerCase()) || runTasks.contains("clean")) {
         return [flavorNames, buildTypes]
     }
-    // To reduce the generation of cmake scripts, the following types that will
-    // not be used are excluded.
-    // Notice: We can't exclude flavorNames because not all the flavors are the same in all projects.
     if (!(runTasks.contains("release") || runTasks.contains("publish"))) {
         buildTypes -= "release"
     }
@@ -75,18 +72,6 @@ ext.getFlavorNamesAndBuildTypes = { Project project ->
 }
 
 ext.writeGnArgs = { String gnArgs ->
-    def parsedGnArgs = new groovy.json.JsonSlurper().parseText(gnArgs)
-    parsedGnArgs.each { variantName, args ->
-        // The example links Lynx native binaries built with NDEBUG. Some Lynx headers
-        // gate fields on NDEBUG, so a debug AnimaX native build can get a different
-        // header-defined layout and crash when crossing into those binaries.
-        // Keep example native debug builds layout-compatible until headers come from
-        // the same Prefab artifacts as the linked binaries.
-        if (variantName.toString().toLowerCase().contains('debug') && args instanceof Map && args.containsKey('is_debug')) {
-            args['is_debug'] = 'false'
-        }
-    }
-    gnArgs = groovy.json.JsonOutput.toJson(parsedGnArgs)
     exec {
         workingDir "../../"
         commandLine pythonExec, "tools_shared/android_tools/write_gn_args.py", "--gn-args", gnArgs.replaceAll('"', '#')
@@ -94,7 +79,6 @@ ext.writeGnArgs = { String gnArgs ->
 }
 
 task generateAllGnCmakeTargets {
-    // force Gradle to evaluate the child build.gradle files before the parent
     evaluationDependsOnChildren()
 
     rootProject.allprojects { Project project ->
@@ -133,3 +117,5 @@ task clean(type: Delete) {
         }
     }
 }
+
+apply from: file("./package.gradle")

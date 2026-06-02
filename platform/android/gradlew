@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Copyright 2026 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+java_cmd="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+
+exec "$java_cmd" \
+  -Dorg.gradle.appname=gradlew \
+  -classpath "$script_dir/gradle/wrapper/gradle-wrapper.jar" \
+  org.gradle.wrapper.GradleWrapperMain "$@"

@@ -34,11 +34,9 @@ animax_source_set("textra") {
   include_dirs = [ "$textra_search_path/public" ]
   deps = [ "../../render:skity" ]
 
-  if (textra_source_build && is_android) {
-    deps += [ "$textra_search_path/platform/android/lynxtextra:lynxtextra" ]
-  } else if (!is_harmony) {
+  if (!is_harmony) {
     metadata = {
-      # let the cmake file to find and link libskity
+      # Let the generated CMake file find and link LynxTextra from binary deps.
       find_and_link_packages = [ [
             textra_target_name,
             [],
