@@ -23,9 +23,6 @@ config("16kb_page") {
 
 group("Android") {
   deps = [
-    "../../third_party/lynx-textra/platform/android/lynxtextra:lynxtextra",
-    "../../third_party/lynx/base/platform/android:LynxBase",
-    "../../third_party/lynx/base/trace/android:LynxTrace",
     "./animax_android:AnimaXAndroid",
     "./animax_textra:AnimaXTextra",
   ]

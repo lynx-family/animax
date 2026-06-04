@@ -13,7 +13,6 @@ animax_wasm_skity_libs = []
 # textra
 textra_search_path = rebase_path("../third_party/lynx-textra")
 textra_target_name = "lynxtextra"
-textra_source_build = true
 
 # skity
 skity_search_path = rebase_path("../third_party/skity")

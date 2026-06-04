@@ -1,0 +1,4 @@
+checker-config:
+  file-type-checker:
+    binary-files-allow-list:
+      - "^platform/android/gradle/wrapper/gradle-wrapper\\.jar$"

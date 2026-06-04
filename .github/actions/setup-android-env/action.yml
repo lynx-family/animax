@@ -18,4 +18,9 @@ runs:
       shell: bash
       run: |-
         sdkmanager "ndk;21.1.6352462"
-        export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/21.1.6352462
+        {
+          echo "ANDROID_SDK=$ANDROID_HOME"
+          echo "ANDROID_NDK=$ANDROID_HOME/ndk/21.1.6352462"
+          echo "ANDROID_NDK_21=$ANDROID_HOME/ndk/21.1.6352462"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/21.1.6352462"
+        } >> "$GITHUB_ENV"

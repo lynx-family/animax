@@ -4,9 +4,21 @@
 apply plugin: 'com.android.library'
 apply from: file("../jacoco.gradle")
 apply from: file("../deps.gradle")
+apply from: file("../publish.gradle")
 import org.json.simple.JSONObject
 
 ext.ABI_FILTERS = ['armeabi-v7a', 'armeabi', 'arm64-v8a', 'x86']
+// AnimaXTextra links libanimax from AnimaXAndroid, which currently does not
+// build x86. Keep the supported ABI set aligned to avoid x86 link failures.
+ext.TEXTRA_SUPPORTED_ABIS = ['armeabi-v7a', 'arm64-v8a']
+
+def getTextraAbiList() {
+    def abis = rootProject.ext.abiList.grep { project.ext.TEXTRA_SUPPORTED_ABIS.contains(it) }
+    if (abis.isEmpty()) {
+        throw new GradleException("AnimaXTextra binary build has no supported ABI in ${rootProject.ext.abiList}; supported ABIs are ${project.ext.TEXTRA_SUPPORTED_ABIS}.")
+    }
+    return abis
+}
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -32,8 +44,7 @@ android {
                 exclude 'lib/*/libnapi.so'
                 exclude 'lib/*/libskity.so'
                 exclude 'lib/*/libanimax.so'
-                // Do not exclude liblynxtextra.so here, because the app may not depend on animax_textra module.
-                // If the app have conflicts on lynxtextra.so, please use pickFirst to resolve it.
+                exclude 'lib/*/liblynxtextra.so'
             }
         }
     }
@@ -54,7 +65,7 @@ android {
                               '-DENABLE_ASAN=true',
                               '-DANDROID_STL=c++_shared',
                               '-DFLAVOR_NAME=asan'
-                    abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+                    abiFilters(*getTextraAbiList())
                 }
             }
         }
@@ -86,7 +97,7 @@ android {
                 }
             }
             ndk {
-                abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+                abiFilters(*getTextraAbiList())
             }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -105,7 +116,7 @@ android {
                 }
             }
             ndk {
-                abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
+                abiFilters(*getTextraAbiList())
             }
             debuggable true
         }
@@ -121,7 +132,7 @@ android {
     }
 
     buildFeatures {
-        // Enable prefab to link libskity.so in skity AAR
+        // Enable prefab to link native libraries from binary AAR dependencies.
         prefab true
     }
 
@@ -160,7 +171,7 @@ task configGnCompileParas {
                     gnBuildArgs_list.put("enable_animax_android_testing", "true")
                 }
             }
-            rootProject.ext.abiList.each { abi -> 
+            getTextraAbiList().each { abi ->
                 gnBuildArgs_map.put(flavorName+buildType+abi, gnBuildArgs_list)
             }
         }
@@ -170,7 +181,6 @@ task configGnCompileParas {
 
 dependencies {
     implementation project(':AnimaXAndroid')
-    implementation project(':LynxTextra')
+    implementation "org.lynxsdk.lynx:lynxtextra:${project.ext.TEXTRA_VERSION}"
     implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
 }
-
