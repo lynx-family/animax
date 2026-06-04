@@ -107,7 +107,7 @@ deps = {
     'third_party/skity': {
         "type": "solution",
         "url": "https://github.com/lynx-family/skity.git",
-        "commit": "3fb6bb60a0e94e6c8a01630f7690492ff59aa666",
+        "commit": "2dfafc71b305dbee6e734f332abcaadf5200544f",
         "deps_file": "hab/DEPS",
         "ignore_in_git": True,
     },
@@ -115,7 +115,7 @@ deps = {
     'third_party/lynx-textra': {
         "type": "solution",
         "url": "https://github.com/lynx-family/lynx-textra.git",
-        "commit": "9762a397d32c832e6e60e2e87b6a51225cb1b931",
+        "commit": "e8abbb637d4f3b512d3a9e5f03b4c224e7350612",
         "deps_file": "DEPS",
         'patches': [
             os.path.join(root_dir, 'patches', 'lynx-textra', '*.patch')

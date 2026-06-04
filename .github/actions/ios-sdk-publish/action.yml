@@ -1,53 +1,100 @@
 name: publish ios sdk
 
-description: package ios source code, upload the zip to release and publish the podspec file to cocoapods
+description: prepare AnimaX iOS source package and podspec release assets
 
 inputs:
   version:
-    required: false
+    required: true
     description: The version of pod.
     type: string
-  tag:
+  release_tag:
+    required: true
+    description: The GitHub release tag containing the source package.
+    type: string
+  commit_id:
     required: false
     type: string
-    description: The tag for release.
-  component:
-    required: false
-    type: string
-    default: 'all'
-  cocoapods_trunk_token:
-    description: The secret key of the sdk to publish
-    type: string
-  github_token:
-    description: The github token
-    type: string
+    description: The git commit id to pin in the podspec source.
+
+outputs:
+  podspec_path:
+    description: Path to the generated release podspec.
+    value: ${{ steps.prepare.outputs.podspec_path }}
+  podspec_json_path:
+    description: Path to the generated release podspec JSON.
+    value: ${{ steps.prepare.outputs.podspec_json_path }}
+  source_zip_path:
+    description: Path to the generated release source zip.
+    value: ${{ steps.prepare.outputs.source_zip_path }}
 
 runs:
   using: composite
   steps:
-    - name: Prepare cocoapods publish source
+    - name: Prepare AnimaX iOS release assets
+      id: prepare
       shell: bash
       run: |-
-        cd $GITHUB_WORKSPACE/animax
+        cd "$GITHUB_WORKSPACE/animax"
         source tools/envsetup.sh
-        python3 tools/ios_tools/cocoapods_publish_helper.py --prepare-source --tag ${{ inputs.tag }} --version ${{ inputs.version }} --component ${{ inputs.component }}
-    - name: Push iOS SDK to release
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ inputs.tag }}
-        token: ${{ inputs.github_token }}
-        artifacts: '${{ github.workspace }}/animax/*.zip'
-        replacesArtifacts: true
-        allowUpdates: true
-        body: ''
-    - name: Publish to CocoaPods Repo
+        VERSION="${{ inputs.version }}"
+        RELEASE_TAG="${{ inputs.release_tag }}"
+        SOURCE_ZIP_NAME="AnimaX-${VERSION}.zip"
+        export POD_VERSION="$VERSION"
+        export ANIMAX_COMMIT_ID="${INPUT_COMMIT_ID:-$(git rev-parse HEAD)}"
+        if [[ -z "$ANIMAX_COMMIT_ID" ]]; then
+          echo "Missing commit id for AnimaX podspec source." >&2
+          exit 1
+        fi
+
+        git config --global url."https://github.com/".insteadOf "git@github.com:"
+        pushd example/darwin/ios/animax_example
+        bash bundle_install.sh --disable-trace
+        popd
+
+        python3 tools/ios_tools/prepare_podspec_release.py --podspec AnimaX.podspec
+        bundle exec pod ipc spec AnimaX.podspec > /dev/null
+
+        python3 tools_shared/gen_ios_pkg.py \
+          --repo AnimaX \
+          --tag "$RELEASE_TAG" \
+          --output_type both \
+          --cache_path .bundle
+
+        mkdir -p source_package/AnimaX
+        while IFS= read -r -d '' header; do
+          cp "$header" "source_package/AnimaX/$(basename "$header")"
+        done < <(find platform/darwin/ios/animax_framework -name '*.h' -print0)
+
+        trace_header=""
+        while IFS= read -r candidate; do
+          trace_header="$candidate"
+          break
+        done < <(find third_party \
+          -path '*/base/trace/native/trace_event.h' -print 2>/dev/null)
+        if [[ -z "$trace_header" ]]; then
+          echo "Missing base/trace/native/trace_event.h for AnimaX iOS source package." >&2
+          exit 1
+        fi
+        rm -rf source_package/base/trace/native
+        mkdir -p source_package/base/trace
+        cp -R "$(dirname "$trace_header")" source_package/base/trace/
+        (cd source_package && zip -r "../$SOURCE_ZIP_NAME" AnimaX base)
+
+        export ANIMAX_SOURCE_ZIP_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${SOURCE_ZIP_NAME}"
+        export ANIMAX_SOURCE_ZIP_SHA256="$(shasum -a 256 "$SOURCE_ZIP_NAME" | awk '{print $1}')"
+        python3 tools/ios_tools/prepare_podspec_release.py --podspec AnimaX.podspec
+        bundle exec pod ipc spec AnimaX.podspec > AnimaX.podspec.json
+
+        test -f AnimaX.podspec
+        test -f AnimaX.podspec.json
+        test -f "$SOURCE_ZIP_NAME"
+
+        mkdir -p out/release/ios
+        cp AnimaX.podspec out/release/ios/AnimaX.podspec
+        cp AnimaX.podspec.json out/release/ios/AnimaX.podspec.json
+        cp "$SOURCE_ZIP_NAME" "out/release/ios/$SOURCE_ZIP_NAME"
+        echo "podspec_path=$GITHUB_WORKSPACE/animax/out/release/ios/AnimaX.podspec" >> "$GITHUB_OUTPUT"
+        echo "podspec_json_path=$GITHUB_WORKSPACE/animax/out/release/ios/AnimaX.podspec.json" >> "$GITHUB_OUTPUT"
+        echo "source_zip_path=$GITHUB_WORKSPACE/animax/out/release/ios/$SOURCE_ZIP_NAME" >> "$GITHUB_OUTPUT"
       env:
-        COCOAPODS_TRUNK_TOKEN: ${{ inputs.cocoapods_trunk_token }}
-      shell: bash
-      run: |-
-        cd $GITHUB_WORKSPACE/animax
-        source tools/envsetup.sh
-        git config --global user.name "lynx.authors"
-        git config --global user.email "lynx.authors@users.noreply.github.com"
-        python3 tools/ios_tools/skip_pod_lint.py --source public
-        python3 tools/ios_tools/cocoapods_publish_helper.py --publish --component ${{ inputs.component }}
+        INPUT_COMMIT_ID: ${{ inputs.commit_id }}

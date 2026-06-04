@@ -4,6 +4,7 @@
 apply plugin: 'com.android.library'
 apply from: file("../jacoco.gradle")
 apply from: file("../deps.gradle")
+apply from: file("../publish.gradle")
 import org.json.simple.JSONObject
 
 ext.ABI_FILTERS = ['armeabi-v7a', 'armeabi', 'arm64-v8a', 'x86']
@@ -137,6 +138,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    configurations {
+        extractJNI
+    }
 }
 
 // Configure the compilation parameters in gn to generate the corresponding CMakeLists.txt files.
@@ -179,6 +184,38 @@ task configGnCompileParas {
 dependencies {
     implementation project.ext.appcompat
     implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
-    implementation project(':LynxBase')
-    implementation project(':LynxTrace')
+    implementation "org.lynxsdk.lynx:lynx-base:${project.ext.LYNX_VERSION}"
+    implementation "org.lynxsdk.lynx:lynx-trace:${project.ext.LYNX_VERSION}"
+    extractJNI "org.lynxsdk.lynx:lynx-base:${project.ext.LYNX_VERSION}@aar"
+    extractJNI "org.lynxsdk.lynx:lynx-trace:${project.ext.LYNX_VERSION}@aar"
+}
+
+task extractJNIFiles {
+    doLast {
+        delete "$projectDir/build/jniLibs/lynx"
+        configurations.extractJNI.files.each {
+            def file = it.absoluteFile
+            def packageName = file.name.tokenize('-')[0]
+            println("extractJNI: " + packageName)
+            copy {
+                from zipTree(file)
+                into "$projectDir/build/jniLibs/$packageName/"
+                include "jni/**/*"
+            }
+        }
+        def extractedFiles = fileTree("$projectDir/build/jniLibs/lynx").matching {
+            include 'jni/**/liblynxbase.so'
+            include 'jni/**/liblynxtrace.so'
+        }
+        if (extractedFiles.isEmpty()) {
+            throw new GradleException("No Lynx native libraries were extracted into $projectDir/build/jniLibs/lynx")
+        }
+    }
+}
+
+preBuild.dependsOn extractJNIFiles
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('generateJsonModel') || task.name.startsWith('externalNativeBuild')) {
+        task.dependsOn extractJNIFiles
+    }
 }

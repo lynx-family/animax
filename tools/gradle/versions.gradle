@@ -1,0 +1,36 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+def findDependencyVersionsFile = {
+    def currentDir = rootProject.projectDir
+    while (currentDir != null) {
+        def candidate = new File(currentDir, "versions.properties")
+        if (candidate.isFile()) {
+            return candidate
+        }
+        currentDir = currentDir.parentFile
+    }
+    throw new GradleException("Could not find versions.properties from ${rootProject.projectDir}")
+}
+
+def dependencyVersions = new Properties()
+def dependencyVersionsFile = findDependencyVersionsFile()
+dependencyVersionsFile.withInputStream { dependencyVersions.load(it) }
+
+def requiredDependencyVersions = [
+    "LYNX_VERSION",
+    "SKITY_VERSION",
+    "TEXTRA_VERSION",
+]
+requiredDependencyVersions.each { key ->
+    if (!dependencyVersions.getProperty(key)) {
+        throw new GradleException("Missing ${key} in ${dependencyVersionsFile}")
+    }
+}
+
+allprojects {
+    ext.LYNX_VERSION = dependencyVersions.getProperty("LYNX_VERSION")
+    ext.SKITY_VERSION = dependencyVersions.getProperty("SKITY_VERSION")
+    ext.TEXTRA_VERSION = dependencyVersions.getProperty("TEXTRA_VERSION")
+}

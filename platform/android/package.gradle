@@ -1,0 +1,98 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+ext.releaseModulePaths = [':AnimaXAndroid', ':AnimaXTextra'] as Set
+ext.releaseModuleNames = ['AnimaXAndroid', 'AnimaXTextra'] as Set
+ext.releaseArtifactNames = ['animax-sdk', 'animax-textra'] as Set
+
+def isReleaseModule = { Project subproject ->
+    rootProject.ext.releaseModulePaths.contains(subproject.path) &&
+            rootProject.ext.releaseModuleNames.contains(subproject.name) &&
+            rootProject.ext.releaseArtifactNames.contains(subproject.findProperty('ARTIFACT_NAME')) &&
+            subproject.plugins.hasPlugin("maven-publish") &&
+            subproject.plugins.hasPlugin('com.android.library')
+}
+
+def getReleaseVersion = {
+    def releaseVersion = findProperty("VERSION") ?: findProperty("version")
+    if (!releaseVersion) {
+        throw new GradleException("Missing VERSION. Please pass -PVERSION=<ver>")
+    }
+    return releaseVersion
+}
+
+task assembleAllModulesRelease {
+    dependsOn generateAllGnCmakeTargets
+}
+
+task publishAllModules {
+    description = "Publish release modules"
+    dependsOn assembleAllModulesRelease
+}
+
+task stageReleaseMavenArtifacts {
+    description = "Stage release module Maven artifacts without triggering third-party publish configuration"
+    dependsOn assembleAllModulesRelease
+}
+
+rootProject.afterEvaluate {
+    tasks.named('assembleAllModulesRelease').configure { assembleTask ->
+        rootProject.subprojects.each { subproject ->
+            if (isReleaseModule(subproject)) {
+                def hasNoAsanFlavor = subproject.android.productFlavors.names.contains('noasan')
+                if (hasNoAsanFlavor) {
+                    assembleTask.dependsOn subproject.tasks.named('assembleNoasanRelease')
+                } else {
+                    assembleTask.dependsOn subproject.tasks.named('assembleRelease')
+                }
+            }
+        }
+    }
+
+    tasks.named('publishAllModules').configure { publishTask ->
+        rootProject.subprojects.each { subproject ->
+            if (isReleaseModule(subproject)) {
+                publishTask.dependsOn subproject.tasks.named('publish')
+            }
+        }
+    }
+
+    tasks.named('stageReleaseMavenArtifacts').configure { stageTask ->
+        rootProject.subprojects.each { subproject ->
+            if (isReleaseModule(subproject)) {
+                stageTask.dependsOn subproject.tasks.named('publish')
+            }
+        }
+    }
+}
+
+def artifactList = []
+
+task zipArtifacts {
+    doLast {
+        def version = getReleaseVersion()
+        rootProject.subprojects.each { subproject ->
+            if (isReleaseModule(subproject)) {
+                def artifactPath = "${subproject.buildDir}/release/${version}"
+                def zipPath = file("${project.buildDir}/${subproject.ARTIFACT_NAME}-${version}.zip")
+                if (!file(artifactPath).exists()) {
+                    throw new GradleException("No Maven release directory found at ${artifactPath}")
+                }
+                ant.zip(destfile: zipPath, basedir: artifactPath)
+                artifactList.add(zipPath.absolutePath)
+            }
+        }
+    }
+}
+
+task getArtifactList {
+    dependsOn zipArtifacts
+    doLast {
+        println "artifactInfo: ${artifactList}"
+        def json = new groovy.json.JsonBuilder(artifactList).toString()
+        File file = new File("${project.buildDir}/artifact-list")
+        file.parentFile.mkdirs()
+        file.text = json
+    }
+}

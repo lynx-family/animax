@@ -6,8 +6,16 @@ import("//config.gni")
 
 animax_base_xcconfig = {
   HEADER_SEARCH_PATHS = [
+    "//",
+    "//AnimaX",
+    "//src",
     "//PODS_ROOT/LynxBase/lynx",
     "//PODS_ROOT/LynxBase",
+    "//PODS_ROOT/Headers/Public/LynxTextra",
+    "//PODS_ROOT/LynxTextra/public/",
+    "//PODS_CONFIGURATION_BUILD_DIR/XCFrameworkIntermediates/LynxTextra/LynxTextra.framework/Headers",
+    "//third_party",
+    "//third_party/lynx",
   ]
   GCC_PREPROCESSOR_DEFINITIONS = [
     "OS_IOS=1",
@@ -51,7 +59,7 @@ podspec_target("animax_podspec") {
       "-fno-rtti",
     ]
     ios = {
-      deployment_target = "10.0"
+      deployment_target = "13.0"
     }
     pod_target_xcconfig = animax_base_xcconfig
     pod_target_xcconfig.CLANG_CXX_LANGUAGE_STANDARD = "gnu++17"
@@ -71,6 +79,7 @@ subspec_target("Framework") {
   pod_target_xcconfig = {
     HEADER_SEARCH_PATHS = [
       "//",
+      "//AnimaX",
       "../../../src",
     ]
     GCC_PREPROCESSOR_DEFINITIONS = [
@@ -110,6 +119,9 @@ subspec_target("Core") {
   pod_target_xcconfig = {
     HEADER_SEARCH_PATHS = [
       "//",
+      "//AnimaX",
+      "//src",
+      "//third_party",
       "//third_party/lynx",
     ]
     GCC_PREPROCESSOR_DEFINITIONS = [
@@ -122,6 +134,7 @@ subspec_target("Core") {
   dependency = [
     "AnimaX/ThirdParty",
     "SSZipArchive",
+    "skity",
   ]
   frameworks = [
     "VideoToolbox",
@@ -138,7 +151,9 @@ subspec_target("Textra") {
   pod_target_xcconfig = {
     HEADER_SEARCH_PATHS = [
       "//",
+      "//PODS_ROOT/Headers/Public/LynxTextra",
       "//PODS_ROOT/LynxTextra/public/",
+      "//PODS_CONFIGURATION_BUILD_DIR/XCFrameworkIntermediates/LynxTextra/LynxTextra.framework/Headers",
     ]
   }
   dependency = [
@@ -191,7 +206,10 @@ subspec_target("Software") {
 subspec_target("Skity") {
   header_mappings_dir = "."
   pod_target_xcconfig = {
-    HEADER_SEARCH_PATHS = [ "//third_party" ]
+    HEADER_SEARCH_PATHS = [
+      "//src",
+      "//third_party",
+    ]
     GCC_PREPROCESSOR_DEFINITIONS = []
   }
   deps = [ "../../../src/render:skity" ]
@@ -211,7 +229,6 @@ subspec_target("fml") {
     ]
   }
 
-  # deps = [ "//third_party/base/trace/native:trace_public_headers" ]
   header_mappings_dir = "."
   dependency = [
     "LynxBase/Framework",
