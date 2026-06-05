@@ -24,6 +24,10 @@ ValueType GetValueTypeForProperty(LayerPropertyType property_type) {
     case LayerPropertyType::kTransformRotationZ:
     case LayerPropertyType::kTextSize:
     case LayerPropertyType::kTextTracking:
+    case LayerPropertyType::kTextSkew:
+    case LayerPropertyType::kTextRangeOffset:
+    case LayerPropertyType::kTextRangeStart:
+    case LayerPropertyType::kTextRangeEnd:
     case LayerPropertyType::kStrokeWidth:
     case LayerPropertyType::kBlurRadius:
     case LayerPropertyType::kCornerRadius:

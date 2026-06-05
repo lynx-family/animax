@@ -32,6 +32,9 @@ class AnimatableTextPropertiesParser {
       rapidjson::Value& value, CompositionModel& composition);
   static std::unique_ptr<AnimatableTextProperty> ParseAnimatableTextProperty(
       rapidjson::Value& value, CompositionModel& composition);
+  static std::unique_ptr<AnimatableTextRangeSelector>
+  ParseAnimatableTextRangeSelector(rapidjson::Value& value,
+                                   CompositionModel& composition);
 };
 
 }  // namespace animax

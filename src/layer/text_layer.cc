@@ -42,6 +42,28 @@ TextLayer::TextLayer(LayerModel& layer, CompositionModel& composition)
 
 TextLayer::~TextLayer() = default;
 
+void TextLayer::AddAnimationsForRangeSelector(
+    RangeSelectorProperty& result_property,
+    const AnimatableTextRangeSelector& range_selector) {
+  result_property.range_units = range_selector.GetRangeUnits();
+
+  auto* offset = range_selector.GetAnimatableOffset();
+  if (offset) {
+    result_property.offset = offset->CreateAnimation();
+    AddAnimation(result_property.offset.get());
+  }
+  auto* start = range_selector.GetAnimatableStart();
+  if (start) {
+    result_property.start = start->CreateAnimation();
+    AddAnimation(result_property.start.get());
+  }
+  auto* end = range_selector.GetAnimatableEnd();
+  if (end) {
+    result_property.end = end->CreateAnimation();
+    AddAnimation(result_property.end.get());
+  }
+}
+
 TextLayerAnimations::AnimatorProperty TextLayer::CreateAnimator(
     const AnimatableTextProperty* text_property) {
   TextLayerAnimations::AnimatorProperty animator;
@@ -65,12 +87,32 @@ TextLayerAnimations::AnimatorProperty TextLayer::CreateAnimator(
     animator.tracking = tracking->CreateAnimation();
     AddAnimation(animator.tracking.get());
   }
+
   auto* skew = text_property->GetSkew();
   if (skew) {
     animator.skew = skew->CreateAnimation();
     AddAnimation(animator.skew.get());
   }
+
+  auto* range_selector = text_property->GetRangeSelector();
+  if (range_selector) {
+    animator.range_selector = std::make_unique<RangeSelectorProperty>();
+    AddAnimationsForRangeSelector(*animator.range_selector, *range_selector);
+  }
   return animator;
+}
+
+void TextLayer::AddUpdateListenerToRangeSelectorProperty(
+    RangeSelectorProperty& range_selector) {
+  if (range_selector.offset) {
+    range_selector.offset->AddUpdateListener(this);
+  }
+  if (range_selector.start) {
+    range_selector.start->AddUpdateListener(this);
+  }
+  if (range_selector.end) {
+    range_selector.end->AddUpdateListener(this);
+  }
 }
 
 void TextLayer::AddUpdateListenerToAnimatorProperty(
@@ -89,6 +131,9 @@ void TextLayer::AddUpdateListenerToAnimatorProperty(
   }
   if (animator.skew) {
     animator.skew->AddUpdateListener(this);
+  }
+  if (animator.range_selector) {
+    AddUpdateListenerToRangeSelectorProperty(*animator.range_selector);
   }
 }
 
@@ -189,8 +234,19 @@ inline KeyframeAnimation* TextLayer::GetAnimationFromAnimatorProperty(
       return animator.stroke_width.get();
     case LayerPropertyType::kTextTracking:
       return animator.tracking.get();
+    case LayerPropertyType::kTextSkew:
+      return animator.skew.get();
     case LayerPropertyType::kTextSize:
       return animator.text_size_callback.get();
+    case LayerPropertyType::kTextRangeOffset:
+      return animator.range_selector ? animator.range_selector->offset.get()
+                                     : nullptr;
+    case LayerPropertyType::kTextRangeStart:
+      return animator.range_selector ? animator.range_selector->start.get()
+                                     : nullptr;
+    case LayerPropertyType::kTextRangeEnd:
+      return animator.range_selector ? animator.range_selector->end.get()
+                                     : nullptr;
     default:
       return nullptr;
   }
@@ -227,12 +283,39 @@ KeyframeAnimation* TextLayer::GetAnimationForProperty(LayerPropertyType type) {
     case LayerPropertyType::kTextTracking:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(
           AnimatorPropertyForType(type).tracking, layer_ref, this);
+    case LayerPropertyType::kTextSkew:
+      return GetOrCreateAnimation<FloatKeyframeAnimation>(
+          AnimatorPropertyForType(type).skew, layer_ref, this);
     case LayerPropertyType::kTextSize:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(
           AnimatorPropertyForType(type).text_size_callback, layer_ref, this);
     case LayerPropertyType::kTextValue:
       return GetOrCreateAnimation<TextKeyframeAnimation>(
           animations_.text_keyframe, layer_ref, this);
+    case LayerPropertyType::kTextRangeOffset: {
+      auto& animator = AnimatorPropertyForType(type);
+      if (animator.range_selector) {
+        return GetOrCreateAnimation<FloatKeyframeAnimation>(
+            animator.range_selector->offset, layer_ref, this);
+      }
+      return BaseLayer::GetAnimationForProperty(type);
+    }
+    case LayerPropertyType::kTextRangeStart: {
+      auto& animator = AnimatorPropertyForType(type);
+      if (animator.range_selector) {
+        return GetOrCreateAnimation<FloatKeyframeAnimation>(
+            animator.range_selector->start, layer_ref, this);
+      }
+      return BaseLayer::GetAnimationForProperty(type);
+    }
+    case LayerPropertyType::kTextRangeEnd: {
+      auto& animator = AnimatorPropertyForType(type);
+      if (animator.range_selector) {
+        return GetOrCreateAnimation<FloatKeyframeAnimation>(
+            animator.range_selector->end, layer_ref, this);
+      }
+      return BaseLayer::GetAnimationForProperty(type);
+    }
     default:
       return BaseLayer::GetAnimationForProperty(type);
   }
