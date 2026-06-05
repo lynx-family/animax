@@ -104,6 +104,13 @@ animax_source_set("skity") {
       "font_typeface_provider.cc",
       "image_gl.cc",
     ]
+  } else if (is_android) {
+    sources += [
+      "vk/context_vk.cc",
+      "vk/context_vk.h",
+      "vk/surface_vk.cc",
+      "vk/surface_vk.h",
+    ]
   }
 
   if (enable_unittests) {

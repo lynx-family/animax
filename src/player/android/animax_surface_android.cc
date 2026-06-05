@@ -21,6 +21,8 @@
 #include "src/render/drawable_sw.h"
 #include "src/render/surface_gl.h"
 #include "src/render/surface_sw.h"
+#include "src/render/vk/context_vk.h"
+#include "src/render/vk/surface_vk.h"
 
 namespace lynx {
 namespace animax {
@@ -206,6 +208,93 @@ class AnimaXImageSurfaceAndroidSW : public AnimaXSurfaceAndroid {
   uint8_t* buffer_;
   std::unique_ptr<Surface> draw_surface_;
 };
+
+class AnimaXSurfaceAndroidVk : public AnimaXSurfaceAndroid {
+ public:
+  AnimaXSurfaceAndroidVk(
+      std::unique_ptr<animax::SurfaceTextureAndroid> surface_texture,
+      AndroidNativeWindow window, const SurfaceDrawableDescription& desc)
+      : AnimaXSurfaceAndroid(desc.width, desc.height),
+        surface_texture_(std::move(surface_texture)),
+        window_{std::move(window)} {
+    CreateDrawSurface(desc);
+  }
+
+  ~AnimaXSurfaceAndroidVk() override = default;
+
+  void Flush() override {
+    if (draw_surface_) {
+      ANIMAX_TRACE_EVENT_BEGIN(kFlushFrame);
+      draw_surface_->Flush();
+      ANIMAX_TRACE_EVENT_END();
+    }
+  }
+
+  animax::Canvas* Canvas() override { return draw_surface_->GetCanvas(); }
+
+  AnimaXBackend Type() const override { return AnimaXBackend::kVulkan; }
+
+  bool Valid() const override {
+    return window_ && gpu_native_window_ && draw_surface_;
+  }
+
+ protected:
+  void OnReconfigure(const SurfaceDrawableDescription& desc) override {
+    if (desc.width <= 0 || desc.height <= 0) {
+      return;
+    }
+    AnimaXSurface::Resize(desc.width, desc.height);
+
+    // Defensive guard: if Vulkan initialization failed earlier (i.e.
+    // gpu_native_window_ / draw_surface_ are null), fall back to a fresh
+    // CreateDrawSurface() attempt instead of dereferencing null pointers.
+    if (!gpu_native_window_ || !draw_surface_) {
+      window_.Resize(Width(), Height());
+      CreateDrawSurface({Width(), Height(), desc.enable_anti_aliasing});
+      return;
+    }
+
+    draw_surface_->Destroy();
+    window_.Resize(Width(), Height());
+    gpu_native_window_->Resize(Width(), Height());
+    draw_surface_ = std::make_unique<SurfaceVk>(gpu_native_window_.get(),
+                                                desc.enable_anti_aliasing);
+  }
+
+ private:
+  void CreateDrawSurface(const SurfaceDrawableDescription& desc) {
+    auto context = ContextVk::GetGPUContext();
+    if (!context) {
+      ANIMAX_LOGE("Failed to get Vulkan GPU context");
+      return;
+    }
+
+    skity::VKNativeWindowInfo native_window_info = {};
+    native_window_info.type = skity::VKNativeWindowType::kAndroid;
+    native_window_info.handle = static_cast<ANativeWindow*>(window_);
+
+    skity::GPUNativeWindowInfoVK info = {};
+    info.native_window = native_window_info;
+    info.width = static_cast<uint32_t>(Width());
+    info.height = static_cast<uint32_t>(Height());
+
+    gpu_native_window_ = skity::CreateGPUNativeWindowVK(context.get(), &info);
+    if (!gpu_native_window_) {
+      ANIMAX_LOGE("Failed to create Vulkan native window");
+      return;
+    }
+
+    draw_surface_ = std::make_unique<SurfaceVk>(gpu_native_window_.get(),
+                                                desc.enable_anti_aliasing);
+    DCHECK(Valid());
+  }
+
+  std::unique_ptr<animax::SurfaceTextureAndroid> surface_texture_{};
+  AndroidNativeWindow window_{};
+  std::unique_ptr<skity::GPUNativeWindowVK> gpu_native_window_{};
+  std::unique_ptr<Surface> draw_surface_{};
+};
+
 }  // namespace
 
 AnimaXSurfaceAndroid::AnimaXSurfaceAndroid(float width, float height)
@@ -268,10 +357,53 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceAndroid::Make(
         animax_surface.reset(
             new AnimaXSurfaceAndroidSW(std::move(surface_texture),
                                        std::move(android_native_window), desc));
-      } else {  // backend == AnimaXBackend::kGL
-        // Ensures the EGLContext is properly initialized and set as current.
-        // This is crucial if it's the initial usage of an EGLContext within the
-        // AnimaX_GPU thread.
+      } else {
+        // Try Vulkan first: check if the system supports Vulkan and the skity
+        // engine can create a Vulkan GPU context
+        std::shared_ptr<skity::GPUContext> vk_context =
+            backend == AnimaXBackend::kVulkan ? ContextVk::GetGPUContext()
+                                              : nullptr;
+        if (vk_context) {
+          auto vk_surface = std::make_unique<AnimaXSurfaceAndroidVk>(
+              std::move(surface_texture), std::move(android_native_window),
+              desc);
+          if (vk_surface->Valid()) {
+            animax_surface = std::move(vk_surface);
+            break;
+          }
+          ANIMAX_LOGE("Vulkan surface invalid, falling back to GL backend");
+
+          // The Vulkan branch already moved surface_texture and
+          // android_native_window into the (now invalid) vk_surface, so we
+          // must recreate them before falling back to GL to avoid using
+          // moved-from objects.
+          if (surface_drawable.GetType() ==
+              AnimaXSurfaceDrawableAndroid::Type::kTextureView) {
+            if (surface_drawable.IsTextureFirstFrameAware()) {
+              surface_texture = std::make_unique<
+                  lynx::animax::FirstFrameAwareSurfaceTextureAndroid>(
+                  env, surface_drawable.GetSurfaceTexture().Get());
+            } else {
+              surface_texture =
+                  std::make_unique<lynx::animax::SurfaceTextureAndroid>(
+                      env, surface_drawable.GetSurfaceTexture().Get());
+            }
+          }
+
+          android_native_window = AndroidNativeWindow(
+              surface_drawable.GetSurface().Get(), width, height);
+          if (!android_native_window) {
+            ANIMAX_LOGE("native_window is null");
+            return nullptr;
+          }
+        } else {
+          ANIMAX_LOGE(
+              "Failed to create Vulkan context, falling back to GL backend");
+        }
+
+        // Fall back to GL: ensures the EGLContext is properly initialized and
+        // set as current. This is crucial if it's the initial usage of an
+        // EGLContext within the AnimaX_GPU thread.
         AnimaXEGLContext::Instance().init(
             surface_drawable.IsAutoDestroyEGLContextEnabled());
         AnimaXEGLContext::Instance().MakeCurrent();
