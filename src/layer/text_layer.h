@@ -23,6 +23,7 @@
 #include "src/content/effect/blur_element.h"
 #include "src/layer/base_layer.h"
 #include "src/layer/text_layer_animations.h"
+#include "src/model/animatable/animatable_text_range_selector.h"
 #include "src/model/value/base_value.h"
 #include "src/model/value/document_data.h"
 
@@ -47,8 +48,13 @@ class TextLayer : public BaseLayer {
  private:
   TextLayerAnimations::AnimatorProperty CreateAnimator(
       const AnimatableTextProperty* text_property);
+  void AddAnimationsForRangeSelector(
+      RangeSelectorProperty& result_property,
+      const AnimatableTextRangeSelector& range_selector);
   void AddUpdateListenerToAnimatorProperty(
       TextLayerAnimations::AnimatorProperty& animator);
+  void AddUpdateListenerToRangeSelectorProperty(
+      RangeSelectorProperty& range_selector);
   TextLayerAnimations::AnimatorProperty& AnimatorPropertyForType(
       LayerPropertyType type);
   KeyframeAnimation* GetAnimationFromAnimatorProperty(

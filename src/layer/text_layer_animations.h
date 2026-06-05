@@ -5,10 +5,11 @@
 #ifndef ANIMAX_SRC_LAYER_TEXT_LAYER_ANIMATIONS_H_
 #define ANIMAX_SRC_LAYER_TEXT_LAYER_ANIMATIONS_H_
 
+#include <memory>
 #include <vector>
 
-#include "src/animation/base_keyframe_animation.h"
 #include "src/animation/text_keyframe_animation.h"
+#include "src/layer/text_range_selector_property.h"
 
 namespace lynx {
 namespace animax {
@@ -23,6 +24,7 @@ struct TextLayerAnimations {
     std::unique_ptr<FloatKeyframeAnimation> tracking;
     std::unique_ptr<FloatKeyframeAnimation> skew;
     std::unique_ptr<FloatKeyframeAnimation> text_size_callback;
+    std::unique_ptr<RangeSelectorProperty> range_selector;
   };
   std::vector<AnimatorProperty> animator_property_list;
 };

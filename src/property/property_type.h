@@ -59,7 +59,14 @@ enum class LayerPropertyType : uint16_t {
   kTextColor,
   // The text layer's text tracking transform, the type is Float.
   kTextTracking,
-
+  // The text layer's skew transform, the type is Float.
+  kTextSkew,
+  // The text layer's text range offset transform, the type is Float.
+  kTextRangeOffset,
+  // The text layer's text range start transform, the type is Float.
+  kTextRangeStart,
+  // The text layer's text range end transform, the type is Float.
+  kTextRangeEnd,
   // The layer or content's color, the type is Color.
   kColor = kContentRangeStart,
   // The layer or content's color filter, the type is ColorFilter.

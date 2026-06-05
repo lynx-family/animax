@@ -5,6 +5,7 @@ import("../animax.gni")
 
 model_shared_sources = [
   "animatable/animatable_text_properties.h",
+  "animatable/animatable_text_range_selector.h",
   "animatable/animatable_transform_model.cc",
   "animatable/animatable_transform_model.h",
   "animatable/animatable_value.cc",

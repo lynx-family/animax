@@ -20,6 +20,7 @@
 #define ANIMAX_SRC_MODEL_ANIMATABLE_ANIMATABLE_TEXT_PROPERTIES_H_
 
 #include "src/animation/text_keyframe_animation.h"
+#include "src/model/animatable/animatable_text_range_selector.h"
 #include "src/model/animatable/animatable_value.h"
 #include "src/model/animatable/base_animatable_value.h"
 #include "src/model/value/document_data.h"
@@ -29,6 +30,7 @@ namespace animax {
 
 class AnimatableFloatValue;
 class AnimatableColorValue;
+class AnimatableTextRangeSelector;
 
 class AnimatableTextProperty {
  public:
@@ -59,8 +61,16 @@ class AnimatableTextProperty {
   AnimatableFloatValue* GetSkew() const {
     return skew_ ? skew_.get() : nullptr;
   }
+  AnimatableTextRangeSelector* GetRangeSelector() const {
+    return range_selector_ ? range_selector_.get() : nullptr;
+  }
+  void SetRangeSelector(
+      std::unique_ptr<AnimatableTextRangeSelector> range_selector) {
+    range_selector_ = std::move(range_selector);
+  }
 
  private:
+  std::unique_ptr<AnimatableTextRangeSelector> range_selector_;
   std::unique_ptr<AnimatableColorValue> color_;
   std::unique_ptr<AnimatableColorValue> stroke_;
   std::unique_ptr<AnimatableFloatValue> stroke_width_;

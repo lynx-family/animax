@@ -24,20 +24,26 @@
 
 namespace lynx {
 namespace animax {
-
 std::unique_ptr<AnimatableTextProperty> AnimatableTextPropertiesParser::Parse(
     rapidjson::Value& value, CompositionModel& composition) {
   std::unique_ptr<AnimatableTextProperty> anim;
+  std::unique_ptr<AnimatableTextRangeSelector> text_range_selector;
   const auto& object = value.GetObject();
   for (auto it = object.MemberBegin(); it != object.MemberEnd(); it++) {
     const auto& key = it->name.GetString();
     if (strcmp(key, "a") == 0) {
       anim = ParseAnimatableTextProperty(it->value, composition);
+    } else if (strcmp(key, "s") == 0) {
+      text_range_selector =
+          ParseAnimatableTextRangeSelector(it->value, composition);
     }
   }
   if (anim == nullptr) {
-    return std::unique_ptr<AnimatableTextProperty>(
-        new AnimatableTextProperty());
+    anim =
+        std::unique_ptr<AnimatableTextProperty>(new AnimatableTextProperty());
+  }
+  if (text_range_selector != nullptr) {
+    anim->SetRangeSelector(std::move(text_range_selector));
   }
   return anim;
 }
@@ -45,6 +51,10 @@ std::unique_ptr<AnimatableTextProperty> AnimatableTextPropertiesParser::Parse(
 std::unique_ptr<AnimatableTextProperty>
 AnimatableTextPropertiesParser::ParseAnimatableTextProperty(
     rapidjson::Value& value, CompositionModel& composition) {
+  if (!value.IsObject()) {
+    return nullptr;
+  }
+
   std::unique_ptr<AnimatableColorValue> color;
   std::unique_ptr<AnimatableColorValue> stroke;
   std::unique_ptr<AnimatableFloatValue> stroke_width;
@@ -69,6 +79,37 @@ AnimatableTextPropertiesParser::ParseAnimatableTextProperty(
   return std::make_unique<AnimatableTextProperty>(
       std::move(color), std::move(stroke), std::move(stroke_width),
       std::move(tracking), std::move(skew));
+}
+
+std::unique_ptr<AnimatableTextRangeSelector>
+AnimatableTextPropertiesParser::ParseAnimatableTextRangeSelector(
+    rapidjson::Value& value, CompositionModel& composition) {
+  TextRangeUnits range_units = TextRangeUnits::kPercent;
+  std::unique_ptr<AnimatableFloatValue> offset;
+  std::unique_ptr<AnimatableFloatValue> start;
+  std::unique_ptr<AnimatableFloatValue> end;
+
+  const auto& object = value.GetObject();
+  for (auto it = object.MemberBegin(); it != object.MemberEnd(); it++) {
+    const auto& key = it->name.GetString();
+    if (strcmp(key, "o") == 0) {
+      offset = AnimatableValueParser::ParseFloat(it->value, composition, false);
+    } else if (strcmp(key, "r") == 0) {
+      if (it->value.IsInt()) {
+        const auto units = it->value.GetInt();
+        if (units == static_cast<int>(TextRangeUnits::kPercent) ||
+            units == static_cast<int>(TextRangeUnits::kIndex)) {
+          range_units = static_cast<TextRangeUnits>(units);
+        }
+      }
+    } else if (strcmp(key, "s") == 0) {
+      start = AnimatableValueParser::ParseFloat(it->value, composition, false);
+    } else if (strcmp(key, "e") == 0) {
+      end = AnimatableValueParser::ParseFloat(it->value, composition, false);
+    }
+  }
+  return std::make_unique<AnimatableTextRangeSelector>(
+      range_units, std::move(offset), std::move(start), std::move(end));
 }
 
 }  // namespace animax

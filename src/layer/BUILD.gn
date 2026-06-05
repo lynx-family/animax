@@ -34,6 +34,7 @@ layer_shared_sources = [
   "text_layer.cc",
   "text_layer.h",
   "text_layer_animations.h",
+  "text_range_selector_property.h",
 ]
 
 animax_source_set("layer") {
