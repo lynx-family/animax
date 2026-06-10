@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/ios/video_asset_ios.h"
+#include "src/video/darwin/video_asset_darwin.h"
 
 #include "base/include/string/string_utils.h"
 #include "src/base/log/log.h"
@@ -15,18 +15,18 @@ namespace lynx {
 namespace animax {
 
 std::shared_ptr<VideoAsset> VideoAsset::Make(VideoAssetModel model) {
-  return std::make_shared<VideoAssetIOS>(std::move(model));
+  return std::make_shared<VideoAssetDarwin>(std::move(model));
 }
 
-VideoAssetIOS::VideoAssetIOS(VideoAssetModel model) : VideoAsset(std::move(model)) {}
+VideoAssetDarwin::VideoAssetDarwin(VideoAssetModel model) : VideoAsset(std::move(model)) {}
 
-VideoAssetIOS::~VideoAssetIOS() {
+VideoAssetDarwin::~VideoAssetDarwin() {
   if (desc_) {
     CFRelease(desc_);
   }
 }
 
-bool VideoAssetIOS::PrepareFrameData(const std::string& video_path) {
+bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
   ANIMAX_TRACE_EVENT_ASSET_ID(kPrepareAlphaVideoFrameData, Model().id);
   NSString* file_path = [NSString stringWithUTF8String:video_path.c_str()];
   if (!file_path) {
@@ -125,8 +125,8 @@ bool VideoAssetIOS::PrepareFrameData(const std::string& video_path) {
   return IsValid();
 }
 
-void VideoAssetIOS::ComputePresentationIndex(std::vector<std::pair<double, uint32_t>>& gop,
-                                             uint32_t& sorted_num) {
+void VideoAssetDarwin::ComputePresentationIndex(std::vector<std::pair<double, uint32_t>>& gop,
+                                                uint32_t& sorted_num) {
   std::sort(gop.begin(), gop.end(),
             [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
   const auto gop_size = gop.size();
@@ -139,7 +139,7 @@ void VideoAssetIOS::ComputePresentationIndex(std::vector<std::pair<double, uint3
   gop.clear();
 }
 
-bool VideoAssetIOS::IsKeyFrame(CMSampleBufferRef current_sample_buffer) {
+bool VideoAssetDarwin::IsKeyFrame(CMSampleBufferRef current_sample_buffer) {
   DCHECK(current_sample_buffer);
   bool is_key_frame = false;
   CFArrayRef attachments =
@@ -156,11 +156,11 @@ bool VideoAssetIOS::IsKeyFrame(CMSampleBufferRef current_sample_buffer) {
   return is_key_frame;
 }
 
-bool VideoAssetIOS::IsKeyFramesValid() const {
+bool VideoAssetDarwin::IsKeyFramesValid() const {
   return !key_frames_.empty() && (key_frames_[0] == 0);
 }
 
-int VideoAssetIOS::GetPrevKeyFrame(int frame) const {
+int VideoAssetDarwin::GetPrevKeyFrame(const int32_t frame) const {
   auto it = std::upper_bound(key_frames_.begin(), key_frames_.end(), frame);
   return *--it;
 }

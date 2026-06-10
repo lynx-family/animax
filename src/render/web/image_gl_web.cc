@@ -63,7 +63,7 @@ ImageGL::ImageGL(TextureInfo *texture, RealContext *real_context) {
   DCHECK(real_context);
   auto texture_gl = static_cast<TextureInfoGL *>(texture);
   auto context = real_context->Get();
-  skity::GPUBackendTextureInfoGL texture_info;
+  skity::GPUBackendTextureInfoGL texture_info{};
   texture_info.backend = skity::GPUBackendType::kOpenGL;
   texture_info.format = skity::TextureFormat::kRGBA;
   texture_info.width = texture_gl->Width();

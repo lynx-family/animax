@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#ifndef ANIMAX_SRC_VIDEO_IOS_VIDEO_FRAME_H_
-#define ANIMAX_SRC_VIDEO_IOS_VIDEO_FRAME_H_
+#ifndef ANIMAX_SRC_VIDEO_DARWIN_VIDEO_FRAME_H_
+#define ANIMAX_SRC_VIDEO_DARWIN_VIDEO_FRAME_H_
 
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
@@ -25,7 +25,7 @@ class VideoFrame final {
              CVMetalTextureCacheRef texture_cache_ref);
   ~VideoFrame();
   VideoFrame(VideoFrame &&other);
-  VideoFrame &operator=(VideoFrame &&other);
+  VideoFrame &operator=(VideoFrame &&other) = delete;
   VideoFrame(const VideoFrame &) = delete;
   VideoFrame &operator=(const VideoFrame &) = delete;
 
@@ -41,4 +41,4 @@ class VideoFrame final {
 }  // namespace animax
 }  // namespace lynx
 
-#endif  // ANIMAX_SRC_VIDEO_IOS_VIDEO_FRAME_H_
+#endif  // ANIMAX_SRC_VIDEO_DARWIN_VIDEO_FRAME_H_

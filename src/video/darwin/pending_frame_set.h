@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#ifndef ANIMAX_SRC_VIDEO_IOS_PENDING_FRAME_SET_H_
-#define ANIMAX_SRC_VIDEO_IOS_PENDING_FRAME_SET_H_
+#ifndef ANIMAX_SRC_VIDEO_DARWIN_PENDING_FRAME_SET_H_
+#define ANIMAX_SRC_VIDEO_DARWIN_PENDING_FRAME_SET_H_
 
 #import <CoreVideo/CoreVideo.h>
 
@@ -27,8 +27,8 @@ class PendingFrameSet : public std::enable_shared_from_this<PendingFrameSet> {
   PendingFrameSet &operator=(const PendingFrameSet &) = delete;
 
   /**
-   * Called by VideoPlayerIOS, means VideoPlayerIOS::DecodeFrameData will be
-   * called.
+   * Called by VideoPlayerDarwin, means VideoPlayerDarwin::DecodeFrameData will
+   * be called.
    * @param presentation_index frame to decode
    * @param need_output_frame  If true, presentation_index will be added to
    * pending_frame_set_, which means DecodeFrameData(presentation_index) being
@@ -38,14 +38,14 @@ class PendingFrameSet : public std::enable_shared_from_this<PendingFrameSet> {
    */
   void WillDecodeFrame(int32_t presentation_index, bool need_output_frame);
   /**
-   * Called by VideoPlayerIOS, means VideoPlayerIOS::DecodeFrameData finished
-   * with error.
+   * Called by VideoPlayerDarwin, means VideoPlayerDarwin::DecodeFrameData
+   * finished with error.
    * @param presentation_index same as param presentation_index of
    * WillDecodeFrame
    */
   void DidDecodeFrameFailDirectly(int32_t presentation_index);
   /**
-   * Called by system, means VideoPlayerIOS::DecodeFrameData finished.
+   * Called by system, means VideoPlayerDarwin::DecodeFrameData finished.
    * @param status             whether decode succeeds
    * @param image_buffer       decode result
    * @param presentation_index same as param presentation_index of
@@ -105,4 +105,4 @@ class PendingFrameSet : public std::enable_shared_from_this<PendingFrameSet> {
 }  // namespace animax
 }  // namespace lynx
 
-#endif  // ANIMAX_SRC_VIDEO_IOS_PENDING_FRAME_SET_H_
+#endif  // ANIMAX_SRC_VIDEO_DARWIN_PENDING_FRAME_SET_H_

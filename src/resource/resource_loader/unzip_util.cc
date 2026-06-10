@@ -2,18 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/resource/resource_loader/harmony/unzip_util.h"
+#include "src/resource/resource_loader/unzip_util.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #ifdef OS_WIN
 #include <filesystem>
-
-#include "third_party/zlib/zlib.h"
 #else
 #include <dirent.h>
-#include <zlib.h>
 #endif
 
 #include <cstdint>
@@ -24,6 +21,7 @@
 
 #include "src/base/log/log.h"
 #include "src/resource/uri/uri_util.h"
+#include "third_party/zlib/zlib.h"
 
 namespace lynx {
 namespace animax {

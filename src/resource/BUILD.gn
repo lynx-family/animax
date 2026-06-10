@@ -57,6 +57,7 @@ resource_shared_sources = [
 
 animax_source_set("resource") {
   sources = resource_shared_sources
+  deps = []
 
   if (is_ios) {
     sources += [
@@ -114,21 +115,23 @@ animax_source_set("resource") {
       "resource_loader/harmony/resource_loader_harmony.h",
       "resource_loader/harmony/unzip_loader_harmony.cc",
       "resource_loader/harmony/unzip_loader_harmony.h",
-      "resource_loader/harmony/unzip_util.cc",
-      "resource_loader/harmony/unzip_util.h",
+      "resource_loader/unzip_util.cc",
+      "resource_loader/unzip_util.h",
     ]
-  } else if (is_win) {
+    deps += [ "//third_party/zlib" ]
+  } else if (is_win || is_mac) {
     sources += [
-      "resource_loader/harmony/unzip_util.cc",
-      "resource_loader/harmony/unzip_util.h",
+      "resource_loader/unzip_util.cc",
+      "resource_loader/unzip_util.h",
     ]
+    deps += [ "//third_party/zlib" ]
   } else if (is_wasm) {
     sources -= [
       "asset/video_asset.cc",
       "asset/video_asset.h",
     ]
 
-    deps = [ ":wasm-rtti-resource" ]
+    deps += [ ":wasm-rtti-resource" ]
   }
 }
 

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/ios/video_frame.h"
+#include "src/video/darwin/video_frame.h"
 
 namespace lynx {
 namespace animax {
@@ -19,20 +19,6 @@ VideoFrame::VideoFrame(VideoFrame &&other)
   other.texture_cache_ref_ = nullptr;
   other.texture_ref_ = nullptr;
   other.texture_ = nullptr;
-}
-
-VideoFrame &VideoFrame::operator=(VideoFrame &&other) {
-  if (this != &other) {
-    pixel_buffer_ = other.pixel_buffer_;
-    texture_cache_ref_ = other.texture_cache_ref_;
-    texture_ref_ = other.texture_ref_;
-    texture_ = other.texture_;
-    other.pixel_buffer_ = nullptr;
-    other.texture_cache_ref_ = nullptr;
-    other.texture_ref_ = nullptr;
-    other.texture_ = nullptr;
-  }
-  return *this;
 }
 
 VideoFrame::~VideoFrame() {

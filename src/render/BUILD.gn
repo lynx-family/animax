@@ -15,7 +15,7 @@ render_shared_sources = [
 
 animax_source_set("render") {
   sources = render_shared_sources
-  if (is_ios) {
+  if (is_ios || is_mac) {
     sources += [
       "drawable_mtl.h",
       "texture_info_mtl.h",
@@ -40,6 +40,7 @@ skity_shared_sources = [
   "image.h",
   "image_gl.cc",
   "image_gl.h",
+  "image_gl_factory.h",
   "mask_filter.cc",
   "mask_filter.h",
   "matrix.cc",
@@ -86,13 +87,31 @@ animax_source_set("skity") {
 
   sources = skity_shared_sources
 
-  if (is_ios) {
+  if (is_win && !enable_unittests) {
+    sources += [
+      "image_gl_factory_win.cc",
+      "skity_promise_texture.h",
+    ]
+  } else {
+    sources += [ "image_gl_factory_default.cc" ]
+  }
+
+  if (is_ios || is_mac) {
     sources += [
       "image_mtl.h",
       "image_mtl.mm",
+      "image_mtl_factory.h",
       "surface_mtl.h",
       "surface_mtl.mm",
     ]
+    if (is_ios) {
+      sources += [ "image_mtl_factory_ios.mm" ]
+    } else if (is_mac) {
+      sources += [
+        "image_mtl_factory_mac.mm",
+        "skity_promise_texture.h",
+      ]
+    }
   } else if (is_wasm) {
     sources += [
       "web/font_registry_web.cc",

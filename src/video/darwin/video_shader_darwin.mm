@@ -2,13 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/ios/video_shader_ios.h"
+#include "src/video/darwin/video_shader_darwin.h"
 #include <memory>
 #include "base/include/no_destructor.h"
 #include "src/base/log/log.h"
 #include "src/render/image_mtl.h"
 #include "src/render/texture_info_mtl.h"
-#include "src/video/ios/metal_shaders.h"
+#include "src/video/darwin/metal_shaders.h"
 
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
@@ -101,7 +101,7 @@ MetalResourceManager &GetGlobalMetalResources() {
   return *instance;
 }
 
-VideoShaderIOS::VideoShaderIOS()
+VideoShaderDarwin::VideoShaderDarwin()
     : mtl_device_(nil),
       pipeline_state_(nil),
       position_factor_(nil),
@@ -113,13 +113,13 @@ VideoShaderIOS::VideoShaderIOS()
       is_valid_(false) {}
 
 std::unique_ptr<VideoShader> VideoShader::Make(std::shared_ptr<AnimaXAbility> ability) {
-  return std::make_unique<VideoShaderIOS>();
+  return std::make_unique<VideoShaderDarwin>();
 }
 
-bool VideoShaderIOS::Valid() { return is_valid_; }
+bool VideoShaderDarwin::Valid() { return is_valid_; }
 
-void VideoShaderIOS::Init(int32_t w, int32_t h, const std::array<float, 4> &rgb_frame,
-                          const std::array<float, 4> &a_frame) {
+void VideoShaderDarwin::Init(int32_t w, int32_t h, const std::array<float, 4> &rgb_frame,
+                             const std::array<float, 4> &a_frame) {
   if (is_valid_) {
     return;
   }
@@ -147,8 +147,8 @@ void VideoShaderIOS::Init(int32_t w, int32_t h, const std::array<float, 4> &rgb_
   is_valid_ = true;
 }
 
-void VideoShaderIOS::Draw(std::unique_ptr<TextureInfo> texture_info,
-                          const std::array<float, 16> &transform) {
+void VideoShaderDarwin::Draw(std::unique_ptr<TextureInfo> texture_info,
+                             const std::array<float, 16> &transform) {
   if (!is_valid_) {
     return;
   }
@@ -192,21 +192,16 @@ void VideoShaderIOS::Draw(std::unique_ptr<TextureInfo> texture_info,
   [command_buffer commit];
 }
 
-std::unique_ptr<Image> VideoShaderIOS::GetOutputImage(RealContext *context) {
+std::unique_ptr<Image> VideoShaderDarwin::GetOutputImage(RealContext *context) {
   if (!is_valid_ || output_texture_ == nil) {
     return std::unique_ptr<Image>();
   }
 
-  if (context->GetBackendType() == ContextBackend::kMetal) {
-    TextureInfoMTL info(output_texture_, w_, h_);
-    return std::make_unique<ImageMTL>(&info, context);
-  } else {
-    // unsupported backend type
-    return std::unique_ptr<Image>();
-  }
+  TextureInfoMTL info(output_texture_, w_, h_);
+  return std::make_unique<ImageMTL>(&info, context);
 }
 
-bool VideoShaderIOS::InitMetalResources() {
+bool VideoShaderDarwin::InitMetalResources() {
   MetalResourceManager &global_resources = GetGlobalMetalResources();
   mtl_device_ = global_resources.device;
   pipeline_state_ = global_resources.pipeline_state;
@@ -220,7 +215,7 @@ bool VideoShaderIOS::InitMetalResources() {
   return command_queue_ != nil;
 }
 
-bool VideoShaderIOS::SetupVertexData() {
+bool VideoShaderDarwin::SetupVertexData() {
   if (!mtl_device_) {
     return false;
   }
@@ -255,7 +250,7 @@ bool VideoShaderIOS::SetupVertexData() {
   return vertex_buffer_ != nil;
 }
 
-bool VideoShaderIOS::CreateOutputTexture() {
+bool VideoShaderDarwin::CreateOutputTexture() {
   if (!mtl_device_) {
     return false;
   }

@@ -27,10 +27,6 @@ source_set("animax") {
     ":animax_core",
     "render:skity",
   ]
-
-  if (is_win) {
-    deps += [ "//third_party/zlib" ]
-  }
 }
 
 config("animax_private_config") {
@@ -156,6 +152,13 @@ config("animax_private_config") {
     defines += [
       "OS_OSX=1",
       "OS_POSIX=1",
+    ]
+    frameworks = [
+      "AVFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "Metal.framework",
+      "VideoToolbox.framework",
     ]
   } else if (is_wasm) {
     defines += [

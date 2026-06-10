@@ -2,7 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/ios/video_frame_cache.h"
+#include "src/video/darwin/video_frame_cache.h"
+
+#include <algorithm>
 
 namespace lynx {
 namespace animax {
@@ -15,15 +17,6 @@ VideoFrameCache::VideoFrameCache() {
 VideoFrameCache::VideoFrameCache(VideoFrameCache &&other)
     : frames_(std::move(other.frames_)), texture_cache_ref_(other.texture_cache_ref_) {
   other.texture_cache_ref_ = 0;
-}
-
-VideoFrameCache &VideoFrameCache::operator=(VideoFrameCache &&other) {
-  if (this != &other) {
-    frames_ = std::move(other.frames_);
-    texture_cache_ref_ = other.texture_cache_ref_;
-    other.texture_cache_ref_ = 0;
-  }
-  return *this;
 }
 
 VideoFrameCache::~VideoFrameCache() {

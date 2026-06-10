@@ -20,22 +20,22 @@ video_shared_sources = [
 animax_source_set("video") {
   sources = video_shared_sources
 
-  if (is_ios) {
+  if (is_ios || (is_mac && !enable_unittests)) {
     sources += [
-      "ios/frame_info.h",
-      "ios/metal_shaders.h",
-      "ios/pending_frame_set.cc",
-      "ios/pending_frame_set.h",
-      "ios/video_asset_ios.h",
-      "ios/video_asset_ios.mm",
-      "ios/video_frame.h",
-      "ios/video_frame.mm",
-      "ios/video_frame_cache.h",
-      "ios/video_frame_cache.mm",
-      "ios/video_player_ios.h",
-      "ios/video_player_ios.mm",
-      "ios/video_shader_ios.h",
-      "ios/video_shader_ios.mm",
+      "darwin/frame_info.h",
+      "darwin/metal_shaders.h",
+      "darwin/pending_frame_set.cc",
+      "darwin/pending_frame_set.h",
+      "darwin/video_asset_darwin.h",
+      "darwin/video_asset_darwin.mm",
+      "darwin/video_frame.h",
+      "darwin/video_frame.mm",
+      "darwin/video_frame_cache.h",
+      "darwin/video_frame_cache.mm",
+      "darwin/video_player_darwin.h",
+      "darwin/video_player_darwin.mm",
+      "darwin/video_shader_darwin.h",
+      "darwin/video_shader_darwin.mm",
     ]
   } else if (is_android) {
     sources += [
@@ -100,11 +100,6 @@ animax_source_set("video") {
 
     include_dirs = [
       "../../../../clay/third_party/uniplayer/win/$target_cpu/ttffmpeg/include",
-    ]
-  } else if (is_mac && !enable_unittests) {
-    sources += [
-      "mac/video_player_mac.cc",
-      "mac/video_player_mac.h",
     ]
   }
 }

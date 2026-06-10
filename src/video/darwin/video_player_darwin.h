@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#ifndef ANIMAX_SRC_VIDEO_IOS_VIDEO_PLAYER_IOS_H_
-#define ANIMAX_SRC_VIDEO_IOS_VIDEO_PLAYER_IOS_H_
+#ifndef ANIMAX_SRC_VIDEO_DARWIN_VIDEO_PLAYER_DARWIN_H_
+#define ANIMAX_SRC_VIDEO_DARWIN_VIDEO_PLAYER_DARWIN_H_
 
 #import <AVFoundation/AVFoundation.h>
 #import <VideoToolbox/VideoToolbox.h>
@@ -12,21 +12,21 @@
 #include <unordered_set>
 
 #include "src/render/texture_info.h"
-#include "src/video/ios/pending_frame_set.h"
-#include "src/video/ios/video_asset_ios.h"
+#include "src/video/darwin/pending_frame_set.h"
+#include "src/video/darwin/video_asset_darwin.h"
 #include "src/video/video_player.h"
 
 namespace lynx {
 namespace animax {
-class VideoAssetIOS;
+class VideoAssetDarwin;
 class VideoPlayerErrorReporter;
 class VideoFrame;
 class VideoFrameCache;
 
-class VideoPlayerIOS : public VideoPlayer {
+class VideoPlayerDarwin : public VideoPlayer {
  public:
-  VideoPlayerIOS();
-  ~VideoPlayerIOS() override;
+  VideoPlayerDarwin();
+  ~VideoPlayerDarwin() override;
 
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16> &GetTransform() override;
@@ -51,7 +51,7 @@ class VideoPlayerIOS : public VideoPlayer {
   VideoFrameCache *GetFrameCache();
   void MoveFrameFromCache(int32_t presentation_frame);
 
-  std::shared_ptr<VideoAssetIOS> asset_ = nullptr;
+  std::shared_ptr<VideoAssetDarwin> asset_ = nullptr;
   std::array<float, 16> transform_;
   std::unique_ptr<VideoPlayerErrorReporter> error_reporter_ = nullptr;
 
@@ -78,4 +78,4 @@ class VideoPlayerIOS : public VideoPlayer {
 }  // namespace animax
 }  // namespace lynx
 
-#endif  // ANIMAX_SRC_VIDEO_IOS_VIDEO_PLAYER_IOS_H_
+#endif  // ANIMAX_SRC_VIDEO_DARWIN_VIDEO_PLAYER_DARWIN_H_
