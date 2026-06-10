@@ -20,8 +20,13 @@ Canvas *SurfaceVk::GetCanvas() {
   }
 
   if (frame_surface_) {
-    // some thing is wrong the previous surface not submit
-
+    // The previous surface was not flushed — submit pending GPU commands
+    // before presenting so stale / partial content never reaches the screen.
+    if (wrap_) {
+      wrap_->GetSkityCanvas()->Flush();
+      wrap_.reset();
+    }
+    frame_surface_->Flush();
     presenter->Present(std::move(frame_surface_));
   }
 
@@ -73,13 +78,31 @@ void SurfaceVk::Clear() {
     return;
   }
 
-  wrap_.reset();
-  frame_surface_.reset();
+  if (wrap_) {
+    wrap_->GetSkityCanvas()->Flush();
+    wrap_.reset();
+  }
+  frame_surface_->Flush();
+
+  auto presenter = native_window_->GetPresenter();
+  if (presenter) {
+    presenter->Present(std::move(frame_surface_));
+  }
 }
 
 void SurfaceVk::Destroy() {
-  wrap_.reset();
-  frame_surface_.reset();
+  if (frame_surface_) {
+    if (wrap_) {
+      wrap_->GetSkityCanvas()->Flush();
+      wrap_.reset();
+    }
+    frame_surface_->Flush();
+
+    auto presenter = native_window_->GetPresenter();
+    if (presenter) {
+      presenter->Present(std::move(frame_surface_));
+    }
+  }
 }
 }  // namespace animax
 }  // namespace lynx

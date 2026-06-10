@@ -277,6 +277,7 @@ class AnimaXSurfaceAndroidVk : public AnimaXSurfaceAndroid {
     info.native_window = native_window_info;
     info.width = static_cast<uint32_t>(Width());
     info.height = static_cast<uint32_t>(Height());
+    info.present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 
     gpu_native_window_ = skity::CreateGPUNativeWindowVK(context.get(), &info);
     if (!gpu_native_window_) {
