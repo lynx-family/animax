@@ -1,8 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-#ifndef ANIMAX_SRC_VIDEO_IOS_METAL_SHADERS_H_
-#define ANIMAX_SRC_VIDEO_IOS_METAL_SHADERS_H_
+#ifndef ANIMAX_SRC_VIDEO_DARWIN_METAL_SHADERS_H_
+#define ANIMAX_SRC_VIDEO_DARWIN_METAL_SHADERS_H_
 
 #include <simd/simd.h>
 
@@ -78,4 +78,4 @@ fragment float4 fragmentShader(RasterizerData input [[ stage_in ]],
 }  // namespace animax
 }  // namespace lynx
 
-#endif  // ANIMAX_SRC_VIDEO_IOS_METAL_SHADERS_H_
+#endif  // ANIMAX_SRC_VIDEO_DARWIN_METAL_SHADERS_H_

@@ -2,19 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/video/ios/video_player_ios.h"
+#include "src/video/darwin/video_player_darwin.h"
 
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
 #include "src/player/animax_event.h"
-#include "src/player/ios/animax_ability_ios.h"
 #include "src/render/texture_info_mtl.h"
-#include "src/video/ios/pending_frame_set.h"
-#include "src/video/ios/video_asset_ios.h"
-#include "src/video/ios/video_frame.h"
-#include "src/video/ios/video_frame_cache.h"
+#include "src/video/darwin/pending_frame_set.h"
+#include "src/video/darwin/video_asset_darwin.h"
+#include "src/video/darwin/video_frame.h"
+#include "src/video/darwin/video_frame_cache.h"
 
 static void AnimaXVideoDecompression(void *decompressionOutputRefCon, void *sourceFrameRefCon,
                                      OSStatus status, VTDecodeInfoFlags infoFlags,
@@ -38,7 +37,7 @@ class VideoPlayerErrorReporter {
     //    kCreateBlockBufferError = 3,
     kDecodeFrameError = 4,
   };
-  VideoPlayerErrorReporter(VideoPlayerIOS *player) : player_(player) {}
+  VideoPlayerErrorReporter(VideoPlayerDarwin *player) : player_(player) {}
 
   void HasDrewOnce();
   void ReportErrorOnce(const std::string &err_msg, const Error err_code);
@@ -50,7 +49,7 @@ class VideoPlayerErrorReporter {
   std::unordered_set<Error> error_reported_;
   int32_t error_count_ = 0;
   bool has_drawn_once_after_error_reported = false;
-  VideoPlayerIOS *player_ = nullptr;
+  VideoPlayerDarwin *player_ = nullptr;
 };
 
 void VideoPlayerErrorReporter::ReportHasDrawnOnceAfterError() {
@@ -84,7 +83,7 @@ void VideoPlayerErrorReporter::Log(const std::string &err_msg) const {
   ANIMAX_LOGE("Error(" << static_cast<int32_t>(error_count_) << "): " << err_msg);
 }
 
-VideoPlayerIOS::VideoPlayerIOS()
+VideoPlayerDarwin::VideoPlayerDarwin()
     : error_reporter_(
           std::unique_ptr<VideoPlayerErrorReporter>(new VideoPlayerErrorReporter(this))),
       pending_frame_set_(PendingFrameSet::Create()) {
@@ -95,7 +94,7 @@ VideoPlayerIOS::VideoPlayerIOS()
   transform_[15] = 1.f;
 }
 
-void VideoPlayerIOS::UpdateOutputFrameSize(const int32_t width, const int32_t height) {
+void VideoPlayerDarwin::UpdateOutputFrameSize(const int32_t width, const int32_t height) {
   if (width != output_width_ || height != output_height_) {
     should_restart_ = true;
     output_width_ = width;
@@ -103,14 +102,14 @@ void VideoPlayerIOS::UpdateOutputFrameSize(const int32_t width, const int32_t he
   }
 }
 
-VideoPlayerIOS::~VideoPlayerIOS() {
+VideoPlayerDarwin::~VideoPlayerDarwin() {
   ThreadAssert::Assert(ThreadAssert::Type::kGPU);
   current_frame_ = nullptr;
   frame_cache_ = nullptr;
   ReleaseSession();
 }
 
-VideoFrameCache *VideoPlayerIOS::GetFrameCache() {
+VideoFrameCache *VideoPlayerDarwin::GetFrameCache() {
   if (!frame_cache_) {
     ThreadAssert::Assert(ThreadAssert::Type::kGPU);
     frame_cache_ = std::make_unique<VideoFrameCache>();
@@ -118,7 +117,7 @@ VideoFrameCache *VideoPlayerIOS::GetFrameCache() {
   return frame_cache_.get();
 }
 
-int32_t VideoPlayerIOS::GetNextFrameToDecode(int32_t presentation_frame) {
+int32_t VideoPlayerDarwin::GetNextFrameToDecode(int32_t presentation_frame) {
   const int32_t key_frame = asset_->GetPrevKeyFrame(presentation_frame);
   do {
     if (CURRENT_FRAME_INVALID == current_decoded_frame_) {
@@ -143,12 +142,12 @@ int32_t VideoPlayerIOS::GetNextFrameToDecode(int32_t presentation_frame) {
   return key_frame;
 }
 
-void VideoPlayerIOS::MoveFrameFromCache(int32_t presentation_frame) {
+void VideoPlayerDarwin::MoveFrameFromCache(int32_t presentation_frame) {
   current_frame_ = GetFrameCache()->Evict(presentation_frame);
   current_presentation_frame_ = presentation_frame;
 }
 
-std::unique_ptr<TextureInfo> VideoPlayerIOS::UpdateTexture(const int32_t frame) {
+std::unique_ptr<TextureInfo> VideoPlayerDarwin::UpdateTexture(const int32_t frame) {
   if (should_restart_) {
     should_restart_ = false;
     ResetSession();
@@ -209,7 +208,7 @@ std::unique_ptr<TextureInfo> VideoPlayerIOS::UpdateTexture(const int32_t frame) 
   return std::make_unique<TextureInfoMTL>(texture, output_width_, output_height_);
 }
 
-PendingFrameSet::FlushResult VideoPlayerIOS::FlushPendingFrameSet(
+PendingFrameSet::FlushResult VideoPlayerDarwin::FlushPendingFrameSet(
     const int32_t required_presentation_index, const bool sync) {
   DCHECK(session_valid_);
   PendingFrameSet::FlushResult result =
@@ -234,9 +233,9 @@ PendingFrameSet::FlushResult VideoPlayerIOS::FlushPendingFrameSet(
   return result;
 }
 
-bool VideoPlayerIOS::DecodeFrameData(CMSampleBufferRef sample_buffer,
-                                     const int32_t presentation_index,
-                                     const bool need_output_frame) {
+bool VideoPlayerDarwin::DecodeFrameData(CMSampleBufferRef sample_buffer,
+                                        const int32_t presentation_index,
+                                        const bool need_output_frame) {
   pending_frame_set_->WillDecodeFrame(presentation_index, need_output_frame);
 
   DecompressionInfo *decompression_info_ptr = nullptr;
@@ -276,8 +275,8 @@ bool VideoPlayerIOS::DecodeFrameData(CMSampleBufferRef sample_buffer,
   return true;
 }
 
-int32_t VideoPlayerIOS::DecodeFrame(const int32_t decode_index,
-                                    const int32_t target_presentation_index) {
+int32_t VideoPlayerDarwin::DecodeFrame(const int32_t decode_index,
+                                       const int32_t target_presentation_index) {
   DCHECK(session_valid_);
   const FrameInfo &info = asset_->GetFrameInfo(decode_index);
   CMSampleBufferRef sample_buffer = PrepareFrameData(info);
@@ -297,7 +296,7 @@ int32_t VideoPlayerIOS::DecodeFrame(const int32_t decode_index,
   return info.presentation_index_;
 }
 
-void VideoPlayerIOS::PrepareNextFrame(const int32_t target_presentation_index) {
+void VideoPlayerDarwin::PrepareNextFrame(const int32_t target_presentation_index) {
   if (!session_valid_) {
     return;
   }
@@ -310,20 +309,20 @@ void VideoPlayerIOS::PrepareNextFrame(const int32_t target_presentation_index) {
   DecodeFrame(decode_index, target_presentation_index);
 }
 
-void VideoPlayerIOS::AttachAsset(std::shared_ptr<VideoAsset> asset) {
-  auto asset_ios = std::static_pointer_cast<VideoAssetIOS>(asset);
-  if (!asset_ios || !asset_ios->IsValid()) {
+void VideoPlayerDarwin::AttachAsset(std::shared_ptr<VideoAsset> asset) {
+  auto asset_darwin = std::static_pointer_cast<VideoAssetDarwin>(asset);
+  if (!asset_darwin || !asset_darwin->IsValid()) {
     return;
   }
 
-  asset_ = asset_ios;
+  asset_ = asset_darwin;
   output_width_ = asset_->GetVideoWidth();
   output_height_ = asset_->GetVideoHeight();
   ResetSession();
   PrepareNextFrame(0);
 }
 
-void VideoPlayerIOS::ResetSession() {
+void VideoPlayerDarwin::ResetSession() {
   ReleaseSession();
 
   VTDecompressionOutputCallbackRecord callback{
@@ -354,7 +353,7 @@ void VideoPlayerIOS::ResetSession() {
   }
 }
 
-void VideoPlayerIOS::ReleaseSession() {
+void VideoPlayerDarwin::ReleaseSession() {
   if (session_) {
     VTDecompressionSessionWaitForAsynchronousFrames(session_);
     VTDecompressionSessionInvalidate(session_);
@@ -369,7 +368,7 @@ void VideoPlayerIOS::ReleaseSession() {
   pending_frame_set_->Reset();
 }
 
-CMSampleBufferRef VideoPlayerIOS::PrepareFrameData(const FrameInfo &frame_info) {
+CMSampleBufferRef VideoPlayerDarwin::PrepareFrameData(const FrameInfo &frame_info) {
   if (frame_info.beg_ < 0 || frame_info.end_ < 0 || frame_info.beg_ >= frame_info.end_ ||
       frame_info.end_ > asset_->GetFrameDataLength()) {
     return nullptr;
@@ -411,10 +410,10 @@ CMSampleBufferRef VideoPlayerIOS::PrepareFrameData(const FrameInfo &frame_info) 
   return sample_buffer;
 }
 
-const std::array<float, 16> &VideoPlayerIOS::GetTransform() { return transform_; }
+const std::array<float, 16> &VideoPlayerDarwin::GetTransform() { return transform_; }
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(std::shared_ptr<AnimaXAbility> ability) {
-  return std::make_unique<VideoPlayerIOS>();
+  return std::make_unique<VideoPlayerDarwin>();
   ;
 }
 

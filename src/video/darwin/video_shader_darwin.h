@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#ifndef ANIMAX_SRC_VIDEO_IOS_VIDEO_SHADER_IOS_H_
-#define ANIMAX_SRC_VIDEO_IOS_VIDEO_SHADER_IOS_H_
+#ifndef ANIMAX_SRC_VIDEO_DARWIN_VIDEO_SHADER_DARWIN_H_
+#define ANIMAX_SRC_VIDEO_DARWIN_VIDEO_SHADER_DARWIN_H_
 
 #import <CoreVideo/CoreVideo.h>
 #import <Metal/Metal.h>
@@ -18,10 +18,10 @@
 namespace lynx {
 namespace animax {
 
-class VideoShaderIOS : public VideoShader {
+class VideoShaderDarwin : public VideoShader {
  public:
-  VideoShaderIOS();
-  ~VideoShaderIOS() = default;
+  VideoShaderDarwin();
+  ~VideoShaderDarwin() = default;
 
   // VideoShader interface implementation
   bool Valid() override;
@@ -55,4 +55,4 @@ class VideoShaderIOS : public VideoShader {
 }  // namespace animax
 }  // namespace lynx
 
-#endif  // ANIMAX_SRC_VIDEO_IOS_VIDEO_SHADER_IOS_H_
+#endif  // ANIMAX_SRC_VIDEO_DARWIN_VIDEO_SHADER_DARWIN_H_

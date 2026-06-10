@@ -8,7 +8,7 @@
 
 #include "src/resource/loader/exec_loader.h"
 #include "src/resource/loader/lambda_loader.h"
-#include "src/resource/resource_loader/harmony/unzip_util.h"
+#include "src/resource/resource_loader/unzip_util.h"
 
 namespace lynx {
 namespace animax {
