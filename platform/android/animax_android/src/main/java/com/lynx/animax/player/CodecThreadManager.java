@@ -51,13 +51,11 @@ public class CodecThreadManager {
    * Posts a runnable to the front of the codec thread queue and clears all pending messages.
    * @param r The runnable to execute
    */
-  public void postAtFrontAndClearQueue(Runnable r) {
+  public void postAtFrontOfQueue(Runnable r) {
     if (mCodecThreadHandler == null) {
       AnimaXLog.e(TAG, "Attempted to post to codec thread after it was released or not alive.");
       return;
     }
-    // Clear all pending messages and callbacks
-    mCodecThreadHandler.removeCallbacksAndMessages(null);
     // Post the new runnable at the front of the queue
     mCodecThreadHandler.postAtFrontOfQueue(r);
   }

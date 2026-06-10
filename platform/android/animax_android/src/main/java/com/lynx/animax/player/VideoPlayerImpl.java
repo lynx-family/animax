@@ -120,7 +120,7 @@ public class VideoPlayerImpl extends AbsVideoPlayer
     mIsDestroyed = true;
 
     final CountDownLatch latch = new CountDownLatch(1);
-    CodecThreadManager.getInstance().postAtFrontAndClearQueue(new Runnable() {
+    CodecThreadManager.getInstance().postAtFrontOfQueue(new Runnable() {
       @Override
       public void run() {
         if (mCodecManager != null) {
