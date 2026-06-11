@@ -5,6 +5,7 @@
 #include "src/render/paint.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "skity/effect/color_filter.hpp"
 #include "skity/effect/image_filter.hpp"
@@ -23,7 +24,7 @@ const skity::Paint &Paint::GetPaint() const { return *paint_; }
 void Paint::SetAntiAlias(bool anti_alias) { paint_->SetAntiAlias(anti_alias); }
 
 void Paint::SetAlpha(float alpha) {
-  paint_->SetAlpha(static_cast<uint8_t>(alpha));
+  paint_->SetAlpha(static_cast<uint8_t>(std::clamp(alpha, 0.0f, 255.0f)));
 }
 
 void Paint::SetColor(const Color &color) {
