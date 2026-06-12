@@ -8,13 +8,17 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 import com.lynx.animax.util.AnimaXLog;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CodecThreadManager {
   private static final String TAG = "CodecThreadManager";
-  private HandlerThread mCodecThread;
-  private Handler mCodecThreadHandler;
   private static final String DEFAULT_THREAD_NAME = "Animax_Codec";
+  private static final int DEFAULT_THREAD_INDEX = 0;
+  private static final int MAX_CODEC_THREAD_COUNT = 6;
 
+  private HandlerThread[] mCodecThreads;
+  private Handler[] mCodecThreadHandlers;
+  private final AtomicInteger mNextThreadIndex = new AtomicInteger(0);
   private static CodecThreadManager sInstance;
 
   private CodecThreadManager() {}
@@ -28,22 +32,23 @@ public class CodecThreadManager {
   }
 
   private void init() {
-    if (mCodecThread == null) {
-      mCodecThread = new HandlerThread(DEFAULT_THREAD_NAME, Process.THREAD_PRIORITY_DISPLAY);
-      mCodecThread.start();
-      mCodecThreadHandler = new Handler(mCodecThread.getLooper());
+    if (mCodecThreadHandlers == null) {
+      mCodecThreads = new HandlerThread[MAX_CODEC_THREAD_COUNT];
+      mCodecThreadHandlers = new Handler[MAX_CODEC_THREAD_COUNT];
+      getHandler(DEFAULT_THREAD_INDEX);
     }
   }
 
-  public void runNowOrPostToCodecThread(Runnable r) {
-    if (mCodecThreadHandler == null) {
+  public void runNowOrPostToCodecThread(int threadIndex, Runnable r) {
+    Handler codecThreadHandler = getHandler(threadIndex);
+    if (codecThreadHandler == null) {
       AnimaXLog.e(TAG, "Attempted to post to codec thread after it was released or not alive.");
       return;
     }
-    if (Looper.myLooper() == mCodecThreadHandler.getLooper()) {
+    if (Looper.myLooper() == codecThreadHandler.getLooper()) {
       r.run();
     } else {
-      mCodecThreadHandler.post(r);
+      codecThreadHandler.post(r);
     }
   }
 
@@ -51,21 +56,48 @@ public class CodecThreadManager {
    * Posts a runnable to the front of the codec thread queue and clears all pending messages.
    * @param r The runnable to execute
    */
-  public void postAtFrontAndClearQueue(Runnable r) {
-    if (mCodecThreadHandler == null) {
+  public void postAtFrontAndClearQueue(int threadIndex, Runnable r) {
+    Handler codecThreadHandler = getHandler(threadIndex);
+    if (codecThreadHandler == null) {
       AnimaXLog.e(TAG, "Attempted to post to codec thread after it was released or not alive.");
       return;
     }
     // Clear all pending messages and callbacks
-    mCodecThreadHandler.removeCallbacksAndMessages(null);
+    codecThreadHandler.removeCallbacksAndMessages(null);
     // Post the new runnable at the front of the queue
-    mCodecThreadHandler.postAtFrontOfQueue(r);
+    codecThreadHandler.postAtFrontOfQueue(r);
   }
 
-  public void ensureOnCodecThread() {
-    if (mCodecThreadHandler == null || Looper.myLooper() != mCodecThreadHandler.getLooper()) {
-      throw new IllegalStateException("Must be called on codec thread (" + DEFAULT_THREAD_NAME
+  public void ensureOnCodecThread(int threadIndex) {
+    Handler codecThreadHandler = getHandler(threadIndex);
+    if (codecThreadHandler == null || Looper.myLooper() != codecThreadHandler.getLooper()) {
+      throw new IllegalStateException("Must be called on codec thread (" + threadIndex
           + "), current: " + Thread.currentThread().getName());
     }
+  }
+
+  private synchronized Handler getHandler(int threadIndex) {
+    if (mCodecThreadHandlers == null || mCodecThreadHandlers.length == 0) {
+      return null;
+    }
+    if (threadIndex < 0 || threadIndex >= mCodecThreadHandlers.length) {
+      threadIndex = DEFAULT_THREAD_INDEX;
+    }
+    if (mCodecThreadHandlers[threadIndex] == null) {
+      String threadName = DEFAULT_THREAD_NAME + "-" + threadIndex;
+      HandlerThread codecThread = new HandlerThread(threadName, Process.THREAD_PRIORITY_DISPLAY);
+      codecThread.start();
+      mCodecThreads[threadIndex] = codecThread;
+      mCodecThreadHandlers[threadIndex] = new Handler(codecThread.getLooper());
+      AnimaXLog.i(TAG, "Created codec thread handler: " + threadName);
+    }
+    return mCodecThreadHandlers[threadIndex];
+  }
+
+  public int obtainThreadIndex(boolean enableThreadPool) {
+    if (!enableThreadPool) {
+      return DEFAULT_THREAD_INDEX;
+    }
+    return (mNextThreadIndex.getAndIncrement() & Integer.MAX_VALUE) % mCodecThreadHandlers.length;
   }
 }

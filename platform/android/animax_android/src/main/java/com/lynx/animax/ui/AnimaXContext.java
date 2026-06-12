@@ -17,12 +17,16 @@ public class AnimaXContext {
   @NonNull private final BaseAbility mAbility;
   @NonNull private final Context mContext;
   private final boolean mMultiThreadAccelerate;
+  private final boolean mVideoThreadAccelerate;
   private float mDeviceDensity = 0.f;
 
   private AnimaXContext(Builder builder) {
     this.mAbility = builder.mAbility;
     this.mContext = builder.mContext;
     this.mMultiThreadAccelerate = builder.mMultiThreadAccelerate;
+    this.mVideoThreadAccelerate =
+        builder.mVideoThreadAccelerate && DeviceUtil.videoThreadAccelerate(mAbility);
+    this.mAbility.getVideoPlayerConfig().setVideoThreadAccelerate(mVideoThreadAccelerate);
   }
 
   /**
@@ -69,6 +73,14 @@ public class AnimaXContext {
   }
 
   /**
+   * Check if codec thread pool acceleration is enabled for this context.
+   * @return True if codec thread pool acceleration is enabled, false otherwise.
+   */
+  public boolean videoThreadAccelerate() {
+    return mVideoThreadAccelerate;
+  }
+
+  /**
    * Builder class for creating AnimaXContext instances using the builder pattern
    * for more controlled construction of the context.
    */
@@ -76,6 +88,7 @@ public class AnimaXContext {
     private final BaseAbility mAbility;
     private final Context mContext;
     private boolean mMultiThreadAccelerate = false;
+    private boolean mVideoThreadAccelerate = true;
 
     public Builder(@NonNull BaseAbility ability, @NonNull Context context) {
       this.mAbility = ability;
@@ -84,6 +97,11 @@ public class AnimaXContext {
 
     public Builder multiThreadAccelerate(boolean enable) {
       mMultiThreadAccelerate = enable;
+      return this;
+    }
+
+    public Builder videoThreadAccelerate(boolean enable) {
+      mVideoThreadAccelerate = enable;
       return this;
     }
 

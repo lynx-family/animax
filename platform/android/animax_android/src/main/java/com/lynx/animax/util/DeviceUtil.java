@@ -27,6 +27,7 @@ public class DeviceUtil {
   private static final String sSettingVideoSurfaceDestroyTimeout =
       "ANIMAX_VIDEO_SURFACE_DESTROY_TIMEOUT";
   private static final String sSettingLegacyFetcher = "ANIMAX_USE_LEGACY_FETCHER";
+  private static final String sSettingVideoThreadAccelerate = "ANIMAX_VIDEO_THREAD_ACCELERATE";
   private static final String sSettingDisablePlaybackOnAssetLoadFailure =
       "ANIMAX_DISABLE_PLAYBACK_ON_ASSET_LOAD_FAILURE";
   private static final String sSettingDisableByteVC1Decoder = "ANIMAX_DISABLE_BYTEVC1_DECODER";
@@ -207,6 +208,13 @@ public class DeviceUtil {
   public static boolean useLegacyFetcher(@NonNull BaseAbility ability) {
     final String result = getStringFromExternalEnv(sSettingLegacyFetcher, ability);
     return isPositiveConfigValue(result);
+  }
+
+  // Use codec thread pool acceleration, default is true in grey branch and should be false when
+  // merged to develop
+  public static boolean videoThreadAccelerate(@NonNull BaseAbility ability) {
+    final String result = getStringFromExternalEnv(sSettingVideoThreadAccelerate, ability);
+    return TextUtils.isEmpty(result) || isPositiveConfigValue(result);
   }
 
   public static boolean disablePlaybackOnAssetLoadFailure(@NonNull BaseAbility ability) {
