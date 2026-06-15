@@ -16,6 +16,7 @@
 #include <zlib.h>
 #endif
 
+#include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -28,6 +29,11 @@ namespace lynx {
 namespace animax {
 
 namespace {
+enum class CompressionMethod : uint16_t {
+  kStored = 0,
+  kDeflated = 8,
+};
+
 uint32_t ReadUInt32(const char* data) {
   return static_cast<uint32_t>((static_cast<unsigned char>(data[0])) |
                                (static_cast<unsigned char>(data[1]) << 8) |
@@ -155,14 +161,17 @@ bool UnzipUtil::UnzipToPath(const std::string& src_path,
     }
     offset += 4;
 
-    // Read version and flags
+    // Read version, flags, and compression method
     offset += 2;
     uint16_t flags = ReadUInt16(&zip_data[offset]);
     bool has_data_descriptor = (flags & 0x8) != 0;
     offset += 2;
 
-    // Skip compression method and time/date fields
-    offset += 10;
+    uint16_t compression_method = ReadUInt16(&zip_data[offset]);
+    offset += 2;
+
+    // Skip time/date fields
+    offset += 8;
 
     // Read compressed file size and uncompressed file size
     uint32_t compressed_size = ReadUInt32(&zip_data[offset]);
@@ -232,12 +241,25 @@ bool UnzipUtil::UnzipToPath(const std::string& src_path,
       offset = data_start;
     }
 
-    // Decompress file
-    std::vector<char> compressed_data(
-        zip_data.begin() + offset, zip_data.begin() + offset + compressed_size);
     std::vector<char> decompressed_data;
-    if (Decompress(compressed_data, decompressed_data) != 0) {
-      return false;
+    switch (static_cast<CompressionMethod>(compression_method)) {
+      case CompressionMethod::kStored:
+        decompressed_data.assign(zip_data.begin() + offset,
+                                 zip_data.begin() + offset + compressed_size);
+        break;
+      case CompressionMethod::kDeflated: {
+        std::vector<char> compressed_data(
+            zip_data.begin() + offset,
+            zip_data.begin() + offset + compressed_size);
+        if (Decompress(compressed_data, decompressed_data) != 0) {
+          return false;
+        }
+        break;
+      }
+      default:
+        ANIMAX_LOGE("Unsupported compression method: "
+                    << compression_method << " for file: " << file_name);
+        return false;
     }
 
     std::ofstream out_file(full_path, std::ios::binary);
