@@ -14,6 +14,7 @@
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
 #include "src/player/android/animax_ability_android.h"
+#include "src/player/android/gl_context_android.h"
 #include "src/render/texture_info_gl.h"
 #include "src/video/android/video_asset_android.h"
 
@@ -23,6 +24,7 @@ namespace animax {
 VideoPlayerAndroid::VideoPlayerAndroid(std::shared_ptr<AnimaXAbility> ability) {
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   if (ability) {
+    backend_ = ability->GetBackend();
     auto android_ability =
         std::static_pointer_cast<AnimaXAbilityAndroid>(std::move(ability));
     if (android_ability) {
@@ -37,7 +39,17 @@ VideoPlayerAndroid::VideoPlayerAndroid(std::shared_ptr<AnimaXAbility> ability) {
 VideoPlayerAndroid::~VideoPlayerAndroid() {
   if (video_texture_) {
     ThreadAssert::Assert(ThreadAssert::Type::kGPU);
-    glDeleteTextures(1, &video_texture_);
+    // Vulkan path: ensure the offscreen EGL context is current before deleting
+    // the GL texture (the GPU thread has no GL context otherwise). On the GL
+    // backend ScopedEGLContext is a no-op (context already current).
+    ScopedEGLContext egl(backend_ == ContextBackend::kVulkan);
+    if (egl.ready()) {
+      glDeleteTextures(1, &video_texture_);
+    } else if (backend_ == ContextBackend::kVulkan) {
+      ANIMAX_LOGE(
+          "VideoPlayerAndroid dtor: MakeCurrent failed, skip "
+          "glDeleteTextures to avoid UB (texture may leak)");
+    }
   }
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   Java_IVideoPlayer_destroy(env, player_.Get());
@@ -92,8 +104,16 @@ void VideoPlayerAndroid::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   asset_ = std::static_pointer_cast<VideoAssetAndroid>(asset);
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   Java_IVideoPlayer_attachAsset(env, player_.Get(), asset_->JavaObject());
-  // trigger Java_IVideoPlayer_setSurface
-  CreateVideoTexture();
+  // CreateVideoTexture issues GL calls (glGenTextures + setSurface), so under
+  // Vulkan scope the offscreen EGL context around it. No-op on the GL backend.
+  ScopedEGLContext egl(backend_ == ContextBackend::kVulkan);
+  if (egl.ready()) {
+    CreateVideoTexture();
+  } else if (backend_ == ContextBackend::kVulkan) {
+    ANIMAX_LOGE(
+        "VideoPlayerAndroid::AttachAsset: EGL MakeCurrent failed, "
+        "skipping CreateVideoTexture (video texture may leak)");
+  }
 }
 
 void VideoPlayerAndroid::NotifyErrorEvent(const std::string &err_msg) {

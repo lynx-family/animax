@@ -41,7 +41,10 @@ class ANIMAX_EXPORT VideoShaderGL : public VideoShader {
  protected:
   void InitProgram();
   void InitFramebuffer();
-  GLuint OnInitTexture();
+  // Create the texture used as the FBO color attachment. Overridable so a
+  // backend can supply an externally-backed texture (e.g. an
+  // AHardwareBuffer-backed GL texture for the GL -> Vulkan bridge).
+  virtual GLuint OnInitTexture();
 
   GLuint program_ = 0;
   GLuint fbo_ = 0;

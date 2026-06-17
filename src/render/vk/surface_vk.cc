@@ -48,7 +48,7 @@ Canvas *SurfaceVk::GetCanvas() {
 
   wrap_.reset(new Canvas(canvas, frame_surface_->GetWidth(),
                          frame_surface_->GetHeight(),
-                         native_window_->GetContext()));
+                         native_window_->GetContext(), frame_surface_.get()));
 
   return wrap_.get();
 }

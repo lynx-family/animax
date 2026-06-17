@@ -71,7 +71,8 @@ Canvas* SurfaceGL::GetCanvas() {
   frame_canvas_ = gpu_surface_->LockCanvas();
 
   wrap_.reset(new Canvas(frame_canvas_, gpu_surface_->GetWidth(),
-                         gpu_surface_->GetHeight(), gpu_ctx_.get()));
+                         gpu_surface_->GetHeight(), gpu_ctx_.get(),
+                         gpu_surface_.get()));
 
   return wrap_.get();
 }

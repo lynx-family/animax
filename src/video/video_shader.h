@@ -14,6 +14,7 @@
 namespace lynx {
 namespace animax {
 
+class Canvas;
 class Image;
 class RealContext;
 
@@ -60,6 +61,27 @@ class VideoShader {
    * @return the output texture.
    */
   virtual std::unique_ptr<Image> GetOutputImage(RealContext *context) = 0;
+
+  // A frame rendering scope returned by BeginFrame(). While alive, any backend
+  // rendering context needed for GL video work is held current; destroying it
+  // commits the frame to the active backend surface (e.g. bridges GL completion
+  // to Vulkan) and releases that context. The default impl is a no-op, used by
+  // the GL backend whose context is already current.
+  class FrameScope {
+   public:
+    virtual ~FrameScope() = default;
+    // Whether backend rendering resources are ready this frame; false means the
+    // caller must skip UpdateTexture/Draw.
+    virtual bool Ready() const { return true; }
+  };
+
+  // Wrap one frame's worth of video processing. The returned scope must outlive
+  // any UpdateTexture/Draw calls made within the frame; destroying it submits
+  // the frame. Default returns a no-op scope.
+  virtual std::unique_ptr<FrameScope> BeginFrame(Canvas *canvas,
+                                                 RealContext *context) {
+    return std::make_unique<FrameScope>();
+  }
 };
 
 }  // namespace animax

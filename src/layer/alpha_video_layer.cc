@@ -92,6 +92,9 @@ void AlphaVideoLayer::AttachAssetOnce() {
     composite_texture_height = downsample_height_;
   }
 
+  // VideoShader / VideoPlayer ensure any backend-specific rendering context
+  // (e.g. the Vulkan path's offscreen EGL context) themselves around their GL
+  // resource creation, so no scope is needed here.
   video_shader_->Init(composite_texture_width, composite_texture_height,
                       rgb_frame, a_frame);
   if (!video_shader_->Valid()) {
@@ -157,7 +160,7 @@ void AlphaVideoLayer::UpdateDownsampleSize(int32_t canvas_width,
 
 void AlphaVideoLayer::DrawLayer(Canvas& canvas, Matrix& parent_matrix,
                                 int32_t parent_alpha) {
-  auto image = UpdateCompositeImage(canvas.GetRealContext());
+  auto image = UpdateCompositeImage(canvas, canvas.GetRealContext());
   if (image == nullptr) {
     return;
   }
@@ -181,7 +184,7 @@ void AlphaVideoLayer::DrawLayer(Canvas& canvas, Matrix& parent_matrix,
 
       UpdateDownsampleSize(video_canvas_rect.GetWidth(),
                            video_canvas_rect.GetHeight());
-      image = UpdateCompositeImage(canvas.GetRealContext());
+      image = UpdateCompositeImage(canvas, canvas.GetRealContext());
       if (image == nullptr) {
         return;
       }
@@ -196,7 +199,8 @@ void AlphaVideoLayer::DrawLayer(Canvas& canvas, Matrix& parent_matrix,
   canvas.Restore();
 }
 
-Image* AlphaVideoLayer::UpdateCompositeImage(RealContext* real_context) {
+Image* AlphaVideoLayer::UpdateCompositeImage(Canvas& canvas,
+                                             RealContext* real_context) {
   AttachAssetOnce();
   auto composite_image = GetCompositeImage(real_context);
   if (!composite_image || !video_shader_ || !video_player_) {
@@ -204,12 +208,20 @@ Image* AlphaVideoLayer::UpdateCompositeImage(RealContext* real_context) {
   }
 
   const int32_t frame = GetCurrentFrame();
-  // update video texture
-  auto video_texture = video_player_->UpdateTexture(frame);
-  // compose video texture into composite texture
-  if (video_texture) {
-    video_shader_->Draw(std::move(video_texture),
-                        video_player_->GetTransform());
+  // BeginFrame returns a scope that holds any backend rendering context current
+  // for the GL work below and commits the frame on destruction. The scope is
+  // destroyed as this function returns, after the texture has been composed, so
+  // GL completion is bridged to the active backend surface before the caller
+  // draws the composite image.
+  auto frame_scope = video_shader_->BeginFrame(&canvas, real_context);
+  if (frame_scope && frame_scope->Ready()) {
+    // update video texture
+    auto video_texture = video_player_->UpdateTexture(frame);
+    // compose video texture into composite texture
+    if (video_texture) {
+      video_shader_->Draw(std::move(video_texture),
+                          video_player_->GetTransform());
+    }
   }
 
   return composite_image;

@@ -5,6 +5,7 @@
 #include "src/render/canvas.h"
 
 #include "skity/effect/mask_filter.hpp"
+#include "skity/gpu/gpu_surface.hpp"
 #include "skity/render/canvas.hpp"
 #include "skity/text/text_blob.hpp"
 #include "src/model/value/base_value.h"
@@ -15,8 +16,8 @@ namespace lynx {
 namespace animax {
 
 Canvas::Canvas(skity::Canvas *canvas, int32_t width, int32_t height,
-               skity::GPUContext *context)
-    : canvas_(canvas), width_(width), height_(height) {
+               skity::GPUContext *context, skity::GPUSurface *surface)
+    : canvas_(canvas), width_(width), height_(height), surface_(surface) {
   if (context) {
     real_context_ = std::unique_ptr<RealContext>(new RealContext(context));
   }
@@ -140,6 +141,13 @@ RealContext *Canvas::GetRealContext() const {
 }
 
 skity::Canvas *Canvas::GetSkityCanvas() { return canvas_; }
+
+void Canvas::AddExternalWaitSemaphore(
+    std::shared_ptr<skity::GPUSemaphore> semaphore) {
+  if (surface_ != nullptr && semaphore != nullptr) {
+    surface_->AddExternalWaitSemaphore(std::move(semaphore));
+  }
+}
 
 }  // namespace animax
 }  // namespace lynx

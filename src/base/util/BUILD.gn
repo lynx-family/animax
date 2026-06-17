@@ -35,6 +35,8 @@ if (is_ios) {
 } else if (is_android) {
   base_util_shared_sources += [
     "android/animax_native_android.cc",
+    "android/egl_ext_functions.cc",
+    "android/egl_ext_functions.h",
     "android/hardware_buffer_functions.cc",
     "android/hardware_buffer_functions.h",
     "android/java_only_array.cc",
