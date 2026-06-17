@@ -44,6 +44,8 @@ class PeriodicalTimestampRecorder : public TimestampRecorder {
   float GetFPS() const;
   void SetFPSListener(std::weak_ptr<FPSListener> listener);
   void SetFPSReportThreshold(long threshold);
+  void OnPlaybackStart();
+  void OnPlaybackStop();
 
  private:
   void TraceFirstFrame(TraceEventType type);
@@ -51,16 +53,23 @@ class PeriodicalTimestampRecorder : public TimestampRecorder {
   void UpdateInternalStateIfNeeded();
   float GetSessionFPS() const;
   void ResetSession();
+  Timestamp GetActivePlaybackDuration() const;
+  Timestamp GetSessionActivePlaybackDuration() const;
+  void AccumulatePlaybackDuration(Timestamp now);
 
   Timestamp last_render_frame_start_{0};
   Timestamp last_render_frame_end_{0};
 
   long session_report_threshold_{0};
-  Timestamp session_render_frame_start_{0};
+  Timestamp session_playback_duration_{0};
+  Timestamp session_playback_start_{0};
   uint32_t session_max_dropped_frames_{0};
   uint32_t num_of_session_frames_{0};
 
   uint32_t num_of_all_frames_{0};
+  Timestamp playback_duration_{0};
+  Timestamp playback_start_{0};
+  bool is_playback_active_{false};
 
   float avg_frame_time_{0.f};
   Timestamp max_frame_time_{0};

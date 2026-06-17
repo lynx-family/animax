@@ -496,6 +496,7 @@ void AnimaXRenderer::AddAudioController(
 }
 
 void AnimaXRenderer::OnResume() {
+  gpu_thread_recorder_.OnPlaybackStart();
   for (auto weak_controller : audio_controllers_) {
     if (auto controller = weak_controller.lock()) {
       controller->OnResume();
@@ -504,6 +505,7 @@ void AnimaXRenderer::OnResume() {
 }
 
 void AnimaXRenderer::OnPause() {
+  gpu_thread_recorder_.OnPlaybackStop();
   for (auto weak_controller : audio_controllers_) {
     if (auto controller = weak_controller.lock()) {
       controller->OnPause();
