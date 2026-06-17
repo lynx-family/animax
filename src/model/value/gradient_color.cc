@@ -19,12 +19,108 @@
 
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 #include "src/base/log/log.h"
 #include "src/base/util/misc_util.h"
 
 namespace lynx {
 namespace animax {
+namespace {
+
+struct MergedGradientPosition {
+  float position;
+  int32_t occurrence;
+};
+
+int32_t SampleGradientColor(const GradientColor& gradient, float position,
+                            int32_t occurrence) {
+  auto size = gradient.GetSize();
+  auto* positions = gradient.GetPositions();
+  auto* colors = gradient.GetColors();
+  if (size <= 0 || positions == nullptr || colors == nullptr) {
+    return 0;
+  }
+
+  auto exact_index = 0;
+  while (exact_index < size && positions[exact_index] < position) {
+    exact_index++;
+  }
+  if (exact_index < size && positions[exact_index] == position) {
+    auto exact_count = 0;
+    while (exact_index + exact_count < size &&
+           positions[exact_index + exact_count] == position) {
+      exact_count++;
+    }
+    auto sampled_occurrence = std::min(occurrence, exact_count - 1);
+    return colors[exact_index + sampled_occurrence];
+  }
+
+  auto upper_index = 0;
+  while (upper_index < size && positions[upper_index] < position) {
+    upper_index++;
+  }
+
+  if (upper_index == 0) {
+    return colors[0];
+  }
+  if (upper_index == size) {
+    return colors[size - 1];
+  }
+
+  auto lower_index = upper_index - 1;
+  auto start_position = positions[lower_index];
+  auto end_position = positions[upper_index];
+  if (end_position <= start_position) {
+    return colors[lower_index];
+  }
+
+  auto segment_progress =
+      (position - start_position) / (end_position - start_position);
+  return GammaEvaluate(colors[lower_index], colors[upper_index],
+                       segment_progress);
+}
+
+std::vector<MergedGradientPosition> MergeGradientPositions(
+    const GradientColor& gc1, const GradientColor& gc2) {
+  std::vector<MergedGradientPosition> positions;
+  positions.reserve(gc1.GetSize() + gc2.GetSize());
+
+  auto* positions1 = gc1.GetPositions();
+  auto* positions2 = gc2.GetPositions();
+  auto size1 = gc1.GetSize();
+  auto size2 = gc2.GetSize();
+  auto index1 = 0;
+  auto index2 = 0;
+
+  while (index1 < size1 || index2 < size2) {
+    auto take_first =
+        index2 >= size2 ||
+        (index1 < size1 && positions1[index1] < positions2[index2]);
+    auto position = take_first ? positions1[index1] : positions2[index2];
+
+    auto count1 = 0;
+    while (index1 < size1 && positions1[index1] == position) {
+      count1++;
+      index1++;
+    }
+
+    auto count2 = 0;
+    while (index2 < size2 && positions2[index2] == position) {
+      count2++;
+      index2++;
+    }
+
+    auto count = std::max(count1, count2);
+    for (auto i = 0; i < count; i++) {
+      positions.push_back({position, i});
+    }
+  }
+
+  return positions;
+}
+
+}  // namespace
 
 GradientColor::GradientColor()
     : size_(0), positions_(nullptr), colors_(nullptr) {}
@@ -53,19 +149,34 @@ std::unique_ptr<Value> GradientColor::Copy() const {
 
 void GradientColor::LerpColor(GradientColor& gc1, GradientColor& gc2,
                               float progress) {
-  if (gc1.size_ != gc2.size_) {
-    ANIMAX_LOGE("gradient color size not same.");
+  if (gc1.IsEmpty() || gc2.IsEmpty()) {
+    ANIMAX_LOGE("gradient color is empty.");
     return;
   }
 
-  // Ensure the current object is properly initialized to the correct size
-  // before writing data.
-  auto size = gc1.GetSize();
-  Init(size);
+  if (gc1.size_ == gc2.size_) {
+    // Ensure the current object is properly initialized to the correct size
+    // before writing data.
+    auto size = gc1.GetSize();
+    Init(size);
 
-  for (auto i = 0; i < size; i++) {
-    positions_[i] = Lerp(gc1.positions_[i], gc2.positions_[i], progress);
-    colors_[i] = GammaEvaluate(gc1.colors_[i], gc2.colors_[i], progress);
+    for (auto i = 0; i < size; i++) {
+      positions_[i] = Lerp(gc1.positions_[i], gc2.positions_[i], progress);
+      colors_[i] = GammaEvaluate(gc1.colors_[i], gc2.colors_[i], progress);
+    }
+    return;
+  }
+
+  auto merged_positions = MergeGradientPositions(gc1, gc2);
+  Init(static_cast<int32_t>(merged_positions.size()));
+
+  for (auto i = 0; i < static_cast<int32_t>(merged_positions.size()); i++) {
+    auto position = merged_positions[i].position;
+    auto occurrence = merged_positions[i].occurrence;
+    positions_[i] = position;
+    colors_[i] =
+        GammaEvaluate(SampleGradientColor(gc1, position, occurrence),
+                      SampleGradientColor(gc2, position, occurrence), progress);
   }
 }
 
