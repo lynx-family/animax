@@ -124,9 +124,11 @@ TEST_F(AnimaXMetricsManagerTest, MultipleEvents) {
   std::this_thread::sleep_for(std::chrono::milliseconds(20));
   loader_actor_->Impl()->Trace(TraceEventType::kPrepareAssetsEnd);
   std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  renderer_actor_->Impl()->OnResume();
   renderer_actor_->Impl()->Trace(TraceEventType::kRenderFrameStart);
   std::this_thread::sleep_for(std::chrono::milliseconds(20));
   renderer_actor_->Impl()->Trace(TraceEventType::kRenderFrameEnd);
+  renderer_actor_->Impl()->OnPause();
 
   ExternalMetricsReadyCallback on_completion =
       [&metrics_promise](MetricsMap metrics_map) {
