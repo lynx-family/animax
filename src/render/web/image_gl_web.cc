@@ -24,8 +24,8 @@ static inline std::shared_ptr<skity::Image> MakeImageFromTexture(
   texture_info.height = wgpuTextureGetHeight(texture_web);
   DCHECK(bitmap->Format() == BitmapFormat::kRGBA);
   texture_info.format = skity::TextureFormat::kRGBA;
-  DCHECK(bitmap->AlphaType() == BitmapAlphaType::kUnpremul_AlphaType);
-  texture_info.alpha_type = skity::AlphaType::kUnpremul_AlphaType;
+  DCHECK(bitmap->AlphaType() == BitmapAlphaType::kPremul_AlphaType);
+  texture_info.alpha_type = skity::AlphaType::kPremul_AlphaType;
   texture_info.texture = texture_web;
   auto skity_texture = real_context->Get()->WrapTexture(&texture_info);
   return skity::Image::MakeHWImage(std::move(skity_texture));
