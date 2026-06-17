@@ -4,9 +4,38 @@
 
 #include "src/model/value/gradient_color.h"
 
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "gtest/gtest.h"
+#include "src/base/util/misc_util.h"
 
 using namespace lynx::animax;
+
+namespace {
+
+int32_t Argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
+  auto color = (static_cast<uint32_t>(a) << 24) |
+               (static_cast<uint32_t>(r) << 16) |
+               (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(b);
+  return static_cast<int32_t>(color);
+}
+
+std::unique_ptr<GradientColor> MakeGradient(
+    const std::vector<float>& positions, const std::vector<int32_t>& colors) {
+  auto position_values = std::make_unique<float[]>(positions.size());
+  auto color_values = std::make_unique<int32_t[]>(colors.size());
+  for (auto i = 0u; i < positions.size(); i++) {
+    position_values[i] = positions[i];
+    color_values[i] = colors[i];
+  }
+  return ValueFactory::Make<GradientColor>(
+      std::move(position_values), std::move(color_values),
+      static_cast<int32_t>(positions.size()));
+}
+
+}  // namespace
 
 TEST(GradientColorTest, DefaultConstructor) {
   auto gradient = ValueFactory::Make<GradientColor>();
@@ -113,6 +142,70 @@ TEST(GradientColorTest, LerpColor) {
   EXPECT_NE(result->GetColors()[0], 0x00FF00);
   EXPECT_NE(result->GetColors()[1], 0x0000FF);
   EXPECT_NE(result->GetColors()[1], 0xFFFF00);
+}
+
+TEST(GradientColorTest, LerpColorWithDifferentStopCountsMergesPositions) {
+  auto gradient1 = MakeGradient(
+      {0.0f, 0.5f, 1.0f},
+      {Argb(255, 255, 255, 255), Argb(128, 0, 0, 255), Argb(64, 0, 0, 0)});
+  auto gradient2 = MakeGradient(
+      {0.0f, 0.25f, 0.5f, 0.75f, 1.0f},
+      {Argb(128, 0, 0, 0), Argb(255, 0, 255, 0), Argb(255, 255, 0, 0),
+       Argb(128, 0, 0, 255), Argb(255, 255, 255, 255)});
+
+  auto result = ValueFactory::Make<GradientColor>(gradient1->GetSize());
+  result->LerpColor(*gradient1, *gradient2, 0.5f);
+
+  ASSERT_EQ(5, result->GetSize());
+  EXPECT_FLOAT_EQ(0.0f, result->GetPositions()[0]);
+  EXPECT_FLOAT_EQ(0.25f, result->GetPositions()[1]);
+  EXPECT_FLOAT_EQ(0.5f, result->GetPositions()[2]);
+  EXPECT_FLOAT_EQ(0.75f, result->GetPositions()[3]);
+  EXPECT_FLOAT_EQ(1.0f, result->GetPositions()[4]);
+
+  auto sampled_gc1_at_025 =
+      GammaEvaluate(gradient1->GetColors()[0], gradient1->GetColors()[1], 0.5f);
+  auto sampled_gc1_at_075 =
+      GammaEvaluate(gradient1->GetColors()[1], gradient1->GetColors()[2], 0.5f);
+  EXPECT_EQ(
+      GammaEvaluate(gradient1->GetColors()[0], gradient2->GetColors()[0], 0.5f),
+      result->GetColors()[0]);
+  EXPECT_EQ(GammaEvaluate(sampled_gc1_at_025, gradient2->GetColors()[1], 0.5f),
+            result->GetColors()[1]);
+  EXPECT_EQ(
+      GammaEvaluate(gradient1->GetColors()[1], gradient2->GetColors()[2], 0.5f),
+      result->GetColors()[2]);
+  EXPECT_EQ(GammaEvaluate(sampled_gc1_at_075, gradient2->GetColors()[3], 0.5f),
+            result->GetColors()[3]);
+  EXPECT_EQ(
+      GammaEvaluate(gradient1->GetColors()[2], gradient2->GetColors()[4], 0.5f),
+      result->GetColors()[4]);
+}
+
+TEST(GradientColorTest, LerpColorWithDuplicatePositionsPreservesHardStops) {
+  auto gradient1 = MakeGradient({0.0f, 0.5f, 0.5f, 1.0f},
+                                {Argb(255, 0, 0, 0), Argb(255, 255, 0, 0),
+                                 Argb(255, 0, 0, 255), Argb(255, 0, 0, 255)});
+  auto gradient2 = MakeGradient(
+      {0.0f, 0.5f, 1.0f},
+      {Argb(255, 0, 0, 0), Argb(255, 255, 255, 255), Argb(255, 255, 255, 255)});
+
+  auto result = ValueFactory::Make<GradientColor>(gradient2->GetSize());
+  result->LerpColor(*gradient1, *gradient2, 0.5f);
+
+  ASSERT_EQ(4, result->GetSize());
+  EXPECT_FLOAT_EQ(0.0f, result->GetPositions()[0]);
+  EXPECT_FLOAT_EQ(0.5f, result->GetPositions()[1]);
+  EXPECT_FLOAT_EQ(0.5f, result->GetPositions()[2]);
+  EXPECT_FLOAT_EQ(1.0f, result->GetPositions()[3]);
+
+  EXPECT_EQ(
+      GammaEvaluate(gradient1->GetColors()[1], gradient2->GetColors()[1], 0.5f),
+      result->GetColors()[1]);
+  EXPECT_EQ(
+      GammaEvaluate(gradient1->GetColors()[2], gradient2->GetColors()[1], 0.5f),
+      result->GetColors()[2]);
+  EXPECT_NE(result->GetColors()[1], result->GetColors()[2]);
 }
 
 TEST(GradientColorTest, Copy) {
