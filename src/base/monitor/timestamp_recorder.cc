@@ -41,14 +41,44 @@ void PeriodicalTimestampRecorder::TraceFirstFrame(TraceEventType type) {
 }
 
 void PeriodicalTimestampRecorder::ResetSession() {
-  session_render_frame_start_ = Current();
+  session_playback_duration_ = 0;
+  session_playback_start_ = is_playback_active_ ? Current() : 0;
   num_of_session_frames_ = 0;
   session_max_dropped_frames_ = 0;
 }
 
+void PeriodicalTimestampRecorder::AccumulatePlaybackDuration(Timestamp now) {
+  if (!is_playback_active_ || playback_start_ <= 0 || now <= playback_start_) {
+    return;
+  }
+  auto duration = now - playback_start_;
+  playback_duration_ += duration;
+  playback_start_ = now;
+  if (session_playback_start_ > 0 && now > session_playback_start_) {
+    session_playback_duration_ += now - session_playback_start_;
+    session_playback_start_ = now;
+  }
+}
+
+Timestamp PeriodicalTimestampRecorder::GetActivePlaybackDuration() const {
+  auto duration = playback_duration_;
+  if (is_playback_active_ && playback_start_ > 0) {
+    duration += Current() - playback_start_;
+  }
+  return duration;
+}
+
+Timestamp PeriodicalTimestampRecorder::GetSessionActivePlaybackDuration()
+    const {
+  auto duration = session_playback_duration_;
+  if (is_playback_active_ && session_playback_start_ > 0) {
+    duration += Current() - session_playback_start_;
+  }
+  return duration;
+}
+
 void PeriodicalTimestampRecorder::ReportFPSAndMaxDroppedFrames() {
-  auto time_since_last_report =
-      last_render_frame_end_ - session_render_frame_start_;
+  auto time_since_last_report = GetSessionActivePlaybackDuration();
 
   if (time_since_last_report > session_report_threshold_) {
     auto fps = GetSessionFPS();
@@ -94,29 +124,22 @@ void PeriodicalTimestampRecorder::Trace(TraceEventType type) {
 }
 
 float PeriodicalTimestampRecorder::GetFPS() const {
-  auto first_render_frame_start =
-      timestamps_[static_cast<uint8_t>(TraceEventType::kRenderFrameStart)];
-  auto time_since_animation_started =
-      last_render_frame_end_ - first_render_frame_start;
+  auto active_playback_duration = GetActivePlaybackDuration();
 
-  if (time_since_animation_started <= 0 || first_render_frame_start == 0) {
+  if (active_playback_duration <= 0 || num_of_all_frames_ == 0) {
     return 0.0f;
   }
-  return round((num_of_all_frames_ * 1000.0 / time_since_animation_started) *
-               100) /
+  return round((num_of_all_frames_ * 1000.0 / active_playback_duration) * 100) /
          100.f;
 }
 
 float PeriodicalTimestampRecorder::GetSessionFPS() const {
-  auto time_since_last_session_started =
-      last_render_frame_end_ - session_render_frame_start_;
+  auto active_session_duration = GetSessionActivePlaybackDuration();
 
-  if (time_since_last_session_started <= 0 ||
-      session_render_frame_start_ == 0) {
+  if (active_session_duration <= 0 || num_of_session_frames_ == 0) {
     return 0.0f;
   }
-  return round((num_of_session_frames_ * 1000.0 /
-                time_since_last_session_started) *
+  return round((num_of_session_frames_ * 1000.0 / active_session_duration) *
                100) /
          100.f;
 }
@@ -135,6 +158,25 @@ void PeriodicalTimestampRecorder::SetFPSListener(
 
 void PeriodicalTimestampRecorder::SetFPSReportThreshold(long threshold) {
   session_report_threshold_ = threshold;
+}
+
+void PeriodicalTimestampRecorder::OnPlaybackStart() {
+  if (is_playback_active_) {
+    return;
+  }
+  is_playback_active_ = true;
+  playback_start_ = Current();
+  session_playback_start_ = playback_start_;
+}
+
+void PeriodicalTimestampRecorder::OnPlaybackStop() {
+  if (!is_playback_active_) {
+    return;
+  }
+  AccumulatePlaybackDuration(Current());
+  is_playback_active_ = false;
+  playback_start_ = 0;
+  session_playback_start_ = 0;
 }
 
 }  // namespace animax
