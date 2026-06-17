@@ -43,6 +43,11 @@ HardwareBufferFunctions::HardwareBufferFunctions() {
     SymbolUtil::LoadSymbol(handle, from_hardware_buffer_,
                            "AHardwareBuffer_fromHardwareBuffer");
   }
+  if (IsHardwareBufferSupported()) {
+    void *handle = GetAndroidSoHandle();
+    SymbolUtil::LoadSymbol(handle, allocate_, "AHardwareBuffer_allocate");
+    SymbolUtil::LoadSymbol(handle, release_, "AHardwareBuffer_release");
+  }
 }
 
 HardwareBufferFunctions &HardwareBufferFunctions::GetInstance() {
@@ -52,6 +57,10 @@ HardwareBufferFunctions &HardwareBufferFunctions::GetInstance() {
 
 bool HardwareBufferFunctions::IsWrappedBitmapSupported() {
   return GetSDKVersion() >= 29;
+}
+
+bool HardwareBufferFunctions::IsHardwareBufferSupported() {
+  return GetSDKVersion() >= 26;
 }
 
 void HardwareBufferFunctions::Describe(const AHardwareBuffer *buffer,
@@ -76,6 +85,17 @@ AHardwareBuffer *HardwareBufferFunctions::FromHardwareBuffer(
     JNIEnv *env, jobject hardware_buffer_obj) {
   DCHECK(from_hardware_buffer_);
   return from_hardware_buffer_(env, hardware_buffer_obj);
+}
+
+int HardwareBufferFunctions::Allocate(const AHardwareBuffer_Desc *desc,
+                                      AHardwareBuffer **out_buffer) {
+  DCHECK(allocate_);
+  return allocate_(desc, out_buffer);
+}
+
+void HardwareBufferFunctions::Release(AHardwareBuffer *buffer) {
+  DCHECK(release_);
+  release_(buffer);
 }
 }  // namespace animax
 }  // namespace lynx

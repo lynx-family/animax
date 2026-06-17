@@ -20,10 +20,16 @@ using LockFunc = int(AHardwareBuffer* buffer, uint64_t usage, int32_t fence,
 using UnlockFunc = int(AHardwareBuffer* buffer, int32_t* fence);
 using FromHardwareBufferFunc = AHardwareBuffer*(JNIEnv* env,
                                                 jobject hardwareBufferObj);
+using AllocateFunc = int(const AHardwareBuffer_Desc* desc,
+                         AHardwareBuffer** out_buffer);
+using ReleaseFunc = void(AHardwareBuffer* buffer);
 
 class HardwareBufferFunctions {
  public:
   static bool IsWrappedBitmapSupported();
+  // Whether AHardwareBuffer_allocate / AHardwareBuffer_release can be loaded
+  // (API >= 26). Required for the GL -> Vulkan texture share bridge.
+  static bool IsHardwareBufferSupported();
   static HardwareBufferFunctions& GetInstance();
 
   HardwareBufferFunctions(const HardwareBufferFunctions&) = delete;
@@ -34,6 +40,8 @@ class HardwareBufferFunctions {
            const ARect* rect, void** out_virtual_address);
   int Unlock(AHardwareBuffer* buffer, int32_t* fence);
   AHardwareBuffer* FromHardwareBuffer(JNIEnv* env, jobject hardware_buffer_obj);
+  int Allocate(const AHardwareBuffer_Desc* desc, AHardwareBuffer** out_buffer);
+  void Release(AHardwareBuffer* buffer);
 
  private:
   friend class lynx::base::NoDestructor<HardwareBufferFunctions>;
@@ -42,6 +50,8 @@ class HardwareBufferFunctions {
   LockFunc* lock_ = nullptr;
   UnlockFunc* unlock_ = nullptr;
   FromHardwareBufferFunc* from_hardware_buffer_ = nullptr;
+  AllocateFunc* allocate_ = nullptr;
+  ReleaseFunc* release_ = nullptr;
 };
 
 }  // namespace animax

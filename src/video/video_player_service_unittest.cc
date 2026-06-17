@@ -93,4 +93,33 @@ TEST(MockVideoPlayerProvider, CreateVideoPlayer) {
   EXPECT_NE(nullptr, shader_1);
 }
 
+TEST(AnimaXAbilityTest, DefaultBackendIsOpenGL) {
+  AnimaXAbility ability;
+  EXPECT_EQ(ability.GetBackend(), ContextBackend::kOpenGL);
+}
+
+TEST(AnimaXAbilityTest, SetBackendRoundTripsAllBackends) {
+  AnimaXAbility ability;
+  for (auto backend : {ContextBackend::kOpenGL, ContextBackend::kVulkan,
+                       ContextBackend::kMetal, ContextBackend::kSoftware}) {
+    ability.SetBackend(backend);
+    EXPECT_EQ(ability.GetBackend(), backend);
+  }
+}
+
+TEST(AnimaXAbilityTest, IsDownsampleVideoEnabledDefaultsToFalse) {
+  AnimaXAbility ability;
+  EXPECT_FALSE(ability.IsDownsampleVideoEnabled());
+}
+
+// VideoShader::BeginFrame defaults to returning a no-op scope (the GL backend
+// keeps its context current). MockVideoShader does not override it, so this
+// exercises the base implementation directly.
+TEST(VideoShaderDefaultHooks, BeginFrameReturnsReadyScopeByDefault) {
+  MockVideoShader shader;
+  auto scope = shader.BeginFrame(nullptr, nullptr);
+  EXPECT_NE(nullptr, scope);
+  EXPECT_TRUE(scope->Ready());
+}
+
 }  // namespace

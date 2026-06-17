@@ -107,7 +107,7 @@ deps = {
     'third_party/skity': {
         "type": "solution",
         "url": "https://github.com/lynx-family/skity.git",
-        "commit": "2dfafc71b305dbee6e734f332abcaadf5200544f",
+        "commit": "405ffc1c7a5f6a8b0d4feab166a8e5218f92e425",
         "deps_file": "hab/DEPS",
         "ignore_in_git": True,
     },

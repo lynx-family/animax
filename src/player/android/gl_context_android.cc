@@ -33,6 +33,14 @@ AnimaXEGLContext::AnimaXEGLContext(bool is_no_config_context_supported,
 
 void AnimaXEGLContext::init(bool auto_destroy_context) {
   if (is_initialized_) {
+    // Allow downgrading auto-destroy (true -> false): the Vulkan video bridge
+    // relies on the offscreen EGL context surviving across GL texture deletes,
+    // so a later init(false) from a destructor must be able to relax an earlier
+    // init(true). Never upgrade false -> true: a caller that created the
+    // context without auto-destroy does not expect it to be torn down.
+    if (is_auto_destroy_context_ && !auto_destroy_context) {
+      is_auto_destroy_context_ = false;
+    }
     ANIMAX_LOGI("AnimaXEGLContext initialized, is_auto_destroy_context_: "
                 << is_auto_destroy_context_
                 << ", auto_destroy_context: " << auto_destroy_context);
@@ -191,6 +199,20 @@ bool AnimaXEGLContext::IsCurrent() const {
   return current_context == context_;
 }
 
+void AnimaXEGLContext::ReleaseCurrent() {
+  if (!is_valid_) {
+    return;
+  }
+  EGLDisplay display = GetEGLDisplay();
+  if (display == EGL_NO_DISPLAY) {
+    return;
+  }
+  if (!eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                      EGL_NO_CONTEXT)) {
+    ANIMAX_LOGE("Failed to ReleaseCurrent, error: " << eglGetError());
+  }
+}
+
 bool AnimaXEGLContext::Valid() const { return is_valid_; }
 
 EGLConfig AnimaXEGLContext::Config() const { return config_; }
@@ -208,6 +230,26 @@ EGLDisplay AnimaXEGLContext::GetEGLDisplay() {
   }
 
   return display_;
+}
+
+ScopedEGLContext::ScopedEGLContext(bool ensure) : ensure_(ensure) {
+  if (!ensure_) {
+    return;
+  }
+  AnimaXEGLContext::Instance().init(/*auto_destroy_context=*/false);
+  ready_ = AnimaXEGLContext::Instance().MakeCurrent();
+  if (!ready_) {
+    ANIMAX_LOGE(
+        "ScopedEGLContext: MakeCurrent failed, GL work will be skipped");
+  }
+}
+
+ScopedEGLContext::~ScopedEGLContext() {
+  // Only release what we successfully made current; releasing without a prior
+  // MakeCurrent would disturb a context owned by another scope/caller.
+  if (ensure_ && ready_) {
+    AnimaXEGLContext::Instance().ReleaseCurrent();
+  }
 }
 
 }  // namespace animax

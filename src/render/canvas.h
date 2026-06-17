@@ -5,6 +5,8 @@
 #ifndef ANIMAX_SRC_RENDER_CANVAS_H_
 #define ANIMAX_SRC_RENDER_CANVAS_H_
 
+#include <memory>
+
 #include "src/model/rect_model.h"
 #include "src/render/font.h"
 #include "src/render/image.h"
@@ -15,14 +17,16 @@
 
 namespace skity {
 class Canvas;
-}
+class GPUSemaphore;
+class GPUSurface;
+}  // namespace skity
 namespace lynx {
 namespace animax {
 
 class Canvas {
  public:
   Canvas(skity::Canvas* canvas, int32_t width, int32_t height,
-         skity::GPUContext* context);
+         skity::GPUContext* context, skity::GPUSurface* surface = nullptr);
 
   ~Canvas() = default;
 
@@ -67,10 +71,16 @@ class Canvas {
 
   skity::Canvas* GetSkityCanvas();
 
+  // Forward an external wait semaphore to the underlying surface. Used by the
+  // Vulkan video path so the surface waits for GL completion before rendering.
+  // Must be called between the surface's LockCanvas() and Flush().
+  void AddExternalWaitSemaphore(std::shared_ptr<skity::GPUSemaphore> semaphore);
+
  private:
   skity::Canvas* canvas_;
   int32_t width_ = 0, height_ = 0;
   std::unique_ptr<RealContext> real_context_;
+  skity::GPUSurface* surface_ = nullptr;
 };
 
 }  // namespace animax

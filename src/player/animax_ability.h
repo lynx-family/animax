@@ -5,6 +5,8 @@
 #ifndef ANIMAX_SRC_PLAYER_ANIMAX_ABILITY_H_
 #define ANIMAX_SRC_PLAYER_ANIMAX_ABILITY_H_
 
+#include "src/render/real_context.h"
+
 namespace lynx {
 namespace animax {
 
@@ -14,9 +16,21 @@ class AnimaXAbility {
 
   /**
    * Get whether video downsampling is enabled
-   * @return True if video downsampling is enabled, false otherwise
+   * @return True if video downsampling is enabled, false otherwise.
    */
   virtual bool IsDownsampleVideoEnabled() const { return false; }
+
+  /**
+   * The GPU backend chosen for the current surface, filled by the renderer
+   * after the surface is created. The video subsystem reads this to decide
+   * whether to enable AHardwareBuffer bridging (GL -> Vulkan texture share)
+   * together with an offscreen EGL context. Defaults to OpenGL.
+   */
+  ContextBackend GetBackend() const { return backend_; }
+  void SetBackend(ContextBackend backend) { backend_ = backend; }
+
+ private:
+  ContextBackend backend_ = ContextBackend::kOpenGL;
 };
 
 }  // namespace animax

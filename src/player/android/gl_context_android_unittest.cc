@@ -126,6 +126,68 @@ TEST_P(AnimaXEGLContextTest, ContextCanDraw) {
   }
 }
 
+// ScopedEGLContext wraps AnimaXEGLContext::Instance() (the thread-local
+// singleton) MakeCurrent/ReleaseCurrent as RAII. It is tested independently of
+// the parameterized fixture above: the singleton's capabilities are fixed by
+// the device, not by AnimaXEGLContextTestParams.
+
+// ensure == false is a no-op: it never touches the current context and always
+// reports ready. This path does not require a usable EGL context.
+TEST(ScopedEGLContextTest, NoOpWhenEnsureFalse) {
+  using namespace lynx::animax;
+  const EGLContext prev = eglGetCurrentContext();
+  {
+    ScopedEGLContext egl(false);
+    EXPECT_TRUE(egl.ready());
+    EXPECT_EQ(eglGetCurrentContext(), prev);
+  }
+  EXPECT_EQ(eglGetCurrentContext(), prev);
+}
+
+// ensure == true makes the offscreen EGL context current on construction and
+// releases it on destruction.
+TEST(ScopedEGLContextTest, AcquiresAndReleasesContext) {
+  using namespace lynx::animax;
+  // Probe device support; skip cleanly where no offscreen EGL context exists.
+  {
+    ScopedEGLContext probe(true);
+    if (!probe.ready()) {
+      return;
+    }
+  }
+
+  ASSERT_EQ(eglGetCurrentContext(), EGL_NO_CONTEXT);
+  {
+    ScopedEGLContext egl(true);
+    ASSERT_TRUE(egl.ready());
+    EXPECT_NE(eglGetCurrentContext(), EGL_NO_CONTEXT);
+    EXPECT_TRUE(AnimaXEGLContext::Instance().IsCurrent());
+  }
+  // Destruction must release the context.
+  EXPECT_EQ(eglGetCurrentContext(), EGL_NO_CONTEXT);
+}
+
+// Repeated construction mirrors the per-frame usage in the Vulkan video path.
+TEST(ScopedEGLContextTest, ReusableAcrossScopes) {
+  using namespace lynx::animax;
+  {
+    ScopedEGLContext probe(true);
+    if (!probe.ready()) {
+      return;
+    }
+  }
+
+  for (int i = 0; i < 3; ++i) {
+    ASSERT_EQ(eglGetCurrentContext(), EGL_NO_CONTEXT);
+    {
+      ScopedEGLContext egl(true);
+      ASSERT_TRUE(egl.ready());
+      EXPECT_TRUE(AnimaXEGLContext::Instance().IsCurrent());
+    }
+    ASSERT_EQ(eglGetCurrentContext(), EGL_NO_CONTEXT);
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(
     AnimaXEGLContextTests, AnimaXEGLContextTest,
     ::testing::Values(AnimaXEGLContextTestParams{false, false},

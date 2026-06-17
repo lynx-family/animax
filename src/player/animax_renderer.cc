@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "include/player/animax_player.h"
+#include "include/player/animax_surface.h"
 #include "src/base/log/log.h"
 #include "src/base/monitor/animax_metric_names.h"
 #include "src/base/monitor/animax_metrics_manager.h"
@@ -18,10 +19,13 @@
 #include "src/base/util/memory_calculator.h"
 #include "src/layer/composition_layer.h"
 #include "src/parser/layer_parser.h"
+#include "src/player/animax_ability.h"
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
+#include "src/player/animax_player_context.h"
 #include "src/property/animax_property_updater.h"
 #include "src/render/matrix.h"
+#include "src/render/real_context.h"
 #include "src/render/surface.h"
 #include "src/resource/log_util.h"
 
@@ -62,6 +66,27 @@ void AnimaXRenderer::UpdateSurfaceInternal(
   surface_ = std::move(surface);
   ANIMAX_LOGI("AnimaXRenderer UpdateSurfaceInternal"
               << ", surface: " << surface_);
+
+  // Propagate the chosen backend to the ability so the video subsystem can
+  // decide whether to bridge GL video frames to Vulkan via AHardwareBuffer.
+  if (surface_) {
+    ContextBackend backend = ContextBackend::kOpenGL;
+    switch (surface_->Type()) {
+      case AnimaXBackend::kVulkan:
+        backend = ContextBackend::kVulkan;
+        break;
+      case AnimaXBackend::kSoftware:
+        backend = ContextBackend::kSoftware;
+        break;
+      default:
+        break;
+    }
+    if (auto context = weak_context_.lock()) {
+      if (auto ability = context->weak_ability.lock()) {
+        ability->SetBackend(backend);
+      }
+    }
+  }
 
   if (!has_surface_before_) {
     // If this is the first surface assigned to the renderer, initiate

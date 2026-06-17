@@ -33,7 +33,7 @@ class AlphaVideoLayer : public BaseLayer {
   void AttachAssetOnce();
   void UpdateDownsampleSize(int32_t canvas_width, int32_t canvas_height);
 
-  Image* UpdateCompositeImage(RealContext* real_context);
+  Image* UpdateCompositeImage(Canvas& canvas, RealContext* real_context);
   Image* GetCompositeImage(RealContext* real_context);
   int32_t GetCurrentFrame();
 

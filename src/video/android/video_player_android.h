@@ -32,6 +32,7 @@ class VideoPlayerAndroid : public VideoPlayer {
   uint32_t video_texture_ = 0;
   std::array<float, 16> transform_{};
   int32_t current_frame_ = -1;
+  ContextBackend backend_ = ContextBackend::kOpenGL;
 };
 
 }  // namespace animax

@@ -127,6 +127,8 @@ animax_source_set("skity") {
     sources += [
       "vk/context_vk.cc",
       "vk/context_vk.h",
+      "vk/image_vk.cc",
+      "vk/image_vk.h",
       "vk/surface_vk.cc",
       "vk/surface_vk.h",
     ]

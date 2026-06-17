@@ -31,6 +31,11 @@ class AnimaXEGLContext {
   bool MakeCurrent(EGLSurface draw_surface = EGL_NO_SURFACE,
                    EGLSurface read_surface = EGL_NO_SURFACE);
   bool IsCurrent() const;
+
+  // Make no context current on this thread without destroying the context.
+  // Used by the Vulkan path to release the offscreen EGL context after GL
+  // video processing so it does not stay current on the shared GPU thread.
+  void ReleaseCurrent();
   AnimaXEGLContext() = default;
   AnimaXEGLContext(bool is_no_config_context_supported,
                    bool is_surfaceless_context_supported);
@@ -59,6 +64,28 @@ class AnimaXEGLContext {
   void DestroyContext();
 
   EGLDisplay GetEGLDisplay();
+};
+
+// RAII wrapper around AnimaXEGLContext::MakeCurrent/ReleaseCurrent.
+//
+// When |ensure| is true it makes the offscreen EGL context current on
+// construction and releases it on destruction; this is what the Vulkan video
+// path uses to scope GL work on a GPU thread that has no GL context of its own.
+// When |ensure| is false it is a no-op, for backends (e.g. GL) whose context is
+// already current. ready() reports whether the context is current and GL work
+// may proceed.
+class ScopedEGLContext {
+ public:
+  explicit ScopedEGLContext(bool ensure);
+  ~ScopedEGLContext();
+  ScopedEGLContext(const ScopedEGLContext&) = delete;
+  ScopedEGLContext& operator=(const ScopedEGLContext&) = delete;
+
+  bool ready() const { return ready_; }
+
+ private:
+  bool ensure_ = false;
+  bool ready_ = true;
 };
 
 }  // namespace animax

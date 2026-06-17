@@ -39,6 +39,8 @@ animax_source_set("video") {
     ]
   } else if (is_android) {
     sources += [
+      "android/ahardware_buffer_gl.cc",
+      "android/ahardware_buffer_gl.h",
       "android/native_player_callback.cc",
       "android/video_asset_android.cc",
       "android/video_asset_android.h",
