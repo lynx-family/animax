@@ -119,20 +119,21 @@ void TextContentTextra::ConfigurePlatformPainter(
   // anti-aliasing default to true
   paint_->SetAntiAlias(true);
 
+  auto& document_data = data_source.GetDocumentData();
   // fill color
-  Color fill_color = Color(data_source.GetColor());
+  Color fill_color = Color(document_data.GetColor());
   fill_color.SetA(alpha * fill_color.GetA() / 255);
   paint_->SetFillColor(fill_color);
 
-  float width = data_source.GetStrokeWidth();
+  float width = document_data.GetStrokeWidth();
   // stroke color and stroke width
   if (width > 0) {
-    Color stroke_color = Color(data_source.GetStrokeColor());
+    Color stroke_color = Color(document_data.GetStrokeColor());
     stroke_color.SetA(alpha * stroke_color.GetA() / 255);
     paint_->SetStrokeColor(stroke_color);
     paint_->SetStrokeWidth(width);
     // stroke overfill
-    paint_->SetStyle(data_source.GetDocumentData().GetStrokeOverfill()
+    paint_->SetStyle(document_data.GetStrokeOverfill()
                          ? PaintStyle::kFillAddStroke
                          : PaintStyle::kStrokeThenFill);
   } else {

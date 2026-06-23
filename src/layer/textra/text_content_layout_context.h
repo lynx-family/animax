@@ -5,6 +5,9 @@
 #ifndef ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_LAYOUT_CONTEXT_H_
 #define ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_LAYOUT_CONTEXT_H_
 
+#include <memory>
+#include <vector>
+
 #include "src/layer/textra/textra_include.h"
 
 namespace lynx {
@@ -23,6 +26,7 @@ class TextContentLayoutContext {
   std::unique_ptr<ttoffice::tttext::LayoutRegion> layout_region_;
   std::unique_ptr<TTParagraph> paragraph_;
   ttoffice::tttext::SkityPainter tt_painter_;
+  std::vector<std::unique_ptr<ttoffice::tttext::SkityPainter>> range_painters_;
   bool is_box_mode_;
 };
 

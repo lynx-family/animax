@@ -4,8 +4,9 @@
 
 #include "src/layer/textra/text_content_layout_context.h"
 
-#include <cmath>
+#include <algorithm>
 
+#include "base/include/string/string_utils.h"
 #include "src/content/path/path_util.h"
 #include "src/layer/text_content_data_source.h"
 #include "src/layer/text_layer.h"
@@ -33,6 +34,66 @@ TTHorizontalAlignment ToHorizontalAlignment(
     default:
       return TTHorizontalAlignment::kLeft;
   }
+}
+
+bool ConfigureRangeStyle(
+    const TextContentDataSource::RangeStyle& range_style,
+    const DocumentData& document_data, const skity::Paint& paint,
+    ttoffice::tttext::Style& style_for_range,
+    std::vector<std::unique_ptr<ttoffice::tttext::SkityPainter>>&
+        range_painters) {
+  if (!range_style.HasStyle()) {
+    return false;
+  }
+
+  if (range_style.skew != 0.f) {
+    style_for_range.SetTextSkew(
+        -std::tan(PathUtil::ToRadians(range_style.skew)));
+  }
+
+  if (range_style.color.IsEmpty() && range_style.stroke_color.IsEmpty() &&
+      range_style.stroke_width == 0.f) {
+    // Skew-only ranges still need ApplyStyleInRange, but do not need a painter.
+    return true;
+  }
+
+  auto range_painter = std::make_unique<ttoffice::tttext::SkityPainter>();
+  auto range_paint = std::make_unique<skity::Paint>(paint);
+  if (!range_style.color.IsEmpty()) {
+    auto base_fill_color = paint.GetFillColor();
+    auto alpha =
+        std::clamp(range_style.color.GetA() * base_fill_color.a, 0.f, 255.f);
+    range_paint->SetFillColor(skity::ColorSetARGB(
+        alpha, range_style.color.GetR(), range_style.color.GetG(),
+        range_style.color.GetB()));
+  }
+
+  if (!range_style.stroke_color.IsEmpty() || range_style.stroke_width != 0.f) {
+    auto stroke_color = !range_style.stroke_color.IsEmpty()
+                            ? range_style.stroke_color
+                            : Color(document_data.GetStrokeColor());
+    auto stroke_width =
+        range_style.stroke_width != 0.f ? range_style.stroke_width : 1.f;
+    auto base_fill_color = paint.GetFillColor();
+    auto stroke_alpha =
+        std::clamp(stroke_color.GetA() * base_fill_color.a, 0.f, 255.f);
+    range_paint->SetStrokeColor(
+        skity::ColorSetARGB(stroke_alpha, stroke_color.GetR(),
+                            stroke_color.GetG(), stroke_color.GetB()));
+    range_paint->SetStrokeWidth(stroke_width);
+    range_paint->SetStyle(document_data.GetStrokeOverfill()
+                              ? skity::Paint::kStrokeAndFill_Style
+                              : skity::Paint::kStrokeThenFill_Style);
+    style_for_range.SetTextStrokeStyle(
+        ttoffice::tttext::TTColor(stroke_color.GetInt()), stroke_width);
+  } else {
+    range_paint->SetStyle(skity::Paint::kFill_Style);
+  }
+
+  range_painter->platform_painter_ = std::move(range_paint);
+  style_for_range.SetForegroundPainter(range_painter.get());
+  range_painters.push_back(std::move(range_painter));
+  return true;
 }
 }  // namespace
 
@@ -67,12 +128,6 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
 
   ttoffice::tttext::Style style;
   style.SetLetterSpacing(tracking);
-
-  float skew = data_source.GetSkew();
-  if (skew != 0.f) {
-    style.SetTextSkew(-std::tan(PathUtil::ToRadians(skew)));
-  }
-
   // Set font descriptor
   ttoffice::tttext::FontDescriptor font_descriptor;
   font_descriptor.font_family_list_.clear();
@@ -97,9 +152,24 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
   // Config TT_Painter
   tt_painter_.platform_painter_ = std::make_unique<skity::Paint>(paint);
   style.SetForegroundPainter(&tt_painter_);
+  range_painters_.clear();
 
   // Add Text Run
   paragraph_->AddTextRun(&style, document_data.GetText().c_str());
+  const size_t text_length = paragraph_->GetCharCount();
+
+  // Add Text Range Selector
+  auto range_styles = data_source.GetRangeAnimatorPropertyList(text_length);
+  for (const auto& range_style : range_styles) {
+    ttoffice::tttext::Style style_for_range;
+    if (!ConfigureRangeStyle(range_style, document_data, paint, style_for_range,
+                             range_painters_)) {
+      continue;
+    }
+    paragraph_->ApplyStyleInRange(
+        style_for_range, range_style.segment_start,
+        range_style.segment_end - range_style.segment_start);
+  }
 
   // Layout
   ttoffice::tttext::TTTextContext context;

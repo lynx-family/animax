@@ -133,7 +133,7 @@ class Integer : public Value {
 /**
  * Float value type for the animation system.
  */
-class Float : public Value {
+class ANIMAX_EXPORT Float : public Value {
  public:
   static constexpr float kMax = std::numeric_limits<float>::max();
   static constexpr float kMin = std::numeric_limits<float>::min();
@@ -339,7 +339,7 @@ class ScaleF : public CoordinateF {
 /**
  * RGBA color value type for the animation system.
  */
-class Color : public Value {
+class ANIMAX_EXPORT Color : public Value {
  public:
   /**
    * Creates a new empty Color.
@@ -375,7 +375,8 @@ class Color : public Value {
    * @param b The blue component (0-255).
    * @return The color as a 32-bit integer.
    */
-  static int32_t ToInt(uint8_t a, uint8_t r, uint8_t g, uint8_t b);
+  ANIMAX_EXPORT static int32_t ToInt(uint8_t a, uint8_t r, uint8_t g,
+                                     uint8_t b);
 
   ~Color() override = default;
 
