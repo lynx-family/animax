@@ -77,60 +77,10 @@ class TextContentDataSourceTest : public ::testing::Test {
 TEST_F(TextContentDataSourceTest, DefaultProperties) {
   TextLayerAnimations animations = CreateAnimations();
   TextContentDataSource data_source(animations, font_manager_);
-  EXPECT_EQ(data_source.GetColor(), doc_data.GetColor());
-  EXPECT_EQ(data_source.GetStrokeColor(), doc_data.GetStrokeColor());
-  EXPECT_EQ(data_source.GetStrokeWidth(), doc_data.GetStrokeWidth());
   EXPECT_FLOAT_EQ(data_source.GetTracking(), doc_data.GetTracking() / 10.0f);
   EXPECT_STREQ(data_source.GetFontName().c_str(),
                doc_data.GetFontName().c_str());
   EXPECT_NE(data_source.GetFontAsset(), nullptr);
-}
-
-TEST_F(TextContentDataSourceTest, MultipleAnimators_ColorOverride) {
-  TextLayerAnimations animations = CreateAnimations();
-  const int32_t list_size = 3;
-  animations.animator_property_list.resize(list_size);
-  TextContentDataSource data_source(animations, font_manager_);
-  for (int i = 0; i < list_size; ++i) {
-    Color color(int32_t(0xFF) << (i * 8));
-    auto color_keyframe = std::make_unique<MockColorKeyframeAnimation>();
-    EXPECT_CALL(*color_keyframe, GetValue())
-        .WillRepeatedly(::testing::ReturnRef(color));
-    animations.animator_property_list[i].color = std::move(color_keyframe);
-    EXPECT_EQ(data_source.GetColor(), color.GetInt());
-  }
-}
-
-TEST_F(TextContentDataSourceTest, MultipleAnimators_StrokeColorOverride) {
-  TextLayerAnimations animations = CreateAnimations();
-  const int32_t list_size = 3;
-  animations.animator_property_list.resize(list_size);
-  TextContentDataSource data_source(animations, font_manager_);
-  for (int i = 0; i < list_size; ++i) {
-    Color stroke_color(int32_t(0xAA) << (i * 8));
-    auto stroke_color_keyframe = std::make_unique<MockColorKeyframeAnimation>();
-    EXPECT_CALL(*stroke_color_keyframe, GetValue())
-        .WillRepeatedly(::testing::ReturnRef(stroke_color));
-    animations.animator_property_list[i].stroke_color =
-        std::move(stroke_color_keyframe);
-    EXPECT_EQ(data_source.GetStrokeColor(), stroke_color.GetInt());
-  }
-}
-
-TEST_F(TextContentDataSourceTest, MultipleAnimators_StrokeWidthOverride) {
-  TextLayerAnimations animations = CreateAnimations();
-  const int32_t list_size = 3;
-  animations.animator_property_list.resize(list_size);
-  TextContentDataSource data_source(animations, font_manager_);
-  for (int i = 0; i < list_size; ++i) {
-    Float stroke_width(0.5f * i);
-    auto stroke_width_keyframe = std::make_unique<MockFloatKeyframeAnimation>();
-    EXPECT_CALL(*stroke_width_keyframe, GetValue())
-        .WillRepeatedly(::testing::ReturnRef(stroke_width));
-    animations.animator_property_list[i].stroke_width =
-        std::move(stroke_width_keyframe);
-    EXPECT_FLOAT_EQ(data_source.GetStrokeWidth(), stroke_width.Get());
-  }
 }
 
 TEST_F(TextContentDataSourceTest, MultipleAnimators_TrackingAccumulate) {
@@ -149,4 +99,120 @@ TEST_F(TextContentDataSourceTest, MultipleAnimators_TrackingAccumulate) {
         doc_data.GetTracking() / 10.0f + tracking.Get() * (i + 1);
     EXPECT_FLOAT_EQ(data_source.GetTracking(), expected_tracking);
   }
+}
+
+TEST_F(TextContentDataSourceTest, GetAnimatorPropertyListReturnsOriginalList) {
+  TextLayerAnimations animations = CreateAnimations();
+  animations.animator_property_list.resize(2);
+  animations.animator_property_list[0].skew =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(12.f);
+  animations.animator_property_list[1].color =
+      AnimationFactory::Make<ColorKeyframeAnimation, Color>(0xFFFF0000);
+  TextContentDataSource data_source(animations, font_manager_);
+
+  const auto& properties = data_source.GetAnimatorPropertyList();
+
+  EXPECT_EQ(&properties, &animations.animator_property_list);
+  ASSERT_EQ(properties.size(), 2u);
+  ASSERT_NE(properties[0].skew, nullptr);
+  EXPECT_FLOAT_EQ(properties[0].skew->GetValue().Get(), 12.f);
+  ASSERT_NE(properties[1].color, nullptr);
+  EXPECT_EQ(properties[1].color->GetValue().GetInt(), 0xFFFF0000);
+}
+
+TEST_F(TextContentDataSourceTest,
+       GetRangeAnimatorPropertyListFiltersPropertiesWithoutRangeStyle) {
+  TextLayerAnimations animations = CreateAnimations();
+  animations.animator_property_list.resize(2);
+  animations.animator_property_list[0].tracking =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(12.f);
+  animations.animator_property_list[1].color =
+      AnimationFactory::Make<ColorKeyframeAnimation, Color>(0xFFFF0000);
+  TextContentDataSource data_source(animations, font_manager_);
+
+  auto range_styles =
+      data_source.GetRangeAnimatorPropertyList(doc_data.GetText().size());
+
+  ASSERT_EQ(range_styles.size(), 1u);
+  EXPECT_EQ(range_styles[0].segment_start, 0u);
+  EXPECT_EQ(range_styles[0].segment_end, doc_data.GetText().size());
+  EXPECT_FALSE(range_styles[0].color.IsEmpty());
+  EXPECT_EQ(range_styles[0].color.GetInt(), 0xFFFF0000);
+}
+
+TEST_F(TextContentDataSourceTest,
+       GetRangeAnimatorPropertyListSortsAndDeduplicatesBoundaries) {
+  TextLayerAnimations animations = CreateAnimations();
+  animations.animator_property_list.resize(3);
+
+  auto& first_property = animations.animator_property_list[0];
+  first_property.color =
+      AnimationFactory::Make<ColorKeyframeAnimation, Color>(0xFFFF0000);
+  first_property.range_selector = std::make_unique<RangeSelectorProperty>();
+  first_property.range_selector->range_units = TextRangeUnits::kIndex;
+  first_property.range_selector->start =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(5.f);
+  first_property.range_selector->end =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(10.f);
+
+  auto& second_property = animations.animator_property_list[1];
+  second_property.skew =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(12.f);
+  second_property.range_selector = std::make_unique<RangeSelectorProperty>();
+  second_property.range_selector->range_units = TextRangeUnits::kIndex;
+  second_property.range_selector->start =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(0.f);
+  second_property.range_selector->end =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(5.f);
+
+  auto& empty_property = animations.animator_property_list[2];
+  empty_property.stroke_width =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(2.f);
+  empty_property.range_selector = std::make_unique<RangeSelectorProperty>();
+  empty_property.range_selector->range_units = TextRangeUnits::kIndex;
+  empty_property.range_selector->start =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(2.f);
+  empty_property.range_selector->end =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(2.f);
+
+  TextContentDataSource data_source(animations, font_manager_);
+
+  auto range_styles =
+      data_source.GetRangeAnimatorPropertyList(doc_data.GetText().size());
+
+  ASSERT_EQ(range_styles.size(), 2u);
+  EXPECT_EQ(range_styles[0].segment_start, 0u);
+  EXPECT_EQ(range_styles[0].segment_end, 5u);
+  EXPECT_FLOAT_EQ(range_styles[0].skew, 12.f);
+  EXPECT_EQ(range_styles[1].segment_start, 5u);
+  EXPECT_EQ(range_styles[1].segment_end, 10u);
+  EXPECT_FALSE(range_styles[1].color.IsEmpty());
+  EXPECT_EQ(range_styles[1].color.GetInt(), 0xFFFF0000);
+}
+
+TEST_F(TextContentDataSourceTest,
+       GetRangeAnimatorPropertyListClampsRangeToTextLength) {
+  TextLayerAnimations animations = CreateAnimations();
+  animations.animator_property_list.resize(1);
+  auto& property = animations.animator_property_list[0];
+  property.color =
+      AnimationFactory::Make<ColorKeyframeAnimation, Color>(0xFFFF0000);
+  property.range_selector = std::make_unique<RangeSelectorProperty>();
+  property.range_selector->range_units = TextRangeUnits::kIndex;
+  property.range_selector->offset =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(7.f);
+  property.range_selector->start =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(5.f);
+  property.range_selector->end =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(20.f);
+
+  TextContentDataSource data_source(animations, font_manager_);
+
+  auto range_styles = data_source.GetRangeAnimatorPropertyList(15);
+
+  ASSERT_EQ(range_styles.size(), 1u);
+  EXPECT_EQ(range_styles[0].segment_start, 12u);
+  EXPECT_EQ(range_styles[0].segment_end, 15u);
+  EXPECT_FALSE(range_styles[0].color.IsEmpty());
+  EXPECT_EQ(range_styles[0].color.GetInt(), 0xFFFF0000);
 }

@@ -40,12 +40,16 @@ struct RangeSelectorProperty {
     const float default_end = range_units == TextRangeUnits::kPercent
                                   ? 100.f
                                   : static_cast<float>(text_length);
-    float ret = (end ? end->GetValue().Get() : default_end) -
-                (start ? start->GetValue().Get() : 0.f);
+    float end_value = (end ? end->GetValue().Get() : default_end);
+    float start_value = (start ? start->GetValue().Get() : 0.f);
     if (range_units == TextRangeUnits::kPercent) {
-      ret = text_length * ret / 100.f;
+      end_value = text_length * end_value / 100.f;
+      start_value = text_length * start_value / 100.f;
     }
-    return static_cast<size_t>(std::floor(ret));
+    if (start_value > end_value) {
+      return 0;
+    }
+    return static_cast<size_t>(std::ceil(end_value) - std::floor(start_value));
   }
 };
 

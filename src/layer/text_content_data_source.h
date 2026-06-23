@@ -7,9 +7,13 @@
 
 #include <stdint.h>
 
+#include <cstddef>
 #include <string>
+#include <vector>
 
 #include "include/base/macros.h"
+#include "src/layer/text_layer_animations.h"
+#include "src/model/value/base_value.h"
 
 namespace lynx {
 namespace animax {
@@ -25,17 +29,38 @@ class ANIMAX_EXPORT TextContentDataSource {
                         FontAssetManager& font_asset_manager);
   ~TextContentDataSource();
 
+  struct RangeStyle {
+    size_t segment_start = 0;
+    size_t segment_end = 0;
+    Color color;
+    Color stroke_color;
+    float stroke_width = 0.f;
+    float skew = 0.f;
+
+    bool HasStyle() const {
+      return !color.IsEmpty() || !stroke_color.IsEmpty() ||
+             stroke_width != 0.f || skew != 0.f;
+    }
+  };
+
   const DocumentData& GetDocumentData() const;
   int32_t GetColor() const;
   int32_t GetStrokeColor() const;
   float GetStrokeWidth() const;
   float GetTracking() const;
-  float GetSkew() const;
   float GetTextSize() const;
   std::string GetFontName() const;
   void* GetFontMgrCollection() const;
   FontAsset* GetFontAsset() const;
   bool GetLayoutOnlyOnce() const;
+
+  // Returns a read-only list of animator properties and callers must NOT mutate
+  // any underlying animation objects.
+  const std::vector<TextLayerAnimations::AnimatorProperty>&
+  GetAnimatorPropertyList() const;
+
+  const std::vector<RangeStyle> GetRangeAnimatorPropertyList(
+      size_t text_length) const;
 
  private:
   const TextLayerAnimations& animations_;
