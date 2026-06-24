@@ -47,6 +47,10 @@ static inline std::shared_ptr<skity::Image> MakeImageFromPixels(
       bitmap_ptr->AlphaType() == BitmapAlphaType::kPremul_AlphaType
           ? skity::AlphaType::kPremul_AlphaType
           : skity::AlphaType::kUnpremul_AlphaType);
+  if (pixmap->GetAlphaType() == skity::AlphaType::kUnpremul_AlphaType) {
+    pixmap->SetColorInfo(skity::AlphaType::kPremul_AlphaType,
+                         pixmap->GetColorType());
+  }
   return skity::Image::MakeImage(pixmap, real_context->Get());
 }
 
