@@ -133,7 +133,7 @@ void ResourceLoaderWeb::OnResourceLoaded(const ResourceLoadResult& result) {
     auto bitmap = Bitmap::Make(
         result.width, result.height, copy,
         [](const void* ptr) { delete[] static_cast<const uint8_t*>(ptr); },
-        copy, BitmapFormat::kRGBA, BitmapAlphaType::kPremul_AlphaType);
+        copy, BitmapFormat::kRGBA, BitmapAlphaType::kUnpremul_AlphaType);
     info->callback(ResourceResponse{.payload = MakeBitmapResourcePayload(
                                         std::move(bitmap))},
                    LoaderError{});
