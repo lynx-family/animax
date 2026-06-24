@@ -245,13 +245,20 @@ def ensure_core_release_preserve_paths(content):
     return "".join(lines)
 
 
-def pin_dependency(content, dependency, version, required=True):
+def minimum_version_requirement(version):
+    version = version.strip()
+    if re.match(r"^(?:~>|>=|<=|=|>|<|!=)", version):
+        return version
+    return f">= {version}"
+
+
+def set_dependency_requirement(content, dependency, requirement, required=True):
     dependency_pattern = re.compile(
         rf"^(\s*[A-Za-z_][A-Za-z0-9_]*\.dependency\s+['\"]{re.escape(dependency)}['\"])(?:\s*,\s*['\"][^'\"]+['\"])?(\s*)$",
         re.MULTILINE,
     )
     content, replacement_count = dependency_pattern.subn(
-        rf"\g<1>, '{version}'\g<2>",
+        rf"\g<1>, '{requirement}'\g<2>",
         content,
     )
     if required and replacement_count == 0:
@@ -331,13 +338,25 @@ def prepare_podspec(path, dependency_versions):
     content = replace_assignment(content, spec_variable, "source")
     content = ensure_release_header_attributes(content, spec_variable)
     content = ensure_core_release_preserve_paths(content)
-    content = pin_dependency(content, "skity", dependency_versions["SKITY_VERSION"])
-    content = pin_dependency(content, "LynxTextra", dependency_versions["TEXTRA_VERSION"])
-    content = pin_dependency(content, "LynxBase/Framework", dependency_versions["LYNX_VERSION"])
-    content = pin_dependency(
+    content = set_dependency_requirement(
+        content,
+        "skity",
+        minimum_version_requirement(dependency_versions["SKITY_VERSION"]),
+    )
+    content = set_dependency_requirement(
+        content,
+        "LynxTextra",
+        minimum_version_requirement(dependency_versions["TEXTRA_VERSION"]),
+    )
+    content = set_dependency_requirement(
+        content,
+        "LynxBase/Framework",
+        minimum_version_requirement(dependency_versions["LYNX_VERSION"]),
+    )
+    content = set_dependency_requirement(
         content,
         "LynxServiceAPI/Core",
-        dependency_versions["LYNX_VERSION"],
+        minimum_version_requirement(dependency_versions["LYNX_VERSION"]),
         required=False,
     )
     content = remove_disabled_trace(content)
