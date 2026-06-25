@@ -12,14 +12,6 @@
 namespace lynx {
 namespace animax {
 
-AnimaXEGLContextHolder::AnimaXEGLContextHolder() {
-  AnimaXEGLContext::Instance().Ref();
-}
-
-AnimaXEGLContextHolder::~AnimaXEGLContextHolder() {
-  AnimaXEGLContext::Instance().UnRef();
-}
-
 AnimaXEGLContext::AnimaXEGLContext(bool is_no_config_context_supported,
                                    bool is_surfaceless_context_supported)
     : is_no_config_context_supported_(is_no_config_context_supported),
@@ -29,28 +21,6 @@ AnimaXEGLContext::AnimaXEGLContext(bool is_no_config_context_supported,
               << ", is_surfaceless_context_supported: "
               << is_surfaceless_context_supported);
   EnsureContext();
-}
-
-void AnimaXEGLContext::init(bool auto_destroy_context) {
-  if (is_initialized_) {
-    // Allow downgrading auto-destroy (true -> false): the Vulkan video bridge
-    // relies on the offscreen EGL context surviving across GL texture deletes,
-    // so a later init(false) from a destructor must be able to relax an earlier
-    // init(true). Never upgrade false -> true: a caller that created the
-    // context without auto-destroy does not expect it to be torn down.
-    if (is_auto_destroy_context_ && !auto_destroy_context) {
-      is_auto_destroy_context_ = false;
-    }
-    ANIMAX_LOGI("AnimaXEGLContext initialized, is_auto_destroy_context_: "
-                << is_auto_destroy_context_
-                << ", auto_destroy_context: " << auto_destroy_context);
-    return;
-  }
-  is_initialized_ = true;
-  is_auto_destroy_context_ = auto_destroy_context;
-  ANIMAX_LOGI("AnimaXEGLContext init, is_auto_destroy_context_: "
-              << is_auto_destroy_context_
-              << ", auto_destroy_context: " << auto_destroy_context);
 }
 
 AnimaXEGLContext::~AnimaXEGLContext() {
@@ -104,38 +74,6 @@ void AnimaXEGLContext::EnsureContext() {
   }
 
   is_valid_ = true;
-}
-
-void AnimaXEGLContext::DestroyContext() {
-  ANIMAX_LOGE("AnimaXEGLContext DestroyContext");
-
-  is_valid_ = false;
-
-  EGLDisplay default_display = GetEGLDisplay();
-  if (default_display == EGL_NO_DISPLAY) {
-    return;
-  }
-  if (!eglMakeCurrent(default_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                      EGL_NO_CONTEXT)) {
-    ANIMAX_LOGE("Failed to MakeCurrent");
-  }
-  if (context_ != EGL_NO_CONTEXT) {
-    if (!eglDestroyContext(default_display, context_)) {
-      ANIMAX_LOGE("Failed to destroy EGLContext: " << context_);
-    } else {
-      ANIMAX_LOGI("success to destroy EGLContext: " << context_);
-    }
-  }
-  if (fake_surface_ != EGL_NO_SURFACE) {
-    if (!eglDestroySurface(default_display, fake_surface_)) {
-      ANIMAX_LOGE("Failed to destroy EGLSurface");
-    }
-  }
-
-  config_ = EGL_NO_CONFIG_KHR;
-  context_ = EGL_NO_CONTEXT;
-  fake_surface_ = EGL_NO_SURFACE;
-  display_ = EGL_NO_DISPLAY;
 }
 
 bool AnimaXEGLContext::MakeCurrent(EGLSurface draw_surface,
@@ -236,7 +174,6 @@ ScopedEGLContext::ScopedEGLContext(bool ensure) : ensure_(ensure) {
   if (!ensure_) {
     return;
   }
-  AnimaXEGLContext::Instance().init(/*auto_destroy_context=*/false);
   ready_ = AnimaXEGLContext::Instance().MakeCurrent();
   if (!ready_) {
     ANIMAX_LOGE(

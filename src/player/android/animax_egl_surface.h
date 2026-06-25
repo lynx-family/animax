@@ -45,7 +45,6 @@ class AnimaXEGLSurface {
   void Invalidate();
   EGLDisplay display_ = EGL_NO_DISPLAY;
   EGLSurface surface_ = EGL_NO_SURFACE;
-  AnimaXEGLContextHolder eglContextHolder_;
 };
 
 }  // namespace animax

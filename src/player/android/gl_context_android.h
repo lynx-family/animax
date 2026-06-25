@@ -14,18 +14,9 @@
 namespace lynx {
 namespace animax {
 
-class AnimaXEGLContextHolder {
- public:
-  AnimaXEGLContextHolder();
-  ~AnimaXEGLContextHolder();
-  AnimaXEGLContextHolder(const AnimaXEGLContextHolder&) = delete;
-  AnimaXEGLContextHolder& operator=(const AnimaXEGLContextHolder&) = delete;
-};
-
 class AnimaXEGLContext {
  public:
   static AnimaXEGLContext& Instance();
-  void init(bool auto_destroy_context = false);
   bool Valid() const;
   EGLConfig Config() const;
   bool MakeCurrent(EGLSurface draw_surface = EGL_NO_SURFACE,
@@ -40,13 +31,6 @@ class AnimaXEGLContext {
   AnimaXEGLContext(bool is_no_config_context_supported,
                    bool is_surfaceless_context_supported);
   ~AnimaXEGLContext();
-  void Ref() { ref_count_++; }
-  void UnRef() {
-    ref_count_--;
-    if (ref_count_ <= 0 && is_auto_destroy_context_) {
-      DestroyContext();
-    }
-  }
 
  private:
   EGLConfig config_ = EGL_NO_CONFIG_KHR;
@@ -54,14 +38,10 @@ class AnimaXEGLContext {
   EGLSurface fake_surface_ = EGL_NO_SURFACE;
   EGLDisplay display_ = EGL_NO_DISPLAY;
   bool is_valid_ = false;
-  int ref_count_{0};
   bool is_no_config_context_supported_ = false;
   bool is_surfaceless_context_supported_ = false;
-  bool is_auto_destroy_context_ = false;
-  bool is_initialized_ = false;
 
   void EnsureContext();
-  void DestroyContext();
 
   EGLDisplay GetEGLDisplay();
 };

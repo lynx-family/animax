@@ -5,6 +5,7 @@
 #include "src/video/android/ahardware_buffer_gl.h"
 
 #include "src/base/gl/gl_include.h"
+#include "src/base/gl/scoped_gl_reset_restore.h"
 #include "src/base/log/log.h"
 #include "src/base/util/android/hardware_buffer_functions.h"
 
@@ -111,6 +112,7 @@ bool AHardwareBufferGL::Init(int32_t width, int32_t height) {
   }
 
   // 3. Bind EGLImage to a new GL texture (FBO color attachment target).
+  ScopedGLResetRestore scope_tex(GL_TEXTURE_BINDING_2D);
   glGenTextures(1, &texture_);
   glBindTexture(GL_TEXTURE_2D, texture_);
   g_image_target_texture(GL_TEXTURE_2D, egl_image_);

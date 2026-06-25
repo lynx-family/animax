@@ -405,8 +405,6 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceAndroid::Make(
         // Fall back to GL: ensures the EGLContext is properly initialized and
         // set as current. This is crucial if it's the initial usage of an
         // EGLContext within the AnimaX_GPU thread.
-        AnimaXEGLContext::Instance().init(
-            surface_drawable.IsAutoDestroyEGLContextEnabled());
         AnimaXEGLContext::Instance().MakeCurrent();
         animax_surface.reset(
             new AnimaXSurfaceAndroidGL{std::move(surface_texture),
