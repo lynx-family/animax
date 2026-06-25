@@ -39,6 +39,11 @@ class AnimaXSurfaceHarmonyGL : public AnimaXSurfaceHarmony {
   ~AnimaXSurfaceHarmonyGL() override {
     ThreadAssert::Assert(ThreadAssert::Type::kGPU);
     DCHECK(AnimaXEGLContext::Instance().IsCurrent());
+    egl_surface_.Destroy();
+    if (window_) {
+      OH_NativeWindow_DestroyNativeWindow(window_);
+      window_ = nullptr;
+    }
   }
 
   void Flush() override {
@@ -94,6 +99,10 @@ class AnimaXSurfaceHarmonySW : public AnimaXSurfaceHarmony {
   ~AnimaXSurfaceHarmonySW() override {
     if (buffer_) {
       delete[] buffer_;
+    }
+    if (window_) {
+      OH_NativeWindow_DestroyNativeWindow(window_);
+      window_ = nullptr;
     }
   }
 
