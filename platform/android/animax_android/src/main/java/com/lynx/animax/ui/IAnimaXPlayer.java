@@ -32,7 +32,7 @@ public interface IAnimaXPlayer {
    * Returns the AnimaX context bound to this player.
    * @return a {@link AnimaXContext} that provides runtime facilities.
    */
-  AnimaXContext getAnimaXContext();
+  @RestrictTo(RestrictTo.Scope.LIBRARY) AnimaXContext getAnimaXContext();
 
   /**
    * Enables software rasterization path instead of hardware when true.
@@ -105,7 +105,7 @@ public interface IAnimaXPlayer {
    * configurations.
    * @param polyfill A map containing polyfill data.
    */
-  void setSrcPolyfill(JavaOnlyMap polyfill);
+  @RestrictTo(RestrictTo.Scope.LIBRARY) void setSrcPolyfill(JavaOnlyMap polyfill);
 
   /**
    * Enables or disables dynamic resource loading.
@@ -351,7 +351,7 @@ public interface IAnimaXPlayer {
    * @param x The x-coordinate of the tap within the animation bounds.
    * @param y The y-coordinate of the tap within the animation bounds.
    */
-  void onTap(float x, float y);
+  @RestrictTo(RestrictTo.Scope.LIBRARY) void onTap(float x, float y);
 
   // misc
   /**
@@ -418,5 +418,5 @@ public interface IAnimaXPlayer {
    * Asynchronously collects runtime metrics (e.g., FPS, memory) and returns them via callback.
    * @param callback The receiver for metrics results
    */
-  void getMetricsAsync(AnimaXMetricsCallback callback);
+  @RestrictTo(RestrictTo.Scope.LIBRARY) void getMetricsAsync(AnimaXMetricsCallback callback);
 }
