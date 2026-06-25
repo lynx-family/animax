@@ -97,7 +97,6 @@ class VideoShaderAndroid::VulkanFrameScope : public VideoShader::FrameScope {
   VulkanFrameScope(VideoShaderAndroid &shader, Canvas *canvas,
                    RealContext *context)
       : shader_(shader), canvas_(canvas), context_(context) {
-    AnimaXEGLContext::Instance().init(/*auto_destroy_context=*/false);
     ready_ = AnimaXEGLContext::Instance().MakeCurrent();
     if (!ready_) {
       ANIMAX_LOGE(
