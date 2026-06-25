@@ -37,6 +37,7 @@ class AnimaXSurfaceWeb : public AnimaXSurface {
   bool Valid() const override { return gpu_surface_ != nullptr; }
 
  private:
+  bool MakeWebGLContextCurrent();
   void InitWebGLSurface(const Description& desc);
   void InitWebGPUSurface(const Description& desc);
   void UpdateWebGLSurface(const Description& desc);

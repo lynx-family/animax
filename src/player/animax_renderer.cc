@@ -246,6 +246,11 @@ void AnimaXRenderer::Render(double progress) {
 
   ANIMAX_TRACE_EVENT_BEGIN(kDrawFrame);
   Canvas* canvas = surface_->Canvas();
+  if (!canvas) {
+    ANIMAX_TRACE_EVENT_END();
+    Trace(TraceEventType::kRenderFrameEnd);
+    return;
+  }
   canvas->Save();
   ResizeCanvas(*canvas);
   canvas_matrix_ = canvas->GetMatrix();
