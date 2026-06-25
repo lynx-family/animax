@@ -22,6 +22,7 @@ def requiredDependencyVersions = [
     "LYNX_VERSION",
     "SKITY_VERSION",
     "TEXTRA_VERSION",
+    "PRIMJS_VERSION",
 ]
 requiredDependencyVersions.each { key ->
     if (!dependencyVersions.getProperty(key)) {
@@ -33,4 +34,5 @@ allprojects {
     ext.LYNX_VERSION = dependencyVersions.getProperty("LYNX_VERSION")
     ext.SKITY_VERSION = dependencyVersions.getProperty("SKITY_VERSION")
     ext.TEXTRA_VERSION = dependencyVersions.getProperty("TEXTRA_VERSION")
+    ext.PRIMJS_VERSION = dependencyVersions.getProperty("PRIMJS_VERSION")
 }

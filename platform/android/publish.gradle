@@ -24,9 +24,9 @@ def getAARPath(buildPath, boolean isDev = false) {
 }
 
 boolean isPublishModule() {
-    def releaseModulePaths = rootProject.ext.has('releaseModulePaths') ? rootProject.ext.releaseModulePaths : [':AnimaXAndroid', ':AnimaXTextra'] as Set
-    def releaseModuleNames = rootProject.ext.has('releaseModuleNames') ? rootProject.ext.releaseModuleNames : ['AnimaXAndroid', 'AnimaXTextra'] as Set
-    def releaseArtifactNames = rootProject.ext.has('releaseArtifactNames') ? rootProject.ext.releaseArtifactNames : ['animax-sdk', 'animax-textra'] as Set
+    def releaseModulePaths = rootProject.ext.has('releaseModulePaths') ? rootProject.ext.releaseModulePaths : [':AnimaXAndroid', ':AnimaXTextra', ':AnimaXNapi'] as Set
+    def releaseModuleNames = rootProject.ext.has('releaseModuleNames') ? rootProject.ext.releaseModuleNames : ['AnimaXAndroid', 'AnimaXTextra', 'AnimaXNapi'] as Set
+    def releaseArtifactNames = rootProject.ext.has('releaseArtifactNames') ? rootProject.ext.releaseArtifactNames : ['animax-sdk', 'animax-textra', 'animax-napi'] as Set
     return releaseModulePaths.contains(project.path) &&
             releaseModuleNames.contains(project.name) &&
             releaseArtifactNames.contains(project.findProperty('ARTIFACT_NAME'))

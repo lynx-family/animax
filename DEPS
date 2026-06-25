@@ -107,7 +107,7 @@ deps = {
     'third_party/skity': {
         "type": "solution",
         "url": "https://github.com/lynx-family/skity.git",
-        "commit": "405ffc1c7a5f6a8b0d4feab166a8e5218f92e425",
+        "commit": "b0b789941bd3bfe5082bb7e7cb7fc93eacd34f68",
         "deps_file": "hab/DEPS",
         "ignore_in_git": True,
     },
@@ -143,7 +143,14 @@ deps = {
         "type": "git",
         "url": "https://github.com/lynx-family/lynx.git",
         "commit": "7edf2700bed58556c2bfcaeaff99231e0c3013db",
-        "paths": ["third_party/rapidjson", "base", "platform/android/service_api", "platform/darwin/ios/lynx_service_api"],
+        "paths": [
+            "third_party/rapidjson",
+            "third_party/binding",
+            "third_party/napi/include",
+            "base",
+            "platform/android/service_api",
+            "platform/darwin/ios/lynx_service_api",
+        ],
         "patches": [
             os.path.join(root_dir, 'patches', 'lynx', '*.patch')
         ],

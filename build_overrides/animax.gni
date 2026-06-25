@@ -19,8 +19,8 @@ skity_search_path = rebase_path("../third_party/skity")
 skity_target_name = "skity-native"
 
 # napi
-enable_napi = false
-napi_binding_search_path = rebase_path("../third_party/binding")
+napi_binding_search_path =
+    rebase_path("../third_party/lynx/third_party/binding")
 
 # rapid json
 rapidjson_search_path = rebase_path("../third_party/lynx/third_party/rapidjson")

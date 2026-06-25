@@ -22,13 +22,22 @@ REQUIRED_DEPENDENCY_VERSION_KEYS = (
     "LYNX_VERSION",
     "SKITY_VERSION",
     "TEXTRA_VERSION",
+    "PRIMJS_VERSION",
 )
 RELEASE_PRESERVE_PATHS = (
     "AnimaX/**/*.h",
     "base/trace/native/**/*.h",
+    "base/include/path_utils.h",
+    "include/base/macros.h",
+    "include/base/log/log_message.h",
 )
 RELEASE_PUBLIC_HEADERS = ("AnimaX/**/*.h",)
-RELEASE_PRIVATE_HEADERS = ("base/trace/native/**/*.h",)
+RELEASE_PRIVATE_HEADERS = (
+    "base/trace/native/**/*.h",
+    "base/include/path_utils.h",
+    "include/base/macros.h",
+    "include/base/log/log_message.h",
+)
 CORE_RELEASE_PRESERVE_PATHS = RELEASE_PRESERVE_PATHS
 
 
@@ -245,18 +254,44 @@ def ensure_core_release_preserve_paths(content):
     return "".join(lines)
 
 
-def pin_dependency(content, dependency, version, required=True):
+def set_dependency_versions(content, dependency, versions, required=True):
+    if isinstance(versions, str):
+        versions = (versions,)
+
     dependency_pattern = re.compile(
-        rf"^(\s*[A-Za-z_][A-Za-z0-9_]*\.dependency\s+['\"]{re.escape(dependency)}['\"])(?:\s*,\s*['\"][^'\"]+['\"])?(\s*)$",
+        (
+            rf"^(\s*[A-Za-z_][A-Za-z0-9_]*\.dependency\s+"
+            rf"['\"]{re.escape(dependency)}['\"])"
+            r"(?:\s*,\s*['\"][^'\"]+['\"])*(\s*)$"
+        ),
         re.MULTILINE,
     )
-    content, replacement_count = dependency_pattern.subn(
-        rf"\g<1>, '{version}'\g<2>",
-        content,
+    version_arguments = "".join(
+        f", '{ruby_single_quoted(version)}'" for version in versions
     )
+
+    def replacement(match):
+        return f"{match.group(1)}{version_arguments}{match.group(2)}"
+
+    content, replacement_count = dependency_pattern.subn(replacement, content)
     if required and replacement_count == 0:
         raise RuntimeError(f"Could not find {dependency} dependency in generated podspec.")
     return content
+
+
+def pin_dependency(content, dependency, version, required=True):
+    return set_dependency_versions(content, dependency, version, required)
+
+
+def compatible_major_version_range(version):
+    match = re.match(r"^([0-9]+)\.", version)
+    if not match:
+        raise RuntimeError(f"Could not infer compatible major version range from: {version}")
+    next_major_version = int(match.group(1)) + 1
+    # CocoaPods only resolves pre-release versions when the requirement mentions
+    # a pre-release version explicitly. Keep LynxBase compatible within the same
+    # major, but use the verified Lynx version as the lower bound.
+    return (f">= {version}", f"< {next_major_version}.0.0")
 
 
 def read_dependency_versions(path):
@@ -333,7 +368,14 @@ def prepare_podspec(path, dependency_versions):
     content = ensure_core_release_preserve_paths(content)
     content = pin_dependency(content, "skity", dependency_versions["SKITY_VERSION"])
     content = pin_dependency(content, "LynxTextra", dependency_versions["TEXTRA_VERSION"])
-    content = pin_dependency(content, "LynxBase/Framework", dependency_versions["LYNX_VERSION"])
+    content = set_dependency_versions(
+        content,
+        "LynxBase/Framework",
+        compatible_major_version_range(dependency_versions["LYNX_VERSION"]),
+    )
+    content = pin_dependency(content, "PrimJS/napi/core", dependency_versions["PRIMJS_VERSION"])
+    content = pin_dependency(content, "PrimJS/napi/env", dependency_versions["PRIMJS_VERSION"])
+    content = pin_dependency(content, "PrimJS/napi/quickjs", dependency_versions["PRIMJS_VERSION"])
     content = pin_dependency(
         content,
         "LynxServiceAPI/Core",

@@ -24,10 +24,7 @@ config("16kb_page") {
 group("Android") {
   deps = [
     "./animax_android:AnimaXAndroid",
+    "./animax_napi:AnimaXNapi",
     "./animax_textra:AnimaXTextra",
   ]
-
-  if (enable_napi) {
-    deps += [ "./animax_napi:AnimaXNapi" ]
-  }
 }

@@ -105,6 +105,7 @@ runs:
 
         copy_aar "animax_android" "animax-sdk"
         copy_aar "animax_textra" "animax-textra"
+        copy_aar "animax_napi" "animax-napi"
 
         {
           echo "aar_paths<<EOF"

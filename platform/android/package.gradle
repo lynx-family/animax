@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-ext.releaseModulePaths = [':AnimaXAndroid', ':AnimaXTextra'] as Set
-ext.releaseModuleNames = ['AnimaXAndroid', 'AnimaXTextra'] as Set
-ext.releaseArtifactNames = ['animax-sdk', 'animax-textra'] as Set
+ext.releaseModulePaths = [':AnimaXAndroid', ':AnimaXTextra', ':AnimaXNapi'] as Set
+ext.releaseModuleNames = ['AnimaXAndroid', 'AnimaXTextra', 'AnimaXNapi'] as Set
+ext.releaseArtifactNames = ['animax-sdk', 'animax-textra', 'animax-napi'] as Set
 
 def isReleaseModule = { Project subproject ->
     rootProject.ext.releaseModulePaths.contains(subproject.path) &&

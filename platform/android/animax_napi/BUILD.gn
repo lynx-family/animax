@@ -15,7 +15,7 @@ cmake_target("AnimaXNapi") {
     "../animax_android:AnimaXAndroid",
   ]
 
-  lib_dirs = [ "${vmsdk_native_lib_dir}" ]
+  lib_dirs = [ "${primjs_native_lib_dir}" ]
   libs = [
     "napi",
     "EGL",
