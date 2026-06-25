@@ -1,0 +1,62 @@
+From 1d3f19f87004c0ba2cb0e40cc3d1b21e7f1d6789 Mon Sep 17 00:00:00 2001
+From: "RickAi" <RickAi@users.noreply.github.com>
+Date: Wed, 24 Jun 2026 23:00:00 +0800
+Subject: [PATCH] fix napi binding sparse build for animax
+
+---
+ third_party/binding/napi/BUILD.gn | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
+
+diff --git a/third_party/binding/napi/BUILD.gn b/third_party/binding/napi/BUILD.gn
+index a7b4b35..8cd1d0f 100644
+--- a/third_party/binding/napi/BUILD.gn
++++ b/third_party/binding/napi/BUILD.gn
+@@ -2,13 +2,18 @@
+ # Licensed under the Apache License Version 2.0 that can be found in the
+ # LICENSE file in the root directory of this source tree.
+
+-import("../../../core/Lynx.gni")
+-import("../../../testing/test.gni")
++import("//config.gni")
+ import("../common/common.gni")
+
+ config("napi_private_config") {
++  include_dirs = [ "../../.." ]
++  defines = [
++    "NAPI_DISABLE_CPP_EXCEPTIONS",
++    "NAPI_DISABLE_CPP_RTTI",
++  ]
++
+   if (use_primjs_napi) {
+-    defines = [ "USE_PRIMJS_NAPI" ]
++    defines += [ "USE_PRIMJS_NAPI" ]
+   }
+ }
+
+@@ -35,7 +40,6 @@ source_set("napi_binding_base_headers") {
+
+   configs += [
+     ":napi_private_config",
+-    "../../napi:napi_config",
+   ]
+ }
+
+@@ -56,18 +60,5 @@ source_set("napi_binding_base") {
+
+   configs += [
+     ":napi_private_config",
+-    "../../napi:napi_config",
+-  ]
+-}
+-
+-unittest_exec("napi_binding_unittests_exec") {
+-  sources = [ "napi_binding_unittest.cc" ]
+-
+-  deps = [
+-    "../../../core/base",
+-    "../../../core/runtime/bindings/napi:napi_binding_quickjs",
+-    "../../../core/renderer/dom:dom",
+-    "../../napi:env",
+-    "../../napi:quickjs",
+   ]
+ }

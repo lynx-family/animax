@@ -19,8 +19,7 @@ animax_napi_sources = [
   "bindings/animax/napi_value_param.h",
 ]
 
-# TODO(aiyongbiao.rick): delete enable_napi after napi was integrated
-if (is_ios && enable_napi) {
+if (is_ios) {
   animax_napi_sources += [ "bindings/animax/ios/use_mod_animax.mm" ]
 }
 

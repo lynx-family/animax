@@ -4,8 +4,8 @@
 
 import("//build/toolchain/clang.gni")
 
-vmsdk_native_lib_dir =
-    rebase_path("./animax_napi/build/jniLibs/vmsdk/jni/${android_app_abi}")
+primjs_native_lib_dir =
+    rebase_path("./animax_napi/build/jniLibs/primjs/jni/${android_app_abi}")
 
 lynx_base_native_lib_dir =
     rebase_path("./animax_android/build/jniLibs/lynx/jni/${android_app_abi}")

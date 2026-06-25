@@ -26,6 +26,8 @@ buildscript {
 
 apply from: file("../../tools/gradle/versions.gradle")
 
+ext.enable_coverage_bool = (enable_coverage == 'true')
+
 allprojects {
     repositories {
         google()

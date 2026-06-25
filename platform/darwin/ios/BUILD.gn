@@ -16,6 +16,7 @@ animax_base_xcconfig = {
     "//PODS_CONFIGURATION_BUILD_DIR/XCFrameworkIntermediates/LynxTextra/LynxTextra.framework/Headers",
     "//third_party",
     "//third_party/lynx",
+    "//third_party/lynx/third_party/napi/include",
   ]
   GCC_PREPROCESSOR_DEFINITIONS = [
     "OS_IOS=1",
@@ -164,14 +165,10 @@ subspec_target("Textra") {
 
 subspec_target("ThirdParty") {
   deps = [
+    ":NapiBinding",
     ":fml",
     ":rapidjson",
   ]
-
-  # TODO(aiyongbiao.rick): delete enable_napi after napi was integrated
-  if (enable_napi) {
-    deps += [ ":NapiBinding" ]
-  }
 }
 
 subspec_target("Trace") {
@@ -242,19 +239,37 @@ subspec_target("rapidjson") {
 }
 
 subspec_target("NapiBinding") {
-  pod_target_xcconfig = {
-    HEADER_SEARCH_PATHS = [
-      "//PODS_CONFIGURATION_BUILD_DIR/skity/skity.framework/Headers",
-      "//PODS_ROOT/vmsdk/oss/src/napi",
-    ]
-    GCC_PREPROCESSOR_DEFINITIONS = [
-      "NAPI_DISABLE_CPP_RTTI",
-      "NAPI_DISABLE_CPP_EXCEPTIONS",
-      "ENABLE_NAPI_BINDING=1",
-    ]
-  }
+  pod_target_xcconfig = animax_base_xcconfig
+  pod_target_xcconfig.HEADER_SEARCH_PATHS += [
+    "//PODS_ROOT/PrimJS/src/interpreter",
+    "//PODS_ROOT/PrimJS/src",
+    "//PODS_ROOT/PrimJS/src/gc",
+    "//PODS_ROOT/PrimJS/src/interpreter/quickjs/include",
+    "//PODS_ROOT/PrimJS/src/napi",
+    "//PODS_ROOT/PrimJS/src/napi/env",
+    "//PODS_ROOT/PrimJS/src/napi/quickjs",
+    "//PODS_ROOT/vmsdk/oss/src/napi",
+  ]
+  pod_target_xcconfig.GCC_PREPROCESSOR_DEFINITIONS += [
+    "NAPI_DISABLE_CPP_RTTI",
+    "NAPI_DISABLE_CPP_EXCEPTIONS",
+    "ENABLE_NAPI_BINDING=1",
+  ]
 
-  # deps = [ "//third_party/binding/napi:napi_binding_base" ]
-  # dependency = [ "vmsdk/napi/env" ]
+  deps = [
+    "$napi_binding_search_path/napi:napi_binding_base",
+    "../../../include",
+    "../../../src/base/log",
+    "../../../src/jsbridge",
+  ]
+  dependency = [
+    "PrimJS/napi/core",
+    "PrimJS/napi/env",
+    "PrimJS/napi/quickjs",
+  ]
   header_mappings_dir = "."
+  pattern_source_files = [
+    "//base/include/**/*.h",
+    "//src/**/*.h",
+  ]
 }

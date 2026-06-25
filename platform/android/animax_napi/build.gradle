@@ -4,6 +4,7 @@
 apply plugin: 'com.android.library'
 apply from: file("../jacoco.gradle")
 apply from: file("../deps.gradle")
+apply from: file("../publish.gradle")
 import org.json.simple.JSONObject
 
 ext.ABI_FILTERS = ['armeabi-v7a', 'armeabi', 'arm64-v8a', 'x86']
@@ -22,14 +23,12 @@ android {
             if(enable_lynx_android_test.toBoolean()) {
                 pickFirst 'lib/*/libc++_shared.so'
                 pickFirst 'lib/*/liblynxtrace.so'
-                pickFirst 'lib/*/libnapi.so'
                 pickFirst 'lib/*/libskity.so'
                 pickFirst 'lib/*/libtttext_lite.so'
                 pickFirst 'lib/*/libanimax.so'
             } else {
                 exclude 'lib/*/libc++_shared.so'
                 exclude 'lib/*/liblynxtrace.so'
-                exclude 'lib/*/libnapi.so'
                 exclude 'lib/*/libskity.so'
                 exclude 'lib/*/libtttext_lite.so'
                 exclude 'lib/*/libanimax.so'
@@ -153,7 +152,6 @@ task configGnCompileParas {
         buildTypes.each{
             JSONObject gnBuildArgs_list = new JSONObject(gnBuildArgsList)
             String buildType = it
-            gnBuildArgs_list.put("build_lepus_compile", "false")
             gnBuildArgs_list.put("enable_lto", "\"$enable_lto\"")
             if (buildType == "release") {
                 gnBuildArgs_list.put("is_debug", "false")
@@ -173,14 +171,13 @@ task configGnCompileParas {
 
 dependencies {
     implementation project(':AnimaXAndroid')
-    // TODO(aiyongbiao.rick): integrate primjs and v8so to support napi on lynx bussiness.
-    implementation 'org.lynxsdk.lynx:primjs:3.6.0-rc.0'
-    extractJNI 'org.lynxsdk.lynx:primjs:3.6.0-rc.0'
-    extractJNI 'org.lynxsdk.lynx:v8so:11.1.277.4'
+    implementation "org.lynxsdk.lynx:primjs:${project.ext.PRIMJS_VERSION}"
+    extractJNI "org.lynxsdk.lynx:primjs:${project.ext.PRIMJS_VERSION}"
 }
 
 task extractJNIFiles {
     doLast {
+        delete "$projectDir/build/jniLibs/primjs"
         configurations.extractJNI.files.each {
             def file = it.absoluteFile
             def packageName = file.name.tokenize('-')[0]
@@ -190,6 +187,15 @@ task extractJNIFiles {
                 into "$projectDir/build/jniLibs/$packageName/"
                 include "jni/**/*"
             }
+        }
+        def extractedNapiFiles = fileTree("$projectDir/build/jniLibs/primjs").matching {
+            include "jni/**/libnapi.so"
+        }
+        def extractedQuickFiles = fileTree("$projectDir/build/jniLibs/primjs").matching {
+            include "jni/**/libquick.so"
+        }
+        if (extractedNapiFiles.isEmpty() || extractedQuickFiles.isEmpty()) {
+            throw new GradleException("PrimeJS JNI extraction must provide libnapi.so and libquick.so.")
         }
     } 
 }

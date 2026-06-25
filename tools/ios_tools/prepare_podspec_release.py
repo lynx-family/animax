@@ -22,13 +22,22 @@ REQUIRED_DEPENDENCY_VERSION_KEYS = (
     "LYNX_VERSION",
     "SKITY_VERSION",
     "TEXTRA_VERSION",
+    "PRIMJS_VERSION",
 )
 RELEASE_PRESERVE_PATHS = (
     "AnimaX/**/*.h",
     "base/trace/native/**/*.h",
+    "base/include/path_utils.h",
+    "include/base/macros.h",
+    "include/base/log/log_message.h",
 )
 RELEASE_PUBLIC_HEADERS = ("AnimaX/**/*.h",)
-RELEASE_PRIVATE_HEADERS = ("base/trace/native/**/*.h",)
+RELEASE_PRIVATE_HEADERS = (
+    "base/trace/native/**/*.h",
+    "base/include/path_utils.h",
+    "include/base/macros.h",
+    "include/base/log/log_message.h",
+)
 CORE_RELEASE_PRESERVE_PATHS = RELEASE_PRESERVE_PATHS
 
 
@@ -352,6 +361,21 @@ def prepare_podspec(path, dependency_versions):
         content,
         "LynxBase/Framework",
         minimum_version_requirement(dependency_versions["LYNX_VERSION"]),
+    )
+    content = set_dependency_requirement(
+        content,
+        "PrimJS/napi/core",
+        minimum_version_requirement(dependency_versions["PRIMJS_VERSION"]),
+    )
+    content = set_dependency_requirement(
+        content,
+        "PrimJS/napi/env",
+        minimum_version_requirement(dependency_versions["PRIMJS_VERSION"]),
+    )
+    content = set_dependency_requirement(
+        content,
+        "PrimJS/napi/quickjs",
+        minimum_version_requirement(dependency_versions["PRIMJS_VERSION"]),
     )
     content = set_dependency_requirement(
         content,
