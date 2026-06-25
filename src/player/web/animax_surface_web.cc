@@ -102,10 +102,13 @@ AnimaXSurfaceWeb::AnimaXSurfaceWeb(
   }
 }
 AnimaXSurfaceWeb::~AnimaXSurfaceWeb() {
-  canvas_.reset();
-  gpu_surface_.reset();
   switch (backend_type_) {
     case AnimaXBackend::kGL:
+      if (gl_context_) {
+        MakeWebGLContextCurrent();
+      }
+      canvas_.reset();
+      gpu_surface_.reset();
       gl_gpu_ctx_.reset();
       if (gl_context_) {
         emscripten_webgl_make_context_current(0);
@@ -114,6 +117,8 @@ AnimaXSurfaceWeb::~AnimaXSurfaceWeb() {
       }
       break;
     case AnimaXBackend::kWebGPU:
+      canvas_.reset();
+      gpu_surface_.reset();
       if (web_gpu_surface_) {
         wgpuSurfaceRelease(reinterpret_cast<WGPUSurface>(web_gpu_surface_));
         web_gpu_surface_ = nullptr;
@@ -127,6 +132,9 @@ AnimaXSurfaceWeb::~AnimaXSurfaceWeb() {
 }
 
 void AnimaXSurfaceWeb::Flush() {
+  if (!MakeWebGLContextCurrent()) {
+    return;
+  }
   if (canvas_) {
     canvas_->GetSkityCanvas()->Flush();
     canvas_.reset();
@@ -136,6 +144,9 @@ void AnimaXSurfaceWeb::Flush() {
   }
 }
 lynx::animax::Canvas* AnimaXSurfaceWeb::Canvas() {
+  if (!MakeWebGLContextCurrent()) {
+    return nullptr;
+  }
   if (canvas_) {
     return canvas_.get();
   }
@@ -158,8 +169,6 @@ lynx::animax::Canvas* AnimaXSurfaceWeb::Canvas() {
 }
 
 void AnimaXSurfaceWeb::Reconfigure(const Description& desc) {
-  canvas_.reset();
-  gpu_surface_.reset();
   Resize(desc.width, desc.height);
   switch (backend_type_) {
     case AnimaXBackend::kGL:
@@ -170,6 +179,8 @@ void AnimaXSurfaceWeb::Reconfigure(const Description& desc) {
       }
       break;
     case AnimaXBackend::kWebGPU:
+      canvas_.reset();
+      gpu_surface_.reset();
       if (web_gpu_surface_ && web_gpu_ctx_) {
         UpdateWebGPUSurface(desc);
       } else {
@@ -181,6 +192,22 @@ void AnimaXSurfaceWeb::Reconfigure(const Description& desc) {
       break;
   }
 }
+bool AnimaXSurfaceWeb::MakeWebGLContextCurrent() {
+  if (backend_type_ != AnimaXBackend::kGL) {
+    return true;
+  }
+  if (!gl_context_) {
+    ANIMAX_LOGI("WebGL context handle is invalid!");
+    return false;
+  }
+  auto result = emscripten_webgl_make_context_current(
+      static_cast<EMSCRIPTEN_WEBGL_CONTEXT_HANDLE>(gl_context_));
+  if (result != EMSCRIPTEN_RESULT_SUCCESS) {
+    ANIMAX_LOGI("Failed to make WebGL context current! " << result);
+    return false;
+  }
+  return true;
+}
 void AnimaXSurfaceWeb::InitWebGLSurface(const Description& desc) {
   if (desc.gl_context_handle <= 0) {
     ANIMAX_LOGI("WebGL context handle is invalid! " << desc.gl_context_handle);
@@ -188,13 +215,23 @@ void AnimaXSurfaceWeb::InitWebGLSurface(const Description& desc) {
   }
   gl_context_ =
       static_cast<EMSCRIPTEN_WEBGL_CONTEXT_HANDLE>(desc.gl_context_handle);
-  emscripten_webgl_make_context_current(gl_context_);
+  if (!MakeWebGLContextCurrent()) {
+    return;
+  }
   gl_gpu_ctx_ = skity::GLContextCreate(
       reinterpret_cast<void*>(emscripten_webgl_get_proc_address));
   UpdateWebGLSurface(desc);
 }
 void AnimaXSurfaceWeb::UpdateWebGLSurface(const Description& desc) {
   DCHECK(gl_context_);
+  if (!MakeWebGLContextCurrent()) {
+    return;
+  }
+  if (!gl_gpu_ctx_) {
+    ANIMAX_LOGI("WebGL GPU context is invalid!");
+    return;
+  }
+  canvas_.reset();
   gpu_surface_.reset();
   skity::GPUSurfaceDescriptorGL skity_desc{};
   skity_desc.backend = skity::GPUBackendType::kOpenGL;
