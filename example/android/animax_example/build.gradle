@@ -73,6 +73,8 @@ android {
         pickFirst '**/libc++_shared.so'
         pickFirst '**/libskity.so'
         pickFirst '**/liblynxtextra.so'
+        pickFirst '**/libnapi.so'
+        pickFirst '**/libquick.so'
     }
 
     kotlinOptions { jvmTarget = 1.8 }
@@ -86,6 +88,7 @@ dependencies {
 
     implementation project(':AnimaXAndroid')
     implementation project(':AnimaXTextra')
+    implementation project(':AnimaXNapi')
 
     implementation 'com.facebook.fresco:fresco:2.3.0'
     implementation 'com.facebook.fresco:animated-webp:2.3.0'

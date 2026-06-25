@@ -163,7 +163,6 @@ task configGnCompileParas {
         buildTypes.each{
             JSONObject gnBuildArgs_list = new JSONObject(gnBuildArgsList)
             String buildType = it
-            gnBuildArgs_list.put("build_lepus_compile", "false")
             gnBuildArgs_list.put("enable_lto", "\"$enable_lto\"")
             if (buildType == "release") {
                 gnBuildArgs_list.put("is_debug", "false")

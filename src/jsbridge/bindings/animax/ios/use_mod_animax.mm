@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include <vmsdk/napi_module.h>
+#include <napi_module.h>
 
 NAPI_USE(animax)
 

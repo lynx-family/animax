@@ -17,7 +17,7 @@ end
 pod_path = '../../../../'
 dependency_versions = load_dependency_versions(File.expand_path(File.join(pod_path, 'versions.properties'), __dir__))
 
-platform :ios, '13.0'
+platform :ios, '12.0'
 
 LYNX_VERSION = dependency_versions.fetch('LYNX_VERSION')
 TEXTRA_VERSION = dependency_versions.fetch('TEXTRA_VERSION')
@@ -43,7 +43,8 @@ target 'AnimaXExample' do
     'Framework', 
     'RenderBackend/Skity',
     'Textra',
-    'ThirdParty'
+    'ThirdParty',
+    'ThirdParty/NapiBinding'
   ]
 
   pod 'skity', SKITY_VERSION
