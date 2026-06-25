@@ -5,9 +5,7 @@ package com.lynx.animax.ui;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 import com.lynx.animax.base.VisibilityState;
-import com.lynx.animax.base.bridge.JavaOnlyMap;
 import com.lynx.animax.composition.AnimaXComposition;
 import com.lynx.animax.drawable.AnimaXSurfaceDrawable;
 import com.lynx.animax.listener.IAnimationListener;
@@ -18,22 +16,13 @@ import com.lynx.animax.property.AnimaXValueCallback;
 import com.lynx.animax.property.AnimaXValueParam;
 import com.lynx.animax.property.LayerPropertyType;
 import com.lynx.animax.property.ResourcePropertyType;
-import com.lynx.animax.util.AnimaXMetricsCallback;
 
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-public interface IAnimaXPlayerDelegate extends IAnimaXPlayer {
+public interface IAnimaXPlayerDelegate {
   /**
    * Gets the underlying player instance.
    * @return The {@link IAnimaXPlayer} instance.
    */
   @NonNull IAnimaXPlayer getPlayer();
-
-  /**
-   * @see IAnimaXPlayer#getAnimaXContext()
-   */
-  default AnimaXContext getAnimaXContext() {
-    return getPlayer().getAnimaXContext();
-  }
 
   /**
    * @see IAnimaXPlayer#enableSoftwareRender(boolean)
@@ -54,13 +43,6 @@ public interface IAnimaXPlayerDelegate extends IAnimaXPlayer {
    */
   default void updateAnimaXSurface(AnimaXSurfaceDrawable surfaceDrawable) {
     getPlayer().updateAnimaXSurface(surfaceDrawable);
-  }
-
-  /**
-   * @see IAnimaXPlayer#markPlatformSurfaceAsInvalid(boolean)
-   */
-  default void markPlatformSurfaceAsInvalid(boolean isInvalid) {
-    getPlayer().markPlatformSurfaceAsInvalid(isInvalid);
   }
 
   /**
@@ -99,13 +81,6 @@ public interface IAnimaXPlayerDelegate extends IAnimaXPlayer {
    */
   default void setSrc(String src) {
     getPlayer().setSrc(src);
-  }
-
-  /**
-   * @see IAnimaXPlayer#setSrcPolyfill(JavaOnlyMap)
-   */
-  default void setSrcPolyfill(JavaOnlyMap polyfill) {
-    getPlayer().setSrcPolyfill(polyfill);
   }
 
   /**
@@ -371,20 +346,6 @@ public interface IAnimaXPlayerDelegate extends IAnimaXPlayer {
    */
   default void removeAnimationListener(IAnimationListener listener) {
     getPlayer().removeAnimationListener(listener);
-  }
-
-  /**
-   * @see IAnimaXPlayer#onTap(float, float)
-   */
-  default void onTap(float x, float y) {
-    getPlayer().onTap(x, y);
-  }
-
-  /**
-   * @see IAnimaXPlayer#getMetricsAsync(AnimaXMetricsCallback)
-   */
-  default void getMetricsAsync(AnimaXMetricsCallback callback) {
-    getPlayer().getMetricsAsync(callback);
   }
 
   /**

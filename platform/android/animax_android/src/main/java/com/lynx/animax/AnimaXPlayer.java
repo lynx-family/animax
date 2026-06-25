@@ -231,6 +231,7 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   }
 
   @Override
+  @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void markPlatformSurfaceAsInvalid(boolean isInvalid) {
     this.mIsPlatformSurfaceInitiallyInvalid = isInvalid;
   }
@@ -560,8 +561,8 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     nativeSetObjectPosition(mPtr, objectPosition.ordinal());
   }
 
-  @RestrictTo(RestrictTo.Scope.LIBRARY)
   @Override
+  @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void setSrcPolyfill(JavaOnlyMap polyfillMap) {
     if (!checkNativeReady()) {
       return;
