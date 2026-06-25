@@ -46,12 +46,6 @@ VideoPlayerHarmony::~VideoPlayerHarmony() {
 
   codec_manager_.reset();
 
-  // Destroy surface window
-  if (native_window_) {
-    OH_NativeWindow_DestroyNativeWindow(native_window_);
-    native_window_ = nullptr;
-  }
-
   // Detach and destroy native image
   if (native_image_) {
     if (IsFrameListenerEnabled()) {
@@ -70,6 +64,7 @@ VideoPlayerHarmony::~VideoPlayerHarmony() {
   if (native_image_) {
     OH_NativeImage_Destroy(&native_image_);
     native_image_ = nullptr;
+    native_window_ = nullptr;
   }
 }
 
@@ -136,6 +131,10 @@ void VideoPlayerHarmony::InitNativeWindow() {
   }
   // Hold the native window, used to update the image texture.
   native_window_ = OH_NativeImage_AcquireNativeWindow(native_image_);
+  if (native_window_ == nullptr) {
+    ANIMAX_LOGE("OH_NativeImage_AcquireNativeWindow fail.");
+    return;
+  }
   // Initialize the window's size by video's config.
   OH_NativeWindow_NativeWindowHandleOpt(native_window_, SET_BUFFER_GEOMETRY,
                                         asset_->GetVideoWidth(),
