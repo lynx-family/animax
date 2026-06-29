@@ -220,15 +220,7 @@ PendingFrameSet::FlushResult VideoPlayerDarwin::FlushPendingFrameSet(
   }
   result.ready_frame_map.clear();
   if (noErr != result.first_error_status) {
-    if (kVTInvalidSessionErr == result.first_error_status) {
-      ANIMAX_LOGI("decode frame error from callback: kVTInvalidSessionErr");
-      should_restart_ = true;
-    } else {
-      error_reporter_->ReportErrorOnce(
-          "decode frame error from callback, status: " + std::to_string(result.first_error_status),
-          VideoPlayerErrorReporter::Error::kDecodeFrameError);
-    }
-    session_valid_ = false;
+    HandleDecodeError(result.first_error_status, "decode frame error from callback");
   }
   return result;
 }
@@ -251,14 +243,7 @@ bool VideoPlayerDarwin::DecodeFrameData(CMSampleBufferRef sample_buffer,
   OSStatus status = VTDecompressionSessionDecodeFrame(session_, sample_buffer, decode_flags,
                                                       decompression_info_ptr, &flags_out);
   if (noErr != status) {
-    session_valid_ = false;
-    if (kVTInvalidSessionErr == status) {
-      ANIMAX_LOGI("decode frame error: kVTInvalidSessionErr");
-      should_restart_ = true;
-    } else {
-      error_reporter_->ReportErrorOnce("decode frame error, status: " + std::to_string(status),
-                                       VideoPlayerErrorReporter::Error::kDecodeFrameError);
-    }
+    HandleDecodeError(status, "decode frame error");
     pending_frame_set_->DidDecodeFrameFailDirectly(presentation_index);
 
     // From @discussion of VTDecompressionSessionDecodeFrame:
@@ -273,6 +258,31 @@ bool VideoPlayerDarwin::DecodeFrameData(CMSampleBufferRef sample_buffer,
     return false;
   }
   return true;
+}
+
+bool VideoPlayerDarwin::IsRestartableDecodeError(OSStatus status) const {
+  return status == kVTVideoDecoderMalfunctionErr || status == kVTVideoDecoderBadDataErr ||
+         status == PendingFrameSet::kDecodeCallbackMissingImageBufferErr;
+}
+
+void VideoPlayerDarwin::HandleDecodeError(OSStatus status, const std::string &message_prefix) {
+  session_valid_ = false;
+  if (status == kVTInvalidSessionErr) {
+    should_restart_ = true;
+    ANIMAX_LOGI(message_prefix << ": kVTInvalidSessionErr, retry decoder");
+    return;
+  }
+
+  if (IsRestartableDecodeError(status) && decoder_retry_count_ < kMaxRetryCount) {
+    ++decoder_retry_count_;
+    should_restart_ = true;
+    ANIMAX_LOGI(message_prefix << ", retry decoder, status: " << status
+                               << ", retry count: " << decoder_retry_count_);
+    return;
+  }
+
+  error_reporter_->ReportErrorOnce(message_prefix + ", status: " + std::to_string(status),
+                                   VideoPlayerErrorReporter::Error::kDecodeFrameError);
 }
 
 int32_t VideoPlayerDarwin::DecodeFrame(const int32_t decode_index,
@@ -316,6 +326,7 @@ void VideoPlayerDarwin::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   }
 
   asset_ = asset_darwin;
+  decoder_retry_count_ = 0;
   output_width_ = asset_->GetVideoWidth();
   output_height_ = asset_->GetVideoHeight();
   ResetSession();
