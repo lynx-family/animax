@@ -133,8 +133,8 @@ void PendingFrameSet::DidDecodeFrame(OSStatus status,
       ready_frame_map_[presentation_index] = pixel_buffer;
     } else if (need_pixel_buffer && (noErr == first_error_status_)) {
       // If we need pixel buffer, but can't get it from image buffer and origin
-      // status is noError. Updata first_error_status_
-      first_error_status_ = -1;
+      // status is noError. Update first_error_status_
+      first_error_status_ = kDecodeCallbackMissingImageBufferErr;
     }
     pending_frame_set_.erase(presentation_index);
   }

@@ -18,6 +18,8 @@ namespace animax {
 
 class PendingFrameSet : public std::enable_shared_from_this<PendingFrameSet> {
  public:
+  static constexpr OSStatus kDecodeCallbackMissingImageBufferErr = -1;
+
   static std::shared_ptr<PendingFrameSet> Create();
   ~PendingFrameSet();
 

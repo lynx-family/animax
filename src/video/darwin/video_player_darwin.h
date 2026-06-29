@@ -9,6 +9,7 @@
 #import <VideoToolbox/VideoToolbox.h>
 
 #include <shared_mutex>
+#include <string>
 #include <unordered_set>
 
 #include "src/render/texture_info.h"
@@ -44,6 +45,8 @@ class VideoPlayerDarwin : public VideoPlayer {
   bool DecodeFrameData(CMSampleBufferRef sample_buffer,
                        const int32_t presentation_index,
                        const bool need_output_frame);
+  bool IsRestartableDecodeError(OSStatus status) const;
+  void HandleDecodeError(OSStatus status, const std::string &message_prefix);
   int32_t DecodeFrame(const int32_t decode_index,
                       const int32_t target_presentation_index);
   void PrepareNextFrame(const int32_t target_presentation_index);
