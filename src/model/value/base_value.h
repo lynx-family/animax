@@ -359,7 +359,7 @@ class ANIMAX_EXPORT Color : public Value {
    * Creates a new Color from a 32-bit integer value.
    * @param value The color value in ARGB format.
    */
-  ANIMAX_EXPORT explicit Color(int32_t value);
+  explicit Color(int32_t value);
 
   /**
    * Creates a new Color from a color string.
@@ -375,8 +375,7 @@ class ANIMAX_EXPORT Color : public Value {
    * @param b The blue component (0-255).
    * @return The color as a 32-bit integer.
    */
-  ANIMAX_EXPORT static int32_t ToInt(uint8_t a, uint8_t r, uint8_t g,
-                                     uint8_t b);
+  static int32_t ToInt(uint8_t a, uint8_t r, uint8_t g, uint8_t b);
 
   ~Color() override = default;
 
