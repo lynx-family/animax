@@ -93,23 +93,28 @@ public class CodecManager {
     }
 
     boolean success = false;
-    int codecCount = MediaCodecList.getCodecCount();
-    while (mMediaCodecListNextTryIndex < codecCount) {
-      MediaCodecInfo info = MediaCodecList.getCodecInfoAt(mMediaCodecListNextTryIndex++);
-      if (info.isEncoder() || !supportMimeType(info, mimeType)) {
-        continue;
+    try {
+      int codecCount = MediaCodecList.getCodecCount();
+      while (mMediaCodecListNextTryIndex < codecCount) {
+        MediaCodecInfo info = MediaCodecList.getCodecInfoAt(mMediaCodecListNextTryIndex++);
+        if (info.isEncoder() || !supportMimeType(info, mimeType)) {
+          continue;
+        }
+        String decoderName = info.getName();
+        if (null == decoderName) {
+          continue;
+        }
+        Status status = tryInitDecoder(decoderName);
+        if (status.mSuccess) {
+          success = true;
+          break;
+        }
       }
-      String decoderName = info.getName();
-      if (null == decoderName) {
-        continue;
-      }
-      Status status = tryInitDecoder(decoderName);
-      if (status.mSuccess) {
-        success = true;
-        break;
-      } else {
-        AnimaXLog.e(TAG, "[" + decoderName + "]: " + status.mErrMsg);
-      }
+    } catch (Exception e) {
+      AnimaXLog.e(
+          TAG, "enumerate codec list failed, fallback to decoder by type: " + e.getMessage());
+      Status status = tryInitDecoderByType(mimeType);
+      success = status.mSuccess;
     }
     if (!success) {
       reportError("initDecoder error");
@@ -230,12 +235,30 @@ public class CodecManager {
     if (null == mAsset) {
       return new Status("tryInitDecoder error: mAsset is null");
     }
-    Status status = null;
-    status = createCodec(decoderName);
+    Status status = createCodec(decoderName);
     if (!status.mSuccess) {
       return status;
     }
-    status = configureCodec(mAsset.getFormat(), mSurface, null, 0 /*0: decoder, 1: encoder*/);
+    return configureAndStartDecoder(decoderName);
+  }
+
+  private Status tryInitDecoderByType(@NonNull String mimeType) {
+    AnimaXLog.i(TAG, "try decoder by type: " + mimeType);
+    if (null == mAsset) {
+      return new Status("tryInitDecoderByType error: mAsset is null");
+    }
+    try {
+      mDecoder = MediaCodec.createDecoderByType(mimeType);
+    } catch (Exception e) {
+      return new Status("createDecoderByType Exception: " + e.getMessage());
+    }
+    String decoderName = mDecoder.getName();
+    return configureAndStartDecoder(decoderName);
+  }
+
+  private Status configureAndStartDecoder(@NonNull String decoderName) {
+    Status status =
+        configureCodec(mAsset.getFormat(), mSurface, null, 0 /*0: decoder, 1: encoder*/);
     if (!status.mSuccess) {
       mDecoder.release();
       mDecoder = null;
