@@ -59,7 +59,7 @@ podspec_target("animax_podspec") {
       "-fno-rtti",
     ]
     ios = {
-      deployment_target = "12.0"
+      deployment_target = "13.0"
     }
     pod_target_xcconfig = animax_base_xcconfig
     pod_target_xcconfig.CLANG_CXX_LANGUAGE_STANDARD = "gnu++17"

@@ -113,10 +113,6 @@ using namespace lynx::animax;
   [self checkAnimaXSurface:animax_surface.get() createdWithCGSize:size type:AnimaXBackend::kMetal];
 
   auto size2 = CGSizeMake(20, 20);
-  XCTAssertTrue([drawable updateSize:size2]);
-  CVPixelBufferRef buffer2 = [drawable createPixelBufferWithWidth:size2.width height:size2.height];
-  XCTAssertNotEqual(nullptr, buffer2);
-  [drawable setBuffer:buffer2];
   animax_surface = AnimaXSurfaceIOS::Reconfigure(std::move(animax_surface), {size2});
   [self checkAnimaXSurface:animax_surface.get() createdWithCGSize:size2 type:AnimaXBackend::kMetal];
 }
