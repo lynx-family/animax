@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'release tag'
+        description: 'snapshot base version'
         required: true
         type: string
       commitId:
@@ -36,10 +36,16 @@ jobs:
       version: ${{ steps.get_version.outputs.VERSION }}
       tag: ${{ steps.get_version.outputs.TAG }}
       checkout_ref: ${{ steps.get_version.outputs.CHECKOUT_REF }}
+      release_mode: ${{ steps.get_version.outputs.RELEASE_MODE }}
     steps:
       - name: Get Version
         id: get_version
         run: |-
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            release_mode="snapshot"
+          else
+            release_mode="release"
+          fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             tag="${{ github.event.inputs.tag }}"
             checkout_ref="${{ github.event.inputs.commitId }}"
@@ -65,6 +71,7 @@ jobs:
             echo "TAG=$tag" >> $GITHUB_OUTPUT
             echo "VERSION=$version" >> $GITHUB_OUTPUT
             echo "CHECKOUT_REF=$checkout_ref" >> $GITHUB_OUTPUT
+            echo "RELEASE_MODE=$release_mode" >> $GITHUB_OUTPUT
           else
             echo "Version is invalid"
             exit 1
@@ -73,6 +80,7 @@ jobs:
   android-sdk-release:
     runs-on: lynx-ubuntu-22.04-large
     needs: get-version
+    if: ${{ needs.get-version.outputs.release_mode == 'release' }}
     timeout-minutes: 60
     steps:
       - name: Download Source
@@ -134,6 +142,59 @@ jobs:
           portal_api_token: ${{ secrets.PORTAL_API_TOKEN }}
           artifact_path_list: ${{ steps.android-sdk-release.outputs.maven_artifact_list }}
 
+  android-sdk-snapshot-release:
+    runs-on: lynx-ubuntu-22.04-large
+    needs: get-version
+    if: ${{ needs.get-version.outputs.release_mode == 'snapshot' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Source
+        uses: actions/checkout@v4.2.2
+        with:
+          path: animax
+          ref: ${{ needs.get-version.outputs.checkout_ref }}
+          fetch-depth: 0
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Setup Android environment
+        uses: ./animax/.github/actions/setup-android-env
+      - name: Install Common Dependencies
+        uses: ./animax/.github/actions/common-deps
+        with:
+          cache-backend: 'lynx-infra'
+      - name: Validate snapshot publish secrets
+        shell: bash
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_TOKEN_PASSWORD }}
+        run: |-
+          missing=()
+          for name in CENTRAL_TOKEN_USERNAME CENTRAL_TOKEN_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              missing+=("$name")
+            fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Missing required snapshot publish secrets: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+      - name: Resolve Android snapshot version
+        id: resolve_snapshot_version
+        shell: bash
+        run: |-
+          version="${{ needs.get-version.outputs.version }}-SNAPSHOT"
+          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
+      - name: Android SDK Snapshot Release
+        uses: ./animax/.github/actions/android-sdk-snapshot-release
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_TOKEN_PASSWORD }}
+        with:
+          version: ${{ steps.resolve_snapshot_version.outputs.VERSION }}
+          abiList: 'armeabi-v7a,x86_64,arm64-v8a'
+
   ios-sdk-publish:
     timeout-minutes: 60
     runs-on: macos-14
@@ -183,15 +244,9 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - get-version
-      - android-sdk-release
       - ios-sdk-publish
     timeout-minutes: 30
     steps:
-      - name: Download Android release assets
-        uses: actions/download-artifact@v4
-        with:
-          name: animax-android-release-assets
-          path: release-assets
       - name: Download iOS release assets
         uses: actions/download-artifact@v4
         with:
