@@ -6,6 +6,15 @@ ext.releaseModulePaths = [':AnimaXAndroid', ':AnimaXTextra', ':AnimaXNapi'] as S
 ext.releaseModuleNames = ['AnimaXAndroid', 'AnimaXTextra', 'AnimaXNapi'] as Set
 ext.releaseArtifactNames = ['animax-sdk', 'animax-textra', 'animax-napi'] as Set
 
+def collectArtifactList = { String version ->
+    def artifacts = []
+    def artifactZip = file("${project.buildDir}/animax-android-sdk-${version}.zip")
+    if (artifactZip.exists()) {
+        artifacts.add(artifactZip.absolutePath)
+    }
+    return artifacts
+}
+
 def isReleaseModule = { Project subproject ->
     rootProject.ext.releaseModulePaths.contains(subproject.path) &&
             rootProject.ext.releaseModuleNames.contains(subproject.name) &&
@@ -67,28 +76,22 @@ rootProject.afterEvaluate {
     }
 }
 
-def artifactList = []
-
 task zipArtifacts {
     doLast {
         def version = getReleaseVersion()
-        rootProject.subprojects.each { subproject ->
-            if (isReleaseModule(subproject)) {
-                def artifactPath = "${subproject.buildDir}/release/${version}"
-                def zipPath = file("${project.buildDir}/${subproject.ARTIFACT_NAME}-${version}.zip")
-                if (!file(artifactPath).exists()) {
-                    throw new GradleException("No Maven release directory found at ${artifactPath}")
-                }
-                ant.zip(destfile: zipPath, basedir: artifactPath)
-                artifactList.add(zipPath.absolutePath)
-            }
+        def zipFile = file("${project.buildDir}/animax-android-sdk-${version}.zip")
+        def artifactPath = file("$rootProject.buildDir/release/${version}")
+        if (!artifactPath.exists()) {
+            throw new GradleException("No published artifacts found in ${artifactPath}. Please publish artifacts before zipping.")
         }
+        ant.zip(destfile: zipFile, basedir: artifactPath)
     }
 }
 
 task getArtifactList {
-    dependsOn zipArtifacts
     doLast {
+        def version = getReleaseVersion()
+        def artifactList = collectArtifactList(version)
         println "artifactInfo: ${artifactList}"
         def json = new groovy.json.JsonBuilder(artifactList).toString()
         File file = new File("${project.buildDir}/artifact-list")

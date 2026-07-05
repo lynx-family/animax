@@ -1,0 +1,63 @@
+name: build android sdk snapshot
+
+description: build android sdk and publish snapshot artifacts to the Maven snapshots repository
+
+inputs:
+  version:
+    description: The snapshot version of the sdk to publish
+    required: true
+  abiList:
+    description: The abi list of the sdk to publish
+    required: false
+    default: 'armeabi-v7a,arm64-v8a,x86_64'
+
+runs:
+  using: composite
+  steps:
+    - name: Build and publish snapshot artifact
+      shell: bash
+      run: |-
+        cd $GITHUB_WORKSPACE/animax
+        source tools/envsetup.sh
+        VERSION="$INPUT_VERSION"
+        if [[ -z "$VERSION" ]]; then
+          echo "Missing required input: version" >&2
+          exit 1
+        fi
+        if [[ "$VERSION" != *-SNAPSHOT ]]; then
+          echo "Snapshot action requires a version ending with -SNAPSHOT" >&2
+          exit 1
+        fi
+        ABI_LIST="$INPUT_ABI_LIST"
+        TEXTRA_VERSION=$(awk -F= '/^TEXTRA_VERSION=/{print $2}' versions.properties | tr -d '[:space:]')
+        if [[ -z "$TEXTRA_VERSION" ]]; then
+          echo "Missing TEXTRA_VERSION in versions.properties" >&2
+          exit 1
+        fi
+
+        if [[ ",$ABI_LIST," == *",x86,"* ]]; then
+          echo "::notice::AnimaX Android native modules do not publish x86 AAR slices; use x86_64 for simulator artifacts."
+        fi
+        if [[ ",$ABI_LIST," == *",x86_64,"* ]]; then
+          echo "::notice::LynxTextra ${TEXTRA_VERSION} does not ship an x86_64 Prefab slice, so AnimaXTextra publishes only supported ABI slices."
+        fi
+
+        pushd platform/android
+        chmod +x ./gradlew
+        ./gradlew \
+          assembleAllModulesRelease \
+          -Penable_trace=none \
+          -PabiList="$ABI_LIST" \
+          -PbuildLynxDebugSo \
+          --no-daemon
+        ./gradlew \
+          publishAllModules \
+          -Penable_trace=none \
+          -PabiList="$ABI_LIST" \
+          -PbuildLynxDebugSo \
+          -PVERSION="$VERSION" \
+          --no-daemon
+        popd
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_ABI_LIST: ${{ inputs.abiList }}

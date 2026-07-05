@@ -6,7 +6,6 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 import org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency
 import org.gradle.api.internal.artifacts.dependencies.DefaultProjectDependency
-import groovy.json.JsonOutput
 
 def getAARPath(buildPath, boolean isDev = false) {
     def filePattern
@@ -47,6 +46,10 @@ boolean isAndroidModule() {
 boolean shouldConfigurePublishing() {
     def runTasks = gradle.startParameter.taskNames.toString().toLowerCase()
     return runTasks.contains("publish") || runTasks.contains("stagereleasemavenartifacts")
+}
+
+def isSnapshotVersion(String version) {
+    version != null && version.endsWith("-SNAPSHOT")
 }
 
 def getReleaseVersion() {
@@ -138,6 +141,7 @@ def addDependenciesToPom(Node pomNode) {
 afterEvaluate {
     // Configure publications only for explicit Maven staging/publish tasks.
     if (shouldConfigurePublishing() && isPublishModule()) {
+        def releaseVersion = getReleaseVersion()
         publishing {
             publications {
                 if (isJavaModule()) {
@@ -289,44 +293,34 @@ afterEvaluate {
             }
             repositories {
                 maven {
-                    url = "$project.buildDir/release"
+                    if (isSnapshotVersion(releaseVersion)) {
+                        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+                        credentials {
+                            username = System.getenv("CENTRAL_TOKEN_USERNAME") ?: findProperty("centralTokenUsername")
+                            password = System.getenv("CENTRAL_TOKEN_PASSWORD") ?: findProperty("centralTokenPassword")
+                        }
+                    } else {
+                        url = "$project.buildDir/release"
+                    }
                 }
             }
         }
     }
     tasks.withType(PublishToMavenRepository) { task ->
         task.doFirst {
-            repository.url = "$project.buildDir/release/${publication.version}"
+            def publicationVersion = publication.version.toString()
+            if (isSnapshotVersion(publicationVersion)) {
+                def snapshotUsername = System.getenv("CENTRAL_TOKEN_USERNAME") ?: findProperty("centralTokenUsername")
+                def snapshotPassword = System.getenv("CENTRAL_TOKEN_PASSWORD") ?: findProperty("centralTokenPassword")
+                if (!snapshotUsername || !snapshotPassword) {
+                    throw new GradleException("Snapshot publishing requires CENTRAL_TOKEN_USERNAME/CENTRAL_TOKEN_PASSWORD or centralTokenUsername/centralTokenPassword.")
+                }
+                repository.credentials.username = snapshotUsername
+                repository.credentials.password = snapshotPassword
+                repository.url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            } else {
+                repository.url = "$project.buildDir/release/${publication.version}"
+            }
         }
-    }
-}
-
-def artifactList = []
-
-task zipArtifacts {
-    onlyIf {
-        isPublishModule()
-    }
-    doLast {
-        def artifactPath = "${project.buildDir}/release"
-        def version = getReleaseVersion()
-        def zipPath = file("${project.buildDir}/${project.ARTIFACT_NAME}-${version}.zip")
-        if (!file(artifactPath).exists()) {
-            throw new GradleException("No Maven release directory found at ${artifactPath}")
-        }
-        ant.zip(destfile: zipPath, basedir: artifactPath)
-        artifactList.add(zipPath.absolutePath)
-    }
-}
-
-task getArtifactList {
-    onlyIf {
-        isPublishModule()
-    }
-    dependsOn(zipArtifacts)
-    doLast {
-        println "artifactInfo: ${artifactList}"
-        File file = new File("${project.buildDir}/artifact-list")
-        file.text = JsonOutput.toJson(artifactList)
     }
 }
