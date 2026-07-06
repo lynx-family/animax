@@ -142,6 +142,10 @@ public class DeviceUtil {
     return sIsMiui;
   }
 
+  public static boolean isHuaWei() {
+    return "HUAWEI".equals(Build.MANUFACTURER);
+  }
+
   /**
    * Device with android 9 and below need this workaround
    * @return boolean indicating whether the device requires an alpha workaround.

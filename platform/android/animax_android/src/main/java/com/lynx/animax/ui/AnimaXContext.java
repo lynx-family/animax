@@ -83,7 +83,8 @@ public class AnimaXContext {
     }
 
     public Builder multiThreadAccelerate(boolean enable) {
-      mMultiThreadAccelerate = enable;
+      // Shader cache with multithread acceleration can crash on Huawei Android devices.
+      mMultiThreadAccelerate = enable && !DeviceUtil.isHuaWei();
       return this;
     }
 
