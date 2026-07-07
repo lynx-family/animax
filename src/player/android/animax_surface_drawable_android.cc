@@ -4,6 +4,7 @@
 
 #include "src/player/android/animax_surface_drawable_android.h"
 
+#include "include/player/animax_surface.h"
 #include "platform/android/animax_android/src/main/jni/gen/AnimaXSurfaceDrawable_jni.h"
 #include "platform/android/animax_android/src/main/jni/gen/AnimaXSurfaceDrawable_register_jni.h"
 
@@ -76,10 +77,9 @@ bool AnimaXSurfaceDrawableAndroid::IsAntiAliasingEnabled() const {
   return Java_AnimaXSurfaceDrawable_isAntiAliasingEnabled(env,
                                                           java_surface_.Get());
 }
-bool AnimaXSurfaceDrawableAndroid::IsSoftwareRenderEnabled() const {
+int AnimaXSurfaceDrawableAndroid::GetRenderIntent() const {
   JNIEnv* env = base::android::AttachCurrentThread();
-  return Java_AnimaXSurfaceDrawable_isSoftwareRenderEnabled(
-      env, java_surface_.Get());
+  return Java_AnimaXSurfaceDrawable_getRenderIntent(env, java_surface_.Get());
 }
 bool AnimaXSurfaceDrawableAndroid::IsPlatformSurfaceInitiallyInvalid() const {
   JNIEnv* env = base::android::AttachCurrentThread();
@@ -90,6 +90,12 @@ bool AnimaXSurfaceDrawableAndroid::IsAutoDestroyEGLContextEnabled() const {
   JNIEnv* env = base::android::AttachCurrentThread();
   return Java_AnimaXSurfaceDrawable_isAutoDestroyEGLContextEnabled(
       env, java_surface_.Get());
+}
+void AnimaXSurfaceDrawableAndroid::SetActualBackend(
+    AnimaXBackend backend) const {
+  JNIEnv* env = base::android::AttachCurrentThread();
+  Java_AnimaXSurfaceDrawable_setActualBackend(env, java_surface_.Get(),
+                                              static_cast<jint>(backend));
 }
 
 }  // namespace animax

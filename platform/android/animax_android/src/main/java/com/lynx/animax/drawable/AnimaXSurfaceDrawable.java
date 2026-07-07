@@ -30,9 +30,16 @@ public class AnimaXSurfaceDrawable {
   private int mHeight;
 
   private boolean mEnableAntiAliasing = false;
-  private boolean mEnableSoftwareRender = false;
+  // Rendering intent decided on the Java side: GL (default), Software, or Vulkan. A single
+  // value replaces the old software/Vulkan booleans so the mutually-exclusive intent can no
+  // longer end up in an illegal "both" state. Native reads it via getRenderIntent.
+  private volatile Backend mRenderIntent = Backend.GL;
   private boolean mIsPlatformSurfaceInitiallyInvalid = false;
   private boolean mEnableAutoDestroyEGLContext = false;
+
+  // Backend actually engaged by native. Volatile: written on the GPU thread (during surface
+  // creation) and read on the UI thread. UNKNOWN until native reports back.
+  private volatile Backend mActualBackend = Backend.UNKNOWN;
 
   private AnimaXSurfaceDrawable(@Nullable Surface surface, @Nullable SurfaceTexture texture,
       @Nullable BitmapBufferGroup buffer, int width, int height) {
@@ -175,12 +182,12 @@ public class AnimaXSurfaceDrawable {
   }
 
   @CalledByNative
-  public boolean isSoftwareRenderEnabled() {
-    return mEnableSoftwareRender;
+  public int getRenderIntent() {
+    return mRenderIntent.getNativeValue();
   }
 
-  public void setEnableSoftwareRender(boolean enable) {
-    this.mEnableSoftwareRender = enable;
+  public void setRenderIntent(Backend intent) {
+    mRenderIntent = intent;
   }
 
   @CalledByNative
@@ -199,6 +206,27 @@ public class AnimaXSurfaceDrawable {
 
   public void setEnableAutoDestroyEGLContext(boolean enable) {
     this.mEnableAutoDestroyEGLContext = enable;
+  }
+
+  /**
+   * Called from native to report the rendering backend actually selected. This may differ
+   * from the Vulkan intent: skity can reject Vulkan (unsupported version/capabilities) and
+   * fall back to GLES.
+   */
+  @CalledByNative
+  private void setActualBackend(int backend) {
+    mActualBackend = Backend.fromNative(backend);
+  }
+
+  public Backend getActualBackend() {
+    return mActualBackend;
+  }
+
+  /**
+   * Returns a human-readable name of the actual backend for monitoring/reporting.
+   */
+  public String getActualBackendName() {
+    return mActualBackend.toString();
   }
 
   @CalledByNative

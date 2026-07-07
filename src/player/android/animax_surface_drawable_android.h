@@ -14,6 +14,9 @@
 namespace lynx {
 namespace animax {
 
+// Forward declaration; defined in include/player/animax_surface.h
+enum class AnimaXBackend : int;
+
 class AnimaXSurfaceDrawableAndroid {
  public:
   enum class Type {
@@ -57,9 +60,14 @@ class AnimaXSurfaceDrawableAndroid {
 
   // Properties passed down from Android
   bool IsAntiAliasingEnabled() const;
-  bool IsSoftwareRenderEnabled() const;
+  // Rendering intent from Java as an AnimaXBackend native value
+  // (GL/Vulkan/Software).
+  int GetRenderIntent() const;
   bool IsPlatformSurfaceInitiallyInvalid() const;
   bool IsAutoDestroyEGLContextEnabled() const;
+
+  // Reports the backend actually selected by native back to the Java drawable.
+  void SetActualBackend(AnimaXBackend backend) const;
 
  private:
   // Strong reference to Java AnimaXSurfaceWrapper object

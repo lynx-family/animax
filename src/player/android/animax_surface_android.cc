@@ -309,9 +309,12 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceAndroid::Make(
 
   auto width = surface_drawable.GetWidth();
   auto height = surface_drawable.GetHeight();
-  auto backend = surface_drawable.IsSoftwareRenderEnabled()
-                     ? AnimaXBackend::kSoftware
-                     : AnimaXBackend::kGL;
+  // Rendering intent from Java (GL/Vulkan/Software), used directly as the
+  // initial backend. A kVulkan intent only means "attempt" -- the Vulkan probe
+  // below (ContextVk::GetGPUContext + AnimaXSurfaceAndroidVk::Valid) performs
+  // the real capability check and falls back to GL on any failure.
+  AnimaXBackend backend =
+      static_cast<AnimaXBackend>(surface_drawable.GetRenderIntent());
   JNIEnv* env = base::android::AttachCurrentThread();
   std::unique_ptr<AnimaXSurface> animax_surface{};
   auto desc = SurfaceDrawableDescription{
@@ -397,7 +400,7 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceAndroid::Make(
             ANIMAX_LOGE("native_window is null");
             return nullptr;
           }
-        } else {
+        } else if (backend == AnimaXBackend::kVulkan) {
           ANIMAX_LOGE(
               "Failed to create Vulkan context, falling back to GL backend");
         }
@@ -416,6 +419,12 @@ std::unique_ptr<AnimaXSurface> AnimaXSurfaceAndroid::Make(
       break;
   }
 
+  // Report the backend actually selected back to the Java drawable. This may
+  // differ from the Vulkan intent above when skity rejects Vulkan and falls
+  // back to GLES.
+  if (animax_surface) {
+    surface_drawable.SetActualBackend(animax_surface->Type());
+  }
   return animax_surface;
 }
 

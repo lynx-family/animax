@@ -31,6 +31,14 @@ public class DeviceUtil {
       "ANIMAX_DISABLE_PLAYBACK_ON_ASSET_LOAD_FAILURE";
   private static final String sSettingDisableByteVC1Decoder = "ANIMAX_DISABLE_BYTEVC1_DECODER";
 
+  // Vulkan opt-in switch (string "1"/"true" to enable globally). Per-device control is
+  // handled by the blocklist below.
+  private static final String sSettingTryVulkanRender = "ANIMAX_TRY_VULKAN_RENDER";
+
+  // Vulkan device blocklist (Collection of device models), used to urgently disable Vulkan
+  // on known-bad devices even when they are opted in above.
+  private static final String sSettingVulkanBlockListName = "ANIMAX_VULKAN_BLOCK_LIST_ANDROID";
+
   private static final String sSettingUseImageViewPrefix = "ANIMAX_USE_IMAGE_VIEW_";
 
   private static final String sDeviceType = Build.MODEL.toLowerCase();
@@ -67,6 +75,30 @@ public class DeviceUtil {
    */
   public static boolean useSoftwareRender(Context context, @NonNull BaseAbility ability) {
     return !supportHardwareRender(context) || isInSettingList(sSettingSoftwareListName, ability);
+  }
+
+  /**
+   * Decides whether to attempt Vulkan rendering. Called by AnimaXPlayer on the hardware
+   * rendering path. Opt-in is a remote on/off switch (string "1"/"true"), then gated by the
+   * AHardwareBuffer API level and the remote blocklist. A true return only means "try": the
+   * real capability check is performed by skity in the native layer with automatic fallback
+   * to OpenGL.
+   * Note: the result is only meaningful when software rendering is not engaged
+   * (useSoftwareRender == false).
+   */
+  public static boolean useVulkanRender(@NonNull BaseAbility ability) {
+    // Opt-in via remote on/off switch.
+    if (!isPositiveConfigValue(getStringFromExternalEnv(sSettingTryVulkanRender, ability))) {
+      return false;
+    }
+    // The Vulkan path relies on AHardwareBuffer for GPU buffer sharing (notably the
+    // GL<->Vulkan video frame bridge), which is only available since API 26 (O). Below
+    // that there is nothing to try, so fall through to OpenGL.
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+      return false;
+    }
+    // Urgently disable Vulkan on devices known to render incorrectly via the remote list.
+    return !isInSettingList(sSettingVulkanBlockListName, ability);
   }
 
   /**

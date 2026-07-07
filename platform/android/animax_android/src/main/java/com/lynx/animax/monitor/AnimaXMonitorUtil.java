@@ -32,6 +32,7 @@ public final class AnimaXMonitorUtil {
   public static final String PLATFORM_KEY_STAY_DURATION = "stay_duration";
   public static final String PLATFORM_KEY_DISPLAY_MODE = "display_mode";
   public static final String PLATFORM_KEY_TAG = "tag";
+  public static final String PLATFORM_KEY_RENDER_BACKEND = "render_backend";
 
   public static final long MINIMUM_INTERVAL_TIME = 5 * 60 * 1000;
   public static final long MAXIMUM_PLAY_COUNT = 5;

@@ -16,6 +16,7 @@ import com.lynx.animax.base.bridge.JavaOnlyMap;
 import com.lynx.animax.base.bridge.ReadableMap;
 import com.lynx.animax.composition.AnimaXComposition;
 import com.lynx.animax.drawable.AnimaXSurfaceDrawable;
+import com.lynx.animax.drawable.Backend;
 import com.lynx.animax.listener.IAnimationListener;
 import com.lynx.animax.loader.AnimaXResourceLoaderHolder;
 import com.lynx.animax.property.AnimaXKeyPath;
@@ -48,7 +49,10 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   private boolean mAutoPlay = false;
   private boolean mHasDestroyed = false;
   private boolean mEnableAntiAliasing = false;
-  private boolean mEnableSoftwareRender = false;
+  // Rendering intent decided during cold-start init: GL (default), Software, or Vulkan.
+  // Software takes priority over Vulkan (see setUpInitialProperties). Mirrors
+  // AnimaXSurfaceDrawable.mRenderIntent.
+  private Backend mRenderIntent = Backend.GL;
 
   private boolean mIsPlatformSurfaceInitiallyInvalid = false;
 
@@ -169,22 +173,24 @@ public class AnimaXPlayer implements IAnimaXPlayer {
 
     if (DeviceUtil.useSoftwareRender(context, mAbility)) {
       AnimaXLog.i(TAG, "useSoftwareRender");
-      this.enableSoftwareRender(true);
+      this.setRenderIntent(Backend.SOFTWARE);
+    } else if (DeviceUtil.useVulkanRender(mAbility)) {
+      AnimaXLog.i(TAG, "try using Vulkan render");
+      this.setRenderIntent(Backend.VULKAN);
     }
   }
 
   private void updateSurfaceProperties(AnimaXSurfaceDrawable surfaceDrawable) {
     if (surfaceDrawable != null) {
       surfaceDrawable.setEnableAntiAliasing(mEnableAntiAliasing);
-      surfaceDrawable.setEnableSoftwareRender(mEnableSoftwareRender);
+      surfaceDrawable.setRenderIntent(mRenderIntent);
       surfaceDrawable.setEnableAutoDestroyEGLContext(DeviceUtil.needAutoDestroyEGLContext());
       surfaceDrawable.setPlatformSurfaceInitiallyInvalid(mIsPlatformSurfaceInitiallyInvalid);
     }
   }
 
-  @Override
-  public void enableSoftwareRender(boolean softwareRender) {
-    mEnableSoftwareRender = softwareRender;
+  public void setRenderIntent(Backend renderIntent) {
+    mRenderIntent = renderIntent;
   }
 
   private boolean hasInitialized() {
@@ -218,6 +224,7 @@ public class AnimaXPlayer implements IAnimaXPlayer {
       return;
     }
     updateSurfaceProperties(surfaceDrawable);
+    mAbility.getMonitorDelegate().setSurfaceDrawable(surfaceDrawable);
     nativeCreateAnimaXSurface(mPtr, surfaceDrawable);
   }
 
@@ -227,6 +234,7 @@ public class AnimaXPlayer implements IAnimaXPlayer {
       return;
     }
     updateSurfaceProperties(surfaceDrawable);
+    mAbility.getMonitorDelegate().setSurfaceDrawable(surfaceDrawable);
     nativeUpdateAnimaXSurface(mPtr, surfaceDrawable);
   }
 

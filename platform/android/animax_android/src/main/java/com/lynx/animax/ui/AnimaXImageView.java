@@ -21,6 +21,7 @@ import com.lynx.animax.R;
 import com.lynx.animax.ability.NativeAbility;
 import com.lynx.animax.base.VisibilityState;
 import com.lynx.animax.drawable.AnimaXSurfaceDrawable;
+import com.lynx.animax.drawable.Backend;
 import com.lynx.animax.drawable.BitmapBuffer;
 import com.lynx.animax.drawable.BitmapBufferGroup;
 import com.lynx.animax.util.AnimaXLog;
@@ -58,7 +59,7 @@ public class AnimaXImageView extends View implements IAnimaXView, IAnimaXPlayerD
   private final @NonNull Paint mPaint;
   private @Nullable AnimaXSurfaceDrawable mSurfaceDrawable;
 
-  private final @NonNull IAnimaXPlayer mPlayer;
+  private final @NonNull AnimaXPlayer mPlayer;
 
   private boolean mEnableNativeTapLayerEvent = false;
   private boolean mIgnoreAttachStatus = false;
@@ -71,7 +72,7 @@ public class AnimaXImageView extends View implements IAnimaXView, IAnimaXPlayerD
     mPlayer = new AnimaXPlayer(animaXContext);
     mPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
     boolean enableSoftRender = true;
-    mPlayer.enableSoftwareRender(enableSoftRender);
+    mPlayer.setRenderIntent(Backend.SOFTWARE);
     mBufferGroup = new BitmapBufferGroup(this, enableSoftRender);
     initView(null);
   }
@@ -82,7 +83,7 @@ public class AnimaXImageView extends View implements IAnimaXView, IAnimaXPlayerD
     mPlayer = new AnimaXPlayer(animaXContext);
     mPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
     boolean enableSoftRender = true;
-    mPlayer.enableSoftwareRender(enableSoftRender);
+    mPlayer.setRenderIntent(Backend.SOFTWARE);
     mBufferGroup = new BitmapBufferGroup(this, enableSoftRender);
     initView(attrs);
   }
@@ -93,7 +94,7 @@ public class AnimaXImageView extends View implements IAnimaXView, IAnimaXPlayerD
     mPlayer = new AnimaXPlayer(animaXContext);
     mPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
     boolean enable = true;
-    mPlayer.enableSoftwareRender(enable);
+    mPlayer.setRenderIntent(Backend.SOFTWARE);
     mBufferGroup = new BitmapBufferGroup(this, enable);
     initView(null);
   }
@@ -104,7 +105,7 @@ public class AnimaXImageView extends View implements IAnimaXView, IAnimaXPlayerD
     mPlayer = animaXPlayer;
     mPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
     boolean enable = true;
-    mPlayer.enableSoftwareRender(enable);
+    mPlayer.setRenderIntent(Backend.SOFTWARE);
     mBufferGroup = new BitmapBufferGroup(this, enable);
     initView(null);
   }

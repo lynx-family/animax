@@ -5,6 +5,7 @@ package com.lynx.animax.monitor;
 
 import androidx.annotation.NonNull;
 import com.lynx.animax.AnimaXPlayer;
+import com.lynx.animax.drawable.AnimaXSurfaceDrawable;
 import com.lynx.animax.listener.AnimaXErrorParam;
 import com.lynx.animax.listener.AnimaXParam;
 import com.lynx.animax.listener.AnimationListenerAdapter;
@@ -31,6 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MonitorAbilityDelegate extends AnimationListenerAdapter {
   private final ServiceRegistry mServiceRegistry;
   private WeakReference<IAnimaXPlayer> mAnimaXPlayer;
+  // Current surface drawable; held weakly so the actual backend (set asynchronously by
+  // native during surface creation) can be read at report time.
+  private WeakReference<AnimaXSurfaceDrawable> mSurfaceDrawable;
   private boolean mHasReportedFirstPlay = false;
 
   private final Map<String, Object> mPlatformReportItems = new ConcurrentHashMap<>();
@@ -70,6 +74,15 @@ public class MonitorAbilityDelegate extends AnimationListenerAdapter {
    */
   public void setTag(@NonNull String tag) {
     mPlatformReportItems.put(AnimaXMonitorUtil.PLATFORM_KEY_TAG, tag);
+  }
+
+  /**
+   * Binds the current surface drawable so its actual rendering backend can be reported.
+   * The backend is decided asynchronously in native during surface creation and may differ
+   * from the Vulkan intent (e.g. skity rejects Vulkan and falls back to GLES).
+   */
+  public void setSurfaceDrawable(@NonNull AnimaXSurfaceDrawable surfaceDrawable) {
+    mSurfaceDrawable = new WeakReference<>(surfaceDrawable);
   }
 
   /**
@@ -168,6 +181,11 @@ public class MonitorAbilityDelegate extends AnimationListenerAdapter {
       return;
     }
     HashMap<String, Object> map = new HashMap<>(mPlatformReportItems);
+    // Actual rendering backend selected by native (may differ from the Vulkan intent).
+    AnimaXSurfaceDrawable drawable = mSurfaceDrawable != null ? mSurfaceDrawable.get() : null;
+    if (drawable != null) {
+      map.put(AnimaXMonitorUtil.PLATFORM_KEY_RENDER_BACKEND, drawable.getActualBackendName());
+    }
     if (mPlayCount > 0) {
       map.put(AnimaXMonitorUtil.PLATFORM_KEY_PLAY_COUNT, mPlayCount);
       mPlayCount = 0;
