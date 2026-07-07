@@ -92,35 +92,35 @@ public class CodecManager {
       return;
     }
 
-    boolean success = false;
-    try {
-      int codecCount = MediaCodecList.getCodecCount();
-      while (mMediaCodecListNextTryIndex < codecCount) {
-        MediaCodecInfo info = MediaCodecList.getCodecInfoAt(mMediaCodecListNextTryIndex++);
-        if (info.isEncoder() || !supportMimeType(info, mimeType)) {
-          continue;
+    Status status = tryInitDecoderByType(mimeType);
+    boolean success = status.mSuccess;
+    if (!success) {
+      try {
+        int codecCount = MediaCodecList.getCodecCount();
+        while (mMediaCodecListNextTryIndex < codecCount) {
+          MediaCodecInfo info = MediaCodecList.getCodecInfoAt(mMediaCodecListNextTryIndex++);
+          if (info.isEncoder() || !supportMimeType(info, mimeType)) {
+            continue;
+          }
+          String decoderName = info.getName();
+          if (null == decoderName) {
+            continue;
+          }
+          status = tryInitDecoder(decoderName);
+          if (status.mSuccess) {
+            success = true;
+            break;
+          }
         }
-        String decoderName = info.getName();
-        if (null == decoderName) {
-          continue;
-        }
-        Status status = tryInitDecoder(decoderName);
-        if (status.mSuccess) {
-          success = true;
-          break;
-        }
+      } catch (Exception e) {
+        AnimaXLog.e(TAG, "enumerate codec list failed: " + e.getMessage());
       }
-    } catch (Exception e) {
-      AnimaXLog.e(
-          TAG, "enumerate codec list failed, fallback to decoder by type: " + e.getMessage());
-      Status status = tryInitDecoderByType(mimeType);
-      success = status.mSuccess;
     }
     if (!success) {
       reportError("initDecoder error");
       return;
     }
-    prepareFrameToMaxCacheCapacity();
+    prepareNextFrame();
   }
 
   public void decodeAndUploadFrame(int toFrame) {
@@ -319,7 +319,7 @@ public class CodecManager {
     String errMsg = null;
     try {
       mDecoder.stop();
-    } catch (IllegalArgumentException | IllegalStateException e) {
+    } catch (OutOfMemoryError | IllegalArgumentException | IllegalStateException e) {
       errMsg = "stopDecoder Exception: " + e.getMessage();
     }
     return new Status(errMsg);
@@ -512,8 +512,12 @@ public class CodecManager {
     if (null == inputBuffer) {
       return -1;
     }
-    if (null != buffer) {
-      inputBuffer.put(buffer);
+    if (null != buffer && inputBuffer.remaining() >= buffer.remaining()) {
+      try {
+        inputBuffer.put(buffer);
+      } catch (RuntimeException e) {
+        return -1;
+      }
     }
     return inputBufferIndex;
   }
