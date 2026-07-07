@@ -25,13 +25,6 @@ public interface IAnimaXPlayerDelegate {
   @NonNull IAnimaXPlayer getPlayer();
 
   /**
-   * @see IAnimaXPlayer#enableSoftwareRender(boolean)
-   */
-  default void enableSoftwareRender(boolean softwareRender) {
-    getPlayer().enableSoftwareRender(softwareRender);
-  }
-
-  /**
    * @see IAnimaXPlayer#createAnimaXSurface(AnimaXSurfaceDrawable)
    */
   default void createAnimaXSurface(AnimaXSurfaceDrawable surfaceDrawable) {

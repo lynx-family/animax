@@ -35,13 +35,6 @@ public interface IAnimaXPlayer {
   @RestrictTo(RestrictTo.Scope.LIBRARY) AnimaXContext getAnimaXContext();
 
   /**
-   * Enables software rasterization path instead of hardware when true.
-   * This is useful on devices/contexts where GPU rendering is unavailable or undesirable.
-   * @param softwareRender true to enable software rendering; false for hardware.
-   */
-  void enableSoftwareRender(boolean softwareRender);
-
-  /**
    * Releases all resources associated with this player.
    * After calling this, the instance should not be used again.
    */
