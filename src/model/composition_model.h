@@ -50,14 +50,30 @@ class CompositionModel {
   CompositionModel(float scale);
   ~CompositionModel();
 
+  // end_frame is the inclusive playback boundary. Source parsers must convert
+  // the raw half-open timeline out point before initialization.
   void Init(std::unique_ptr<RectF> bounds, float start_frame, float end_frame,
             float frame_rate, bool enable_3d);
 
+  // Returns the playback duration in milliseconds used by animation internals.
   long GetDuration();
+  // Returns the raw half-open timeline duration in milliseconds exposed by
+  // public APIs and callbacks. Do not use it for rendering or animator
+  // progress.
+  long GetTimelineDurationMs() const;
   float GetStartFrame() { return start_frame_; }
+  // Returns the inclusive playback boundary used internally by rendering and
+  // animation. The raw timeline out point is converted during parsing.
   float GetEndFrame() { return end_frame_; }
+  // Returns the raw half-open timeline out point exposed by public APIs.
+  // Do not use it for rendering or animator progress.
+  float GetTimelineEndFrame() const;
   float GetScale() { return scale_; }
+  // Returns the playback duration in frames used by animation internals.
   float GetDurationFrames() { return end_frame_ - start_frame_; }
+  // Returns the raw half-open timeline duration in frames used for reporting
+  // and time-remapping calculations that originate from timeline values.
+  double GetTimelineDurationFrames() const;
   float GetFrameRate() { return frame_rate_; }
 
   RectF& GetBounds() { return *bounds_; }

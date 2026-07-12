@@ -217,6 +217,29 @@ TEST_F(AnimaXEventDispatcherTest, NotifyFrameEvent_NotifiesFrameEvent) {
   dispatcher_->NotifyFrameEvent(Event::kReady, 10.0);
 }
 
+TEST_F(AnimaXEventDispatcherTest,
+       NotifyFrameEvent_ReportsTimelineTotalWithoutChangingCurrent) {
+  test_controller_->SetAutoplay(false);
+  test_controller_->UpdateProperties(CompositionModelMeta{
+      .start_frame = 10.0f,
+      .end_frame = 69.99f,
+      .duration = 2000,
+      .frame_rate = 30.0f,
+  });
+
+  EventListener listener = [](std::weak_ptr<AnimaXPlayer>, Event event,
+                              const EventParamMap& params) {
+    EXPECT_EQ(Event::kReady, event);
+    ASSERT_TRUE(params.at(EventKeys::kCurrent).double_val.has_value());
+    ASSERT_TRUE(params.at(EventKeys::kTotal).double_val.has_value());
+    EXPECT_DOUBLE_EQ(10.25, params.at(EventKeys::kCurrent).double_val.value());
+    EXPECT_DOUBLE_EQ(60.0, params.at(EventKeys::kTotal).double_val.value());
+  };
+
+  dispatcher_->AddEventListener(std::move(listener));
+  dispatcher_->NotifyFrameEvent(Event::kReady, 10.25);
+}
+
 TEST_F(AnimaXEventDispatcherTest, NotifyFps_NotifiesFpsEvent) {
   EventListener mock_listener = [](std::weak_ptr<AnimaXPlayer> player,
                                    Event event, const EventParamMap& params) {

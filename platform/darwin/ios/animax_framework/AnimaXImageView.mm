@@ -321,6 +321,10 @@
   return [_player isAnimating];
 }
 
+- (double)progress {
+  return [_player progress];
+}
+
 - (double)currentFrame {
   return [_player currentFrame];
 }

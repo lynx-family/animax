@@ -461,6 +461,14 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   }
 
   @Override
+  public double getProgress() {
+    if (!checkNativeReady()) {
+      return 0.f;
+    }
+    return nativeGetProgress(mPtr);
+  }
+
+  @Override
   public void seek(int frame) {
     if (!checkNativeReady()) {
       return;
@@ -755,6 +763,8 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   private native double nativeGetDurationMs(long player);
 
   private native boolean nativeIsAnimating(long player);
+
+  private native double nativeGetProgress(long player);
 
   private native void nativeSeek(long player, int frame);
 

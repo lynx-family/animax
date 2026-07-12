@@ -7,6 +7,7 @@
 #include <array>
 
 #include "src/base/log/log.h"
+#include "src/base/util/composition_frame_util.h"
 #include "src/model/animatable/animatable_transform_model.h"
 #include "src/model/composition_model.h"
 #include "src/model/layer_model.h"
@@ -227,7 +228,10 @@ std::shared_ptr<lynx::animax::CompositionModel> ParseAsset(
   model->Init(
       std::unique_ptr<lynx::animax::RectF>(new lynx::animax::RectF(
           0, 0, scale * video->GetRgbWidth(), scale * video->GetRgbHeight())),
-      0.f, video->GetFrameCount() - 0.01f, video->GetFrameRate(), false);
+      0.f,
+      lynx::animax::CompositionFrameUtil::ToPlaybackEndFrame(
+          video->GetFrameCount()),
+      video->GetFrameRate(), false);
   return model;
 }
 

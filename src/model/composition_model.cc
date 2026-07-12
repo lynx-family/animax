@@ -18,6 +18,7 @@
 
 #include "src/model/composition_model.h"
 
+#include "src/base/util/composition_frame_util.h"
 #include "src/layer/text_helper.h"
 #include "src/model/layer_model.h"
 #include "src/model/text/font_character_model.h"
@@ -47,6 +48,20 @@ void CompositionModel::Init(std::unique_ptr<RectF> bounds, float start_frame,
 long CompositionModel::GetDuration() {
   auto duration = (end_frame_ - start_frame_) / frame_rate_ * 1000;
   return duration < 0 ? 0 : duration;
+}
+
+long CompositionModel::GetTimelineDurationMs() const {
+  return CompositionFrameUtil::ToTimelineDurationMs(start_frame_, end_frame_,
+                                                    frame_rate_);
+}
+
+float CompositionModel::GetTimelineEndFrame() const {
+  return CompositionFrameUtil::ToTimelineEndFrame(end_frame_);
+}
+
+double CompositionModel::GetTimelineDurationFrames() const {
+  return CompositionFrameUtil::ToTimelineDurationFrames(start_frame_,
+                                                        end_frame_);
 }
 
 void CompositionModel::SetHashDashPattern(bool has_dash_patern) {

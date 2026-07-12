@@ -531,6 +531,14 @@ static jdouble GetCurrentFrame(JNIEnv* env, jobject jcaller, jlong player) {
   return player_ptr->GetCurrentFrame();
 }
 
+static jdouble GetProgress(JNIEnv* env, jobject jcaller, jlong player) {
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return 0;
+  }
+  return player_ptr->GetProgress();
+}
+
 static void PlaySegment(JNIEnv* env, jobject jcaller, jlong player,
                         jint start_frame, jint end_frame) {
   auto player_ptr = GetAnimaXPlayerSharedPtr(player);

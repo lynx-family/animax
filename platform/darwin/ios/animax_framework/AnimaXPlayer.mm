@@ -318,6 +318,10 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   return _player->IsAnimating();
 }
 
+- (double)progress {
+  return _player->GetProgress();
+}
+
 - (double)currentFrame {
   return _player->GetCurrentFrame();
 }

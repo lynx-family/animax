@@ -546,6 +546,11 @@ double AnimaXPlayer::GetCurrentFrame() {
       [](auto& controller) { return controller->GetCurrentFrame(); });
 }
 
+double AnimaXPlayer::GetProgress() {
+  return controller_actor_->ActSync(
+      [](auto& controller) { return controller->GetProgress(); });
+}
+
 void AnimaXPlayer::OnShow(VisibilityState state) {
   ANIMAX_LOGI("OnShow with state: " << StringifyVisibilityState(state)
                                     << ", this: " << this);

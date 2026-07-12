@@ -39,6 +39,9 @@
 - (int64_t)memoryUsageBytes {
   return 0;
 }
+- (double)progress {
+  return 0;
+}
 @end
 
 @interface TestReleaseMonitorService : NSObject <AnimaXMonitorService>
