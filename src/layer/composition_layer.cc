@@ -164,7 +164,7 @@ void CompositionLayer::SetProgress(float progress) {
   BaseLayer::SetProgress(progress);
 
   if (time_remapping_animation_) {
-    auto duration_frames = composition_.GetDurationFrames() + 0.01;
+    auto duration_frames = composition_.GetTimelineDurationFrames();
     auto delay_frames = composition_.GetStartFrame();
     auto remapped_frames = time_remapping_animation_->GetValue().Get() *
                                composition_.GetFrameRate() -

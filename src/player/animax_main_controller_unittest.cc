@@ -73,6 +73,9 @@ TEST_F(AnimaXMainControllerTest, Constructor_CreatesValidController) {
   EXPECT_NE(controller_actor_->Impl(), nullptr);
   EXPECT_FALSE(controller_actor_->Impl()->GetPlayerID().empty());
   EXPECT_FALSE(controller_actor_->Impl()->GetAnimationID().empty());
+  EXPECT_FLOAT_EQ(0.0f, controller_actor_->Impl()->GetTotalFrame());
+  EXPECT_DOUBLE_EQ(0.0, controller_actor_->Impl()->GetCurrentFrame());
+  EXPECT_DOUBLE_EQ(0.0, controller_actor_->Impl()->GetProgress());
 }
 
 TEST_F(AnimaXMainControllerTest, EnableDynamicResourceFeature_InitiallyFalse) {
@@ -110,6 +113,68 @@ TEST_F(AnimaXMainControllerTest, OnNewLoop_UpdatesLoopIndex) {
 TEST_F(AnimaXMainControllerTest, OnProgress_UpdatesCurrentFrame) {
   controller_actor_->Impl()->OnProgress(0.5, 50.0);
   EXPECT_EQ(controller_actor_->Impl()->GetCurrentFrame(), 50.0);
+  EXPECT_DOUBLE_EQ(0.5, controller_actor_->Impl()->GetProgress());
+}
+
+TEST_F(AnimaXMainControllerTest,
+       UpdateProperties_ReportsTimelineTotalAndDuration) {
+  controller_actor_->Impl()->SetAutoplay(false);
+  mock_playback_handler_.reset();
+
+  auto meta = CompositionModelMeta{
+      .start_frame = 10.0f,
+      .end_frame = 69.99f,
+      .duration = 2000,
+      .frame_rate = 30.0f,
+  };
+
+  controller_actor_->Impl()->UpdateProperties(meta);
+
+  EXPECT_FLOAT_EQ(60.0f, controller_actor_->Impl()->GetTotalFrame());
+  EXPECT_DOUBLE_EQ(2000.0, controller_actor_->Impl()->GetDurationMs());
+}
+
+TEST_F(AnimaXMainControllerTest, ReportsTotalIndependentOfFrameRate) {
+  controller_actor_->Impl()->SetAutoplay(false);
+  mock_playback_handler_.reset();
+  controller_actor_->Impl()->UpdateProperties(CompositionModelMeta{
+      .start_frame = 10.0f,
+      .end_frame = 69.99f,
+      .duration = 0,
+      .frame_rate = 0.0f,
+  });
+
+  EXPECT_FLOAT_EQ(60.0f, controller_actor_->Impl()->GetTotalFrame());
+  EXPECT_DOUBLE_EQ(0.0, controller_actor_->Impl()->GetDurationMs());
+}
+
+TEST_F(AnimaXMainControllerTest, KeepsPlaybackFrameAtCompletion) {
+  controller_actor_->Impl()->SetAutoplay(false);
+  mock_playback_handler_.reset();
+  controller_actor_->Impl()->UpdateProperties(CompositionModelMeta{
+      .start_frame = 10.0f,
+      .end_frame = 69.99f,
+      .duration = 2000,
+      .frame_rate = 30.0f,
+  });
+
+  controller_actor_->Impl()->OnProgress(1.0, 69.99f);
+
+  EXPECT_DOUBLE_EQ(69.99f, controller_actor_->Impl()->GetCurrentFrame());
+  EXPECT_DOUBLE_EQ(1.0, controller_actor_->Impl()->GetProgress());
+
+  double completion_frame = 0.0;
+  controller_actor_->Impl()->AddEventListener(
+      [&completion_frame](std::weak_ptr<AnimaXPlayer>, Event event,
+                          const EventParamMap& params) {
+        if (event == Event::kCompletion) {
+          completion_frame =
+              params.at(EventKeys::kCurrent).double_val.value_or(0.0);
+        }
+      });
+  controller_actor_->Impl()->NotifyCurrentFrameEvent(Event::kCompletion);
+
+  EXPECT_DOUBLE_EQ(69.99f, completion_frame);
 }
 
 TEST_F(AnimaXMainControllerTest, IsAnimating_InitiallyFalse) {

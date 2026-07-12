@@ -75,6 +75,7 @@ typedef NS_ENUM(NSUInteger, VisibilityState) {
 // Animation-playing(getInfo)
 - (double)durationInMS;
 - (BOOL)isAnimating;
+- (double)progress;
 - (double)currentFrame;
 - (int64_t)memoryUsageBytes;
 

@@ -233,11 +233,17 @@ class ANIMAX_EXPORT AnimaXPlayer
   void SubscribeUpdateEvents(std::unordered_set<int32_t> frames,
                              bool subscribe);
   /**
-   * Get the current frame of the animation within the start and end frame
-   * range. Note: Only valid on the JS thread.
-   * @return Current frame index.
+   * Get the current playback frame of the animation within the start and end
+   * frame range. Note: Only valid on the JS thread.
+   * @return Current playback frame.
    */
   double GetCurrentFrame();
+  /**
+   * Get the current animation progress processed by the player.
+   * Note: Only valid on the JS thread.
+   * @return Current progress in the range [0, 1].
+   */
+  double GetProgress();
   /**
    * Play a segment of the animation from start_frame to end_frame.
    * @param start_frame Frame index to start playback.

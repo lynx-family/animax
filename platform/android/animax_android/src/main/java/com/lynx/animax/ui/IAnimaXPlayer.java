@@ -262,6 +262,12 @@ public interface IAnimaXPlayer {
   boolean isAnimating();
 
   /**
+   * Gets the current animation progress processed by the player.
+   * @return The current progress in the range [0, 1].
+   */
+  double getProgress();
+
+  /**
    * Gets the current frame number of the animation.
    * @return The current frame number, which can be a fractional value.
    */

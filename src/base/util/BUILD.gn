@@ -9,6 +9,7 @@ base_util_shared_sources = [
   "buffer_copy_helper.cc",
   "buffer_copy_helper.h",
   "color_util.cc",
+  "composition_frame_util.h",
   "event_warning_checker.cc",
   "event_warning_checker.h",
   "memory_calculator.cc",

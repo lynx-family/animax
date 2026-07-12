@@ -219,7 +219,7 @@ void AnimaXRenderer::StartAnimation() {
   auto meta = CompositionModelMeta{
       .start_frame = model_->GetStartFrame(),
       .end_frame = model_->GetEndFrame(),
-      .duration = model_->GetDuration(),
+      .duration = model_->GetTimelineDurationMs(),
       .frame_rate = model_->GetFrameRate(),
       .has_video_layer = !model_->GetVideos().empty(),
       .image_count = model_->GetImages().size(),

@@ -255,6 +255,13 @@ public interface IAnimaXPlayerDelegate {
   }
 
   /**
+   * @see IAnimaXPlayer#getProgress()
+   */
+  default double getProgress() {
+    return getPlayer().getProgress();
+  }
+
+  /**
    * @see IAnimaXPlayer#getCurrentFrame()
    */
   default double getCurrentFrame() {

@@ -23,6 +23,7 @@
 #include <algorithm>
 
 #include "src/base/log/log.h"
+#include "src/base/util/composition_frame_util.h"
 #include "src/model/composition_model.h"
 #include "src/parser/layer_parser.h"
 #include "src/parser/text/font_character_parser.h"
@@ -83,7 +84,8 @@ std::shared_ptr<CompositionModel> CompositionParser::Parse(const char* str_data,
     } else if (strcmp(key, "ip") == 0) {
       start_frame = it->value.GetFloat();
     } else if (strcmp(key, "op") == 0) {
-      end_frame = it->value.GetFloat() - 0.01f;
+      end_frame =
+          CompositionFrameUtil::ToPlaybackEndFrame(it->value.GetFloat());
     } else if (strcmp(key, "fr") == 0) {
       frame_rate = it->value.GetFloat();
     } else if (strcmp(key, "v") == 0) {

@@ -33,7 +33,7 @@
   if (!_model) {
     return 0;
   }
-  return _model->GetEndFrame();
+  return _model->GetTimelineEndFrame();
 }
 
 - (void *)internalModel {

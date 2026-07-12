@@ -23,7 +23,8 @@ static jlong GetEndFrame(JNIEnv* env, jobject jcaller, jlong native_ptr) {
   auto* ptr_holder =
       reinterpret_cast<std::shared_ptr<lynx::animax::CompositionModel>*>(
           native_ptr);
-  return ptr_holder->get()->GetEndFrame();
+  const auto& model = *ptr_holder->get();
+  return model.GetTimelineEndFrame();
 }
 
 static void Destroy(JNIEnv* env, jclass jcaller, jlong native_ptr) {

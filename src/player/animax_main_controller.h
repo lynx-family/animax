@@ -27,7 +27,9 @@ class AnimaXPlaybackEventHandler;
 
 struct CompositionModelMeta {
   float start_frame = 0.f;
+  // Inclusive playback boundary used by the animator and rendering progress.
   float end_frame = 0.f;
+  // Raw half-open timeline duration in milliseconds exposed by public APIs.
   long duration = 0;
   float frame_rate = 0.f;
   bool has_video_layer = false;
@@ -82,6 +84,7 @@ class AnimaXMainController {
   double GetDurationMs();
   bool IsAnimating();
   double GetCurrentFrame();
+  double GetProgress();
   std::string GetPlayerID();
   std::string GetAnimationID();
   float GetTotalFrame();
@@ -134,6 +137,7 @@ class AnimaXMainController {
 
   CompositionModelMeta model_meta_;
   double current_frame_ = 0.0;
+  double current_progress_ = 0.0;
   int32_t current_loop_ = 0;
 
   std::string current_src_;

@@ -10,6 +10,7 @@
 #include "include/property/animax_player_global.h"
 #include "src/animator/animax_value_animator.h"
 #include "src/base/log/log.h"
+#include "src/base/util/composition_frame_util.h"
 #include "src/base/util/event_warning_checker.h"
 #include "src/player/animax_playback_event_handler.h"
 
@@ -60,11 +61,11 @@ void AnimaXMainController::NotifyWarning(const EventWarning warning,
 }
 
 void AnimaXMainController::NotifyCurrentFrameEvent(const Event event) {
-  event_dispatcher_->NotifyFrameEvent(event, current_frame_);
+  event_dispatcher_->NotifyFrameEvent(event, GetCurrentFrame());
 }
 
 void AnimaXMainController::NotifyFpsEvent(double fps, int32_t max_drop) {
-  event_dispatcher_->NotifyFps(current_frame_, max_drop, fps);
+  event_dispatcher_->NotifyFps(GetCurrentFrame(), max_drop, fps);
 }
 
 void AnimaXMainController::NotifyTapEvent(
@@ -133,6 +134,7 @@ void AnimaXMainController::UpdateProperties(const CompositionModelMeta& meta) {
   // stop last animation
   value_animator_->Stop();
   current_frame_ = meta.start_frame;
+  current_progress_ = 0.0;
   current_loop_ = 0;
   value_animator_->SetOriginFrameProperty(meta.start_frame, meta.end_frame,
                                           meta.frame_rate);
@@ -168,7 +170,11 @@ std::string AnimaXMainController::GetPlayerID() { return player_id_; }
 std::string AnimaXMainController::GetAnimationID() { return animation_id_; }
 
 float AnimaXMainController::GetTotalFrame() {
-  return model_meta_.end_frame - model_meta_.start_frame;
+  if (!IsAnimationReady()) {
+    return 0.0f;
+  }
+  return CompositionFrameUtil::ToTimelineDurationFrames(model_meta_.start_frame,
+                                                        model_meta_.end_frame);
 }
 
 int32_t AnimaXMainController::GetLoopIndex() { return current_loop_; }
@@ -360,6 +366,7 @@ void AnimaXMainController::OnProgress(double progress, double current_frame) {
   }
 
   current_frame_ = current_frame;
+  current_progress_ = progress;
   event_dispatcher_->NotifyUpdateEvent(current_frame_);
 
   auto player = weak_player_.lock();
@@ -421,6 +428,8 @@ void AnimaXMainController::MarkEvent(Event event) {
 }
 
 double AnimaXMainController::GetCurrentFrame() { return current_frame_; }
+
+double AnimaXMainController::GetProgress() { return current_progress_; }
 
 bool AnimaXMainController::IsAnimationReady() {
   return event_tracker_->GetEventValue(
