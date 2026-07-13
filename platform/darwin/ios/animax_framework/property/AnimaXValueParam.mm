@@ -16,6 +16,7 @@ struct AnimaXCoordinate {
 @interface AnimaXValueParam ()
 
 @property(nonatomic, assign) AnimaXValueParamType type;
+@property(nonatomic, assign) AnimaXValueApplyMode internalApplyMode;
 @property(nonatomic, strong, nullable) NSString *internalStringValue;
 @property(nonatomic, assign) double internalNumberValue;
 @property(nonatomic, assign) BOOL internalBooleanValue;
@@ -31,9 +32,16 @@ struct AnimaXCoordinate {
 #pragma mark - Initialization
 
 - (instancetype)initWithType:(AnimaXValueParamType)type targetFrame:(NSInteger)targetFrame {
+  return [self initWithType:type applyMode:AnimaXValueApplyModeSet targetFrame:targetFrame];
+}
+
+- (instancetype)initWithType:(AnimaXValueParamType)type
+                   applyMode:(AnimaXValueApplyMode)applyMode
+                 targetFrame:(NSInteger)targetFrame {
   self = [super init];
   if (self) {
     _type = type;
+    _internalApplyMode = applyMode;
     _internalTargetFrame = targetFrame;
     _internalNumberValue = 0.0;
     _internalBooleanValue = NO;
@@ -62,7 +70,14 @@ struct AnimaXCoordinate {
 }
 
 + (instancetype)paramWithNumber:(double)value targetFrame:(NSInteger)targetFrame {
+  return [self paramWithNumber:value applyMode:AnimaXValueApplyModeSet targetFrame:targetFrame];
+}
+
++ (instancetype)paramWithNumber:(double)value
+                      applyMode:(AnimaXValueApplyMode)applyMode
+                    targetFrame:(NSInteger)targetFrame {
   AnimaXValueParam *param = [[AnimaXValueParam alloc] initWithType:AnimaXValueParamTypeNumber
+                                                         applyMode:applyMode
                                                        targetFrame:targetFrame];
   param.internalNumberValue = value;
   return param;
@@ -89,6 +104,13 @@ struct AnimaXCoordinate {
   return [self paramWithCoordinateX:x y:y z:0 targetFrame:targetFrame];
 }
 
++ (instancetype)paramWithCoordinateX:(double)x
+                                   y:(double)y
+                           applyMode:(AnimaXValueApplyMode)applyMode
+                         targetFrame:(NSInteger)targetFrame {
+  return [self paramWithCoordinateX:x y:y z:0 applyMode:applyMode targetFrame:targetFrame];
+}
+
 + (instancetype)paramWithCoordinateX:(double)x y:(double)y z:(double)z {
   return [self paramWithCoordinateX:x
                                   y:y
@@ -100,7 +122,20 @@ struct AnimaXCoordinate {
                                    y:(double)y
                                    z:(double)z
                          targetFrame:(NSInteger)targetFrame {
+  return [self paramWithCoordinateX:x
+                                  y:y
+                                  z:z
+                          applyMode:AnimaXValueApplyModeSet
+                        targetFrame:targetFrame];
+}
+
++ (instancetype)paramWithCoordinateX:(double)x
+                                   y:(double)y
+                                   z:(double)z
+                           applyMode:(AnimaXValueApplyMode)applyMode
+                         targetFrame:(NSInteger)targetFrame {
   AnimaXValueParam *param = [[AnimaXValueParam alloc] initWithType:AnimaXValueParamTypeCoordinate
+                                                         applyMode:applyMode
                                                        targetFrame:targetFrame];
   param.internalCoordinateValue = (struct AnimaXCoordinate){x, y, z};
   return param;
@@ -146,6 +181,10 @@ struct AnimaXCoordinate {
 
 - (NSInteger)targetFrame {
   return _internalTargetFrame;
+}
+
+- (AnimaXValueApplyMode)applyMode {
+  return _internalApplyMode;
 }
 
 #pragma mark - Type Checking
@@ -223,17 +262,20 @@ struct AnimaXCoordinate {
       return [NSString stringWithFormat:@"AnimaXValueParam{stringValue='%@', targetFrame=%ld}",
                                         _internalStringValue, (long)_internalTargetFrame];
     case AnimaXValueParamTypeNumber:
-      return [NSString stringWithFormat:@"AnimaXValueParam{numberValue=%f, targetFrame=%ld}",
-                                        _internalNumberValue, (long)_internalTargetFrame];
+      return [NSString
+          stringWithFormat:@"AnimaXValueParam{numberValue=%f, applyMode=%ld, targetFrame=%ld}",
+                           _internalNumberValue, (long)_internalApplyMode,
+                           (long)_internalTargetFrame];
     case AnimaXValueParamTypeBoolean:
       return [NSString stringWithFormat:@"AnimaXValueParam{booleanValue=%@, targetFrame=%ld}",
                                         _internalBooleanValue ? @"YES" : @"NO",
                                         (long)_internalTargetFrame];
     case AnimaXValueParamTypeCoordinate:
       return [NSString
-          stringWithFormat:@"AnimaXValueParam{coordinateValue=(%f,%f,%f), targetFrame=%ld}",
-                           _internalCoordinateValue.x, _internalCoordinateValue.y,
-                           _internalCoordinateValue.z, (long)_internalTargetFrame];
+          stringWithFormat:
+              @"AnimaXValueParam{coordinateValue=(%f,%f,%f), applyMode=%ld, targetFrame=%ld}",
+              _internalCoordinateValue.x, _internalCoordinateValue.y, _internalCoordinateValue.z,
+              (long)_internalApplyMode, (long)_internalTargetFrame];
     case AnimaXValueParamTypeColor:
       return [NSString stringWithFormat:@"AnimaXValueParam{colorValue=%u, targetFrame=%ld}",
                                         _internalColorValue, (long)_internalTargetFrame];
@@ -264,14 +306,17 @@ struct AnimaXCoordinate {
       return std::make_unique<lynx::animax::AnimaXValueParam>(stringValue, targetFrame);
     }
     case AnimaXValueParamTypeNumber: {
-      return std::make_unique<lynx::animax::AnimaXValueParam>([self numberValue], targetFrame);
+      auto apply_mod = static_cast<lynx::animax::AnimaXValueParam::ApplyMode>([self applyMode]);
+      return std::make_unique<lynx::animax::AnimaXValueParam>([self numberValue], apply_mod,
+                                                              targetFrame);
     }
     case AnimaXValueParamTypeBoolean: {
       return std::make_unique<lynx::animax::AnimaXValueParam>([self booleanValue], targetFrame);
     }
     case AnimaXValueParamTypeCoordinate: {
+      auto apply_mod = static_cast<lynx::animax::AnimaXValueParam::ApplyMode>([self applyMode]);
       return std::make_unique<lynx::animax::AnimaXValueParam>([self x], [self y], [self z],
-                                                              targetFrame);
+                                                              apply_mod, targetFrame);
     }
     case AnimaXValueParamTypeColor: {
       return std::make_unique<lynx::animax::AnimaXValueParam>(

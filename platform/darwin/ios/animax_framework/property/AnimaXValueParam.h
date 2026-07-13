@@ -21,6 +21,23 @@ typedef NS_ENUM(NSInteger, AnimaXValueParamType) {
 };
 
 /**
+ * Apply mode for AnimaXValueParam.
+ * SET: Overwrite the existing value.
+ * ADD: Add the value to the existing value.
+ *
+ * Note: This is only applicable for coordinate or number values.
+ */
+typedef NS_ENUM(NSInteger, AnimaXValueApplyMode) {
+  AnimaXValueApplyModeSet,
+  AnimaXValueApplyModeAdd,
+};
+
+/**
+ * Default frame index to apply the value to all frames.
+ */
+static const NSInteger kAnimaXValueFrameIndexAll = -1;
+
+/**
  * A value parameter class that can hold different types of values (String, Number, Boolean, Point)
  * for animation parameters. Supports optional target frame for keyframe animations.
  *
@@ -71,6 +88,17 @@ typedef NS_ENUM(NSInteger, AnimaXValueParamType) {
 + (instancetype)paramWithNumber:(double)value targetFrame:(NSInteger)targetFrame;
 
 /**
+ * Creates an AnimaXValueParam from a numeric value with a target frame and apply mode
+ * @param value Numeric value
+ * @param applyMode Apply mode for this value
+ * @param targetFrame Frame number at which this value should be applied
+ * @return AnimaXValueParam instance
+ */
++ (instancetype)paramWithNumber:(double)value
+                      applyMode:(AnimaXValueApplyMode)applyMode
+                    targetFrame:(NSInteger)targetFrame;
+
+/**
  * Creates an AnimaXValueParam from a boolean value
  * @param value Boolean value
  * @return AnimaXValueParam instance
@@ -103,6 +131,19 @@ typedef NS_ENUM(NSInteger, AnimaXValueParamType) {
 + (instancetype)paramWithCoordinateX:(double)x y:(double)y targetFrame:(NSInteger)targetFrame;
 
 /**
+ * Creates an AnimaXValueParam from a 2D coordinate (x,y) with a target frame and apply mode
+ * @param x X coordinate
+ * @param y Y coordinate
+ * @param applyMode Apply mode for this value
+ * @param targetFrame Frame number at which this value should be applied
+ * @return AnimaXValueParam instance
+ */
++ (instancetype)paramWithCoordinateX:(double)x
+                                   y:(double)y
+                           applyMode:(AnimaXValueApplyMode)applyMode
+                         targetFrame:(NSInteger)targetFrame;
+
+/**
  * Creates an AnimaXValueParam from a 3D coordinate (x,y,z)
  * @param x X coordinate
  * @param y Y coordinate
@@ -122,6 +163,21 @@ typedef NS_ENUM(NSInteger, AnimaXValueParamType) {
 + (instancetype)paramWithCoordinateX:(double)x
                                    y:(double)y
                                    z:(double)z
+                         targetFrame:(NSInteger)targetFrame;
+
+/**
+ * Creates an AnimaXValueParam from a coordinate (x, y, z) with a target frame and apply mode
+ * @param x X coordinate
+ * @param y Y coordinate
+ * @param z Z coordinate
+ * @param applyMode Apply mode for this value
+ * @param targetFrame Frame number at which this value should be applied
+ * @return AnimaXValueParam instance
+ */
++ (instancetype)paramWithCoordinateX:(double)x
+                                   y:(double)y
+                                   z:(double)z
+                           applyMode:(AnimaXValueApplyMode)applyMode
                          targetFrame:(NSInteger)targetFrame;
 
 /**
@@ -276,6 +332,11 @@ typedef NS_ENUM(NSInteger, AnimaXValueParamType) {
  * @return Z coordinate or 0 if not a Coordinate
  */
 @property(nonatomic, readonly) double z;
+
+/**
+ * Apply mode for AnimaXValueParam.
+ */
+@property(nonatomic, readonly) AnimaXValueApplyMode applyMode;
 
 @end
 

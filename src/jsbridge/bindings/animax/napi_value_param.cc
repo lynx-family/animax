@@ -75,6 +75,9 @@ Object ValueParam::ToJsObject(Napi::Env env) {
   if (hasStringValue()) {
     obj["stringValue"] = String::New(env, stringValue_);
   }
+  if (hasValueApplyMode()) {
+    obj["valueApplyMode"] = Number::New(env, valueApplyMode_);
+  }
 
   return obj;
 }
@@ -127,6 +130,14 @@ ValueParam::ValueParam(const Value& info)
     if (!stringValue_val.IsUndefined()) {
       stringValue_ = NativeValueTraits<IDLString>::NativeValue(stringValue_val);
       has_stringValue_ = true;
+    }
+  }
+
+  if (obj.Has("valueApplyMode").FromMaybe(false)) {
+    Value valueApplyMode_val = obj.Get("valueApplyMode");
+    if (!valueApplyMode_val.IsUndefined()) {
+      valueApplyMode_ = NativeValueTraits<IDLNumber>::NativeValue(valueApplyMode_val);
+      has_valueApplyMode_ = true;
     }
   }
 }

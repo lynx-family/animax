@@ -29,11 +29,15 @@ std::unique_ptr<AnimaXValueParam> ToAnimaXValueParam(const ValueParam& value) {
     return std::make_unique<AnimaXValueParam>(value.boolValue(),
                                               value.frameIndex());
   } else if (value.hasPointX() && value.hasPointY()) {
-    return std::make_unique<AnimaXValueParam>(value.pointX(), value.pointY(),
-                                              value.frameIndex());
+    return std::make_unique<AnimaXValueParam>(
+        value.pointX(), value.pointY(),
+        static_cast<AnimaXValueParam::ApplyMode>(value.valueApplyMode()),
+        value.frameIndex());
   } else if (value.hasDoubleValue()) {
-    return std::make_unique<AnimaXValueParam>(value.doubleValue(),
-                                              value.frameIndex());
+    return std::make_unique<AnimaXValueParam>(
+        value.doubleValue(),
+        static_cast<AnimaXValueParam::ApplyMode>(value.valueApplyMode()),
+        value.frameIndex());
   }
   return std::make_unique<AnimaXValueParam>();
 }
@@ -47,7 +51,9 @@ std::unique_ptr<AnimaXValueParam> ToAnimaXValueParamForLayer(
     case LayerPropertyType::kDropShadowColor:
       if (value.hasDoubleValue()) {
         return std::make_unique<AnimaXValueParam>(
-            static_cast<int32_t>(value.doubleValue()), value.frameIndex());
+            static_cast<int32_t>(value.doubleValue()),
+            static_cast<AnimaXValueParam::ApplyMode>(value.valueApplyMode()),
+            value.frameIndex());
       } else if (value.hasStringValue()) {
         int32_t color_value = ColorUtil::ParseHexColor(value.stringValue());
         return std::make_unique<AnimaXValueParam>(color_value,

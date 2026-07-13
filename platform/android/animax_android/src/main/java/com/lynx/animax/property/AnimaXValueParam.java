@@ -12,6 +12,7 @@ import java.lang.Number;
  */
 public class AnimaXValueParam {
   public static final int FRAME_INDEX_ALL = -1;
+  public enum ApplyMode { SET, ADD } // for coordinate or double value
 
   /**
    * A simple class to hold 3D coordinate data (x, y, z).
@@ -29,7 +30,6 @@ public class AnimaXValueParam {
   }
 
   private enum Type { STRING, NUMBER, BOOLEAN, COORDINATE, COLOR, COLOR_FILTER, NULL }
-
   private final Type mType;
   private final String mStringValue;
   private final Number mNumberValue;
@@ -37,15 +37,17 @@ public class AnimaXValueParam {
   private final Coordinate mCoordinateValue;
   private final Integer mColorValue;
   private final Integer mTargetFrame;
+  private final ApplyMode mApplyMode;
 
   private AnimaXValueParam(Type type, String stringValue, Number numberValue, Boolean booleanValue,
-      Coordinate coordinateValue, Integer colorValue, Integer targetFrame) {
+      Coordinate coordinateValue, Integer colorValue, ApplyMode applyMode, Integer targetFrame) {
     this.mType = type;
     this.mStringValue = stringValue;
     this.mNumberValue = numberValue;
     this.mBooleanValue = booleanValue;
     this.mCoordinateValue = coordinateValue;
     this.mColorValue = colorValue;
+    this.mApplyMode = applyMode;
     this.mTargetFrame = targetFrame;
   }
 
@@ -57,7 +59,7 @@ public class AnimaXValueParam {
    */
   @CalledByNative
   public static AnimaXValueParam fromString(String value) {
-    return new AnimaXValueParam(Type.STRING, value, null, null, null, null, null);
+    return new AnimaXValueParam(Type.STRING, value, null, null, null, null, null, null);
   }
 
   /**
@@ -68,7 +70,7 @@ public class AnimaXValueParam {
    * @return AnimaXValueParam instance
    */
   public static AnimaXValueParam fromString(String value, int targetFrame) {
-    return new AnimaXValueParam(Type.STRING, value, null, null, null, null, targetFrame);
+    return new AnimaXValueParam(Type.STRING, value, null, null, null, null, null, targetFrame);
   }
 
   /**
@@ -79,7 +81,7 @@ public class AnimaXValueParam {
    */
   @CalledByNative
   public static AnimaXValueParam fromNumber(double value) {
-    return new AnimaXValueParam(Type.NUMBER, null, value, null, null, null, null);
+    return new AnimaXValueParam(Type.NUMBER, null, value, null, null, null, null, null);
   }
 
   /**
@@ -90,7 +92,19 @@ public class AnimaXValueParam {
    * @return AnimaXValueParam instance
    */
   public static AnimaXValueParam fromNumber(double value, int targetFrame) {
-    return new AnimaXValueParam(Type.NUMBER, null, value, null, null, null, targetFrame);
+    return new AnimaXValueParam(Type.NUMBER, null, value, null, null, null, null, targetFrame);
+  }
+
+  /**
+   * Creates a AnimaXValueParam from a numeric value with a target frame and apply mode
+   *
+   * @param value Numeric value
+   * @param applyMode Apply mode for this value
+   * @param targetFrame Frame number at which this value should be applied
+   * @return AnimaXValueParam instance
+   */
+  public static AnimaXValueParam fromNumber(double value, ApplyMode applyMode, int targetFrame) {
+    return new AnimaXValueParam(Type.NUMBER, null, value, null, null, null, applyMode, targetFrame);
   }
 
   /**
@@ -101,7 +115,7 @@ public class AnimaXValueParam {
    */
   @CalledByNative
   public static AnimaXValueParam fromBoolean(boolean value) {
-    return new AnimaXValueParam(Type.BOOLEAN, null, null, value, null, null, null);
+    return new AnimaXValueParam(Type.BOOLEAN, null, null, value, null, null, null, null);
   }
 
   /**
@@ -112,7 +126,7 @@ public class AnimaXValueParam {
    * @return AnimaXValueParam instance
    */
   public static AnimaXValueParam fromBoolean(boolean value, int targetFrame) {
-    return new AnimaXValueParam(Type.BOOLEAN, null, null, value, null, null, targetFrame);
+    return new AnimaXValueParam(Type.BOOLEAN, null, null, value, null, null, null, targetFrame);
   }
 
   /**
@@ -124,7 +138,7 @@ public class AnimaXValueParam {
    */
   public static AnimaXValueParam fromCoordinate(double x, double y) {
     return new AnimaXValueParam(
-        Type.COORDINATE, null, null, null, new Coordinate(x, y, 0), null, null);
+        Type.COORDINATE, null, null, null, new Coordinate(x, y, 0), null, null, null);
   }
 
   /**
@@ -137,7 +151,22 @@ public class AnimaXValueParam {
    */
   public static AnimaXValueParam fromCoordinate(double x, double y, int targetFrame) {
     return new AnimaXValueParam(
-        Type.COORDINATE, null, null, null, new Coordinate(x, y, 0), null, targetFrame);
+        Type.COORDINATE, null, null, null, new Coordinate(x, y, 0), null, null, targetFrame);
+  }
+
+  /**
+   * Creates a AnimaXValueParam from a 2D coordinate with a target frame and apply mode
+   *
+   * @param x X coordinate
+   * @param y Y coordinate
+   * @param applyMode Apply mode for this value
+   * @param targetFrame Frame number at which this value should be applied
+   * @return AnimaXValueParam instance
+   */
+  public static AnimaXValueParam fromCoordinate(
+      double x, double y, ApplyMode applyMode, int targetFrame) {
+    return new AnimaXValueParam(
+        Type.COORDINATE, null, null, null, new Coordinate(x, y, 0), null, applyMode, targetFrame);
   }
 
   /**
@@ -151,7 +180,7 @@ public class AnimaXValueParam {
   @CalledByNative
   public static AnimaXValueParam fromCoordinate(double x, double y, double z) {
     return new AnimaXValueParam(
-        Type.COORDINATE, null, null, null, new Coordinate(x, y, z), null, null);
+        Type.COORDINATE, null, null, null, new Coordinate(x, y, z), null, null, null);
   }
 
   /**
@@ -165,7 +194,23 @@ public class AnimaXValueParam {
    */
   public static AnimaXValueParam fromCoordinate(double x, double y, double z, int targetFrame) {
     return new AnimaXValueParam(
-        Type.COORDINATE, null, null, null, new Coordinate(x, y, z), null, targetFrame);
+        Type.COORDINATE, null, null, null, new Coordinate(x, y, z), null, null, targetFrame);
+  }
+
+  /**
+   * Creates a AnimaXValueParam from a 3D coordinate with a target frame and apply mode
+   *
+   * @param x X coordinate
+   * @param y Y coordinate
+   * @param z Z coordinate
+   * @param applyMode Apply mode for this value
+   * @param targetFrame Frame number at which this value should be applied
+   * @return AnimaXValueParam instance
+   */
+  public static AnimaXValueParam fromCoordinate(
+      double x, double y, double z, ApplyMode applyMode, int targetFrame) {
+    return new AnimaXValueParam(
+        Type.COORDINATE, null, null, null, new Coordinate(x, y, z), null, applyMode, targetFrame);
   }
 
   /**
@@ -176,7 +221,7 @@ public class AnimaXValueParam {
    */
   @CalledByNative
   public static AnimaXValueParam fromColor(int color) {
-    return new AnimaXValueParam(Type.COLOR, null, null, null, null, color, null);
+    return new AnimaXValueParam(Type.COLOR, null, null, null, null, color, null, null);
   }
 
   /**
@@ -187,7 +232,7 @@ public class AnimaXValueParam {
    * @return AnimaXValueParam instance
    */
   public static AnimaXValueParam fromColor(int color, int targetFrame) {
-    return new AnimaXValueParam(Type.COLOR, null, null, null, null, color, targetFrame);
+    return new AnimaXValueParam(Type.COLOR, null, null, null, null, color, null, targetFrame);
   }
 
   /**
@@ -199,7 +244,8 @@ public class AnimaXValueParam {
    */
   @CalledByNative
   public static AnimaXValueParam fromColorFilter(int color, int mode) {
-    return new AnimaXValueParam(Type.COLOR_FILTER, null, (double) mode, null, null, color, null);
+    return new AnimaXValueParam(
+        Type.COLOR_FILTER, null, (double) mode, null, null, color, null, null);
   }
 
   /**
@@ -212,7 +258,7 @@ public class AnimaXValueParam {
    */
   public static AnimaXValueParam fromColorFilter(int color, int mode, int targetFrame) {
     return new AnimaXValueParam(
-        Type.COLOR_FILTER, null, (double) mode, null, null, color, targetFrame);
+        Type.COLOR_FILTER, null, (double) mode, null, null, color, null, targetFrame);
   }
 
   /**
@@ -221,7 +267,7 @@ public class AnimaXValueParam {
    * @return AnimaXValueParam instance with null value
    */
   public static AnimaXValueParam createNull() {
-    return new AnimaXValueParam(Type.NULL, null, null, null, null, null, null);
+    return new AnimaXValueParam(Type.NULL, null, null, null, null, null, null, null);
   }
 
   /**
@@ -394,6 +440,11 @@ public class AnimaXValueParam {
     return mType.ordinal();
   }
 
+  @CalledByNative
+  public int getApplyModeIndex() {
+    return mApplyMode != null ? mApplyMode.ordinal() : ApplyMode.SET.ordinal();
+  }
+
   @Override
   public String toString() {
     int targetFrame = getTargetFrame();
@@ -402,14 +453,14 @@ public class AnimaXValueParam {
         return "AnimaXValueParam{stringValue='" + mStringValue + "', targetFrame=" + targetFrame
             + "}";
       case NUMBER:
-        return "AnimaXValueParam{numberValue=" + getNumberValue() + ", targetFrame=" + targetFrame
-            + "}";
+        return "AnimaXValueParam{numberValue=" + getNumberValue() + ", applyMode=" + mApplyMode
+            + ", targetFrame=" + targetFrame + "}";
       case BOOLEAN:
         return "AnimaXValueParam{booleanValue=" + getBooleanValue() + ", targetFrame=" + targetFrame
             + "}";
       case COORDINATE:
         return "AnimaXValueParam{coordinateValue=(" + getX() + "," + getY() + "," + getZ()
-            + "), targetFrame=" + targetFrame + "}";
+            + "), applyMode=" + mApplyMode + ", targetFrame=" + targetFrame + "}";
       case COLOR:
         return "AnimaXValueParam{colorValue=" + getColorValue() + ", targetFrame=" + targetFrame
             + "}";

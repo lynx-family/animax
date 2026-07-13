@@ -85,23 +85,53 @@ PropertyUpdateResult PropertyUpdateUtil::UpdateKeyframe(
     case ValueType::kInteger: {
       return UpdateKeyframeAnimation<IntegerKeyframeAnimation, double, Integer>(
           context, animation, frame_index,
-          [](auto value, auto src_ptr) { value->Set(*src_ptr); });
+          [apply_mode = context.GetValue().GetApplyMode()](auto value,
+                                                           auto src_ptr) {
+            if (apply_mode == AnimaXValueParam::ApplyMode::kAdd) {
+              value->Set(value->Get() + *src_ptr);
+            } else {
+              value->Set(*src_ptr);
+            }
+          });
     }
     case ValueType::kFloat: {
       return UpdateKeyframeAnimation<FloatKeyframeAnimation, double, Float>(
           context, animation, frame_index,
-          [](auto value, auto src_ptr) { value->Set(*src_ptr); });
+          [apply_mode = context.GetValue().GetApplyMode()](auto value,
+                                                           auto src_ptr) {
+            if (apply_mode == AnimaXValueParam::ApplyMode::kAdd) {
+              value->Set(value->Get() + *src_ptr);
+            } else {
+              value->Set(*src_ptr);
+            }
+          });
     }
     case ValueType::kPoint: {
       return UpdateKeyframeAnimation<PointKeyframeAnimation, PointF, PointF>(
-          context, animation, frame_index, [](auto value, auto src_ptr) {
-            value->Set(src_ptr->GetX(), src_ptr->GetY(), src_ptr->GetZ());
+          context, animation, frame_index,
+          [apply_mode = context.GetValue().GetApplyMode()](auto value,
+                                                           auto src_ptr) {
+            if (apply_mode == AnimaXValueParam::ApplyMode::kAdd) {
+              value->Set(value->GetX() + src_ptr->GetX(),
+                         value->GetY() + src_ptr->GetY(),
+                         value->GetZ() + src_ptr->GetZ());
+            } else {
+              value->Set(src_ptr->GetX(), src_ptr->GetY(), src_ptr->GetZ());
+            }
           });
     }
     case ValueType::kScale: {
       return UpdateKeyframeAnimation<ScaleKeyframeAnimation, PointF, ScaleF>(
-          context, animation, frame_index, [](auto value, auto src_ptr) {
-            value->Set(src_ptr->GetX(), src_ptr->GetY(), src_ptr->GetZ());
+          context, animation, frame_index,
+          [apply_mode = context.GetValue().GetApplyMode()](auto value,
+                                                           auto src_ptr) {
+            if (apply_mode == AnimaXValueParam::ApplyMode::kAdd) {
+              value->Set(value->GetX() + src_ptr->GetX(),
+                         value->GetY() + src_ptr->GetY(),
+                         value->GetZ() + src_ptr->GetZ());
+            } else {
+              value->Set(src_ptr->GetX(), src_ptr->GetY(), src_ptr->GetZ());
+            }
           });
     }
     case ValueType::kColor: {

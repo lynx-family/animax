@@ -114,12 +114,20 @@ std::unique_ptr<AnimaXValueParam> ToAnimaXValueParam(
         value["boolValue"].as<bool>(),
         value.hasOwnProperty("frameIndex") ? value["frameIndex"].as<int>() : 0);
   } else if (value.hasOwnProperty("pointX") && value.hasOwnProperty("pointY")) {
+    auto apply_mode = value.hasOwnProperty("valueApplyMode")
+                          ? static_cast<AnimaXValueParam::ApplyMode>(
+                                value["valueApplyMode"].as<int32_t>())
+                          : AnimaXValueParam::ApplyMode::kSet;
     return std::make_unique<AnimaXValueParam>(
-        value["pointX"].as<double>(), value["pointY"].as<double>(),
+        value["pointX"].as<double>(), value["pointY"].as<double>(), apply_mode,
         value.hasOwnProperty("frameIndex") ? value["frameIndex"].as<int>() : 0);
   } else if (value.hasOwnProperty("doubleValue")) {
+    auto apply_mode = value.hasOwnProperty("valueApplyMode")
+                          ? static_cast<AnimaXValueParam::ApplyMode>(
+                                value["valueApplyMode"].as<int32_t>())
+                          : AnimaXValueParam::ApplyMode::kSet;
     return std::make_unique<AnimaXValueParam>(
-        value["doubleValue"].as<double>(),
+        value["doubleValue"].as<double>(), apply_mode,
         value.hasOwnProperty("frameIndex") ? value["frameIndex"].as<int>() : 0);
   }
   return std::make_unique<AnimaXValueParam>();

@@ -107,6 +107,13 @@ class UpdatePropertyFragment : Fragment() {
             ),
 
             PropertyUpdateConfig(
+                LayerPropertyType.TRANSFORM_POSITION,
+                "Move Position Add",
+                mKeyPath,
+                AnimaXValueParam.fromCoordinate(20.0, 20.0, AnimaXValueParam.ApplyMode.ADD, AnimaXValueParam.FRAME_INDEX_ALL)
+            ),
+
+            PropertyUpdateConfig(
                 LayerPropertyType.TRANSFORM_SCALE,
                 "Scale 150%",
                 mKeyPath,
@@ -118,6 +125,13 @@ class UpdatePropertyFragment : Fragment() {
                 "Rotate 45°",
                 mKeyPath,
                 AnimaXValueParam.fromNumber(45.0)
+            ),
+
+            PropertyUpdateConfig(
+                LayerPropertyType.TRANSFORM_ROTATION,
+                "Rotate 45 (Add)°",
+                mKeyPath,
+                AnimaXValueParam.fromNumber(45.0, AnimaXValueParam.ApplyMode.ADD, AnimaXValueParam.FRAME_INDEX_ALL)
             ),
 
             PropertyUpdateConfig(
@@ -225,6 +239,13 @@ class UpdatePropertyFragment : Fragment() {
                 "Stroke Width 8px",
                 mFillKeyPath,
                 AnimaXValueParam.fromNumber(8.0)
+            ),
+
+            PropertyUpdateConfig(
+                LayerPropertyType.STROKE_WIDTH,
+                "Stroke Width Add 2px",
+                mFillKeyPath,
+                AnimaXValueParam.fromNumber(2.0, AnimaXValueParam.ApplyMode.ADD, AnimaXValueParam.FRAME_INDEX_ALL)
             ),
 
             PropertyUpdateConfig(
