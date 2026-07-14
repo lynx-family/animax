@@ -160,8 +160,12 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   __block std::unordered_map<std::string, std::string> stdPolyfill;
   [polyfill
       enumerateKeysAndObjectsUsingBlock:^(id _Nonnull key, id _Nonnull obj, BOOL *_Nonnull stop) {
-        if ([key isKindOfClass:[NSString class]] && [key isKindOfClass:[NSString class]]) {
-          stdPolyfill[std::string([key UTF8String])] = std::string([obj UTF8String]);
+        if ([key isKindOfClass:[NSString class]] && [obj isKindOfClass:[NSString class]]) {
+          const char *keyString = [key UTF8String];
+          const char *valueString = [obj UTF8String];
+          if (keyString && valueString) {
+            stdPolyfill[std::string(keyString)] = std::string(valueString);
+          }
         }
       }];
   _player->SetSrcPolyfill(stdPolyfill);

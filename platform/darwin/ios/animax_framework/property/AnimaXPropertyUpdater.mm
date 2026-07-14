@@ -313,18 +313,22 @@
     return;
   }
 
-  dispatch_async(dispatch_get_main_queue(), ^{
-    if (response.IsSuccess()) {
+  // Read the native response before dispatching because its owner may be
+  // destroyed when this callback returns.
+  if (response.IsSuccess()) {
+    dispatch_async(dispatch_get_main_queue(), ^{
       [callback onSuccess];
-    } else {
-      std::vector<std::string> messages = response.GetUpdateMessages();
-      NSMutableArray *errorMessages = [NSMutableArray arrayWithCapacity:messages.size()];
-      for (const auto &msg : messages) {
-        [errorMessages addObject:[NSString stringWithUTF8String:msg.c_str()]];
-      }
-      [callback onError:errorMessages];
+    });
+  } else {
+    std::vector<std::string> messages = response.GetUpdateMessages();
+    NSMutableArray *errorMessages = [NSMutableArray arrayWithCapacity:messages.size()];
+    for (const auto &msg : messages) {
+      [errorMessages addObject:[NSString stringWithUTF8String:msg.c_str()]];
     }
-  });
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [callback onError:errorMessages];
+    });
+  }
 }
 
 @end

@@ -157,7 +157,7 @@
   [self.animaXView setAutoplay:YES];
   [self.animaXView setLoop:YES];
   NSBundle *bundle = [NSBundle mainBundle];
-  NSString *jsonPath = [bundle pathForResource:@"data" ofType:@"json"];
+  NSString *jsonPath = [bundle pathForResource:@"dp" ofType:@"json"];
   if (jsonPath) {
     NSURL *url = [NSURL fileURLWithPath:jsonPath];
     [_animaXView setSrc:url.absoluteString];
@@ -165,6 +165,8 @@
 }
 
 - (void)setupButtons {
+  __weak typeof(self) weakSelf = self;
+
   // Transform properties (matching Android exactly)
   [self addCallbackButtonWithTitle:@"Visibility"
                       propertyType:LayerPropertyTypeVisibility
@@ -297,7 +299,7 @@
                       propertyType:LayerPropertyTypeTextColor
                            keyPath:self.keyPath
                     valueGenerator:^AnimaXValueParam *(double progress) {
-                      return [self generateColorValue:progress];
+                      return [weakSelf generateColorValue:progress];
                     }];
 
   [self addCallbackButtonWithTitle:@"Text Tracking"
@@ -313,21 +315,21 @@
                       propertyType:LayerPropertyTypeColor
                            keyPath:self.fillKeyPath
                     valueGenerator:^AnimaXValueParam *(double progress) {
-                      return [self generateColorValue:progress];
+                      return [weakSelf generateColorValue:progress];
                     }];
 
   [self addCallbackButtonWithTitle:@"Color Filter"
                       propertyType:LayerPropertyTypeColorFilter
                            keyPath:self.fillKeyPath
                     valueGenerator:^AnimaXValueParam *(double progress) {
-                      return [self generateColorFilterValue:progress];
+                      return [weakSelf generateColorFilterValue:progress];
                     }];
 
   [self addCallbackButtonWithTitle:@"Stroke Color"
                       propertyType:LayerPropertyTypeStrokeColor
                            keyPath:self.fillKeyPath
                     valueGenerator:^AnimaXValueParam *(double progress) {
-                      return [self generateColorValue:progress];
+                      return [weakSelf generateColorValue:progress];
                     }];
 
   [self addCallbackButtonWithTitle:@"Stroke Width"
@@ -459,7 +461,7 @@
                       propertyType:LayerPropertyTypeDropShadowColor
                            keyPath:self.fillKeyPath
                     valueGenerator:^AnimaXValueParam *(double progress) {
-                      return [self generateColorValue:progress];
+                      return [weakSelf generateColorValue:progress];
                     }];
 
   [self addCallbackButtonWithTitle:@"Drop Shadow Opacity"
@@ -573,8 +575,8 @@
   NSLog(@"Property callback added successfully");
 }
 
-- (void)onError:(NSString *)errorMessage {
-  NSLog(@"Property callback error: %@", errorMessage);
+- (void)onError:(NSArray<NSString *> *)errorMessages {
+  NSLog(@"Property callback error: %@", errorMessages);
 }
 
 #pragma mark - Actions

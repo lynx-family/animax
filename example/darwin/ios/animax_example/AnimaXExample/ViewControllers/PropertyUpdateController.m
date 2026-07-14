@@ -131,7 +131,7 @@
   [self.animaXView setAutoplay:YES];
   [self.animaXView setLoop:YES];
   NSBundle *bundle = [NSBundle mainBundle];
-  NSString *jsonPath = [bundle pathForResource:@"data" ofType:@"json"];
+  NSString *jsonPath = [bundle pathForResource:@"dp" ofType:@"json"];
   if (jsonPath) {
     NSURL *url = [NSURL fileURLWithPath:jsonPath];
     [_animaXView setSrc:url.absoluteString];
@@ -514,8 +514,8 @@
   NSLog(@"Property updated successfully");
 }
 
-- (void)onError:(NSString *)errorMessage {
-  NSLog(@"Property update error: %@", errorMessage);
+- (void)onError:(NSArray<NSString *> *)errorMessages {
+  NSLog(@"Property update error: %@", errorMessages);
 }
 
 #pragma mark - Actions
