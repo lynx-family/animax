@@ -135,12 +135,12 @@ class ValueAnimator : public std::enable_shared_from_this<ValueAnimator> {
   ValueAnimator(std::shared_ptr<VSyncMonitor> vsync_monitor,
                 std::weak_ptr<ValueAnimatorListener> listener);
   void SetupOnFrame();
-  void OnFrame(double current_time_ms);
+  void OnFrame(int64_t current_time_ns);
   double GetProgress() const;
   bool IsLoopForever();
   void MakeCurrentFrameValid();
   void ResetState();
-  bool UpdateNextFrameNs(double current_time_ms);
+  bool UpdateNextFrameNs(int64_t current_time_ns);
 
   std::shared_ptr<VSyncMonitor> vsync_monitor_;
   std::weak_ptr<ValueAnimatorListener> listener_;
@@ -160,6 +160,8 @@ class ValueAnimator : public std::enable_shared_from_this<ValueAnimator> {
   int32_t current_loop_count_ = 0;
   double current_frame_ = 0.0;
   bool has_on_start_emit_ = false;
+  int64_t frame_time_anchor_ns_ = 0;
+  // Relative deadline from frame_time_anchor_ns_.
   double next_frame_ns_ = 0.f;
   State state_ = State::kUnknown;
   // State End
