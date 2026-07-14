@@ -5,6 +5,7 @@
 #include "src/animator/value_animator.h"
 
 #include <cmath>
+#include <limits>
 
 #include "include/player/vsync_monitor.h"
 #include "src/base/log/log.h"
@@ -13,6 +14,10 @@
 
 namespace lynx {
 namespace animax {
+
+namespace {
+constexpr double kVSyncTimestampToleranceNs = 1.0;
+}  // namespace
 
 std::shared_ptr<ValueAnimator> ValueAnimator::Create(
     std::shared_ptr<VSyncMonitor> vsync_monitor,
@@ -35,21 +40,24 @@ void ValueAnimator::SetupOnFrame() {
           return;
         }
         value_animator->SetupOnFrame();
-        value_animator->OnFrame(static_cast<double>(frame_start) / 1e6);
+        value_animator->OnFrame(frame_start);
       });
 }
 
-void ValueAnimator::OnFrame(double current_time_ms) {
+void ValueAnimator::OnFrame(int64_t current_time_ns) {
+  const double current_time_ms = static_cast<double>(current_time_ns) / 1e6;
   bool start = false;
   bool end = false;
   bool new_loop = false;
   if (last_time_ms_ == -1.0) {
+    frame_time_anchor_ns_ = current_time_ns;
+    next_frame_ns_ = fps_interval_ns_;
     if (!has_on_start_emit_) {
       has_on_start_emit_ = true;
       start = true;
     }
   } else {
-    if (!UpdateNextFrameNs(current_time_ms)) {
+    if (!UpdateNextFrameNs(current_time_ns)) {
       // Update failed, means the next frame haven't reach yet, return directly
       return;
     }
@@ -101,17 +109,35 @@ void ValueAnimator::OnFrame(double current_time_ms) {
   }
 }
 
-bool ValueAnimator::UpdateNextFrameNs(double current_time_ms) {
-  auto current_time_ns = current_time_ms * 1000000.f;
-  if (next_frame_ns_ == 0.f) {
-    next_frame_ns_ = current_time_ns + fps_interval_ns_;
+bool ValueAnimator::UpdateNextFrameNs(int64_t current_time_ns) {
+  if (next_frame_ns_ == 0.0) {
+    // SetMaxFrameRate invalidates the phase; rebuild it without rendering.
+    frame_time_anchor_ns_ = current_time_ns;
+    next_frame_ns_ = fps_interval_ns_;
+    return false;
   }
-  if (current_time_ns > next_frame_ns_) {
-    next_frame_ns_ += fps_interval_ns_;
-    auto unfinished_frames =
-        (current_time_ns - next_frame_ns_) / fps_interval_ns_;
-    if (unfinished_frames > kForceFrames) {
-      next_frame_ns_ = current_time_ns + fps_interval_ns_;
+
+  // Subtract as integers first so device uptime does not reduce precision.
+  const double elapsed_ns =
+      static_cast<double>(current_time_ns - frame_time_anchor_ns_);
+  // A rounded integer VSync can land just below a fractional deadline. The
+  // fixed tolerance and one ULP per operand keep that from dropping a frame.
+  const double elapsed_ulp_ns =
+      std::nextafter(elapsed_ns, std::numeric_limits<double>::infinity()) -
+      elapsed_ns;
+  const double deadline_ulp_ns =
+      std::nextafter(next_frame_ns_, std::numeric_limits<double>::infinity()) -
+      next_frame_ns_;
+  const double adjusted_elapsed_ns = elapsed_ns + kVSyncTimestampToleranceNs +
+                                     elapsed_ulp_ns + deadline_ulp_ns;
+  if (adjusted_elapsed_ns >= next_frame_ns_) {
+    // Skip every expired slot in one step while preserving the cadence phase.
+    const double elapsed_intervals =
+        std::floor(adjusted_elapsed_ns / fps_interval_ns_);
+    next_frame_ns_ = (elapsed_intervals + 1.0) * fps_interval_ns_;
+    // Division may round back to the current slot; always advance past it.
+    if (next_frame_ns_ <= adjusted_elapsed_ns) {
+      next_frame_ns_ += fps_interval_ns_;
     }
     return true;
   }
