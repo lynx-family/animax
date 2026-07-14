@@ -362,9 +362,6 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   __weak typeof(self) weakSelf = self;
   builder.AddEventListener([weakSelf](std::weak_ptr<AnimaXPlayer> /*player*/, const Event event,
                                       const EventParamMap &params) {
-    if (!weakSelf) {
-      return;
-    }
     NSDictionary *eventParams = lynx::animax::MapToNSDictionary(params);
     __strong typeof(weakSelf) self = weakSelf;
     if (!self) {
