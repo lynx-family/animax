@@ -27,47 +27,47 @@ Here are some stunning animations rendered seamlessly by AnimaX. Click on the im
 <table>
   <tr>
     <td>
-      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_1.mp4">
-        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_1.png" width="250"/>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_vector.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_vector.png" width="250"/>
       </a>
     </td>
     <td>
-      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/image_demo_3.mp4">
-        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/image_demo_3.png" width="250"/>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_image.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_image.png" width="250"/>
       </a>
     </td>
     <td>
-      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_2.mp4">
-        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/video_demo_2.png" width="250"/>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_text.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v3_text.png" width="250"/>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>Shape Layer</td>
+    <td>Image Layer</td>
+    <td>Text Layer</td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_alpha_video.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_alpha_video.png" width="250"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_vector2.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v3_vector2.png" width="250"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v2_mixed.mp4">
+        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/docs/v3_mixed.png" width="250"/>
       </a>
     </td>
   </tr>
   <tr>
     <td>Alpha Video Layer</td>
-    <td>Image Layer</td>
-    <td>Alpha Video And Image Layer</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/vector_demo_3.mp4">
-        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/vector_demo_3.png" width="250"/>
-      </a>
-    </td>
-    <td>
-      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/text_demo.mp4">
-        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/text_demo.png" width="250"/>
-      </a>
-    </td>
-    <td>
-      <a href="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/mixed_image_video_demo.mp4">
-        <img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/showcase_mp4/mixed_image_video_demo.png" width="250"/>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td>Vector Layer With Effects</td>
-    <td>Text Layer</td>
-    <td>Text And Image Layer</td>
+    <td>Shape Layer</td>
+    <td>Mixed Layers</td>
   </tr>
 </table>
 
