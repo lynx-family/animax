@@ -17,12 +17,16 @@ object LottieFiles {
     /**
      * Scans the assets/download directory recursively for .json and .zip files.
      * Returns a sorted list of asset paths (relative to assets folder).
-     * Sorted alphanumerically with natural number ordering.
+     * Exported animations use reverse natural ordering and are listed before
+     * bundled samples, which keep natural ordering.
      */
     fun getDownloadedAnimations(context: Context): List<String> {
         val animations = mutableListOf<String>()
         scanAssetsRecursively(context, DOWNLOAD_DIR, animations)
-        return animations.sortedWith(AlphanumericComparator())
+        val sortedAnimations = animations.sortedWith(AlphanumericComparator())
+        val (exportAnimations, bundledAnimations) =
+            sortedAnimations.partition { it.startsWith("export_output/") }
+        return exportAnimations.reversed() + bundledAnimations
     }
 
     /**

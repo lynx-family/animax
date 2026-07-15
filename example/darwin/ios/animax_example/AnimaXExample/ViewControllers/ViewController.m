@@ -58,13 +58,14 @@
   self.isPlaying = YES;
 
   // Load all json files from bundle root
-  NSMutableArray<NSURL *> *fileUrls = [NSMutableArray array];
+  NSMutableArray<NSURL *> *bundledFileUrls = [NSMutableArray array];
   NSArray *urls = [[NSBundle mainBundle] URLsForResourcesWithExtension:@"json" subdirectory:nil];
   if (urls) {
-    [fileUrls addObjectsFromArray:urls];
+    [bundledFileUrls addObjectsFromArray:urls];
   }
 
   // Discover files in export_output
+  NSMutableArray<NSURL *> *exportFileUrls = [NSMutableArray array];
   NSString *downloadPath =
       [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"export_output"];
   NSFileManager *fm = [NSFileManager defaultManager];
@@ -74,14 +75,20 @@
     if ([file.pathExtension isEqualToString:@"json"] ||
         [file.pathExtension isEqualToString:@"zip"]) {
       NSURL *fileUrl = [NSURL fileURLWithPath:[downloadPath stringByAppendingPathComponent:file]];
-      [fileUrls addObject:fileUrl];
+      [exportFileUrls addObject:fileUrl];
     }
   }
 
-  // Sort files for consistent order
-  [fileUrls sortUsingComparator:^NSComparisonResult(NSURL *url1, NSURL *url2) {
+  // Show exported animations first in reverse natural order so media-heavy
+  // cases do not lead the playlist. Keep bundled samples in natural order.
+  [exportFileUrls sortUsingComparator:^NSComparisonResult(NSURL *url1, NSURL *url2) {
+    return [url2.lastPathComponent localizedStandardCompare:url1.lastPathComponent];
+  }];
+  [bundledFileUrls sortUsingComparator:^NSComparisonResult(NSURL *url1, NSURL *url2) {
     return [url1.lastPathComponent localizedStandardCompare:url2.lastPathComponent];
   }];
+  NSMutableArray<NSURL *> *fileUrls = [NSMutableArray arrayWithArray:exportFileUrls];
+  [fileUrls addObjectsFromArray:bundledFileUrls];
   self.animationFiles = fileUrls;
 
   self.currentAnimationIndex = 0;

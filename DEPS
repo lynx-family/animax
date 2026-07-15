@@ -190,7 +190,7 @@ deps = {
     # lynx-base DEPS END
     "export/output": {
         "type": "http",
-        "url": "https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/example/export_output.zip",
+        "url": "https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/animax/example/export_output_v4.zip",
         "ignore_in_git": True,
         "decompress": True,
     },
