@@ -14,7 +14,7 @@ FOUNDATION_EXPORT NSString *const AnimaXMonitorIntegrationType;
 FOUNDATION_EXPORT void const *AnimaXMonitorUrlHolderKey;
 
 @interface AnimaXMonitorUrlHolder : NSObject
-@property(nonatomic, copy) NSString *currentUrl;
+@property(atomic, copy) NSString *currentUrl;
 - (instancetype)init;
 - (NSString *)getCurrentUrl;
 - (void)updateUrl:(NSString *)url;
