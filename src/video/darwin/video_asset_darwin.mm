@@ -114,6 +114,7 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
   [reader cancelReading];
 
   ComputePresentationIndex(gop, sorted_num);
+  ComputePresentationFrameToDecodeFrame();
 
   ANIMAX_LOGI("video size: " << total_size << " bytes, frame count: " << frame_infos_.size()
                              << ", key frame count: " << key_frames_.size());
@@ -123,6 +124,17 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
     is_valid_.store(true);
   }
   return IsValid();
+}
+
+void VideoAssetDarwin::ComputePresentationFrameToDecodeFrame() {
+  const auto total_size = frame_infos_.size();
+  presentation_frame_to_decode_frame_.assign(total_size, -1);
+  for (size_t decode_frame = 0; decode_frame < total_size; ++decode_frame) {
+    const int32_t presentation_frame = frame_infos_[decode_frame].presentation_index_;
+    if (presentation_frame >= 0 && presentation_frame < total_size) {
+      presentation_frame_to_decode_frame_[presentation_frame] = decode_frame;
+    }
+  }
 }
 
 void VideoAssetDarwin::ComputePresentationIndex(std::vector<std::pair<double, uint32_t>>& gop,
@@ -160,9 +172,29 @@ bool VideoAssetDarwin::IsKeyFramesValid() const {
   return !key_frames_.empty() && (key_frames_[0] == 0);
 }
 
-int VideoAssetDarwin::GetPrevKeyFrame(const int32_t frame) const {
-  auto it = std::upper_bound(key_frames_.begin(), key_frames_.end(), frame);
-  return *--it;
+int VideoAssetDarwin::GetPrevKeyFrame(const int32_t decode_frame) const {
+  auto it = std::upper_bound(key_frames_.begin(), key_frames_.end(), decode_frame);
+  --it;
+  // Handle open GOP videos by stepping back to an earlier key frame when
+  // decoding B frames may require references from the previous GOP. Videos
+  // without B frames are not affected because decode and presentation order do
+  // not cross in this way.
+  auto has_leading_b_frames = [this](auto key_frame_it, auto next_key_frame_it) {
+    const int start = *key_frame_it;
+    const int end = next_key_frame_it == key_frames_.end() ? static_cast<int>(frame_infos_.size())
+                                                           : *next_key_frame_it;
+    const int32_t key_presentation_frame = frame_infos_[start].presentation_index_;
+    for (int decode_frame = start + 1; decode_frame < end; ++decode_frame) {
+      if (frame_infos_[decode_frame].presentation_index_ < key_presentation_frame) {
+        return true;
+      }
+    }
+    return false;
+  };
+  while (it != key_frames_.begin() && has_leading_b_frames(it, it + 1)) {
+    --it;
+  }
+  return *it;
 }
 
 }  // namespace animax

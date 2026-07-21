@@ -24,10 +24,16 @@ class VideoAssetDarwin : public VideoAsset {
   int32_t GetFrameCount() const override { return frame_infos_.size(); }
 
   CMFormatDescriptionRef GetFormatDescription() const { return desc_; }
-  const FrameInfo& GetFrameInfo(size_t index) const { return frame_infos_[index]; }
+  const FrameInfo& GetFrameInfo(size_t decode_frame) const { return frame_infos_[decode_frame]; }
   char* GetFrameData() const { return (char*)[frames_ bytes]; }
   uint32_t GetFrameDataLength() const { return [frames_ length]; }
-  int GetPrevKeyFrame(const int32_t frame) const override;
+  // TODO(caitan): Darwin currently returns the decoding start frame, not just the
+  // previous key frame, and will rename this API after all platforms adopt decode-start-frame
+  // semantics.
+  int GetPrevKeyFrame(const int32_t decode_frame) const override;
+  int GetDecodeFrame(const int32_t presentation_frame) const {
+    return presentation_frame_to_decode_frame_[presentation_frame];
+  }
 
  private:
   static bool IsKeyFrame(CMSampleBufferRef current_sample_buffer);
@@ -35,11 +41,13 @@ class VideoAssetDarwin : public VideoAsset {
   bool PrepareFrameData(NSString* file_path);
   void ComputePresentationIndex(std::vector<std::pair<double, uint32_t>>& gop,
                                 uint32_t& sorted_num);
+  void ComputePresentationFrameToDecodeFrame();
   bool IsKeyFramesValid() const;
 
   CMFormatDescriptionRef desc_ = nullptr;
   std::vector<int32_t> key_frames_;
   std::vector<FrameInfo> frame_infos_;
+  std::vector<int32_t> presentation_frame_to_decode_frame_;
   NSMutableData* frames_ = nil;
 };
 
