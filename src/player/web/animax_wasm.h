@@ -22,6 +22,7 @@ class AnimaXPlayer;
 class AnimaXPlayerBuilder;
 class AnimaXWebGPUContext;
 class ResourceLoaderWeb;
+class VSyncMonitorWeb;
 
 class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
  public:
@@ -56,6 +57,7 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
   void SetEventCallback(EventCallback callback);
 
   void UpdateVisibilityStates(uint16_t states);
+  void SetMaxFrameRate(double max_frame_rate);
 
   using PropertyUpdateCallback =
       std::function<void(bool success, uint16_t error)>;
@@ -76,6 +78,7 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
                       LayerBoundsCallback callback);
 
  private:
+  std::shared_ptr<VSyncMonitorWeb> vsync_monitor_;
   std::shared_ptr<AnimaXPlayer> player_;
 
   std::shared_ptr<ResourceLoaderWeb> resource_loader_;
