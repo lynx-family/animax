@@ -13,6 +13,18 @@
 
 namespace lynx {
 namespace animax {
+namespace {
+
+constexpr double kEventParamDecimalScale = 100.0;
+
+double RoundEventParam(double value) {
+  if (!std::isfinite(value)) {
+    return value;
+  }
+  return std::round(value * kEventParamDecimalScale) / kEventParamDecimalScale;
+}
+
+}  // namespace
 
 AnimaXEventDispatcher::AnimaXEventDispatcher(
     std::weak_ptr<AnimaXPlayer> weak_player, AnimaXMainController& controller)
@@ -103,14 +115,16 @@ EventParamMap AnimaXEventDispatcher::ConvertEventParamsIntoMap(
   } else {
     params_out[EventKeys::kAnimationId] = controller_.GetAnimationID();
     auto* frame_params = static_cast<FrameParams*>(params_in.get());
-    params_out[EventKeys::kCurrent] = frame_params->current_frame_;
-    params_out[EventKeys::kTotal] = controller_.GetTotalFrame();
+    params_out[EventKeys::kCurrent] =
+        RoundEventParam(frame_params->current_frame_);
+    params_out[EventKeys::kTotal] =
+        RoundEventParam(controller_.GetTotalFrame());
     params_out[EventKeys::kLoopIndex] = controller_.GetLoopIndex();
     switch (event) {
       case Event::kFps: {
         auto* fps_params = static_cast<FpsParams*>(params_in.get());
         params_out[EventKeys::kMaxDropRate] = fps_params->max_drop_rate_;
-        params_out[EventKeys::kFps] = fps_params->fps_;
+        params_out[EventKeys::kFps] = RoundEventParam(fps_params->fps_);
         break;
       }
       case Event::kReady: {

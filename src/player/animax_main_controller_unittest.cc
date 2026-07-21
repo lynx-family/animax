@@ -174,7 +174,7 @@ TEST_F(AnimaXMainControllerTest, KeepsPlaybackFrameAtCompletion) {
       });
   controller_actor_->Impl()->NotifyCurrentFrameEvent(Event::kCompletion);
 
-  EXPECT_DOUBLE_EQ(69.99f, completion_frame);
+  EXPECT_DOUBLE_EQ(69.99, completion_frame);
 }
 
 TEST_F(AnimaXMainControllerTest, IsAnimating_InitiallyFalse) {
