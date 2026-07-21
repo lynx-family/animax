@@ -252,3 +252,25 @@ TEST_F(AnimaXEventDispatcherTest, NotifyFps_NotifiesFpsEvent) {
   dispatcher_->AddEventListener(std::move(mock_listener));
   dispatcher_->NotifyFps(15.0, 5, 60.0f);
 }
+
+TEST_F(AnimaXEventDispatcherTest, NotifyFps_RoundsDecimalParamsToHundredths) {
+  test_controller_->SetAutoplay(false);
+  test_controller_->UpdateProperties(CompositionModelMeta{
+      .start_frame = 10.0f,
+      .end_frame = 69.99f,
+  });
+
+  EventListener listener = [](std::weak_ptr<AnimaXPlayer>, Event event,
+                              const EventParamMap& params) {
+    EXPECT_EQ(Event::kFps, event);
+    ASSERT_TRUE(params.at(EventKeys::kCurrent).double_val.has_value());
+    ASSERT_TRUE(params.at(EventKeys::kTotal).double_val.has_value());
+    ASSERT_TRUE(params.at(EventKeys::kFps).double_val.has_value());
+    EXPECT_DOUBLE_EQ(10.13, params.at(EventKeys::kCurrent).double_val.value());
+    EXPECT_DOUBLE_EQ(60.0, params.at(EventKeys::kTotal).double_val.value());
+    EXPECT_DOUBLE_EQ(59.13, params.at(EventKeys::kFps).double_val.value());
+  };
+
+  dispatcher_->AddEventListener(std::move(listener));
+  dispatcher_->NotifyFps(10.126, 5, 59.13f);
+}
