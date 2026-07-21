@@ -18,11 +18,12 @@
 #include "src/base/log/log.h"
 #include "src/base/thread/task_runner.h"
 #include "src/base/util/ios/ca_util.h"
+#include "src/base/util/ios/lifecycle_manager.h"
 #include "src/model/composition_model.h"
 #include "src/model/layer_model.h"
 #include "src/model/text/font_character_model.h"
 
-@interface AnimaXView () <AnimaXLayerProtocol>
+@interface AnimaXView () <AnimaXLayerProtocol, AnimaXApplicationLifecycleListener>
 
 @property(strong, nonatomic, nullable) CAMetalLayer *gpuLayer;
 @property(nonatomic, nonnull, readwrite) id<AnimaXPlayerProtocol> player;
@@ -48,6 +49,7 @@
     AnimaXPlayer *player = [[AnimaXPlayer alloc] initWithContext:context];
     player.compositionListener = self;
     _player = player;
+    lynx::animax::LifecycleManager::Instance().AddApplicationLifecycleListener(self);
     [self notifyFrameChanged];
   }
   return self;
@@ -64,6 +66,7 @@
     self.ignoreAttachStatus = NO;
     player.compositionListener = self;
     _player = player;
+    lynx::animax::LifecycleManager::Instance().AddApplicationLifecycleListener(self);
     [self notifyFrameChanged];
   }
   return self;
@@ -72,6 +75,14 @@
 - (void)dealloc {
   // compatible with legacy logic
   _player = nil;
+}
+
+- (void)onAnimaXApplicationDidBecomeActive {
+  [self notifyFrameChanged];
+}
+
+- (BOOL)isAnimaXSurfaceCreationAllowed {
+  return lynx::animax::LifecycleManager::Instance().IsApplicationActive();
 }
 
 - (void)initGPULayer {
@@ -109,6 +120,9 @@
 
   if (!sizeIsValid) {
     ANIMAX_LOGI("Skip invalid size: width: " << width << " height: " << height);
+    return;
+  }
+  if (![self isAnimaXSurfaceCreationAllowed]) {
     return;
   }
   if (!self.drawable) {
