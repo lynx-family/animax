@@ -13,6 +13,21 @@
 
 #pragma mark Test Classes
 
+@interface AnimaXView (ApplicationLifecycleUnitTest)
+- (void)onAnimaXApplicationDidBecomeActive;
+- (BOOL)isAnimaXSurfaceCreationAllowed;
+@end
+
+@interface TestLifecycleAnimaXView : AnimaXView
+@property(nonatomic, assign) BOOL surfaceCreationAllowed;
+@end
+
+@implementation TestLifecycleAnimaXView
+- (BOOL)isAnimaXSurfaceCreationAllowed {
+  return self.surfaceCreationAllowed;
+}
+@end
+
 @interface TestPlayer : NSObject <AnimaXPlayerProtocol>
 @property(nonatomic, assign) NSInteger adoptCount;
 @property(nonatomic, strong) id lastDrawable;
@@ -127,7 +142,9 @@ static NSString *TestEasyLottieJson() {
     self.view = [[AnimaXImageView alloc] initWithContext:ctx];
     XCTAssertTrue([self.view isKindOfClass:AnimaXImageView.class]);
   } else {
-    self.view = [[AnimaXView alloc] initWithContext:ctx];
+    TestLifecycleAnimaXView *view = [[TestLifecycleAnimaXView alloc] initWithContext:ctx];
+    view.surfaceCreationAllowed = YES;
+    self.view = view;
     XCTAssertTrue([self.view isKindOfClass:AnimaXView.class]);
   }
   XCTAssertNotNil(self.view, @"Failed to create the target view.");
@@ -182,6 +199,22 @@ static NSString *TestEasyLottieJson() {
   [self generalTestFrameChanged];
   [self createViewIsImageView:NO];
   [self generalTestInvalidFrameChanged];
+}
+
+- (void)testFrameChangedDefersDrawableUntilApplicationBecomesActive {
+  [self createViewIsImageView:NO];
+  TestLifecycleAnimaXView *view = (TestLifecycleAnimaXView *)self.view;
+  view.surfaceCreationAllowed = NO;
+
+  self.view.frame = CGRectMake(0, 0, 100, 60);
+  XCTAssertNil([self.view valueForKey:@"drawable"]);
+  XCTAssertEqual([(TestPlayer *)self.player adoptCount], 0);
+
+  view.surfaceCreationAllowed = YES;
+  [view onAnimaXApplicationDidBecomeActive];
+
+  XCTAssertNotNil([self.view valueForKey:@"drawable"]);
+  XCTAssertEqual([(TestPlayer *)self.player adoptCount], 1);
 }
 
 - (void)testFrameChangedImage {
@@ -300,7 +333,8 @@ static NSString *TestEasyLottieJson() {
 
   AnimaXContext *ctx = [[AnimaXContext alloc] initWithAbility:ability];
   @autoreleasepool {
-    AnimaXView *view = [[AnimaXView alloc] initWithContext:ctx];
+    TestLifecycleAnimaXView *view = [[TestLifecycleAnimaXView alloc] initWithContext:ctx];
+    view.surfaceCreationAllowed = YES;
     view.frame = CGRectMake(0, 0, 100, 100);
     [view setLoop:YES];
     [view setAutoplay:NO];
