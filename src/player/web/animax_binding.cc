@@ -122,6 +122,7 @@ EMSCRIPTEN_BINDINGS(animax) {
       .class_function("registerFontWithData",
                       &lynx::animax::AnimaXWasm::RegisterFontWithData)
       .function("getPlayer", &lynx::animax::AnimaXWasm::GetPlayer)
+      .function("setMaxFrameRate", &lynx::animax::AnimaXWasm::SetMaxFrameRate)
       .function(
           "setSurfaceWithCanvas",
           emscripten::optional_override(

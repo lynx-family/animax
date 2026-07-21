@@ -72,7 +72,10 @@ animax_source_set("player") {
       "web/animax_surface_web.h",
       "web/animax_web_gpu_context.cc",
       "web/animax_web_gpu_context.h",
+      "web/frame_rate_limiter_web.h",
       "web/vsync_dispatcher_web.cc",
+      "web/vsync_monitor_web.cc",
+      "web/vsync_monitor_web.h",
     ]
 
     deps = [ ":wasm-rtti-player" ]

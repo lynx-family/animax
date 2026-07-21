@@ -19,12 +19,15 @@
 #include "src/base/thread/task_runner.h"
 #include "src/player/web/animax_surface_web.h"
 #include "src/player/web/animax_web_gpu_context.h"
+#include "src/player/web/vsync_monitor_web.h"
 #include "src/render/web/font_registry_web.h"
 #include "src/resource/resource_loader/web/resource_loader_web.h"
 
 namespace lynx {
 namespace animax {
 namespace {
+constexpr double kUnlimitedFrameRate = 1000000000.0;
+
 std::string GetEventName(Event event) {
   switch (event) {
     case Event::kCompletion:
@@ -185,9 +188,11 @@ base::NoDestructor<
 AnimaXWasm::AnimaXWasm(float scale) {
   ANIMAX_LOGI("AnimaXWasm constructor, scale: " << scale);
   resource_loader_ = std::make_shared<ResourceLoaderWeb>();
+  vsync_monitor_ = std::make_shared<VSyncMonitorWeb>();
 
   AnimaXPlayerBuilder builder;
   builder.SetScale(scale)
+      .SetVSyncMonitor(vsync_monitor_)
       .SetResourceLoader(resource_loader_)
       .AddEventListener([](std::weak_ptr<AnimaXPlayer> weak_player,
                            const Event event,
@@ -198,6 +203,9 @@ AnimaXWasm::AnimaXWasm(float scale) {
         }
       });
   player_ = builder.Build();
+  // VSyncMonitorWeb owns Web frame limiting so playback can keep using the
+  // browser's unmodified RAF timestamp.
+  player_->SetMaxFrameRate(kUnlimitedFrameRate);
 }
 
 AnimaXWasm::~AnimaXWasm() {
@@ -364,6 +372,10 @@ void AnimaXWasm::UpdateVisibilityStates(uint16_t state) {
   }
 
   current_visible_states_ = state;
+}
+
+void AnimaXWasm::SetMaxFrameRate(double max_frame_rate) {
+  vsync_monitor_->SetMaxFrameRate(max_frame_rate);
 }
 
 void AnimaXWasm::GetLayerBounds(
