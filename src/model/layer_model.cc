@@ -21,6 +21,7 @@
 #include "src/model/composition_model.h"
 #include "src/model/effect/blur_effect_model.h"
 #include "src/model/effect/drop_shadow_effect_model.h"
+#include "src/model/text/text_gradient_model.h"
 
 namespace lynx {
 namespace animax {
@@ -31,6 +32,8 @@ std::unique_ptr<LayerModel> LayerModel::Make(CompositionModel& composition) {
 
 LayerModel::LayerModel(CompositionModel& composition)
     : composition_(composition) {}
+
+LayerModel::~LayerModel() = default;
 
 void LayerModel::Init(
     std::string layer_name, LayerType layer_type, int32_t layer_id,
@@ -75,6 +78,22 @@ void LayerModel::Init(
 
 AnimatableTransformModel* LayerModel::GetTransform() {
   return transform_.get();
+}
+
+void LayerModel::SetTextGradientModel(
+    std::unique_ptr<TextGradientModel> model) {
+  if (!model) {
+    return;
+  }
+  if (!text_gradient_model_) {
+    text_gradient_model_ = std::move(model);
+    return;
+  }
+  text_gradient_model_->Append(std::move(*model));
+}
+
+const TextGradientModel* LayerModel::GetTextGradientModel() const {
+  return text_gradient_model_.get();
 }
 
 float LayerModel::GetStartProgress() {

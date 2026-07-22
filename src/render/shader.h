@@ -35,6 +35,12 @@ class Shader {
       float end_radius, int32_t size, int32_t* colors, float* positions,
       ShaderTileMode mode, Matrix& matrix);
 
+  static std::unique_ptr<Shader> MakeSweep(PointF const& center,
+                                           float start_angle, float end_angle,
+                                           int32_t size, int32_t* colors,
+                                           float* positions,
+                                           ShaderTileMode mode, Matrix& matrix);
+
   explicit Shader(std::shared_ptr<skity::Shader> shader)
       : shader_(std::move(shader)) {}
 

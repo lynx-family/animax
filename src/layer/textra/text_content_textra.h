@@ -5,9 +5,16 @@
 #ifndef ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_TEXTRA_H_
 #define ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_TEXTRA_H_
 
+#include <memory>
+#include <vector>
+
 #include "src/layer/text_content.h"
 #include "src/layer/text_content_data_source.h"
 #include "src/render/canvas.h"
+
+namespace skity {
+class Shader;
+}  // namespace skity
 
 namespace lynx {
 namespace animax {
@@ -27,6 +34,8 @@ class TextContentTextra : public TextContent {
   const TextContentDataSource& data_source_;
   std::unique_ptr<TextContentLayoutContext> layout_context_;
   std::unique_ptr<Paint> paint_;
+  std::vector<std::shared_ptr<skity::Shader>> gradient_shaders_;
+  bool gradient_shaders_initialized_ = false;
 };
 
 }  // namespace animax

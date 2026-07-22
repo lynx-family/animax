@@ -35,6 +35,10 @@ class ValueParser final {
  public:
   static std::unique_ptr<Value> Parse(rapidjson::Value& value, float scale,
                                       ParseContext& context, ValueType type);
+  static std::unique_ptr<PointF> ParsePoint(rapidjson::Value& value,
+                                            float scale);
+  static std::unique_ptr<GradientColor> ParseGradient(rapidjson::Value& value,
+                                                      ParseContext& context);
 
  private:
   static std::unique_ptr<Value> ParseColor(rapidjson::Value& value,
@@ -43,8 +47,6 @@ class ValueParser final {
                                               float scale);
   static std::unique_ptr<Value> ParseShape(rapidjson::Value& value,
                                            float scale);
-  static std::unique_ptr<Value> ParseGradient(rapidjson::Value& value,
-                                              ParseContext& context);
   static std::unique_ptr<Value> ParseOrientation(rapidjson::Value& value,
                                                  ValueType type);
 

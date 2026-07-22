@@ -80,6 +80,9 @@ class CompositionModel {
 
   LayerModelList& GetLayers() { return layers_; }
   std::unordered_map<int32_t, LayerModel*>& GetLayerMap() { return layer_map_; }
+  // Finds a root layer when precomp_id is empty, otherwise a layer in that
+  // precomposition asset.
+  LayerModel* FindLayer(int32_t layer_id, const std::string& precomp_id);
 
   std::unordered_map<std::string, LayerModelList>& GetPrecomps() {
     return pre_comps_;
