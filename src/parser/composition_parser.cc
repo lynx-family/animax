@@ -21,10 +21,12 @@
 #include <string.h>
 
 #include <algorithm>
+#include <string>
 
 #include "src/base/log/log.h"
 #include "src/base/util/composition_frame_util.h"
 #include "src/model/composition_model.h"
+#include "src/parser/custom/custom_feature_parser.h"
 #include "src/parser/layer_parser.h"
 #include "src/parser/text/font_character_parser.h"
 #include "src/parser/text/font_parser.h"
@@ -74,6 +76,7 @@ std::shared_ptr<CompositionModel> CompositionParser::Parse(const char* str_data,
   int32_t width = 0, height = 0;
   float start_frame = 0, end_frame = 0, frame_rate = 0;
   bool enable_3d = false;
+  rapidjson::Value* meta = nullptr;
 
   for (auto it = document.MemberBegin(); it != document.MemberEnd(); it++) {
     const auto& key = it->name.GetString();
@@ -105,7 +108,13 @@ std::shared_ptr<CompositionModel> CompositionParser::Parse(const char* str_data,
       ParseVideos(it->value, *composition_model);
     } else if (strcmp(key, "ddd") == 0) {
       enable_3d = it->value.GetInt() == 1;
+    } else if (strcmp(key, "meta") == 0) {
+      meta = &it->value;
     }
+  }
+
+  if (meta != nullptr) {
+    CustomFeatureParser::Parse(*meta, *composition_model);
   }
 
   auto rect =

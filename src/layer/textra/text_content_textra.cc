@@ -4,8 +4,15 @@
 
 #include "src/layer/textra/text_content_textra.h"
 
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "src/base/log/log.h"
+#include "src/layer/text_gradient_helper.h"
 #include "src/layer/textra/text_content_layout_context.h"
+#include "src/layer/textra/text_gradient_skity_canvas_helper.h"
 #include "src/model/value/document_data.h"
 
 namespace lynx {
@@ -19,6 +26,8 @@ TextContentTextra::~TextContentTextra() = default;
 void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   if (!data_source_.GetLayoutOnlyOnce()) {
     layout_context_.reset();
+    gradient_shaders_.clear();
+    gradient_shaders_initialized_ = false;
   }
 
   // Offset by the box position
@@ -44,14 +53,25 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   auto* layout_region = layout_context_->GetLayoutRegion();
   DCHECK(layout_region);
 
-  if (!layout_context_->IsBoxMode()) {
+  float origin_left = 0.f;
+  float origin_width = layout_region->GetLayoutedWidth();
+  float origin_height = layout_region->GetLayoutedHeight();
+  if (layout_context_->IsBoxMode()) {
+    auto* box_size = document_data.GetBoxSize();
+    if (box_size && !box_size->IsEmpty()) {
+      origin_width = box_size->GetX();
+      origin_height = box_size->GetY();
+    }
+  } else {
     const auto width = tttext::LAYOUT_MAX_UNITS;
     switch (document_data.GetJustification()) {
       case DocumentJustification::kRightAlign:
         canvas.Translate(-width, 0);
+        origin_left = width - origin_width;
         break;
       case DocumentJustification::kCenter:
         canvas.Translate(-width / 2, 0);
+        origin_left = (width - origin_width) / 2;
         break;
       default:
         break;
@@ -62,9 +82,38 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
     }
   }
 
-  auto* skity_canvas = canvas.GetSkityCanvas();
-  ttoffice::tttext::SkityCanvasHelper canvas_helper(skity_canvas);
-  ttoffice::tttext::LayoutDrawer drawer(&canvas_helper);
+  const auto* text_gradient_model =
+      layer_ ? layer_->GetLayerModel().GetTextGradientModel() : nullptr;
+  const bool has_gradient = text_gradient_model != nullptr &&
+                            !text_gradient_model->GetItems().empty();
+
+  // A SaveLayer is required to fully preserve complex opacity composition
+  // across multiple translucent gradient passes. Avoid it here because Textra
+  // bounds can be inaccurate for some exported fonts and synthetic italic or
+  // bold styles, and an offscreen layer adds memory and compositing overhead.
+  std::unique_ptr<ttoffice::tttext::SkityCanvasHelper> canvas_helper;
+  if (has_gradient) {
+    if (!gradient_shaders_initialized_) {
+      gradient_shaders_.clear();
+      for (const auto& item : text_gradient_model->GetItems()) {
+        auto shader = MakeTextGradientShader(*item, origin_width, origin_height,
+                                             origin_left, 0.f);
+        if (shader && shader->GetShader()) {
+          gradient_shaders_.push_back(shader->GetShader());
+        }
+      }
+      gradient_shaders_initialized_ = true;
+    }
+
+    canvas_helper = std::make_unique<TextGradientSkityCanvasHelper>(
+        canvas.GetSkityCanvas(), gradient_shaders_,
+        static_cast<uint8_t>(std::clamp(alpha, 0, 255)));
+  } else {
+    canvas_helper = std::make_unique<ttoffice::tttext::SkityCanvasHelper>(
+        canvas.GetSkityCanvas());
+  }
+
+  ttoffice::tttext::LayoutDrawer drawer(canvas_helper.get());
   drawer.DrawLayoutPage(layout_region);
 }
 
@@ -72,6 +121,7 @@ bool TextContentTextra::GetRect(RectF& out_rect) {
   if (!layout_context_) {
     return false;
   }
+
   auto& document_data = data_source_.GetDocumentData();
   double x = 0, y = 0, w = 0, h = 0;
   if (layout_context_->IsBoxMode()) {
@@ -105,10 +155,7 @@ bool TextContentTextra::GetRect(RectF& out_rect) {
       y = -first_line->GetMaxAscent();
     }
   }
-  auto baseline_shift = document_data.GetBaselineShift();
-  if (baseline_shift != 0) {
-    y -= baseline_shift;
-  }
+  y -= document_data.GetBaselineShift();
 
   out_rect.Set(x, y, x + w, y + h);
   return true;

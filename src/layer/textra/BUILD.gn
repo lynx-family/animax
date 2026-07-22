@@ -10,6 +10,8 @@ textra_shared_sources = [
   "text_content_layout_context.h",
   "text_content_textra.cc",
   "text_content_textra.h",
+  "text_gradient_skity_canvas_helper.cc",
+  "text_gradient_skity_canvas_helper.h",
   "text_helper_textra.cc",
   "text_helper_textra.h",
   "textra_font_manager_factory.cc",

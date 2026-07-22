@@ -18,6 +18,8 @@
 
 #include "src/model/composition_model.h"
 
+#include <algorithm>
+
 #include "src/base/util/composition_frame_util.h"
 #include "src/layer/text_helper.h"
 #include "src/model/layer_model.h"
@@ -43,6 +45,25 @@ void CompositionModel::Init(std::unique_ptr<RectF> bounds, float start_frame,
   end_frame_ = end_frame;
   frame_rate_ = frame_rate;
   enable_3d_ = enable_3d;
+}
+
+LayerModel* CompositionModel::FindLayer(int32_t layer_id,
+                                        const std::string& precomp_id) {
+  if (precomp_id.empty()) {
+    auto layer_it = layer_map_.find(layer_id);
+    return layer_it == layer_map_.end() ? nullptr : layer_it->second;
+  }
+
+  auto precomp_it = pre_comps_.find(precomp_id);
+  if (precomp_it == pre_comps_.end()) {
+    return nullptr;
+  }
+  auto layer_it =
+      std::find_if(precomp_it->second.begin(), precomp_it->second.end(),
+                   [layer_id](const auto& layer) {
+                     return layer && layer->GetId() == layer_id;
+                   });
+  return layer_it == precomp_it->second.end() ? nullptr : layer_it->get();
 }
 
 long CompositionModel::GetDuration() {

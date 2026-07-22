@@ -23,7 +23,7 @@
 namespace lynx {
 namespace animax {
 
-enum class GradientType : uint8_t { kLinear = 0, kRadial };
+enum class GradientType : uint8_t { kLinear = 0, kRadial, kConic };
 
 /**
  * Represents a gradient color, defined by a set of colors and their positions.

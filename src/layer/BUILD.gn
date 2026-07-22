@@ -29,6 +29,8 @@ layer_shared_sources = [
   "text_content_data_source.h",
   "text_content_default.cc",
   "text_content_default.h",
+  "text_gradient_helper.cc",
+  "text_gradient_helper.h",
   "text_helper.cc",
   "text_helper.h",
   "text_layer.cc",

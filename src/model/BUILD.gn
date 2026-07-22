@@ -43,6 +43,7 @@ model_shared_sources = [
   "shape/shape_path_model.h",
   "shape/shape_stroke_model.h",
   "text/font_character_model.h",
+  "text/text_gradient_model.h",
   "value/base_value.cc",
   "value/base_value.h",
   "value/blend_mode_type.h",

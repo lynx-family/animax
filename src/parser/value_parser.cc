@@ -133,13 +133,7 @@ std::unique_ptr<Value> ValueParser::Parse(rapidjson::Value& value, float scale,
       return ValueFactory::Make<Integer>(static_cast<int32_t>(round));
     }
     case ValueType::kPoint: {
-      if (value.IsArray() || value.IsObject()) {
-        return JsonParser::JsonToPoint(value, scale);
-      } else if (value.IsNumber()) {
-        auto v = value.GetFloat();
-        return ValueFactory::Make<PointF>(v * scale, v * scale, v * scale);
-      }
-      return ValueFactory::Make<PointF>();
+      return ValueParser::ParsePoint(value, scale);
     }
     case ValueType::kScale: {
       auto it = value.GetArray().Begin(), it_end = value.GetArray().End();
@@ -350,8 +344,19 @@ std::unique_ptr<Value> ValueParser::ParseShape(rapidjson::Value& value,
   return shape_model;
 }
 
-std::unique_ptr<Value> ValueParser::ParseGradient(rapidjson::Value& value,
-                                                  ParseContext& context) {
+std::unique_ptr<PointF> ValueParser::ParsePoint(rapidjson::Value& value,
+                                                float scale) {
+  if (value.IsArray() || value.IsObject()) {
+    return JsonParser::JsonToPoint(value, scale);
+  } else if (value.IsNumber()) {
+    auto v = value.GetFloat();
+    return ValueFactory::Make<PointF>(v * scale, v * scale, v * scale);
+  }
+  return ValueFactory::Make<PointF>();
+}
+
+std::unique_ptr<GradientColor> ValueParser::ParseGradient(
+    rapidjson::Value& value, ParseContext& context) {
   if (!value.IsArray()) {
     return nullptr;
   }
@@ -359,7 +364,12 @@ std::unique_ptr<Value> ValueParser::ParseGradient(rapidjson::Value& value,
   const int32_t value_array_size = value.GetArray().Size();
   auto color_points = (context.color_points_ >= 0 ? context.color_points_
                                                   : value_array_size / 4);
-  if (color_points <= 0 || value_array_size < color_points * 4) {
+  if (color_points <= 0 || static_cast<size_t>(color_points) >
+                               static_cast<size_t>(value_array_size) / 4) {
+    return nullptr;
+  }
+  const auto color_value_count = static_cast<size_t>(color_points) * 4;
+  if ((static_cast<size_t>(value_array_size) - color_value_count) % 2 != 0) {
     return nullptr;
   }
 

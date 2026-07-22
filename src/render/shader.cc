@@ -107,5 +107,28 @@ std::unique_ptr<Shader> Shader::MakeTwoPointConical(
   return ret;
 }
 
+std::unique_ptr<Shader> Shader::MakeSweep(PointF const &center,
+                                          float start_angle, float end_angle,
+                                          int32_t size, int32_t *colors,
+                                          float *positions, ShaderTileMode mode,
+                                          Matrix &matrix) {
+  auto skity_mode = ConvertToSkityMode(mode);
+
+  std::vector<skity::Color4f> skity_colors;
+  for (int32_t i = 0; i < size; i++) {
+    skity_colors.emplace_back(skity::Color4fFromColor(colors[i]));
+  }
+
+  auto ret = std::make_unique<Shader>(skity::Shader::MakeSweep(
+      center.GetX(), center.GetY(), start_angle, end_angle, skity_colors.data(),
+      positions, size, skity_mode));
+
+  auto &shader = ret->GetShader();
+  if (shader) {
+    shader->SetLocalMatrix(matrix.GetMatrix());
+  }
+  return ret;
+}
+
 }  // namespace animax
 }  // namespace lynx

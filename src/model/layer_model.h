@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "include/base/macros.h"
 #include "src/model/animatable/animatable_text_properties.h"
 #include "src/model/animatable/animatable_transform_model.h"
 #include "src/model/animatable/animatable_value.h"
@@ -27,6 +28,7 @@ class ContentModel;
 class CompositionModel;
 class AnimatableTransformModel;
 class AnimatableFloatValue;
+class TextGradientModel;
 
 enum class LayerType : int32_t {
   kPreComp = 0,
@@ -54,7 +56,7 @@ class LayerModel {
   static std::unique_ptr<LayerModel> Make(CompositionModel& composition);
 
   LayerModel(CompositionModel& composition);
-  ~LayerModel() = default;
+  ~LayerModel();
 
   void Init(std::string layer_name, LayerType layer_type, int32_t layer_id,
             int32_t parent_id, std::string ref_id, int32_t solid_width,
@@ -111,6 +113,8 @@ class LayerModel {
   const AnimatableTextPropertyList* GetTextPropertiesList() {
     return text_properties_list_.get();
   }
+  void SetTextGradientModel(std::unique_ptr<TextGradientModel> model);
+  ANIMAX_EXPORT const TextGradientModel* GetTextGradientModel() const;
   AnimatableFloatValue* GetTimeRemapping() { return time_remapping_.get(); }
 
   BlurEffectModel* GetBlurEffect() { return blur_effect_.get(); }
@@ -146,6 +150,7 @@ class LayerModel {
   // text
   std::unique_ptr<AnimatableTextFrame> text_;
   std::unique_ptr<AnimatableTextPropertyList> text_properties_list_;
+  std::unique_ptr<TextGradientModel> text_gradient_model_;
 
   std::shared_ptr<KeyframeModelList> in_out_frames_ =
       std::make_shared<KeyframeModelList>();
