@@ -223,8 +223,7 @@ int VideoShaderAndroid::CreateFenceFd() {
 }
 
 void VideoShaderAndroid::EnsureGPUSemaphore(RealContext *context) {
-  if (gpu_semaphore_ != nullptr || context == nullptr ||
-      context->Get() == nullptr) {
+  if (context == nullptr || context->Get() == nullptr) {
     return;
   }
   gpu_semaphore_ = context->Get()->CreateSemaphore();
