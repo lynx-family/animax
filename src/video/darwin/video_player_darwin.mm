@@ -118,7 +118,8 @@ VideoFrameCache *VideoPlayerDarwin::GetFrameCache() {
 }
 
 int32_t VideoPlayerDarwin::GetNextFrameToDecode(int32_t presentation_frame) {
-  const int32_t key_frame = asset_->GetPrevKeyFrame(presentation_frame);
+  const int decode_frame = asset_->GetDecodeFrame(presentation_frame);
+  const int decode_start_frame = asset_->GetPrevKeyFrame(decode_frame);
   do {
     if (CURRENT_FRAME_INVALID == current_decoded_frame_) {
       break;
@@ -126,20 +127,19 @@ int32_t VideoPlayerDarwin::GetNextFrameToDecode(int32_t presentation_frame) {
     if (presentation_frame < current_presentation_frame_) {
       break;
     }
-    // presentation_frame > current_presentation_frame_
-    // continue to decode or decode from key frame
-    if (key_frame != asset_->GetPrevKeyFrame(current_decoded_frame_)) {
-      // in different GOP
+    if (current_decoded_frame_ < decode_start_frame || current_decoded_frame_ >= decode_frame) {
       break;
     }
-    GetFrameCache()->ClearCache(key_frame, presentation_frame);
-    pending_frame_set_->ClearPendingFrame(key_frame, presentation_frame);
+    const int32_t decode_start_presentation_frame =
+        asset_->GetFrameInfo(decode_start_frame).presentation_index_;
+    GetFrameCache()->ClearCache(decode_start_presentation_frame, presentation_frame);
+    pending_frame_set_->ClearPendingFrame(decode_start_presentation_frame, presentation_frame);
     return current_decoded_frame_ + 1;
 
   } while (0);
   GetFrameCache()->ClearAll();
   pending_frame_set_->ClearPendingFrameAll();
-  return key_frame;
+  return decode_start_frame;
 }
 
 void VideoPlayerDarwin::MoveFrameFromCache(int32_t presentation_frame) {

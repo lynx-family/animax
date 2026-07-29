@@ -114,6 +114,8 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
   [reader cancelReading];
 
   ComputePresentationIndex(gop, sorted_num);
+  ComputePresentationFrameToDecodeFrame();
+  ComputeDecodeStartFrames();
 
   ANIMAX_LOGI("video size: " << total_size << " bytes, frame count: " << frame_infos_.size()
                              << ", key frame count: " << key_frames_.size());
@@ -123,6 +125,46 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
     is_valid_.store(true);
   }
   return IsValid();
+}
+
+void VideoAssetDarwin::ComputePresentationFrameToDecodeFrame() {
+  const auto total_size = frame_infos_.size();
+  presentation_frame_to_decode_frame_.assign(total_size, -1);
+  for (size_t decode_frame = 0; decode_frame < total_size; ++decode_frame) {
+    const int32_t presentation_frame = frame_infos_[decode_frame].presentation_index_;
+    if (presentation_frame >= 0 && presentation_frame < total_size) {
+      presentation_frame_to_decode_frame_[presentation_frame] = decode_frame;
+    }
+  }
+}
+
+void VideoAssetDarwin::ComputeDecodeStartFrames() {
+  const size_t total_size = static_cast<size_t>(frame_infos_.size());
+  decode_start_frames_.assign(frame_infos_.size(), -1);
+  if (key_frames_.empty()) {
+    return;
+  }
+
+  int32_t decode_start_frame = key_frames_.front();
+  for (size_t key_frame_index = 0; key_frame_index < key_frames_.size(); ++key_frame_index) {
+    const int32_t gop_start_frame = key_frames_[key_frame_index];
+    const int32_t gop_end_frame =
+        key_frame_index + 1 == key_frames_.size() ? total_size : key_frames_[key_frame_index + 1];
+    const int32_t key_presentation_frame = frame_infos_[gop_start_frame].presentation_index_;
+    bool has_leading_b_frames = false;
+    for (int32_t decode_frame = gop_start_frame + 1; decode_frame < gop_end_frame; ++decode_frame) {
+      if (frame_infos_[decode_frame].presentation_index_ < key_presentation_frame) {
+        has_leading_b_frames = true;
+        break;
+      }
+    }
+    if (!has_leading_b_frames) {
+      decode_start_frame = gop_start_frame;
+    }
+
+    std::fill(decode_start_frames_.begin() + gop_start_frame,
+              decode_start_frames_.begin() + gop_end_frame, decode_start_frame);
+  }
 }
 
 void VideoAssetDarwin::ComputePresentationIndex(std::vector<std::pair<double, uint32_t>>& gop,
@@ -160,9 +202,11 @@ bool VideoAssetDarwin::IsKeyFramesValid() const {
   return !key_frames_.empty() && (key_frames_[0] == 0);
 }
 
-int VideoAssetDarwin::GetPrevKeyFrame(const int32_t frame) const {
-  auto it = std::upper_bound(key_frames_.begin(), key_frames_.end(), frame);
-  return *--it;
+int VideoAssetDarwin::GetPrevKeyFrame(const int32_t decode_frame) const {
+  if (decode_frame < 0 || decode_frame >= decode_start_frames_.size()) {
+    return -1;
+  }
+  return decode_start_frames_[decode_frame];
 }
 
 }  // namespace animax
