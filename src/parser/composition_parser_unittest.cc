@@ -14,8 +14,9 @@ using namespace lynx::animax;
 
 namespace {
 
-std::shared_ptr<CompositionModel> ParseComposition(const char* json) {
-  return CompositionParser::Parse(json, std::strlen(json), 1.0f);
+std::shared_ptr<CompositionModel> ParseComposition(const char* json,
+                                                   bool enable_audio = false) {
+  return CompositionParser::Parse(json, std::strlen(json), 1.0f, enable_audio);
 }
 
 TEST(CompositionParserTest, KeepsPlaybackAndTimelineValues) {
@@ -64,6 +65,32 @@ TEST(CompositionParserTest, ReportsExactMillisecondsForIntegerTimeline) {
 
   ASSERT_NE(nullptr, model);
   EXPECT_EQ(32300, model->GetTimelineDurationMs());
+}
+
+TEST(CompositionParserTest, SkipsAssetsWithInvalidStringFields) {
+  static constexpr const char* kLottie = R"({
+    "v":"5.6.10","fr":30,"ip":0,"op":60,"w":100,"h":100,
+    "assets":[
+      {"id":null,"w":10,"h":10,"p":"missing-id.png","u":""},
+      {"id":"missing-file","w":10,"h":10,"p":null,"u":""},
+      {"id":"valid-image","w":10,"h":10,"p":"image.png","u":null},
+      {"id":"valid-audio","p":"audio.mp3","u":""},
+      {"id":"valid-precomp","layers":[]}
+    ],
+    "layers":[],"markers":[]
+  })";
+
+  auto model = ParseComposition(kLottie, true);
+
+  ASSERT_NE(nullptr, model);
+  ASSERT_EQ(1u, model->GetImages().size());
+  EXPECT_EQ(0u, model->GetImages().count(""));
+  EXPECT_EQ(1u, model->GetImages().count("valid-image"));
+  EXPECT_TRUE(model->GetImages().at("valid-image")->Model().dir_name.empty());
+  EXPECT_EQ(1u, model->GetAudios().size());
+  EXPECT_EQ(1u, model->GetAudios().count("valid-audio"));
+  EXPECT_EQ(1u, model->GetPrecomps().size());
+  EXPECT_EQ(1u, model->GetPrecomps().count("valid-precomp"));
 }
 
 TEST(CompositionModelTest, PreservesDirectPlaybackInitialization) {
