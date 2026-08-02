@@ -6,17 +6,23 @@
 #include <memory>
 #include <utility>
 
+#include "src/resource/asset/video_asset.h"
+#include "src/video/video_player.h"
+#include "src/video/video_shader.h"
+
+#if ENABLE_ANIMAX_VIDEO
 #include "src/base/gl/gl_util.h"
 #include "src/base/log/log.h"
 #include "src/player/animax_ability.h"
 #include "src/video/custom/ffmpeg/video_decoder_ffmpeg.h"
 #include "src/video/custom/video_player_custom.h"
-#include "src/video/video_player.h"
-#include "src/video/video_shader.h"
 #include "src/video/win/video_shader_windows.h"
+#endif
 
 namespace lynx {
 namespace animax {
+
+#if ENABLE_ANIMAX_VIDEO
 
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
     std::shared_ptr<AnimaXAbility> ability) {
@@ -30,6 +36,28 @@ std::unique_ptr<VideoShader> VideoShader::Make(
     std::shared_ptr<AnimaXAbility> ability) {
   return std::make_unique<VideoShaderWindows>(std::move(ability));
 }
+
+#else  // !ENABLE_ANIMAX_VIDEO
+
+// The FFmpeg backend is unavailable in this build (e.g. TTP cloud build
+// where uniplayer is not delivered). Provide stub factories so animax_core
+// still links; downstream code that hits these paths receives nullptr and
+// is expected to no-op.
+std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
+    std::shared_ptr<AnimaXAbility> ability) {
+  return nullptr;
+}
+
+std::unique_ptr<VideoShader> VideoShader::Make(
+    std::shared_ptr<AnimaXAbility> ability) {
+  return nullptr;
+}
+
+std::shared_ptr<VideoAsset> VideoAsset::Make(VideoAssetModel model) {
+  return nullptr;
+}
+
+#endif  // ENABLE_ANIMAX_VIDEO
 
 }  // namespace animax
 }  // namespace lynx
