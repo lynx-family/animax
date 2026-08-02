@@ -82,14 +82,6 @@ animax_source_set("video") {
     deps = [ ":wasm-rtti-video" ]
   } else if (is_win) {
     sources += [
-      "custom/ffmpeg/ffmpeg_lib_loader.cc",
-      "custom/ffmpeg/ffmpeg_lib_loader.h",
-      "custom/ffmpeg/ffmpeg_video_context.cc",
-      "custom/ffmpeg/ffmpeg_video_context.h",
-      "custom/ffmpeg/video_asset_ffmpeg.cc",
-      "custom/ffmpeg/video_asset_ffmpeg.h",
-      "custom/ffmpeg/video_decoder_ffmpeg.cc",
-      "custom/ffmpeg/video_decoder_ffmpeg.h",
       "custom/video_shader_yuv.cc",
       "custom/video_shader_yuv.h",
       "video_shader_gl.cc",
@@ -100,9 +92,27 @@ animax_source_set("video") {
       "win/video_shader_windows.h",
     ]
 
-    include_dirs = [
-      "../../../../clay/third_party/uniplayer/win/$target_cpu/ttffmpeg/include",
-    ]
+    defines = [ "ENABLE_ANIMAX_VIDEO=$enable_animax_video" ]
+
+    # The FFmpeg-backed decoder relies on the uniplayer headers/libs shipped
+    # under clay/third_party/uniplayer/win. Downstream environments such as
+    # the TTP cloud build do not deliver that package. Skip the FFmpeg
+    # sources and the uniplayer include dir there; the Windows sources
+    # above use ENABLE_ANIMAX_VIDEO to fall back to stub factories.
+    if (enable_animax_video) {
+      sources += [
+        "custom/ffmpeg/ffmpeg_lib_loader.cc",
+        "custom/ffmpeg/ffmpeg_lib_loader.h",
+        "custom/ffmpeg/ffmpeg_video_context.cc",
+        "custom/ffmpeg/ffmpeg_video_context.h",
+        "custom/ffmpeg/video_asset_ffmpeg.cc",
+        "custom/ffmpeg/video_asset_ffmpeg.h",
+        "custom/ffmpeg/video_decoder_ffmpeg.cc",
+        "custom/ffmpeg/video_decoder_ffmpeg.h",
+      ]
+
+      include_dirs = [ "../../../../clay/third_party/uniplayer/win/$target_cpu/ttffmpeg/include" ]
+    }
   }
 }
 
