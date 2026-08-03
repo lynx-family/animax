@@ -153,13 +153,17 @@ void CompositionParser::ParseAssets(rapidjson::Value& value,
   for (auto it = array.Begin(); it != array.End(); it++) {
     auto info = ImageAssetModel{};
     LayerModelList layers{};
+    bool has_file_name = false;
 
     const auto& object = it->GetObject();
     for (auto object_it = object.MemberBegin(); object_it != object.MemberEnd();
          object_it++) {
       const auto& object_key = object_it->name.GetString();
       if (strcmp(object_key, "id") == 0) {
-        info.id = object_it->value.GetString();
+        if (object_it->value.IsString()) {
+          info.id.assign(object_it->value.GetString(),
+                         object_it->value.GetStringLength());
+        }
       } else if (strcmp(object_key, "layers") == 0) {
         const auto& layer_array = object_it->value.GetArray();
         for (auto layer_it = layer_array.Begin(); layer_it != layer_array.End();
@@ -172,24 +176,35 @@ void CompositionParser::ParseAssets(rapidjson::Value& value,
       } else if (strcmp(object_key, "h") == 0) {
         info.height = object_it->value.GetInt();
       } else if (strcmp(object_key, "p") == 0) {
-        info.file_name = object_it->value.GetString();
+        if (object_it->value.IsString()) {
+          info.file_name.assign(object_it->value.GetString(),
+                                object_it->value.GetStringLength());
+          has_file_name = !info.file_name.empty();
+        }
       } else if (strcmp(object_key, "u") == 0) {
-        info.dir_name = object_it->value.GetString();
+        if (object_it->value.IsString()) {
+          info.dir_name.assign(object_it->value.GetString(),
+                               object_it->value.GetStringLength());
+        }
       }
+    }
+
+    if (info.id.empty()) {
+      continue;
     }
 
     const auto info_id = info.id;
     const auto file_name = info.file_name;
-    if (IsAudio(file_name)) {
+    if (has_file_name && IsAudio(file_name)) {
       if (!composition.parse_context_.enable_audio_) {
         continue;
       }
       audios[info_id] =
           AudioAsset::Make({info.id, info.dir_name, info.file_name});
-    } else if (!file_name.empty()) {
+    } else if (has_file_name) {
       images[info_id] =
           std::shared_ptr<ImageAsset>(new ImageAsset{std::move(info)});
-    } else {
+    } else if (object.HasMember("layers")) {
       precomps[info_id] = std::move(layers);
     }
   }
