@@ -136,11 +136,18 @@ void BaseLayer::Draw(Canvas& canvas, Matrix& parent_matrix,
   canvas_bounds_.Set(0, 0, canvas.GetWidth(), canvas.GetHeight());
   canvas_matrix_ = canvas.GetMatrix();
 
+  bool can_intersect_canvas_bounds = true;
   if (!canvas_matrix_->IsIdentity()) {
-    canvas_matrix_->Invert(*canvas_matrix_);
-    canvas_matrix_->MapRect(canvas_bounds_);
+    Matrix inverse_canvas_matrix;
+    if (canvas_matrix_->InvertZ0Plane(inverse_canvas_matrix)) {
+      inverse_canvas_matrix.MapRect(canvas_bounds_);
+    } else {
+      // Canvas bounds clipping is only an optimization. If the z=0 plane is
+      // edge-on or otherwise non-invertible, keep the layer bounds unchanged.
+      can_intersect_canvas_bounds = false;
+    }
   }
-  if (!rect_.Intersect(canvas_bounds_)) {
+  if (can_intersect_canvas_bounds && !rect_.Intersect(canvas_bounds_)) {
     rect_.Set(0, 0, 0, 0);
   }
 
