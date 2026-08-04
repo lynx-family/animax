@@ -25,6 +25,11 @@ class Matrix {
 
   bool Invert(Matrix &matrix);
 
+  // Inverts the 2D projective transform induced by mapping the z=0 plane
+  // through this matrix. Unlike a full 4x4 inverse, the returned matrix can
+  // map screen-space points back to their coordinates on the z=0 plane.
+  bool InvertZ0Plane(Matrix &matrix) const;
+
   void MapRect(RectF &rect) const;
 
   void MapPoints(float *points, int32_t size) const;

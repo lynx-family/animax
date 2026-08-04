@@ -29,6 +29,15 @@ bool Matrix::Invert(Matrix &matrix) {
   return matrix_->Invert(matrix.matrix_.get());
 }
 
+bool Matrix::InvertZ0Plane(Matrix &matrix) const {
+  float values[9];
+  matrix_->Get9(values);
+
+  skity::Matrix z0_plane_matrix;
+  z0_plane_matrix.Set9(values);
+  return z0_plane_matrix.Invert(matrix.matrix_.get());
+}
+
 void Matrix::MapRect(RectF &rect) const {
   skity::Rect dst{};
   skity::Rect src = SkityUtil::MakeSkityRect(rect);
