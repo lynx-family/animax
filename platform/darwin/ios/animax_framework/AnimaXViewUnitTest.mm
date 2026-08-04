@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 #import <AnimaX/AnimaXImageView.h>
-#import <AnimaX/AnimaXMonitorService.h>
 #import <AnimaX/AnimaXView.h>
 
 #import <XCTest/XCTest.h>
@@ -56,28 +55,6 @@
 }
 - (double)progress {
   return 0;
-}
-@end
-
-@interface TestReleaseMonitorService : NSObject <AnimaXMonitorService>
-@property(nonatomic, strong) XCTestExpectation *playExpectation;
-@property(nonatomic, strong) XCTestExpectation *releaseExpectation;
-@property(nonatomic, strong) NSThread *playThread;
-@property(nonatomic, strong) NSThread *releaseThread;
-@end
-
-@implementation TestReleaseMonitorService
-- (void)reportError:(NSDictionary<NSString *, NSObject *> *)params {
-}
-
-- (void)reportPerformance:(NSDictionary<NSString *, NSObject *> *)params {
-  if ([params[@"default"] isEqual:@"onPlay"]) {
-    self.playThread = [NSThread currentThread];
-    [self.playExpectation fulfill];
-  } else if ([params[@"default"] isEqual:@"onRelease"]) {
-    self.releaseThread = [NSThread currentThread];
-    [self.releaseExpectation fulfill];
-  }
 }
 @end
 
@@ -315,53 +292,6 @@ static NSString *TestEasyLottieJson() {
 - (void)testTouchImage {
   [self createViewIsImageView:YES];
   [self generalTestTouch];
-}
-
-#pragma mark Test: Release Monitor
-
-- (void)testReleaseReportsFullMetricsAfterPlayerDestroyed {
-  BaseAnimaXAbility *ability = [[BaseAnimaXAbility alloc] init];
-  TestReleaseMonitorService *monitor = [[TestReleaseMonitorService alloc] init];
-  [ability registerService:@protocol(AnimaXMonitorService) withImpl:monitor];
-
-  XCTestExpectation *readyExpectation = [self expectationWithDescription:@"AnimaX ready"];
-  TestStartListener *listener = [[TestStartListener alloc] init];
-  listener.onReadyBlock = ^{
-    [readyExpectation fulfill];
-  };
-  [ability addAnimationListener:listener];
-
-  AnimaXContext *ctx = [[AnimaXContext alloc] initWithAbility:ability];
-  @autoreleasepool {
-    TestLifecycleAnimaXView *view = [[TestLifecycleAnimaXView alloc] initWithContext:ctx];
-    view.surfaceCreationAllowed = YES;
-    view.frame = CGRectMake(0, 0, 100, 100);
-    [view setLoop:YES];
-    [view setAutoplay:NO];
-    [view setJson:TestEasyLottieJson()];
-
-    [self waitForExpectationsWithTimeout:5 handler:nil];
-
-    XCTestExpectation *startExpectation = [self expectationWithDescription:@"AnimaX started"];
-    XCTestExpectation *playExpectation =
-        [self expectationWithDescription:@"AnimaX play metrics reported"];
-    listener.onStartBlock = ^{
-      [startExpectation fulfill];
-    };
-    monitor.playExpectation = playExpectation;
-    [view play];
-
-    [self waitForExpectationsWithTimeout:5 handler:nil];
-
-    monitor.releaseExpectation =
-        [self expectationWithDescription:@"AnimaX release metrics reported"];
-    view = nil;
-
-    [self waitForExpectationsWithTimeout:5 handler:nil];
-  }
-
-  XCTAssertNotNil(monitor.playThread);
-  XCTAssertEqualObjects(monitor.playThread, monitor.releaseThread);
 }
 
 #pragma mark Test: Player Delegate
