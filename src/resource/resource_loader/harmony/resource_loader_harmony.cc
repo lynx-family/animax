@@ -16,6 +16,7 @@
 #include "src/resource/loader/exec_loader.h"
 #include "src/resource/loader/lambda_loader.h"
 #include "src/resource/loader/pipe_loader.h"
+#include "src/resource/uri/uri_util.h"
 
 namespace lynx {
 namespace animax {
@@ -23,9 +24,10 @@ namespace animax {
 namespace {
 void ReadFileToMemory(const char* file_path,
                       std::unique_ptr<uint8_t[]>& data_ptr, size_t* data_size) {
-  std::ifstream file(file_path, std::ios::binary | std::ios::ate);
+  auto local_path = GetUriLocalPath(file_path);
+  std::ifstream file(local_path, std::ios::binary | std::ios::ate);
   if (!file.is_open()) {
-    ANIMAX_LOGE("Failed to open file: " << file_path);
+    ANIMAX_LOGE("Failed to open file: " << local_path);
     return;
   }
 
@@ -377,8 +379,14 @@ void ResourceLoaderHarmony::Load(ResourceRequest request,
       break;
     }
     case ResourceRequestType::kDownloadToLocal: {
-      download_to_local_http_loader_->Load(std::move(request),
-                                           std::move(callback));
+      if (request.uri_info.scheme == UriInfo::Scheme::kFile) {
+        callback(ResourceResponse{.payload = MakePathResourcePayload(
+                                      GetUriLocalPath(request.uri_info.uri))},
+                 LoaderError{});
+      } else {
+        download_to_local_http_loader_->Load(std::move(request),
+                                             std::move(callback));
+      }
       break;
     }
     default: {
