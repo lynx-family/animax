@@ -23,6 +23,7 @@ namespace animax {
 
 AnimaXPlayer::AnimaXPlayer(AnimaXPlayerBuilder& builder)
     : scale_(builder.scale_),
+      allow_extensionless_json_(builder.allow_extensionless_json_),
       ability_(builder.ability_),
       disable_playback_on_asset_load_failure_(
           builder.disable_playback_on_asset_load_failure_),
@@ -58,6 +59,10 @@ void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
 
   // Create loader actor and initialize resource/unzip loaders.
   loader_actor_ = AnimaXCompositionLoader::Create();
+  loader_actor_->Act(
+      [allow_extensionless_json = allow_extensionless_json_](auto& loader) {
+        loader->SetAllowExtensionlessJson(allow_extensionless_json);
+      });
   auto res_loader = builder.resource_loader_;
   auto unzip_loader = builder.unzip_loader_;
   if (res_loader || unzip_loader) {
@@ -200,7 +205,10 @@ void AnimaXPlayer::SetSrc(const std::string& src) {
                        << (old_src.empty() ? "" : ", old src: " + old_src));
 
   controller_actor_->Act(
-      [src](auto& controller) { controller->SetCurrentSrc(src); });
+      [src,
+       allow_extensionless_json = allow_extensionless_json_](auto& controller) {
+        controller->SetCurrentSrc(src, allow_extensionless_json);
+      });
   loader_actor_->Act([src_index, src, scale = scale_,
                       weak_player = weak_from_this()](auto& loader) {
     loader->LoadCompositionModelFromURI(
