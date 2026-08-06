@@ -40,6 +40,10 @@ void AnimaXCompositionLoader::SetEnableAudio(bool enable) {
   pipeline_->SetEnableAudio(enable);
 }
 
+void AnimaXCompositionLoader::SetAllowExtensionlessJson(bool allow) {
+  pipeline_->SetAllowExtensionlessJson(allow);
+}
+
 void AnimaXCompositionLoader::LoadCompositionModelFromURI(
     std::string uri, float scale, AssetLoader::CallbackType callback) {
   pipeline_->LoadCompositionModelFromURI(std::move(uri), scale,
