@@ -109,6 +109,14 @@ class CompositionModelPipeline
   void SetEnableAudio(bool enable);
 
   /**
+   * Configures whether a main resource URI without a file extension should be
+   * treated as JSON.
+   *
+   * @param allow True to treat extensionless main resource URIs as JSON.
+   */
+  void SetAllowExtensionlessJson(bool allow);
+
+  /**
    * Initiates the loading of a composition model from a specified URI.
    *
    * @param uri The URI from which to load the composition model.
@@ -163,6 +171,7 @@ class CompositionModelPipeline
 
   bool has_dynamic_resource_{false};
   bool enable_audio_{false};
+  bool allow_extensionless_json_{false};
   MainResourceUriInfo main_uri_info_{};
   ModelLoader::Ptr json_composition_model_loader_{};
   ModelLoader::Ptr zip_composition_model_loader_{};

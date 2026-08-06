@@ -34,6 +34,12 @@ AnimaXPlayerBuilder& AnimaXPlayerBuilder::DisablePlaybackOnAssetLoadFailure(
   return *this;
 }
 
+AnimaXPlayerBuilder& AnimaXPlayerBuilder::SetAllowExtensionlessJson(
+    bool allow) {
+  allow_extensionless_json_ = allow;
+  return *this;
+}
+
 AnimaXPlayerBuilder& AnimaXPlayerBuilder::SetAbility(
     std::shared_ptr<AnimaXAbility> ability) {
   ability_ = std::move(ability);

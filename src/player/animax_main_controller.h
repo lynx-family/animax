@@ -90,7 +90,8 @@ class AnimaXMainController {
   float GetTotalFrame();
   int32_t GetLoopIndex();
   std::string GetCurrentSrc();
-  void SetCurrentSrc(const std::string& src);
+  void SetCurrentSrc(const std::string& src,
+                     bool allow_extensionless_json = false);
 
   void SetStartFrame(const double start_frame);
   void SetEndFrame(const double end_frame);

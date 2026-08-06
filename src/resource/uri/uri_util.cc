@@ -92,7 +92,8 @@ UriInfo::Scheme ParseUriScheme(const std::string& uri) {
   return UriInfo::Scheme::kUnknown;
 }
 
-UriInfo::ContentType ParseUriMainResourceContentType(const std::string& uri) {
+UriInfo::ContentType ParseUriMainResourceContentType(
+    const std::string& uri, bool allow_extensionless_json) {
   auto length = uri.length();
   auto position = uri.find_first_of(kStripChars);
   if (position != std::string::npos) {
@@ -108,6 +109,18 @@ UriInfo::ContentType ParseUriMainResourceContentType(const std::string& uri) {
   if (length >= kZipLength &&
       uri.compare(length - kZipLength, kZipLength, kZip) == 0) {
     return UriInfo::ContentType::kZip;
+  }
+
+  if (allow_extensionless_json) {
+    const auto path_separator_position = uri.find_last_of("/\\", length - 1);
+    const auto resource_name_position =
+        path_separator_position == std::string::npos
+            ? 0
+            : path_separator_position + 1;
+    const auto extension_position = uri.find('.', resource_name_position);
+    if (resource_name_position < length && extension_position >= length) {
+      return UriInfo::ContentType::kJson;
+    }
   }
 
   return UriInfo::ContentType::kUnknown;
@@ -171,7 +184,7 @@ std::string ConcatFilePaths(const std::string& base_path,
   } else if (relative_path.empty()) {
     return base_path;
   } else {
-    return NormalizePath(base_path + kPathSeparator + relative_path);
+    return NormalizePath(base_path + "/" + relative_path);
   }
 }
 
