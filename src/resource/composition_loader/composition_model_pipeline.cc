@@ -118,7 +118,8 @@ void CompositionModelPipeline::LoadCompositionModelFromURI(
     CompositionAssetLoader::CallbackType callback) {
   auto request = CompositionModelRequest{
       .uri_info = UriInfo{.scheme = ParseUriScheme(uri),
-                          .content_type = ParseUriMainResourceContentType(uri),
+                          .content_type = ParseUriMainResourceContentType(
+                              uri, allow_extensionless_json_),
                           .uri = std::move(uri)},
       .scale = scale,
       .enable_audio = enable_audio_,
@@ -172,6 +173,10 @@ void CompositionModelPipeline::SetHasDynamicResource(
 
 void CompositionModelPipeline::SetEnableAudio(bool enable) {
   enable_audio_ = enable;
+}
+
+void CompositionModelPipeline::SetAllowExtensionlessJson(bool allow) {
+  allow_extensionless_json_ = allow;
 }
 
 void CompositionModelPipeline::OnResourceLoaderTraceEvent(

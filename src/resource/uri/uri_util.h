@@ -27,7 +27,8 @@ bool IsBase64Uri(const std::string& uri);
 bool IsPolyfillUri(const std::string& uri);
 
 UriInfo::Scheme ParseUriScheme(const std::string& uri);
-UriInfo::ContentType ParseUriMainResourceContentType(const std::string& uri);
+UriInfo::ContentType ParseUriMainResourceContentType(
+    const std::string& uri, bool allow_extensionless_json = false);
 std::string ParseUriMainResourceBaseUri(const std::string& uri);
 
 std::string ConcatFilePaths(const std::string& base_path,

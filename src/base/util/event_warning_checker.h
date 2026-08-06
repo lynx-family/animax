@@ -57,7 +57,8 @@ class EventWarningChecker {
    * @return             true if format is valid, false if warning was triggered
    */
   static bool CheckLottieFormat(const std::string src,
-                                WarningHandler&& warning_handler);
+                                WarningHandler&& warning_handler,
+                                bool allow_extensionless_json = false);
 
   /**
    * Check if dynamic resources can be loaded in current state.
