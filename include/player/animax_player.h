@@ -412,6 +412,7 @@ class ANIMAX_EXPORT AnimaXPlayer
   bool EnableDynamicResourceFeature();
 
   float scale_ = 1.f;
+  bool allow_extensionless_json_ = false;
   struct SourceState {
     std::string src;
     std::size_t json_hash = 0;

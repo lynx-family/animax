@@ -41,6 +41,11 @@ class ANIMAX_EXPORT AnimaXPlayerBuilder {
   AnimaXPlayerBuilder& EnableMultiThreadAccelerate(bool enable);
   AnimaXPlayerBuilder& DisablePlaybackOnAssetLoadFailure(bool disable);
   /**
+   * Allow a main resource URI without a file extension to be loaded as JSON.
+   * Optional, defaults to false.
+   */
+  AnimaXPlayerBuilder& SetAllowExtensionlessJson(bool allow);
+  /**
    * Set the ability object for the player.
    * Previously configured via AnimaXPlayer::SetAbility.
    */
@@ -77,6 +82,7 @@ class ANIMAX_EXPORT AnimaXPlayerBuilder {
   std::shared_ptr<VSyncMonitor> vsync_monitor_{};
   bool multi_thread_accelerate_ = false;
   bool disable_playback_on_asset_load_failure_ = false;
+  bool allow_extensionless_json_ = false;
   std::shared_ptr<AnimaXAbility> ability_{};
   Loader<ResourceRequest, ResourceResponse>::Ptr resource_loader_{};
   Loader<UnzipRequest, UnzipResponse>::Ptr unzip_loader_{};

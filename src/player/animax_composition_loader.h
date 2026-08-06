@@ -70,6 +70,8 @@ class AnimaXCompositionLoader : public MetricsDataSource {
 
   void SetEnableAudio(bool enable);
 
+  void SetAllowExtensionlessJson(bool allow);
+
   void LoadCompositionModelFromURI(std::string uri, float scale,
                                    AssetLoader::CallbackType callback);
 

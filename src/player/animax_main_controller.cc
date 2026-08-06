@@ -181,14 +181,17 @@ int32_t AnimaXMainController::GetLoopIndex() { return current_loop_; }
 
 std::string AnimaXMainController::GetCurrentSrc() { return current_src_; }
 
-void AnimaXMainController::SetCurrentSrc(const std::string& src) {
+void AnimaXMainController::SetCurrentSrc(const std::string& src,
+                                         bool allow_extensionless_json) {
   current_src_ = src;
   event_tracker_->Reset();
   if (!src.empty()) {
     EventWarningChecker::CheckLottieFormat(
-        src, [this](EventWarning warning, const std::string& warning_message) {
+        src,
+        [this](EventWarning warning, const std::string& warning_message) {
           NotifyWarning(warning, warning_message);
-        });
+        },
+        allow_extensionless_json);
   }
 }
 

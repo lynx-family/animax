@@ -76,8 +76,10 @@ bool EventWarningChecker::CheckAssetCountOverLimit(
 
 bool EventWarningChecker::CheckLottieFormat(
     const std::string src,
-    EventWarningChecker::WarningHandler&& warning_handler) {
-  auto content_type = ParseUriMainResourceContentType(src);
+    EventWarningChecker::WarningHandler&& warning_handler,
+    bool allow_extensionless_json) {
+  auto content_type =
+      ParseUriMainResourceContentType(src, allow_extensionless_json);
   if (content_type != UriInfo::ContentType::kJson &&
       content_type != UriInfo::ContentType::kZip) {
     EventWarning warning = EventWarning::kInvalidLottieFormat;
