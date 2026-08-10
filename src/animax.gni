@@ -18,4 +18,6 @@ if (target_cpu == "arm" || target_cpu == "arm64") {
 }
 
 declare_args() {
+  # Whether to build the animax video backend.
+  enable_animax_video = true
 }
