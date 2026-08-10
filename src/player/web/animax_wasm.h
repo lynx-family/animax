@@ -12,6 +12,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "base/include/no_destructor.h"
 
@@ -56,6 +57,11 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
                                            const emscripten::val& params)>;
   void SetEventCallback(EventCallback callback);
 
+  using FrameCaptureCallback =
+      std::function<void(std::vector<uint8_t>, int32_t, int32_t)>;
+  void SetFrameCaptureCallback(FrameCaptureCallback callback);
+  void RequestFrameCapture();
+
   void UpdateVisibilityStates(uint16_t states);
   void SetMaxFrameRate(double max_frame_rate);
 
@@ -82,6 +88,7 @@ class AnimaXWasm : std::enable_shared_from_this<AnimaXWasm> {
   std::shared_ptr<AnimaXPlayer> player_;
 
   std::shared_ptr<ResourceLoaderWeb> resource_loader_;
+  FrameCaptureCallback frame_capture_callback_;
 
   uint16_t current_visible_states_ = 0;
 

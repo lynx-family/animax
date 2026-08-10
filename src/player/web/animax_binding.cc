@@ -144,6 +144,20 @@ EMSCRIPTEN_BINDINGS(animax) {
                   };
                   self.SetEventCallback(func);
                 }))
+      .function("setFrameCaptureCallback",
+                emscripten::optional_override([](lynx::animax::AnimaXWasm& self,
+                                                 emscripten::val js_func) {
+                  self.SetFrameCaptureCallback(
+                      [js_func](std::vector<uint8_t> pixels, int32_t width,
+                                int32_t height) {
+                        auto view =
+                            emscripten::val(emscripten::typed_memory_view(
+                                pixels.size(), pixels.data()));
+                        js_func(view, width, height);
+                      });
+                }))
+      .function("requestFrameCapture",
+                &lynx::animax::AnimaXWasm::RequestFrameCapture)
       .function("setResourceLoaderImpl",
                 emscripten::optional_override([](lynx::animax::AnimaXWasm& self,
                                                  emscripten::val js_func) {
