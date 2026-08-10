@@ -218,13 +218,15 @@ void AnimaXWasm::SetSurfaceWithCanvas(
     const std::shared_ptr<AnimaXWebGPUContext>& web_gpu_ctx,
     uintptr_t gl_context_handle) {
   player_->UpdateSurface(
-      [canvas_id, width, height, ctx = web_gpu_ctx, gl_context_handle](
-          std::unique_ptr<lynx::animax::AnimaXSurface> old_surface) {
+      [canvas_id, width, height, ctx = web_gpu_ctx, gl_context_handle,
+       frame_capture_callback = frame_capture_callback_](
+          std::unique_ptr<lynx::animax::AnimaXSurface> old_surface) mutable {
         const auto desc = AnimaXSurfaceWeb::Description{
             .canvas_id = canvas_id,
             .width = width,
             .height = height,
             .gl_context_handle = gl_context_handle,
+            .frame_capture_callback = frame_capture_callback,
         };
         if (old_surface && old_surface->Valid()) {
           auto web_surface = static_cast<AnimaXSurfaceWeb*>(old_surface.get());
@@ -249,6 +251,23 @@ void AnimaXWasm::SetResourceLoaderImpl(ResourceLoaderImpl impl) {
 void AnimaXWasm::SetEventCallback(EventCallback callback) {
   ANIMAX_LOGI("SetEventCallback success");
   (*event_callback_map_)[player_] = callback;
+}
+
+void AnimaXWasm::SetFrameCaptureCallback(FrameCaptureCallback callback) {
+  frame_capture_callback_ = std::move(callback);
+}
+
+void AnimaXWasm::RequestFrameCapture() {
+  player_->UpdateSurface(
+      [frame_capture_callback = frame_capture_callback_](
+          std::unique_ptr<lynx::animax::AnimaXSurface> surface) mutable {
+        if (surface && surface->Valid() &&
+            surface->Type() == AnimaXBackend::kGL) {
+          static_cast<AnimaXSurfaceWeb*>(surface.get())
+              ->SetFrameCaptureCallback(std::move(frame_capture_callback));
+        }
+        return surface;
+      });
 }
 
 bool AnimaXWasm::RegisterFontWithData(const std::string& family_name,

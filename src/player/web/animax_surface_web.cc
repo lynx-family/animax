@@ -5,6 +5,7 @@
 #include "src/player/web/animax_surface_web.h"
 
 #include <EGL/egl.h>
+#include <GLES3/gl3.h>
 #include <emscripten/html5_webgl.h>
 
 #include <cstring>
@@ -88,7 +89,8 @@ AnimaXSurfaceWeb::AnimaXSurfaceWeb(
       gl_context_(0),
       gl_gpu_ctx_(nullptr),
       web_gpu_surface_(nullptr),
-      gpu_surface_(nullptr) {
+      gpu_surface_(nullptr),
+      frame_capture_callback_(desc.frame_capture_callback) {
   switch (backend_type_) {
     case AnimaXBackend::kGL:
       InitWebGLSurface(desc);
@@ -142,6 +144,39 @@ void AnimaXSurfaceWeb::Flush() {
   if (gpu_surface_) {
     gpu_surface_->Flush();
   }
+  CaptureWebGLFrameIfNeeded();
+}
+
+void AnimaXSurfaceWeb::SetFrameCaptureCallback(FrameCaptureCallback callback) {
+  frame_capture_callback_ = std::move(callback);
+  frame_capture_completed_ = false;
+}
+
+void AnimaXSurfaceWeb::CaptureWebGLFrameIfNeeded() {
+  if (backend_type_ != AnimaXBackend::kGL || !frame_capture_callback_ ||
+      frame_capture_completed_ || Width() <= 0 || Height() <= 0 ||
+      !MakeWebGLContextCurrent()) {
+    return;
+  }
+
+  const size_t pixel_count = static_cast<size_t>(Width()) * Height();
+  std::vector<uint8_t> pixels(pixel_count * 4);
+  frame_capture_completed_ = true;
+  auto callback = std::move(frame_capture_callback_);
+  glGetError();
+  GLint pack_alignment = 4;
+  glGetIntegerv(GL_PACK_ALIGNMENT, &pack_alignment);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glReadPixels(0, 0, Width(), Height(), GL_RGBA, GL_UNSIGNED_BYTE,
+               pixels.data());
+  glPixelStorei(GL_PACK_ALIGNMENT, pack_alignment);
+  const GLenum error = glGetError();
+  if (error != GL_NO_ERROR) {
+    ANIMAX_LOGE("Failed to capture WebGL frame, error: " << error);
+    return;
+  }
+
+  callback(std::move(pixels), Width(), Height());
 }
 lynx::animax::Canvas* AnimaXSurfaceWeb::Canvas() {
   if (!MakeWebGLContextCurrent()) {
@@ -169,6 +204,7 @@ lynx::animax::Canvas* AnimaXSurfaceWeb::Canvas() {
 }
 
 void AnimaXSurfaceWeb::Reconfigure(const Description& desc) {
+  SetFrameCaptureCallback(desc.frame_capture_callback);
   Resize(desc.width, desc.height);
   switch (backend_type_) {
     case AnimaXBackend::kGL:
