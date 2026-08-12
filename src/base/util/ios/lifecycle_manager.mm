@@ -17,6 +17,7 @@ LifecycleManager &LifecycleManager::Instance() {
 }
 
 LifecycleManager::LifecycleManager() {
+  application_lifecycle_listeners_ = [NSHashTable weakObjectsHashTable];
   // Ensure the callback runs on main thread to avoid threading issues.
   foreground_observer_ = [[NSNotificationCenter defaultCenter]
       addObserverForName:UIApplicationWillEnterForegroundNotification
@@ -32,11 +33,19 @@ LifecycleManager::LifecycleManager() {
               usingBlock:^(NSNotification *_Nonnull note) {
                 this->NotifyAppEnterBackground();
               }];
+  application_active_observer_ = [[NSNotificationCenter defaultCenter]
+      addObserverForName:UIApplicationDidBecomeActiveNotification
+                  object:nil
+                   queue:[NSOperationQueue mainQueue]
+              usingBlock:^(NSNotification *_Nonnull note) {
+                this->NotifyApplicationDidBecomeActive();
+              }];
 }
 
 LifecycleManager::~LifecycleManager() {
   [[NSNotificationCenter defaultCenter] removeObserver:foreground_observer_];
   [[NSNotificationCenter defaultCenter] removeObserver:background_observer_];
+  [[NSNotificationCenter defaultCenter] removeObserver:application_active_observer_];
 }
 
 void LifecycleManager::AddListener(std::weak_ptr<AnimaXPlayer> weak_player) {
@@ -48,6 +57,26 @@ void LifecycleManager::AddListener(std::weak_ptr<AnimaXPlayer> weak_player) {
     return;
   }
   listeners_.push_back(std::move(weak_player));
+}
+
+void LifecycleManager::AddApplicationLifecycleListener(
+    id<AnimaXApplicationLifecycleListener> listener) {
+  // Ensure listener addition runs on main thread to avoid threading issues.
+  if (![NSThread isMainThread]) {
+    __weak id<AnimaXApplicationLifecycleListener> weak_listener = listener;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      id<AnimaXApplicationLifecycleListener> strong_listener = weak_listener;
+      if (strong_listener) {
+        this->AddApplicationLifecycleListener(strong_listener);
+      }
+    });
+    return;
+  }
+  [application_lifecycle_listeners_ addObject:listener];
+}
+
+bool LifecycleManager::IsApplicationActive() const {
+  return UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
 }
 
 void LifecycleManager::NotifyAppEnterForeground() {
@@ -68,6 +97,14 @@ void LifecycleManager::NotifyAppEnterBackground() {
     if (auto listener = weak_listener.lock()) {
       listener->OnAppEnterBackground();
     }
+  }
+}
+
+void LifecycleManager::NotifyApplicationDidBecomeActive() {
+  NSArray<id<AnimaXApplicationLifecycleListener>> *listeners =
+      [application_lifecycle_listeners_ allObjects];
+  for (id<AnimaXApplicationLifecycleListener> listener in listeners) {
+    [listener onAnimaXApplicationDidBecomeActive];
   }
 }
 
