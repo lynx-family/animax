@@ -28,6 +28,7 @@ class TextContentTextra : public TextContent {
   bool GetRect(RectF& out_rect) override;
 
  private:
+  float GetBoxBaselineOffset() const;
   void ConfigurePlatformPainter(const TextContentDataSource& data_source,
                                 int32_t alpha);
 
