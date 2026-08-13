@@ -102,7 +102,7 @@ class FFmpegLibLoader {
   bool LoadLibrary();
   bool LoadAllSymbols();
 
-  HMODULE dll_ = nullptr;
+  std::vector<HMODULE> dlls_;
   bool is_symbols_valid_ = false;
 
   // Function pointers
