@@ -101,6 +101,7 @@ animax_source_set("video") {
     ]
 
     include_dirs = [
+      "../../../../clay/third_party/ffmpeg/include",
       "../../../../clay/third_party/uniplayer/win/$target_cpu/ttffmpeg/include",
     ]
   }
