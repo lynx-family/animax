@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 #include "src/video/custom/ffmpeg/ffmpeg_lib_loader.h"
 
+#include <windows.h>
+
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
 #include "src/video/custom/ffmpeg/ffmpeg_video_context.h"
@@ -58,7 +60,7 @@ FFmpegLibLoader::FFmpegLibLoader() {
 }
 
 bool FFmpegLibLoader::IsValid() const {
-  return dll_ != nullptr && is_symbols_valid_;
+  return !dlls_.empty() && is_symbols_valid_;
 }
 
 FFmpegVideoContext::FramePtr FFmpegLibLoader::DecodeFrameData(
@@ -135,20 +137,32 @@ bool FFmpegLibLoader::ReadVideoFramesData(
 bool FFmpegLibLoader::LoadLibrary() {
   ANIMAX_LOGI("Loading FFmpeg library");
 
-  if (dll_) {
+  if (!dlls_.empty()) {
     ANIMAX_LOGI("Library already loaded");
     return true;
   }
 
-  dll_ = LoadLibraryExA(
-      "ttffmpeg.dll", nullptr,
-      LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
-  if (!dll_) {
-    ANIMAX_LOGE("Failed to load ttffmpeg.dll");
+  std::vector<std::string> candidate_dlls = {
+      "ttffmpeg.dll",
+      "lynxffmpeg.dll",
+  };
+
+  for (const auto& dll_name : candidate_dlls) {
+    HMODULE dll = LoadLibraryExA(
+        dll_name.c_str(), nullptr,
+        LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (dll) {
+      dlls_.push_back(dll);
+      ANIMAX_LOGI(dll_name << " loaded successfully");
+    }
+  }
+
+  if (dlls_.empty()) {
+    ANIMAX_LOGE("Failed to load any FFmpeg dlls");
     return false;
   }
 
-  ANIMAX_LOGI("ttffmpeg.dll loaded successfully");
+  ANIMAX_LOGI("ffmpeg.dll loaded successfully");
   return LoadAllSymbols();
 }
 
@@ -157,8 +171,8 @@ bool FFmpegLibLoader::LoadAllSymbols() {
 
   is_symbols_valid_ = false;
 
-  if (!dll_) {
-    ANIMAX_LOGE("dll_ is null before loading symbols");
+  if (dlls_.empty()) {
+    ANIMAX_LOGE("dlls_ is empty before loading symbols");
     return false;
   }
 
@@ -169,7 +183,14 @@ bool FFmpegLibLoader::LoadAllSymbols() {
 
   auto load_symbols = [this](const std::vector<SymbolConfig>& symbols) -> bool {
     for (const auto& symbol : symbols) {
-      *symbol.func_ptr = GetProcAddress(dll_, symbol.symbol_name);
+      *symbol.func_ptr = nullptr;
+      for (HMODULE dll : dlls_) {
+        *symbol.func_ptr = GetProcAddress(dll, symbol.symbol_name);
+        if (*symbol.func_ptr) {
+          break;
+        }
+      }
+
       if (!*symbol.func_ptr) {
         ANIMAX_LOGE(
             "Failed to load symbol: " << std::string(symbol.symbol_name));
