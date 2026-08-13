@@ -5,6 +5,7 @@
 #include "src/layer/textra/text_content_textra.h"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -14,6 +15,7 @@
 #include "src/layer/textra/text_content_layout_context.h"
 #include "src/layer/textra/text_gradient_skity_canvas_helper.h"
 #include "src/model/value/document_data.h"
+#include "src/resource/asset/font_asset.h"
 
 namespace lynx {
 namespace animax {
@@ -22,6 +24,32 @@ TextContentTextra::TextContentTextra(const TextContentDataSource& data_source)
     : data_source_(data_source), paint_(std::make_unique<Paint>()) {}
 
 TextContentTextra::~TextContentTextra() = default;
+
+// Bodymovin exports boxed-text ps.y with the Lottie font ascent removed, then
+// restores that ascent when positioning the first baseline. Textra positions
+// the first baseline using the runtime typeface ascent instead. Compensate for
+// the difference so drawing and bounds preserve the exported Lottie baseline.
+float TextContentTextra::GetBoxBaselineOffset() const {
+  if (!layout_context_) {
+    return 0.f;
+  }
+
+  auto* layout_region = layout_context_->GetLayoutRegion();
+  auto* first_line = layout_region ? layout_region->GetLine(0) : nullptr;
+  auto* font_asset = data_source_.GetFontAsset();
+  if (!first_line || !font_asset) {
+    return 0.f;
+  }
+
+  constexpr float kFontAscentScale = 100.f;
+  const float lottie_ascent = font_asset->Model().ascent *
+                              data_source_.GetTextSize() / kFontAscentScale;
+  if (!std::isfinite(lottie_ascent) || lottie_ascent <= 0.f) {
+    return 0.f;
+  }
+
+  return lottie_ascent - first_line->GetMaxAscent();
+}
 
 void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   if (!data_source_.GetLayoutOnlyOnce()) {
@@ -57,6 +85,8 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   float origin_width = layout_region->GetLayoutedWidth();
   float origin_height = layout_region->GetLayoutedHeight();
   if (layout_context_->IsBoxMode()) {
+    canvas.Translate(0, GetBoxBaselineOffset());
+
     auto* box_size = document_data.GetBoxSize();
     if (box_size && !box_size->IsEmpty()) {
       origin_width = box_size->GetX();
@@ -130,6 +160,7 @@ bool TextContentTextra::GetRect(RectF& out_rect) {
       x = box_position->GetX();
       y = box_position->GetY();
     }
+    y += GetBoxBaselineOffset();
     auto* box_size = document_data.GetBoxSize();
     if (box_size && !box_size->IsEmpty()) {
       w = box_size->GetX();
