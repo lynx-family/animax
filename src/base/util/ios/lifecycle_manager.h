@@ -5,10 +5,10 @@
 #ifndef ANIMAX_SRC_BASE_UTIL_IOS_LIFECYCLE_MANAGER_H_
 #define ANIMAX_SRC_BASE_UTIL_IOS_LIFECYCLE_MANAGER_H_
 
-#include <memory>
-#include <vector>
+#import <AnimaX/AnimaXPlayer.h>
 
-#include "include/player/animax_player.h"
+@class AnimaXPlayer;
+@class UIScene;
 
 namespace lynx {
 namespace animax {
@@ -19,14 +19,16 @@ class LifecycleManager {
   LifecycleManager();
   ~LifecycleManager();
 
-  void AddListener(std::weak_ptr<AnimaXPlayer> weak_player);
+  void AddListener(::AnimaXPlayer *player);
 
  private:
-  void NotifyAppEnterForeground();
-  void NotifyAppEnterBackground();
-  id<NSObject> foreground_observer_ = nil;
-  id<NSObject> background_observer_ = nil;
-  std::vector<std::weak_ptr<AnimaXPlayer>> listeners_;
+  void NotifyAppEnterForeground(UIScene *scene);
+  void NotifyAppEnterBackground(UIScene *scene);
+  id<NSObject> scene_foreground_observer_ = nil;
+  id<NSObject> scene_background_observer_ = nil;
+  id<NSObject> app_foreground_observer_ = nil;
+  id<NSObject> app_background_observer_ = nil;
+  NSHashTable<::AnimaXPlayer *> *listeners_ = nil;
 };
 
 }  // namespace animax

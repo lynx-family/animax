@@ -13,7 +13,6 @@
 
 @interface AnimaXDisplayLinkVSync : NSObject
 @property(atomic) CADisplayLink* displayLink;
-@property(atomic) BOOL isInBackground;
 @end
 
 typedef void (^AnimaXDisplayLinkVSyncCallback)(double timestampSeconds);
@@ -32,34 +31,13 @@ typedef void (^AnimaXDisplayLinkVSyncCallback)(double timestampSeconds);
                                                selector:@selector(displayLinkCallback:)];
     [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     _displayLink.paused = YES;
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(appWillEnterForeground:)
-                                                 name:UIApplicationWillEnterForegroundNotification
-                                               object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(appDidEnterBackground:)
-                                                 name:UIApplicationDidEnterBackgroundNotification
-                                               object:nil];
   }
   return self;
 }
 
-- (void)appWillEnterForeground:(UIApplication*)application {
-  _isInBackground = NO;
-  if (_callback && _displayLink) {
-    _displayLink.paused = NO;
-  }
-}
-
-- (void)appDidEnterBackground:(UIApplication*)application {
-  _isInBackground = YES;
-  _displayLink.paused = YES;
-}
-
 - (void)displayLinkCallback:(CADisplayLink*)displayLink {
   NSAssert([NSThread isMainThread], @"Must be called on main thread");
-  if (_isInBackground || _displayLink == nil) {
+  if (_displayLink == nil) {
     return;
   }
 
@@ -81,7 +59,6 @@ typedef void (^AnimaXDisplayLinkVSyncCallback)(double timestampSeconds);
 }
 
 - (void)invalidate {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
   if (_displayLink) {
     ANIMAX_LOGI("AnimaXDisplayLinkVSync invalidate");
     [_displayLink invalidate];

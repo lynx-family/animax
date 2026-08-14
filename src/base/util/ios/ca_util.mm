@@ -10,13 +10,13 @@ namespace animax {
 
 #pragma mark - CAMetalLayer
 
-CAMetalLayer* CreateCAMetalLayer(CGRect frame) {
+CAMetalLayer* CreateCAMetalLayer(CGRect frame, CGFloat scale) {
   CAMetalLayer* layer = [[CAMetalLayer alloc] init];
   [layer setDevice:MTLCreateSystemDefaultDevice()];
   [layer setPixelFormat:MTLPixelFormatBGRA8Unorm];
   [layer setFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
   [layer setOpaque:NO];
-  [layer setContentsScale:[UIScreen mainScreen].scale];
+  [layer setContentsScale:scale];
   return layer;
 }
 

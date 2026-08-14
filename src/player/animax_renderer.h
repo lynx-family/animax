@@ -57,6 +57,7 @@ class AnimaXRenderer : public MetricsDataSource {
 
   // Rendering operation
   void Render(double progress);
+  void SetInBackground(bool is_in_background);
 
   // Tap event handler
   void OnTap(float x, float y);
@@ -141,7 +142,9 @@ class AnimaXRenderer : public MetricsDataSource {
   float scale_factor_y_ = 0.f;
 
   bool has_rendered_first_frame_ = false;
+  bool disable_render_in_background_ = false;
   std::atomic<bool> is_destroyed_ = false;
+  std::atomic<bool> is_in_background_ = false;
 
   std::unique_ptr<AnimaXPropertyUpdater> property_updater_;
   PeriodicalTimestampRecorder gpu_thread_recorder_;
