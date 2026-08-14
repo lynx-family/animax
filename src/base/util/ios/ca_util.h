@@ -12,7 +12,7 @@
 namespace lynx {
 namespace animax {
 
-CAMetalLayer* CreateCAMetalLayer(CGRect frame);
+CAMetalLayer* CreateCAMetalLayer(CGRect frame, CGFloat scale);
 
 // Resizes the CALayer's frame. Must be called from the main thread to ensure thread-safe
 // modifications to UI elements.
