@@ -34,6 +34,12 @@ AnimaXPlayerBuilder& AnimaXPlayerBuilder::DisablePlaybackOnAssetLoadFailure(
   return *this;
 }
 
+AnimaXPlayerBuilder& AnimaXPlayerBuilder::DisableRenderInBackground(
+    bool disable) {
+  disable_render_in_background_ = disable;
+  return *this;
+}
+
 AnimaXPlayerBuilder& AnimaXPlayerBuilder::SetAbility(
     std::shared_ptr<AnimaXAbility> ability) {
   ability_ = std::move(ability);

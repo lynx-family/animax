@@ -77,6 +77,8 @@ void AnimaXPlayer::Init(AnimaXPlayerBuilder& builder) {
   player_context_->weak_main_controller = controller_actor_;
   player_context_->weak_ability = ability_;
   player_context_->weak_player = weak_from_this();
+  player_context_->disable_render_in_background =
+      builder.disable_render_in_background_;
 
   renderer_actor_->Act([player_context = player_context_](auto& renderer) {
     renderer->Init(player_context);
@@ -639,29 +641,12 @@ void AnimaXPlayer::AddLayerPropertyCallback(
 #ifdef OS_IOS
 void AnimaXPlayer::OnAppEnterForeground() {
   ANIMAX_LOGI("OnAppEnterForeground");
-  {
-    std::lock_guard<std::mutex> locker(background_mutex_);
-    is_in_background_ = false;
-  }
-  background_cv_.notify_all();
+  renderer_actor_->Act(
+      [](auto& renderer) { renderer->SetInBackground(false); });
 }
 void AnimaXPlayer::OnAppEnterBackground() {
   ANIMAX_LOGI("OnAppEnterBackground");
-  std::lock_guard<std::mutex> locker(background_mutex_);
-  is_in_background_ = true;
-  // Let renderer wait until app enter foreground
-  renderer_actor_->Act([weak_this = weak_from_this()](auto& renderer) {
-    auto shared_this = weak_this.lock();
-    if (!shared_this) {
-      return;
-    }
-    ANIMAX_LOGI("WaitForeground this: " << shared_this.get());
-    std::unique_lock<std::mutex> locker(shared_this->background_mutex_);
-    // The background_cv_ will hold shared player until app enter foreground
-    shared_this->background_cv_.wait(
-        locker, [shared_this] { return !shared_this->is_in_background_; });
-    ANIMAX_LOGI("WaitForeground done this: " << shared_this.get());
-  });
+  renderer_actor_->Act([](auto& renderer) { renderer->SetInBackground(true); });
 }
 #endif
 

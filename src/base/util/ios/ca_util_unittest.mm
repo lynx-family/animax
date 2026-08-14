@@ -14,14 +14,15 @@
 - (void)testCreateCAMetalLayer {
   using namespace lynx::animax;
   CGRect frame = CGRectMake(100, 100, 16, 16);
-  CAMetalLayer* layer = CreateCAMetalLayer(frame);
+  CGFloat scale = 2;
+  CAMetalLayer* layer = CreateCAMetalLayer(frame, scale);
   XCTAssertEqual(layer.frame.origin.x, 0);
   XCTAssertEqual(layer.frame.origin.y, 0);
   XCTAssertEqual(layer.frame.size.width, frame.size.width);
   XCTAssertEqual(layer.frame.size.height, frame.size.height);
   XCTAssertEqual(layer.opaque, NO);
   XCTAssertEqual(layer.pixelFormat, MTLPixelFormatBGRA8Unorm);
-  XCTAssertEqual(layer.contentsScale, UIScreen.mainScreen.scale);
+  XCTAssertEqual(layer.contentsScale, scale);
   XCTAssertNotNil(layer.device);
 }
 

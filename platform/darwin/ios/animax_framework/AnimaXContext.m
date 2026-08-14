@@ -4,6 +4,7 @@
 
 #import <AnimaX/AnimaXContext.h>
 #import <AnimaX/DefaultAnimaXAbility.h>
+#import <UIKit/UIKit.h>
 #import "AnimaXContext+Internal.h"
 
 @implementation AnimaXContext
@@ -15,6 +16,7 @@
 - (instancetype)initWithAbility:(BaseAnimaXAbility *)ability {
   if (self = [super init]) {
     _ability = ability;
+    _scale = [UIScreen mainScreen].scale;
   }
   return self;
 }
