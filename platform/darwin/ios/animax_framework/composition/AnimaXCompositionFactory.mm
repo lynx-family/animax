@@ -72,7 +72,7 @@
   AnimaXServiceScope *scope = context.ability.getServiceScope;
   __weak typeof(self) weakSelf = self;
   lynx::animax::AnimaXCompositionFactory::Instance().LoadJson(
-      scope.description.UTF8String, json.UTF8String, UIScreen.mainScreen.scale,
+      scope.description.UTF8String, json.UTF8String, context.scale,
       [weakSelf, completion](std::shared_ptr<lynx::animax::CompositionModel> model,
                              const std::string &error) {
         [weakSelf handleCompositionModel:std::move(model) error:error completion:completion];
@@ -92,7 +92,7 @@
   AnimaXServiceScope *scope = context.ability.getServiceScope;
   __weak typeof(self) weakSelf = self;
   lynx::animax::AnimaXCompositionFactory::Instance().LoadUri(
-      scope.description.UTF8String, uri.UTF8String, UIScreen.mainScreen.scale,
+      scope.description.UTF8String, uri.UTF8String, context.scale,
       [weakSelf, completion](std::shared_ptr<lynx::animax::CompositionModel> model,
                              const std::string &error) {
         [weakSelf handleCompositionModel:std::move(model) error:error completion:completion];
