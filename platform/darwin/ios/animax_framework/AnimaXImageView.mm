@@ -42,11 +42,13 @@
   [[AnimaX shareInstance] registerLoggerOnce];
   if (self = [super initWithFrame:CGRectZero]) {
     self.layer.opaque = NO;
-    self.layer.contentsScale = [UIScreen mainScreen].scale;
+    self.layer.contentsScale = context.scale;
     self.enableNativeTapLayerEvent = NO;
     self.ignoreAttachStatus = NO;
-    AnimaXPlayer *player = [[AnimaXPlayer alloc] initWithContext:context];
+    AnimaXPlayer *player = [[AnimaXPlayer alloc] initWithContext:context
+                                                           scale:self.layer.contentsScale];
     player.compositionListener = self;
+    player.lifecycleView = self;
     _player = player;
     [self notifyFrameChanged];
   }
@@ -58,10 +60,11 @@
   [[AnimaX shareInstance] registerLoggerOnce];
   if (self = [super initWithFrame:CGRectZero]) {
     self.layer.opaque = NO;
-    self.layer.contentsScale = [UIScreen mainScreen].scale;
+    self.layer.contentsScale = player.scale;
     self.enableNativeTapLayerEvent = NO;
     self.ignoreAttachStatus = NO;
     player.compositionListener = self;
+    player.lifecycleView = self;
     _player = player;
     [self notifyFrameChanged];
   }
