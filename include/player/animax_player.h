@@ -476,12 +476,6 @@ class ANIMAX_EXPORT AnimaXPlayer
   std::shared_ptr<AnimaXPlayerContext> player_context_;
 
   std::atomic<int64_t> estimated_memory_usage_{0};
-
-#ifdef OS_IOS
-  bool is_in_background_ = false;
-  std::mutex background_mutex_;
-  std::condition_variable background_cv_;
-#endif
 };
 
 }  // namespace animax

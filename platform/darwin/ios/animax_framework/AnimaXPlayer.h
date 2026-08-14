@@ -10,9 +10,13 @@
 
 @end
 
+@class UIView;
+
 @interface AnimaXPlayer : NSObject <AnimaXPlayerProtocol>
 
 @property(nonatomic, weak) id<AnimaXCompositionListenerProtocol> compositionListener;
+@property(nonatomic, weak, nullable) UIView *lifecycleView;
+@property(nonatomic, assign, readonly) CGFloat scale;
 
 - (instancetype)initWithContext:(AnimaXContext *)context;
 - (instancetype)initWithContext:(AnimaXContext *)context scale:(CGFloat)scale;

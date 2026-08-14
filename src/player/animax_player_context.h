@@ -21,6 +21,7 @@ struct AnimaXPlayerContext
   std::weak_ptr<shell::LynxActor<AnimaXMainController>> weak_main_controller;
   std::weak_ptr<AnimaXAbility> weak_ability;
   std::weak_ptr<AnimaXPlayer> weak_player;
+  bool disable_render_in_background = false;
 
   ~AnimaXPlayerContext() = default;
 };

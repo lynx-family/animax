@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign) BOOL enableMultiThreadAccelerate;
 @property(nonatomic, assign) BOOL disablePlaybackOnAssetLoadFailure;
 @property(nonatomic, assign) BOOL enableDownsampleVideo;
+@property(nonatomic, assign) CGFloat scale;
 
 + (instancetype)contextWithDefaultAbility;  // For client usage
 - (instancetype)initWithAbility:(BaseAnimaXAbility *_Nullable)ability NS_DESIGNATED_INITIALIZER;
