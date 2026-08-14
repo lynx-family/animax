@@ -40,6 +40,7 @@ AnimaXRenderer::~AnimaXRenderer() = default;
 void AnimaXRenderer::Init(std::shared_ptr<AnimaXPlayerContext> context) {
   DCHECK(context);
   weak_controller_actor_ = context->weak_main_controller;
+  disable_render_in_background_ = context->disable_render_in_background;
   weak_context_ = std::move(context);
 }
 
@@ -207,6 +208,9 @@ void AnimaXRenderer::StartAnimation() {
 }
 
 void AnimaXRenderer::Render(double progress) {
+  if (disable_render_in_background_ && is_in_background_.load()) {
+    return;
+  }
   if (is_destroyed_ || !surface_ || !surface_->Valid() ||
       is_invalid_platform_surface_) {
     return;
@@ -233,6 +237,10 @@ void AnimaXRenderer::Render(double progress) {
   NotifyFirstFrameIfNeeded();
 
   Trace(TraceEventType::kRenderFrameEnd);
+}
+
+void AnimaXRenderer::SetInBackground(bool is_in_background) {
+  is_in_background_.store(is_in_background);
 }
 
 void AnimaXRenderer::OnTap(float x, float y) {

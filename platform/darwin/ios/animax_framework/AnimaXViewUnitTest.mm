@@ -142,6 +142,17 @@ static NSString *TestEasyLottieJson() {
   [self createViewIsImageView:YES];
 }
 
+- (void)testPlayerInitWithScaleDoesNotMutateContextScale {
+  BaseAnimaXAbility *ability = [[BaseAnimaXAbility alloc] init];
+  AnimaXContext *context = [[AnimaXContext alloc] initWithAbility:ability];
+  context.scale = 2;
+
+  AnimaXPlayer *player = [[AnimaXPlayer alloc] initWithContext:context scale:3];
+
+  XCTAssertEqual(player.scale, 3);
+  XCTAssertEqual(context.scale, 2);
+}
+
 #pragma mark Test: Frame Changed
 
 - (void)generalTestFrameChanged {
