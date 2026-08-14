@@ -5,12 +5,10 @@
 #ifndef ANIMAX_SRC_BASE_UTIL_IOS_LIFECYCLE_MANAGER_H_
 #define ANIMAX_SRC_BASE_UTIL_IOS_LIFECYCLE_MANAGER_H_
 
-#import <Foundation/Foundation.h>
+#import <AnimaX/AnimaXPlayer.h>
 
-#include <memory>
-#include <vector>
-
-#include "include/player/animax_player.h"
+@class AnimaXPlayer;
+@class UIScene;
 
 @protocol AnimaXApplicationLifecycleListener <NSObject>
 - (void)onAnimaXApplicationDidBecomeActive;
@@ -25,19 +23,21 @@ class LifecycleManager {
   LifecycleManager();
   ~LifecycleManager();
 
-  void AddListener(std::weak_ptr<AnimaXPlayer> weak_player);
+  void AddListener(::AnimaXPlayer *player);
   void AddApplicationLifecycleListener(id<AnimaXApplicationLifecycleListener> listener);
   bool IsApplicationActive() const;
 
  private:
-  void NotifyAppEnterForeground();
-  void NotifyAppEnterBackground();
+  void NotifyAppEnterForeground(UIScene *scene);
+  void NotifyAppEnterBackground(UIScene *scene);
   void NotifyApplicationDidBecomeActive();
-  id<NSObject> foreground_observer_ = nil;
-  id<NSObject> background_observer_ = nil;
+  id<NSObject> scene_foreground_observer_ = nil;
+  id<NSObject> scene_background_observer_ = nil;
+  id<NSObject> app_foreground_observer_ = nil;
+  id<NSObject> app_background_observer_ = nil;
   id<NSObject> application_active_observer_ = nil;
   NSHashTable<id<AnimaXApplicationLifecycleListener>> *application_lifecycle_listeners_ = nil;
-  std::vector<std::weak_ptr<AnimaXPlayer>> listeners_;
+  NSHashTable<::AnimaXPlayer *> *listeners_ = nil;
 };
 
 }  // namespace animax
