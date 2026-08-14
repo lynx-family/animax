@@ -41,13 +41,15 @@
   [[AnimaX shareInstance] registerLoggerOnce];
   if (self = [super initWithFrame:CGRectZero]) {
     self.layer.opaque = NO;
-    self.layer.contentsScale = [UIScreen mainScreen].scale;
+    self.layer.contentsScale = context.scale;
     // create gpu layer later to allow front-end user change backend type
     self.gpuLayer = nil;
     self.enableNativeTapLayerEvent = NO;
     self.ignoreAttachStatus = NO;
-    AnimaXPlayer *player = [[AnimaXPlayer alloc] initWithContext:context];
+    AnimaXPlayer *player = [[AnimaXPlayer alloc] initWithContext:context
+                                                           scale:self.layer.contentsScale];
     player.compositionListener = self;
+    player.lifecycleView = self;
     _player = player;
     lynx::animax::LifecycleManager::Instance().AddApplicationLifecycleListener(self);
     [self notifyFrameChanged];
@@ -60,11 +62,12 @@
   [[AnimaX shareInstance] registerLoggerOnce];
   if (self = [super initWithFrame:CGRectZero]) {
     self.layer.opaque = NO;
-    self.layer.contentsScale = [UIScreen mainScreen].scale;
+    self.layer.contentsScale = player.scale;
     // create gpu layer later to allow front-end user change backend type
     self.enableNativeTapLayerEvent = NO;
     self.ignoreAttachStatus = NO;
     player.compositionListener = self;
+    player.lifecycleView = self;
     _player = player;
     lynx::animax::LifecycleManager::Instance().AddApplicationLifecycleListener(self);
     [self notifyFrameChanged];
@@ -91,7 +94,7 @@
     return;
   }
 
-  self.gpuLayer = lynx::animax::CreateCAMetalLayer(self.frame);
+  self.gpuLayer = lynx::animax::CreateCAMetalLayer(self.frame, self.layer.contentsScale);
   [self.layer addSublayer:self.gpuLayer];
   self.drawable = [[AnimaXSurfaceDrawable alloc] initWithMetalLayer:self.gpuLayer
                                                               scale:self.layer.contentsScale];
