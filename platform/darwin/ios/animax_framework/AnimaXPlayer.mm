@@ -78,6 +78,7 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
 @interface AnimaXPlayer ()
 @property(nonatomic) AnimaXResourceLoaderHolder *resourceLoader;
 @property(nonatomic, strong, readwrite) AnimaXContext *context;
+@property(nonatomic, assign, readwrite) CGFloat scale;
 @end
 
 @implementation AnimaXPlayer {
@@ -89,12 +90,14 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
 }
 
 - (instancetype)initWithContext:(AnimaXContext *)context {
-  return [self initWithContext:context scale:[UIScreen mainScreen].scale];
+  CGFloat scale = context.scale > 0 ? context.scale : [UIScreen mainScreen].scale;
+  return [self initWithContext:context scale:scale];
 }
 
 - (instancetype)initWithContext:(AnimaXContext *)context scale:(CGFloat)scale {
   if (self = [super init]) {
     _context = context;
+    _scale = scale;
     [self createPlayerWithScale:scale];
   }
   return self;
@@ -364,6 +367,7 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   lynx::animax::AnimaXPlayerBuilder builder;
   builder.SetScale(static_cast<float>(scale))
       .EnableMultiThreadAccelerate(_context.enableMultiThreadAccelerate)
+      .DisableRenderInBackground(true)
       .DisablePlaybackOnAssetLoadFailure(_context.disablePlaybackOnAssetLoadFailure)
       .SetAbility(std::make_shared<lynx::animax::AnimaXAbilityIOS>(_context));
 
@@ -388,7 +392,7 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
 
   _player = builder.Build();
   [[self.context monitorDelegate] setAnimaXPlayer:&_player];
-  lynx::animax::LifecycleManager::Instance().AddListener(_player);
+  lynx::animax::LifecycleManager::Instance().AddListener(self);
 }
 
 #pragma mark - Visibility
@@ -406,6 +410,14 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
 
 - (void)enterBackground {
   [self updateVisibilityState:NO forType:VisibilityState::kBackground];
+}
+
+- (void)onAppEnterForeground {
+  _player->OnAppEnterForeground();
+}
+
+- (void)onAppEnterBackground {
+  _player->OnAppEnterBackground();
 }
 
 - (BOOL)updateVisibilityFlagIfChanged:(BOOL)isVisible forType:(VisibilityState)state {
