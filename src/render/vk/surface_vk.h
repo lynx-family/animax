@@ -27,11 +27,21 @@ class SurfaceVk : public Surface {
   void Destroy() override;
 
  private:
+  // Submits and presents the pending frame surface, or discards it when it no
+  // longer belongs to the active presenter (a resize retired that presenter
+  // while the frame was in flight). Returns the active presenter, or nullptr
+  // when there is none.
+  skity::GPUPresenter* PresentPendingSurface();
+
   skity::GPUNativeWindowVK* native_window_;
 
   bool enable_anti_aliasing_;
 
   std::unique_ptr<skity::GPUSurface> frame_surface_ = {};
+
+  // Presenter that frame_surface_ was acquired from; a surface may only be
+  // flushed and presented through its owning presenter.
+  skity::GPUPresenter* frame_presenter_ = nullptr;
 
   std::unique_ptr<Canvas> wrap_;
 };
