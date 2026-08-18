@@ -23,6 +23,7 @@ public class DeviceUtil {
   private static final String sUpdateTextureWhenVisible = "ANIMAX_UPDATE_TEXTURE_WHEN_VISIBLE";
   private static final String sSettingBlockListName = "ANIMAX_MODEL_BLOCK_LIST_ANDROID";
   private static final String sSettingSoftwareListName = "ANIMAX_MODEL_SOFTWARE_LIST_ANDROID";
+  private static final String sSettingEnableDownsampleVideo = "ANIMAX_ENABLE_DOWNSAMPLE_VIDEO";
 
   private static final String sSettingVideoSurfaceDestroyTimeout =
       "ANIMAX_VIDEO_SURFACE_DESTROY_TIMEOUT";
@@ -62,6 +63,11 @@ public class DeviceUtil {
    */
   public static boolean updateTextureWhenVisible(@NonNull BaseAbility ability) {
     final String value = getStringFromExternalEnv(sUpdateTextureWhenVisible, ability);
+    return isPositiveConfigValue(value);
+  }
+
+  public static boolean enableDownsampleVideo(@NonNull BaseAbility ability) {
+    final String value = getStringFromExternalEnv(sSettingEnableDownsampleVideo, ability);
     return isPositiveConfigValue(value);
   }
 

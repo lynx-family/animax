@@ -20,6 +20,8 @@ class VideoPlayerAndroid : public VideoPlayer {
   std::unique_ptr<TextureInfo> UpdateTexture(const int32_t frame) override;
   const std::array<float, 16> &GetTransform() override;
   void AttachAsset(std::shared_ptr<VideoAsset> asset) override;
+  void UpdateOutputFrameSize(const int32_t width,
+                             const int32_t height) override;
 
   void NotifyErrorEvent(const std::string &err_msg);
 
@@ -32,6 +34,9 @@ class VideoPlayerAndroid : public VideoPlayer {
   uint32_t video_texture_ = 0;
   std::array<float, 16> transform_{};
   int32_t current_frame_ = -1;
+  int32_t output_width_ = 0;
+  int32_t output_height_ = 0;
+  bool enable_downsample_ = false;
   ContextBackend backend_ = ContextBackend::kOpenGL;
 };
 

@@ -24,6 +24,7 @@ namespace animax {
 VideoPlayerAndroid::VideoPlayerAndroid(std::shared_ptr<AnimaXAbility> ability) {
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   if (ability) {
+    enable_downsample_ = ability->IsDownsampleVideoEnabled();
     backend_ = ability->GetBackend();
     auto android_ability =
         std::static_pointer_cast<AnimaXAbilityAndroid>(std::move(ability));
@@ -78,8 +79,7 @@ std::unique_ptr<TextureInfo> VideoPlayerAndroid::UpdateTexture(
   current_frame_ = to_frame;
   DCHECK(video_texture_);
   return std::make_unique<TextureInfoGL>(
-      video_texture_, asset_->GetVideoWidth(), asset_->GetVideoHeight(),
-      GL_TEXTURE_EXTERNAL_OES);
+      video_texture_, output_width_, output_height_, GL_TEXTURE_EXTERNAL_OES);
 }
 
 const std::array<float, 16> &VideoPlayerAndroid::GetTransform() {
@@ -102,6 +102,8 @@ void VideoPlayerAndroid::CreateVideoTexture() {
 void VideoPlayerAndroid::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   DCHECK(asset);
   asset_ = std::static_pointer_cast<VideoAssetAndroid>(asset);
+  output_width_ = asset_->GetVideoWidth();
+  output_height_ = asset_->GetVideoHeight();
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   Java_IVideoPlayer_attachAsset(env, player_.Get(), asset_->JavaObject());
   // CreateVideoTexture issues GL calls (glGenTextures + setSurface), so under
@@ -114,6 +116,20 @@ void VideoPlayerAndroid::AttachAsset(std::shared_ptr<VideoAsset> asset) {
         "VideoPlayerAndroid::AttachAsset: EGL MakeCurrent failed, "
         "skipping CreateVideoTexture (video texture may leak)");
   }
+}
+
+void VideoPlayerAndroid::UpdateOutputFrameSize(const int32_t width,
+                                               const int32_t height) {
+  if (!enable_downsample_ || width <= 0 || height <= 0 ||
+      (width == output_width_ && height == output_height_)) {
+    return;
+  }
+  output_width_ = width;
+  output_height_ = height;
+  current_frame_ = -1;
+  JNIEnv *env = lynx::base::android::AttachCurrentThread();
+  Java_IVideoPlayer_updateOutputFrameSize(env, player_.Get(), output_width_,
+                                          output_height_);
 }
 
 void VideoPlayerAndroid::NotifyErrorEvent(const std::string &err_msg) {

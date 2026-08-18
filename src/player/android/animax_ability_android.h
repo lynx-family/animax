@@ -21,6 +21,8 @@ class ANIMAX_EXPORT AnimaXAbilityAndroid : public AnimaXAbility {
 
   bool DisableByteVC1Decoder() const;
 
+  bool IsDownsampleVideoEnabled() const override;
+
   base::android::ScopedLocalJavaRef<jobject> CreateVideoPlayer(
       jlong native_ptr) const;
 
