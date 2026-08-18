@@ -79,6 +79,7 @@ public class VideoPlayerImpl extends AbsVideoPlayer
       public void run() {
         mCodecManager.attachSurface(mSurface);
         mCodecManager.initDecoder();
+        mCodecManager.prepareNextFrame();
       }
     });
   }
@@ -108,6 +109,22 @@ public class VideoPlayerImpl extends AbsVideoPlayer
       }
     });
     return updateTexImageIfNecessary();
+  }
+
+  @Override
+  public void updateOutputFrameSize(int width, int height) {
+    if (mIsDestroyed || width <= 0 || height <= 0) {
+      return;
+    }
+    if (mSurfaceTexture != null) {
+      mSurfaceTexture.setDefaultBufferSize(width, height);
+    }
+    postToCodecThreadWhenCodecReady(new Runnable() {
+      @Override
+      public void run() {
+        mCodecManager.restartDecoder();
+      }
+    });
   }
 
   // called from external

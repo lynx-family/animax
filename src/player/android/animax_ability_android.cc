@@ -29,6 +29,11 @@ bool AnimaXAbilityAndroid::DisableByteVC1Decoder() const {
   return Java_BaseAbility_disableByteVC1Decoder(env, ability_.Get());
 }
 
+bool AnimaXAbilityAndroid::IsDownsampleVideoEnabled() const {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  return Java_BaseAbility_isDownsampleVideoEnabled(env, ability_.Get());
+}
+
 base::android::ScopedLocalJavaRef<jobject>
 AnimaXAbilityAndroid::CreateVideoPlayer(jlong native_ptr) const {
   JNIEnv* env = lynx::base::android::AttachCurrentThread();
