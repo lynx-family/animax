@@ -118,16 +118,18 @@ public class CodecManager {
     }
     if (!success) {
       reportError("initDecoder error");
-      return;
     }
-    prepareNextFrame();
+  }
+
+  public void restartDecoder() {
+    releaseDecoder();
+    initDecoder();
   }
 
   public void decodeAndUploadFrame(int toFrame) {
     if (mDecoderShouldRestart) {
       mDecoderShouldRestart = false;
-      releaseDecoder();
-      initDecoder();
+      restartDecoder();
     }
     if (!mDecoderValid) {
       return;
@@ -545,7 +547,7 @@ public class CodecManager {
     }
   }
 
-  private boolean prepareNextFrame() {
+  boolean prepareNextFrame() {
     if (!mDecoderValid || null == mAsset) {
       return false;
     }
