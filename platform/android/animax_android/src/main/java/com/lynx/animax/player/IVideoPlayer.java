@@ -14,5 +14,8 @@ public interface IVideoPlayer {
 
   @CalledByNative float[] getTransformMatrix();
 
+  @CalledByNative
+  default void updateOutputFrameSize(int width, int height) {}
+
   @CalledByNative void destroy();
 }

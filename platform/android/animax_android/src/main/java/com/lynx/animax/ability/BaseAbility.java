@@ -86,6 +86,11 @@ public class BaseAbility {
     return DeviceUtil.disableByteVC1Decoder(this);
   }
 
+  @CalledByNative
+  public boolean isDownsampleVideoEnabled() {
+    return DeviceUtil.enableDownsampleVideo(this);
+  }
+
   /**
    * Send events on the UI thread
    * @param event
