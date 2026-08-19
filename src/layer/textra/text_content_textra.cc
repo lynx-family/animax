@@ -47,7 +47,7 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   if (layout_context_ == nullptr) {
     ConfigurePlatformPainter(data_source_, alpha);
     layout_context_ = std::make_unique<TextContentLayoutContext>();
-    layout_context_->Layout(data_source_, paint_->GetPaint());
+    layout_context_->Layout(data_source_, paint_->GetPaint(), alpha);
   }
 
   auto* layout_region = layout_context_->GetLayoutRegion();
