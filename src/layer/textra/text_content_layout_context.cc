@@ -39,7 +39,7 @@ TTHorizontalAlignment ToHorizontalAlignment(
 bool ConfigureRangeStyle(
     const TextContentDataSource::RangeStyle& range_style,
     const DocumentData& document_data, const skity::Paint& paint,
-    ttoffice::tttext::Style& style_for_range,
+    int32_t layer_alpha, ttoffice::tttext::Style& style_for_range,
     std::vector<std::unique_ptr<ttoffice::tttext::SkityPainter>>&
         range_painters) {
   if (!range_style.HasStyle()) {
@@ -59,33 +59,46 @@ bool ConfigureRangeStyle(
 
   auto range_painter = std::make_unique<ttoffice::tttext::SkityPainter>();
   auto range_paint = std::make_unique<skity::Paint>(paint);
-  if (!range_style.color.IsEmpty()) {
-    auto base_fill_color = paint.GetFillColor();
+  auto layer_alpha_factor = std::clamp(layer_alpha / 255.f, 0.f, 1.f);
+  const bool range_has_fill = !range_style.color.IsEmpty();
+  const bool range_has_stroke =
+      !range_style.stroke_color.IsEmpty() || range_style.stroke_width != 0.f;
+  if (range_has_fill) {
     auto alpha =
-        std::clamp(range_style.color.GetA() * base_fill_color.a, 0.f, 255.f);
+        std::clamp(range_style.color.GetA() * layer_alpha_factor, 0.f, 255.f);
     range_paint->SetFillColor(skity::ColorSetARGB(
         alpha, range_style.color.GetR(), range_style.color.GetG(),
         range_style.color.GetB()));
   }
 
-  if (!range_style.stroke_color.IsEmpty() || range_style.stroke_width != 0.f) {
+  if (range_has_stroke) {
     auto stroke_color = !range_style.stroke_color.IsEmpty()
                             ? range_style.stroke_color
                             : Color(document_data.GetStrokeColor());
-    auto stroke_width =
-        range_style.stroke_width != 0.f ? range_style.stroke_width : 1.f;
-    auto base_fill_color = paint.GetFillColor();
+    auto stroke_width = range_style.stroke_width != 0.f
+                            ? range_style.stroke_width
+                            : document_data.GetStrokeWidth();
     auto stroke_alpha =
-        std::clamp(stroke_color.GetA() * base_fill_color.a, 0.f, 255.f);
+        std::clamp(stroke_color.GetA() * layer_alpha_factor, 0.f, 255.f);
     range_paint->SetStrokeColor(
         skity::ColorSetARGB(stroke_alpha, stroke_color.GetR(),
                             stroke_color.GetG(), stroke_color.GetB()));
     range_paint->SetStrokeWidth(stroke_width);
+    style_for_range.SetTextStrokeStyle(
+        ttoffice::tttext::TTColor(stroke_color.GetInt()), stroke_width);
+  }
+
+  const auto base_style = range_paint->GetStyle();
+  const bool base_has_fill = base_style != skity::Paint::kStroke_Style;
+  const bool base_has_stroke = base_style != skity::Paint::kFill_Style;
+  const bool should_draw_fill = base_has_fill || range_has_fill;
+  const bool should_draw_stroke = base_has_stroke || range_has_stroke;
+  if (should_draw_fill && should_draw_stroke) {
     range_paint->SetStyle(document_data.GetStrokeOverfill()
                               ? skity::Paint::kStrokeAndFill_Style
                               : skity::Paint::kStrokeThenFill_Style);
-    style_for_range.SetTextStrokeStyle(
-        ttoffice::tttext::TTColor(stroke_color.GetInt()), stroke_width);
+  } else if (should_draw_stroke) {
+    range_paint->SetStyle(skity::Paint::kStroke_Style);
   } else {
     range_paint->SetStyle(skity::Paint::kFill_Style);
   }
@@ -98,7 +111,8 @@ bool ConfigureRangeStyle(
 }  // namespace
 
 void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
-                                      const skity::Paint& paint) {
+                                      const skity::Paint& paint,
+                                      int32_t layer_alpha) {
   auto& document_data = data_source.GetDocumentData();
   auto* box_size = document_data.GetBoxSize();
   const auto box_width =
@@ -162,8 +176,8 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
   auto range_styles = data_source.GetRangeAnimatorPropertyList(text_length);
   for (const auto& range_style : range_styles) {
     ttoffice::tttext::Style style_for_range;
-    if (!ConfigureRangeStyle(range_style, document_data, paint, style_for_range,
-                             range_painters_)) {
+    if (!ConfigureRangeStyle(range_style, document_data, paint, layer_alpha,
+                             style_for_range, range_painters_)) {
       continue;
     }
     paragraph_->ApplyStyleInRange(
