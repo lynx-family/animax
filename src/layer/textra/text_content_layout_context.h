@@ -5,7 +5,6 @@
 #ifndef ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_LAYOUT_CONTEXT_H_
 #define ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_LAYOUT_CONTEXT_H_
 
-#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -17,7 +16,7 @@ class TextContentDataSource;
 class TextContentLayoutContext {
  public:
   void Layout(const TextContentDataSource& data_source,
-              const skity::Paint& paint, int32_t layer_alpha = 255);
+              const skity::Paint& paint);
   ttoffice::tttext::LayoutRegion* GetLayoutRegion() const {
     return layout_region_.get();
   }
