@@ -39,7 +39,7 @@ TTHorizontalAlignment ToHorizontalAlignment(
 bool ConfigureRangeStyle(
     const TextContentDataSource::RangeStyle& range_style,
     const DocumentData& document_data, const skity::Paint& paint,
-    int32_t layer_alpha, ttoffice::tttext::Style& style_for_range,
+    ttoffice::tttext::Style& style_for_range,
     std::vector<std::unique_ptr<ttoffice::tttext::SkityPainter>>&
         range_painters) {
   if (!range_style.HasStyle()) {
@@ -59,10 +59,10 @@ bool ConfigureRangeStyle(
 
   auto range_painter = std::make_unique<ttoffice::tttext::SkityPainter>();
   auto range_paint = std::make_unique<skity::Paint>(paint);
-  auto layer_alpha_factor = std::clamp(layer_alpha / 255.f, 0.f, 1.f);
   if (!range_style.color.IsEmpty()) {
+    auto base_fill_color = paint.GetFillColor();
     auto alpha =
-        std::clamp(range_style.color.GetA() * layer_alpha_factor, 0.f, 255.f);
+        std::clamp(range_style.color.GetA() * base_fill_color.a, 0.f, 255.f);
     range_paint->SetFillColor(skity::ColorSetARGB(
         alpha, range_style.color.GetR(), range_style.color.GetG(),
         range_style.color.GetB()));
@@ -74,8 +74,9 @@ bool ConfigureRangeStyle(
                             : Color(document_data.GetStrokeColor());
     auto stroke_width =
         range_style.stroke_width != 0.f ? range_style.stroke_width : 1.f;
+    auto base_fill_color = paint.GetFillColor();
     auto stroke_alpha =
-        std::clamp(stroke_color.GetA() * layer_alpha_factor, 0.f, 255.f);
+        std::clamp(stroke_color.GetA() * base_fill_color.a, 0.f, 255.f);
     range_paint->SetStrokeColor(
         skity::ColorSetARGB(stroke_alpha, stroke_color.GetR(),
                             stroke_color.GetG(), stroke_color.GetB()));
@@ -97,8 +98,7 @@ bool ConfigureRangeStyle(
 }  // namespace
 
 void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
-                                      const skity::Paint& paint,
-                                      int32_t layer_alpha) {
+                                      const skity::Paint& paint) {
   auto& document_data = data_source.GetDocumentData();
   auto* box_size = document_data.GetBoxSize();
   const auto box_width =
@@ -162,8 +162,8 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
   auto range_styles = data_source.GetRangeAnimatorPropertyList(text_length);
   for (const auto& range_style : range_styles) {
     ttoffice::tttext::Style style_for_range;
-    if (!ConfigureRangeStyle(range_style, document_data, paint, layer_alpha,
-                             style_for_range, range_painters_)) {
+    if (!ConfigureRangeStyle(range_style, document_data, paint, style_for_range,
+                             range_painters_)) {
       continue;
     }
     paragraph_->ApplyStyleInRange(
