@@ -512,8 +512,12 @@ public class CodecManager {
     if (null == inputBuffer) {
       return -1;
     }
-    if (null != buffer) {
-      inputBuffer.put(buffer);
+    if (null != buffer && inputBuffer.remaining() >= buffer.remaining()) {
+      try {
+        inputBuffer.put(buffer);
+      } catch (RuntimeException e) {
+        return -1;
+      }
     }
     return inputBufferIndex;
   }
