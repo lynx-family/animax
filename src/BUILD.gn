@@ -41,7 +41,7 @@ config("animax_private_config") {
     "$textra_search_path/public",
   ]
 
-  if (is_win) {
+  if (is_win || is_linux) {
     include_dirs += [ "//third_party/angle/include" ]
   }
 
@@ -159,6 +159,11 @@ config("animax_private_config") {
       "CoreVideo.framework",
       "Metal.framework",
       "VideoToolbox.framework",
+    ]
+  } else if (is_linux) {
+    defines += [
+      "OS_LINUX=1",
+      "NAPI_DISABLE_CPP_RTTI",
     ]
   } else if (is_wasm) {
     defines += [

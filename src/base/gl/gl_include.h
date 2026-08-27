@@ -25,6 +25,11 @@
 #elif defined(ANIMAX_GL_USE_OSMESA)
 #include <GL/osmesa.h>
 #include "third_party/mesa_build_support/include/mesa_gl.h"
+#elif defined(OS_LINUX)
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3platform.h>
 #elif defined(OS_WIN)
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

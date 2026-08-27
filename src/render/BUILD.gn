@@ -78,7 +78,7 @@ animax_source_set("skity") {
 
   lib_dirs = []
 
-  if (is_win) {
+  if (is_win || is_linux) {
     include_dirs += [ "//third_party/angle/include" ]
   } else if (is_harmony) {
     include_dirs += [ "//third_party/skity/harmony/include" ]

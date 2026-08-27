@@ -236,6 +236,8 @@ void *kGLProcLoader = reinterpret_cast<void *>(eglGetProcAddress);
 void *kGLProcLoader = reinterpret_cast<void *>(eglGetProcAddress);
 #elif defined(ANIMAX_GL_USE_OSMESA)
 void *kGLProcLoader = reinterpret_cast<void *>(OSMesaGetProcAddress);
+#elif defined(OS_LINUX)
+void *kGLProcLoader = reinterpret_cast<void *>(eglGetProcAddress);
 #elif defined(OS_WIN)
 void *kGLProcLoader = reinterpret_cast<void *>(eglGetProcAddress);
 #elif defined(OS_OSX)
