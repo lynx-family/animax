@@ -119,7 +119,7 @@ animax_source_set("resource") {
       "resource_loader/unzip_util.h",
     ]
     deps += [ "//third_party/zlib" ]
-  } else if (is_win || is_mac) {
+  } else if (is_win || is_mac || is_linux) {
     sources += [
       "resource_loader/unzip_util.cc",
       "resource_loader/unzip_util.h",
