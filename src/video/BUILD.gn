@@ -80,6 +80,11 @@ animax_source_set("video") {
     ]
 
     deps = [ ":wasm-rtti-video" ]
+  } else if (is_linux && !enable_unittests) {
+    sources += [
+      "linux/video_player_linux.cc",
+      "linux/video_player_linux.h",
+    ]
   } else if (is_win) {
     sources += [
       "custom/ffmpeg/ffmpeg_lib_loader.cc",
