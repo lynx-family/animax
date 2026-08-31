@@ -233,7 +233,7 @@ public class VideoPlayerImpl extends AbsVideoPlayer
     postToCodecThread(new Runnable() {
       @Override
       public void run() {
-        if (mCodecManager != null) {
+        if (!mIsDestroyed && mCodecManager != null) {
           r.run();
         }
       }
