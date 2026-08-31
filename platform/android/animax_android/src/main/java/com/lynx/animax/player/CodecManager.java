@@ -92,29 +92,29 @@ public class CodecManager {
       return;
     }
 
-    Status status = tryInitDecoderByType(mimeType);
-    boolean success = status.mSuccess;
-    if (!success) {
-      try {
-        int codecCount = MediaCodecList.getCodecCount();
-        while (mMediaCodecListNextTryIndex < codecCount) {
-          MediaCodecInfo info = MediaCodecList.getCodecInfoAt(mMediaCodecListNextTryIndex++);
-          if (info.isEncoder() || !supportMimeType(info, mimeType)) {
-            continue;
-          }
-          String decoderName = info.getName();
-          if (null == decoderName) {
-            continue;
-          }
-          status = tryInitDecoder(decoderName);
-          if (status.mSuccess) {
-            success = true;
-            break;
-          }
+    boolean success = false;
+    try {
+      int codecCount = MediaCodecList.getCodecCount();
+      while (mMediaCodecListNextTryIndex < codecCount) {
+        MediaCodecInfo info = MediaCodecList.getCodecInfoAt(mMediaCodecListNextTryIndex++);
+        if (info.isEncoder() || !supportMimeType(info, mimeType)) {
+          continue;
         }
-      } catch (Exception e) {
-        AnimaXLog.e(TAG, "enumerate codec list failed: " + e.getMessage());
+        String decoderName = info.getName();
+        if (null == decoderName) {
+          continue;
+        }
+        Status status = tryInitDecoder(decoderName);
+        if (status.mSuccess) {
+          success = true;
+          break;
+        }
       }
+    } catch (Exception e) {
+      AnimaXLog.e(
+          TAG, "enumerate codec list failed, fallback to decoder by type: " + e.getMessage());
+      Status status = tryInitDecoderByType(mimeType);
+      success = status.mSuccess;
     }
     if (!success) {
       reportError("initDecoder error");
