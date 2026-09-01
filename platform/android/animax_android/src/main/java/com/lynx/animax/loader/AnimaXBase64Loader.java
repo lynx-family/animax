@@ -5,6 +5,8 @@ package com.lynx.animax.loader;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ColorSpace;
+import android.os.Build;
 import android.util.Base64;
 
 public class AnimaXBase64Loader implements IAnimaXLoader {
@@ -13,6 +15,15 @@ public class AnimaXBase64Loader implements IAnimaXLoader {
   private static String getDataUrlBase64Content(String dataUrl) {
     return dataUrl.substring(dataUrl.indexOf(BASE64_PREFIX) + BASE64_PREFIX.length());
   }
+
+  private Bitmap decodeBitmap(byte[] data) {
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      options.inPreferredColorSpace = ColorSpace.get(ColorSpace.Named.SRGB);
+    }
+    return BitmapFactory.decodeByteArray(data, 0, data.length, options);
+  }
+
   @Override
   public void load(IAnimaXLoaderRequest request, IAnimaXLoaderCompletionHandler completionHandler) {
     AnimaXLoaderResponse<?> response = null;
@@ -21,7 +32,7 @@ public class AnimaXBase64Loader implements IAnimaXLoader {
       byte[] data = Base64.decode(getDataUrlBase64Content(base64DataUrl), Base64.DEFAULT);
 
       if (request.getImageInfo() != null) {
-        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        Bitmap bitmap = decodeBitmap(data);
         response =
             AnimaXLoaderResponse.createBitmapResponse(new SimpleCloseableBitmapReference(bitmap));
       } else {
