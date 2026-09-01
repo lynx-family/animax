@@ -1,4 +1,6 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 // Copyright 2018 Airbnb, Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,6 +62,7 @@ std::unique_ptr<AnimatablePointValue> AnimatablePathValueParser::ParseSplitPath(
   std::unique_ptr<AnimatablePathValue> path_anim;
   std::unique_ptr<AnimatableFloatValue> x_anim;
   std::unique_ptr<AnimatableFloatValue> y_anim;
+  std::unique_ptr<AnimatableFloatValue> z_anim;
 
   bool has_expressions = false;
 
@@ -80,6 +83,12 @@ std::unique_ptr<AnimatablePointValue> AnimatablePathValueParser::ParseSplitPath(
       } else {
         y_anim = AnimatableValueParser::ParseFloat(it->value, composition);
       }
+    } else if (strcmp(key, "z") == 0) {
+      if (it->value.IsString()) {
+        has_expressions = true;
+      } else {
+        z_anim = AnimatableValueParser::ParseFloat(it->value, composition);
+      }
     }
   }
 
@@ -92,8 +101,8 @@ std::unique_ptr<AnimatablePointValue> AnimatablePathValueParser::ParseSplitPath(
   }
 
   return std::unique_ptr<AnimatableSplitDimensionPathValue>(
-      new AnimatableSplitDimensionPathValue(std::move(x_anim),
-                                            std::move(y_anim)));
+      new AnimatableSplitDimensionPathValue(
+          std::move(x_anim), std::move(y_anim), std::move(z_anim)));
 }
 
 }  // namespace animax

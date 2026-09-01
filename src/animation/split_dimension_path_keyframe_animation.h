@@ -29,6 +29,7 @@ class SplitDimensionPathKeyframeAnimation : public PointKeyframeAnimation {
   SplitDimensionPathKeyframeAnimation(
       std::unique_ptr<FloatKeyframeAnimation> x_animation,
       std::unique_ptr<FloatKeyframeAnimation> y_animation,
+      std::unique_ptr<FloatKeyframeAnimation> z_animation,
       std::shared_ptr<KeyframeModelList> frames);
   ~SplitDimensionPathKeyframeAnimation() override = default;
 
@@ -41,6 +42,7 @@ class SplitDimensionPathKeyframeAnimation : public PointKeyframeAnimation {
   PointF point_;
   std::unique_ptr<FloatKeyframeAnimation> x_animation_;
   std::unique_ptr<FloatKeyframeAnimation> y_animation_;
+  std::unique_ptr<FloatKeyframeAnimation> z_animation_;
 
   KeyframeModelList empty_frames_;
 };

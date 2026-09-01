@@ -79,13 +79,15 @@ std::unique_ptr<PointKeyframeAnimation> AnimatablePathValue::CreateAnimation(
 }
 
 bool AnimatableSplitDimensionPathValue::IsStatic() {
-  return anim_x_dimen_->IsStatic() && anim_y_dimen_->IsStatic();
+  return anim_x_dimen_->IsStatic() && anim_y_dimen_->IsStatic() &&
+         (!anim_z_dimen_ || anim_z_dimen_->IsStatic());
 }
 
 std::unique_ptr<PointKeyframeAnimation>
 AnimatableSplitDimensionPathValue::CreateAnimation(bool enable_3d) {
   return std::make_unique<SplitDimensionPathKeyframeAnimation>(
       anim_x_dimen_->CreateAnimation(), anim_y_dimen_->CreateAnimation(),
+      anim_z_dimen_ ? anim_z_dimen_->CreateAnimation() : nullptr,
       std::make_shared<KeyframeModelList>());
 }
 

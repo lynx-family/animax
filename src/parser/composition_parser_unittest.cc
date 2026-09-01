@@ -8,7 +8,10 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "src/animation/base_keyframe_animation.h"
 #include "src/base/util/composition_frame_util.h"
+#include "src/model/animatable/animatable_transform_model.h"
+#include "src/model/layer_model.h"
 #include "src/model/text/text_gradient_model.h"
 
 using namespace lynx::animax;
@@ -231,6 +234,71 @@ TEST(CompositionParserTest, SkipsMalformedAndNonTextGradientTargets) {
   EXPECT_EQ(nullptr, large_count_layer_it->second->GetTextGradientModel());
   EXPECT_EQ(composition->GetPrecomps().end(),
             composition->GetPrecomps().find("missing"));
+}
+
+TEST(CompositionParserTest, AnimatesSplitPositionZ) {
+  static constexpr const char* kLottie = R"({
+    "v":"5.6.10","fr":30,"ip":0,"op":61,"w":100,"h":100,
+    "nm":"split-position-z","ddd":1,"assets":[],"layers":[{
+      "ddd":1,"ind":1,"ty":4,"nm":"3d-shape","ip":0,"op":61,
+      "ks":{"p":{"s":true,
+        "x":{"a":0,"k":10},
+        "y":{"a":0,"k":20},
+        "z":{"a":1,"k":[
+          {"t":0,"s":[30],"e":[50],"o":{"x":0,"y":0},
+           "i":{"x":1,"y":1}},
+          {"t":60,"s":[50]}
+        ]}
+      }},"shapes":[]
+    }],"markers":[]
+  })";
+
+  auto composition = ParseComposition(kLottie);
+
+  ASSERT_NE(nullptr, composition);
+  auto layer_it = composition->GetLayerMap().find(1);
+  ASSERT_NE(composition->GetLayerMap().end(), layer_it);
+  auto* transform = layer_it->second->GetTransform();
+  ASSERT_NE(nullptr, transform);
+  auto* position = transform->GetPosition();
+  ASSERT_NE(nullptr, position);
+  auto animation = position->CreateAnimation(true);
+  ASSERT_NE(nullptr, animation);
+
+  animation->SetProgress(30.f / composition->GetDurationFrames());
+  const auto& value = animation->GetValue();
+  EXPECT_FLOAT_EQ(10.f, value.GetX());
+  EXPECT_FLOAT_EQ(20.f, value.GetY());
+  EXPECT_NEAR(40.f, value.GetZ(), 0.0001f);
+}
+
+TEST(CompositionParserTest, DefaultsMissingSplitPositionZToZero) {
+  static constexpr const char* kLottie = R"({
+    "v":"5.6.10","fr":30,"ip":0,"op":61,"w":100,"h":100,
+    "nm":"split-position-2d","ddd":0,"assets":[],"layers":[{
+      "ddd":0,"ind":1,"ty":4,"nm":"2d-shape","ip":0,"op":61,
+      "ks":{"p":{"s":true,
+        "x":{"a":0,"k":10},"y":{"a":0,"k":20}
+      }},"shapes":[]
+    }],"markers":[]
+  })";
+
+  auto composition = ParseComposition(kLottie);
+
+  ASSERT_NE(nullptr, composition);
+  auto layer_it = composition->GetLayerMap().find(1);
+  ASSERT_NE(composition->GetLayerMap().end(), layer_it);
+  auto* transform = layer_it->second->GetTransform();
+  ASSERT_NE(nullptr, transform);
+  auto* position = transform->GetPosition();
+  ASSERT_NE(nullptr, position);
+  auto animation = position->CreateAnimation(false);
+  ASSERT_NE(nullptr, animation);
+
+  const auto& value = animation->GetValue();
+  EXPECT_FLOAT_EQ(10.f, value.GetX());
+  EXPECT_FLOAT_EQ(20.f, value.GetY());
+  EXPECT_FLOAT_EQ(0.f, value.GetZ());
 }
 
 TEST(CompositionParserTest, KeepsPlaybackAndTimelineValues) {

@@ -79,8 +79,11 @@ class AnimatableSplitDimensionPathValue : public AnimatablePointValue {
  public:
   AnimatableSplitDimensionPathValue(
       std::unique_ptr<AnimatableFloatValue> anim_x,
-      std::unique_ptr<AnimatableFloatValue> anim_y)
-      : anim_x_dimen_(std::move(anim_x)), anim_y_dimen_(std::move(anim_y)) {}
+      std::unique_ptr<AnimatableFloatValue> anim_y,
+      std::unique_ptr<AnimatableFloatValue> anim_z)
+      : anim_x_dimen_(std::move(anim_x)),
+        anim_y_dimen_(std::move(anim_y)),
+        anim_z_dimen_(std::move(anim_z)) {}
 
   std::unique_ptr<PointKeyframeAnimation> CreateAnimation(
       bool enable_3d) override;
@@ -91,6 +94,7 @@ class AnimatableSplitDimensionPathValue : public AnimatablePointValue {
  private:
   std::unique_ptr<AnimatableFloatValue> anim_x_dimen_;
   std::unique_ptr<AnimatableFloatValue> anim_y_dimen_;
+  std::unique_ptr<AnimatableFloatValue> anim_z_dimen_;
 };
 
 class AnimatableShapeValue : public AnimatableValue {
