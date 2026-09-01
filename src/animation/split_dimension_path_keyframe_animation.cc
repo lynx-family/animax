@@ -23,10 +23,12 @@ namespace animax {
 SplitDimensionPathKeyframeAnimation::SplitDimensionPathKeyframeAnimation(
     std::unique_ptr<FloatKeyframeAnimation> x_animation,
     std::unique_ptr<FloatKeyframeAnimation> y_animation,
+    std::unique_ptr<FloatKeyframeAnimation> z_animation,
     std::shared_ptr<KeyframeModelList> frames)
     : PointKeyframeAnimation(std::move(frames)),
       x_animation_(std::move(x_animation)),
-      y_animation_(std::move(y_animation)) {
+      y_animation_(std::move(y_animation)),
+      z_animation_(std::move(z_animation)) {
   Init();
 }
 
@@ -35,7 +37,11 @@ void SplitDimensionPathKeyframeAnimation::Init() { SetProgress(GetProgress()); }
 void SplitDimensionPathKeyframeAnimation::SetProgress(float progress) {
   x_animation_->SetProgress(progress);
   y_animation_->SetProgress(progress);
-  point_.Set(x_animation_->GetValue().Get(), y_animation_->GetValue().Get(), 0);
+  if (z_animation_) {
+    z_animation_->SetProgress(progress);
+  }
+  point_.Set(x_animation_->GetValue().Get(), y_animation_->GetValue().Get(),
+             z_animation_ ? z_animation_->GetValue().Get() : 0);
   for (auto& listener : listeners_) {
     listener->OnValueChanged();
   }
@@ -47,8 +53,7 @@ PointF& SplitDimensionPathKeyframeAnimation::GetValue(KeyframeModel& keyframe,
 }
 
 PointF& SplitDimensionPathKeyframeAnimation::GetValue() {
-  intermediate_.Set(point_.GetX(), 0, 0);
-  intermediate_.Set(intermediate_.GetX(), point_.GetY(), 0);
+  intermediate_.Set(point_.GetX(), point_.GetY(), point_.GetZ());
   return intermediate_;
 }
 
