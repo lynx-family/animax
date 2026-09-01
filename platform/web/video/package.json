@@ -1,0 +1,55 @@
+{
+  "name": "@lynx-js/animax-video",
+  "version": "1.0.17-alpha.0",
+  "description": "AnimaX H.264/H.265 video decoder module compiled to WebAssembly (WASM)",
+  "type": "module",
+  "main": "out/index.js",
+  "module": "out/index.js",
+  "types": "out/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./out/index.d.ts",
+      "import": "./out/index.js",
+      "default": "./out/index.js"
+    },
+    "./lib/animax-video.wasm": "./out/lib/animax-video.wasm"
+  },
+  "files": [
+    "out/index.js",
+    "out/index.d.ts",
+    "out/lib",
+    "out/licenses",
+    "README.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "npm run clean && ./script/build.sh",
+    "build:debug": "npm run clean && ./script/build.sh debug",
+    "build:ffmpeg": "./script/build_ffmpeg.sh",
+    "build:ffmpeg:force": "./script/build_ffmpeg.sh --force",
+    "clean": "rm -rf out/index.js out/index.d.ts out/index.js.in out/index.d.ts.in out/wasm out/lib out/licenses index.js index.d.ts lib"
+  },
+  "keywords": [
+    "AnimaX",
+    "video",
+    "FFmpeg",
+    "WebAssembly",
+    "WASM",
+    "H.264",
+    "H.265",
+    "decoder"
+  ],
+  "license": "SEE LICENSE IN THIRD_PARTY_NOTICES.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/animax.git",
+    "directory": "platform/web/video"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  }
+}

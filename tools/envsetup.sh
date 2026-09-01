@@ -27,6 +27,10 @@ lynx_envsetup() {
   # setup corepack
   export COREPACK_HOME="${BUILDTOOLS_DIR}/corepack"
 
+  if [ -f "${BUILDTOOLS_DIR}/emsdk/emsdk_env.sh" ]; then
+    EMSDK_QUIET=1 source "${BUILDTOOLS_DIR}/emsdk/emsdk_env.sh" >/dev/null
+  fi
+
   export PATH="${LYNX_DIR}/tools_shared:$PATH"
 }
 

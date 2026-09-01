@@ -6,8 +6,13 @@
 animax_proj_root = rebase_path("../")
 
 # wasm
-animax_wasm_deps = []
-animax_wasm_skity_libs = []
+animax_wasm_deps = rebase_path([ "../src:build_skity_wasm" ])
+animax_wasm_skity_libs = [
+  "$root_out_dir/wasm/libskity.a",
+  "$root_out_dir/wasm/libwgsl-cross.a",
+  "$root_out_dir/wasm/libjsoncpp.a",
+  "$root_out_dir/wasm/libfreetype2.a",
+]
 
 # third party deps
 # textra
@@ -28,3 +33,17 @@ rapidjson_include_path = rebase_path("../third_party/lynx/third_party")
 
 # lynx base
 lynx_base_search_path = rebase_path("../third_party/lynx")
+
+# FFmpeg
+#
+# The public checkout uses upstream FFmpeg from DEPS. The Windows loader
+# implementation is kept provider-specific so consumers can replace the
+# upstream DLL layout without exposing private runtime names in this tree.
+animax_ffmpeg_include_dirs =
+    rebase_path([
+                  "../third_party/ffmpeg_config/include",
+                  "../third_party/ffmpeg",
+                ])
+animax_ffmpeg_deps = []
+animax_ffmpeg_loader_sources = [ rebase_path(
+        "../src/video/custom/ffmpeg/ffmpeg_library_names_upstream.cc") ]

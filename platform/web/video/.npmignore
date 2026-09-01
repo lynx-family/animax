@@ -1,0 +1,23 @@
+# Build cache & intermediates
+out/ffmpeg/
+
+# Source code (published versions generated at build time to out/)
+src/
+
+# Root-level build artifacts (only out/ is published)
+index.js
+index.d.ts
+lib/
+
+# Build scripts
+script/
+
+# FFmpeg source (not needed in published package)
+third_party/
+native/
+
+# Development artifacts
+.gitignore
+.npmignore
+.yalc/
+node_modules/

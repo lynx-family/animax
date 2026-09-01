@@ -1,0 +1,16 @@
+# Source code (published versions generated at build time to out/)
+src/
+
+# Root-level build artifacts (only out/ is published)
+index.js
+index.d.ts
+lib/
+
+# Build scripts
+script/
+
+# Development artifacts
+.gitignore
+.npmignore
+.yalc/
+node_modules/

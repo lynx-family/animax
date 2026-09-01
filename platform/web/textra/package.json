@@ -1,0 +1,50 @@
+{
+  "name": "@lynx-js/animax-textra",
+  "version": "1.0.17-alpha.0",
+  "description": "AnimaX Textra text layout module compiled to WebAssembly (WASM)",
+  "type": "module",
+  "main": "out/index.js",
+  "module": "out/index.js",
+  "types": "out/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./out/index.d.ts",
+      "import": "./out/index.js",
+      "default": "./out/index.js"
+    },
+    "./lib/animax-textra.wasm": "./out/lib/animax-textra.wasm"
+  },
+  "files": [
+    "out/index.js",
+    "out/index.d.ts",
+    "out/lib",
+    "out/licenses",
+    "README.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "npm run clean && ./script/build.sh",
+    "build:debug": "npm run clean && ./script/build.sh debug",
+    "clean": "rm -rf out/index.js out/index.d.ts out/index.js.in out/index.d.ts.in out/wasm out/lib out/licenses index.js index.d.ts lib"
+  },
+  "keywords": [
+    "AnimaX",
+    "Textra",
+    "text layout",
+    "WebAssembly",
+    "WASM"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/animax.git",
+    "directory": "platform/web/textra"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  }
+}
