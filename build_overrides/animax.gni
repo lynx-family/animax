@@ -6,8 +6,13 @@
 animax_proj_root = rebase_path("../")
 
 # wasm
-animax_wasm_deps = []
-animax_wasm_skity_libs = []
+animax_wasm_deps = rebase_path([ "../src:build_skity_wasm" ])
+animax_wasm_skity_libs = [
+  "$root_out_dir/wasm/libskity.a",
+  "$root_out_dir/wasm/libwgsl-cross.a",
+  "$root_out_dir/wasm/libjsoncpp.a",
+  "$root_out_dir/wasm/libfreetype2.a",
+]
 
 # third party deps
 # textra
