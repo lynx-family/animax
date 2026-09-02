@@ -18,7 +18,7 @@ ANDROID_DIR="${ROOT_DIR}/example/android"
 APP_MODULE_DIR="${ANDROID_DIR}/animax_example"
 BUILD_DIR="${APP_MODULE_DIR}/build"
 
-# Source environment (build tools, SDK/NDK, Python venv)
+# Source environment (build tools, SDK/NDK, Python tooling)
 source "${ROOT_DIR}/tools/envsetup.sh"
 
 echo "[1/3] Cleaning previous artifacts"
