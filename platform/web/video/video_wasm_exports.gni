@@ -1,0 +1,165 @@
+declare_args() {
+  _video_wasm_runtime_symbols = [
+    "___stack_pointer",
+    "_stderr",
+    "___errno_location",
+    "_abort",
+  ]
+
+  _video_wasm_memory_symbols = [
+    "_posix_memalign",
+    "_realloc",
+    "_memchr",
+    "_memcmp",
+    "_bsearch",
+    "_qsort",
+  ]
+
+  _video_wasm_string_symbols = [
+    "_strlen",
+    "_strchr",
+    "_strcmp",
+    "_strcpy",
+    "_strstr",
+    "_strspn",
+    "_strcspn",
+    "_strrchr",
+    "_strncmp",
+    "_strtol",
+    "_strtoll",
+    "_strtoul",
+    "_strtoull",
+    "_strtod",
+    "_strerror_r",
+    "_wcslen",
+    "_atoi",
+  ]
+
+  _video_wasm_stdio_fs_symbols = [
+    "_open",
+    "_fcntl",
+    "_fdopen",
+    "_setvbuf",
+    "_fread",
+    "_fwrite",
+    "_fclose",
+    "_fputs",
+    "_fiprintf",
+    "_isatty",
+    "_sysconf",
+    "_getenv",
+  ]
+
+  _video_wasm_time_symbols = [
+    "_clock",
+    "_clock_gettime",
+    "_gettimeofday",
+    "_nanosleep",
+    "_localtime_r",
+    "_gmtime_r",
+    "_strftime",
+  ]
+
+  _video_wasm_format_symbols = [
+    "_snprintf",
+    "_vsnprintf",
+    "_sscanf",
+  ]
+
+  _video_wasm_math_symbols = [
+    "_exp",
+    "_exp2",
+    "_log",
+    "_log10",
+    "_pow",
+    "_round",
+    "_frexp",
+    "_hypot",
+    "_atan2",
+    "_atan",
+    "_asin",
+    "_acos",
+    "_sin",
+    "_cos",
+    "_tan",
+    "_sinh",
+    "_cosh",
+    "_tanh",
+    "_fabs",
+    "_fmod",
+    "_scalbn",
+    "_llrint",
+  ]
+
+  _video_wasm_pthread_symbols = [
+    "_pthread_mutex_init",
+    "_pthread_mutex_destroy",
+    "_pthread_mutex_lock",
+    "_pthread_mutex_unlock",
+    "_pthread_once",
+    "_pthread_cond_init",
+    "_pthread_cond_destroy",
+    "_pthread_cond_wait",
+    "_pthread_cond_signal",
+    "_pthread_cond_broadcast",
+    "_pthread_create",
+    "_pthread_join",
+  ]
+
+  _video_wasm_iconv_zlib_symbols = [
+    "_iconv_open",
+    "_iconv",
+    "_iconv_close",
+    "_uncompress",
+  ]
+
+  _video_wasm_compiler_rt_symbols = [
+    "___extenddftf2",
+    "___floatunsitf",
+    "___multf3",
+    "___addtf3",
+    "___trunctfdf2",
+    "___multi3",
+    "___fpclassify",
+  ]
+
+  _video_wasm_cpp_runtime_symbols = [
+    "__Znwm",
+    "__ZdlPvm",
+    "__ZNSt3__222__libcpp_verbose_abortEPKcz",
+  ]
+
+  _video_wasm_linker_exports_symbols = [
+    "memory",
+    "__indirect_function_table",
+    "__stack_pointer",
+    "__heap_base",
+    "emscripten_get_sbrk_ptr",
+    "_emscripten_stack_alloc",
+    "_emscripten_stack_restore",
+    "emscripten_stack_get_current",
+    "setThrew",
+    "__wasm_apply_data_relocs",
+  ]
+}
+
+video_wasm_all_function_symbols =
+    _video_wasm_runtime_symbols + _video_wasm_memory_symbols +
+    _video_wasm_string_symbols + _video_wasm_stdio_fs_symbols +
+    _video_wasm_time_symbols + _video_wasm_format_symbols +
+    _video_wasm_math_symbols + _video_wasm_pthread_symbols +
+    _video_wasm_iconv_zlib_symbols + _video_wasm_compiler_rt_symbols +
+    _video_wasm_cpp_runtime_symbols
+
+_video_wasm_all_function_quoted_symbols = []
+foreach(sym, video_wasm_all_function_symbols) {
+  _video_wasm_all_function_quoted_symbols += [ "'" + sym + "'" ]
+}
+
+video_wasm_exported_functions =
+    "[" + string_join(",", _video_wasm_all_function_quoted_symbols) + "]"
+
+video_wasm_linker_export_flags = []
+foreach(sym, _video_wasm_linker_exports_symbols) {
+  video_wasm_linker_export_flags += [ "-Wl,--export=" + sym ]
+}

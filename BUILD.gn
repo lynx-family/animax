@@ -7,5 +7,7 @@ group("default") {
     deps += [ "./platform/android:Android" ]
   } else if (is_ios) {
     deps += [ "./platform/darwin/ios:animax_podspec" ]
+  } else if (is_wasm) {
+    deps += [ "./src:animax_wasm" ]
   }
 }

@@ -9,6 +9,8 @@ python_path = "python3"
 if system == "windows":
     python_path = "python"
 
+EMSDK_VERSION = "4.0.22"
+
 deps = {
     # Build environment setup
     'platform/android/gradle/wrapper/gradle-6.7.1-all.zip': {
@@ -82,6 +84,31 @@ deps = {
         }.get(system, None),
         "ignore_in_git": True,
         "condition": system in ['linux', 'darwin', 'windows']
+    },
+    'buildtools/emsdk': {
+        "type": "http",
+        "url": (
+            "https://github.com/emscripten-core/emsdk/archive/refs/tags/"
+            f"{EMSDK_VERSION}.tar.gz"
+        ),
+        "ignore_in_git": True,
+        "condition": system in ['linux', 'darwin'],
+    },
+    'config_emsdk': {
+        "type": "action",
+        "cwd": os.path.join(root_dir, "buildtools/emsdk"),
+        "commands": [
+            (
+                "env -u EMSDK -u EMSDK_PYTHON -u EM_CONFIG "
+                f"./emsdk install {EMSDK_VERSION}"
+            ),
+            (
+                "env -u EMSDK -u EMSDK_PYTHON -u EM_CONFIG "
+                f"./emsdk activate {EMSDK_VERSION}"
+            ),
+        ],
+        "require": ['buildtools/emsdk'],
+        "condition": system in ['linux', 'darwin'],
     },
     "build": {
         "type": "git",

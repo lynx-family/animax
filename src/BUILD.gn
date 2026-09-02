@@ -1,6 +1,7 @@
 # Copyright 2025 The Lynx Authors. All rights reserved.
 # Licensed under the Apache License Version 2.0 that can be found in the
 # LICENSE file in the root directory of this source tree.
+import("../platform/web/video/video_wasm_exports.gni")
 import("animax.gni")
 
 group("animax_core") {
@@ -27,6 +28,125 @@ source_set("animax") {
     ":animax_core",
     "render:skity",
   ]
+}
+
+if (is_wasm) {
+  # get_target_outputs() does not support binary targets, so keep the side
+  # module output path shared between its target and the main module linker.
+  _animax_textra_wasm_output = "$root_out_dir/animax_textra.wasm"
+
+  action("build_skity_wasm") {
+    script = "../tools/build_skity_wasm.py"
+    args = [
+      rebase_path("//third_party/skity", root_build_dir),
+      rebase_path("$root_out_dir/wasm", root_build_dir),
+    ]
+    if (is_debug) {
+      args += [ "--debug" ]
+    }
+    outputs = animax_wasm_skity_libs
+  }
+
+  animax_source_set("source-wasm-rtti") {
+    exclude_configs = [ "//build/config/compiler:no_rtti" ]
+    configs = [ "//build/config/compiler:rtti" ]
+    deps = [ "$lynx_base_search_path/base/src:base_static" ]
+  }
+
+  executable("animax_wasm") {
+    output_extension = "js"
+
+    configs -= [ "//build/config/compiler:compiler" ]
+
+    deps = [
+      ":animax",
+      ":animax_textra_wasm",
+      ":source-wasm-rtti",
+    ]
+    data_deps = [ ":animax_textra_wasm" ]
+
+    cflags = []
+
+    ldflags = [
+      "-sEXPORT_ES6=1",
+      "-sUSE_ES6_IMPORT_META=1",
+      "-sEXPORT_NAME=animax_wasm",
+      "-std=c++17",
+      "-sWASM=1",
+      "-sFULL_ES3=1",
+      "-sMODULARIZE=1",
+      "-sGL_PREINITIALIZED_CONTEXT",
+      "-lGL",
+      "-sUSE_WEBGL2=1",
+      "-sMAX_WEBGL_VERSION=2",
+      "--bind",
+      "--no-entry",
+      "--use-port=emdawnwebgpu",
+      "-sEXPORTED_RUNTIME_METHODS=WebGPU,GL,loadDynamicLibrary",
+      "-sERROR_ON_UNDEFINED_SYMBOLS=0",
+      "-sLLD_REPORT_UNDEFINED=1",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sENVIRONMENT=web",
+      "-sUSE_ZLIB=1",
+    ]
+
+    # Pass the optional Textra side module to Emscripten at link time so its
+    # imports are preserved automatically. NO_AUTOLOAD_DYLIBS keeps the module
+    # opt-in at runtime through loadDynamicLibrary().
+    ldflags += [
+                 "-sMAIN_MODULE=2",
+                 "-sNO_AUTOLOAD_DYLIBS",
+                 "-sEXPORTED_FUNCTIONS=" + video_wasm_exported_functions,
+                 rebase_path(_animax_textra_wasm_output, root_build_dir),
+               ] + video_wasm_linker_export_flags
+
+    if (is_debug) {
+      ldflags += [
+        "-O0",
+        "-gsource-map",
+        "--emit-symbol-map",
+      ]
+    } else {
+      configs -= [ "//build/config/compiler:optimize" ]
+      cflags += [ "-O3" ]
+      ldflags += [
+        "-O3",
+        "-Wl,--gc-sections",
+      ]
+    }
+  }
+
+  executable("animax_textra_wasm") {
+    output_name = get_path_info(_animax_textra_wasm_output, "name")
+    output_extension = get_path_info(_animax_textra_wasm_output, "extension")
+
+    configs -= [ "//build/config/compiler:compiler" ]
+    deps = [ "layer/textra:textra-wasm-sources" ]
+    cflags = []
+    ldflags = [
+      "-std=c++17",
+      "-sWASM=1",
+      "-sSIDE_MODULE=2",
+      "-sERROR_ON_UNDEFINED_SYMBOLS=0",
+      "-sLLD_REPORT_UNDEFINED=1",
+      "-Wl,--export=RegisterAnimaXTextraWasm",
+    ]
+
+    if (is_debug) {
+      ldflags += [
+        "-O0",
+        "-gsource-map",
+        "--emit-symbol-map",
+      ]
+    } else {
+      configs -= [ "//build/config/compiler:optimize" ]
+      cflags += [ "-O3" ]
+      ldflags += [
+        "-O3",
+        "-Wl,--gc-sections",
+      ]
+    }
+  }
 }
 
 config("animax_private_config") {
