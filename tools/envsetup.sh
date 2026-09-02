@@ -22,10 +22,7 @@ lynx_envsetup() {
   export BUILDTOOLS_DIR="${LYNX_DIR}/buildtools"
   export SHARED_TOOLS_DIR="${LYNX_DIR}/tools_shared"
   export PATH="${BUILDTOOLS_DIR}/llvm/bin:${BUILDTOOLS_DIR}/gn:${BUILDTOOLS_DIR}/ninja:${SHARED_TOOLS_DIR}/gn_tools:${SHARED_TOOLS_DIR}:$PATH"
-  # setup node version
-  export PATH=${BUILDTOOLS_DIR}/node/bin:$PATH
-  # setup corepack
-  export COREPACK_HOME="${BUILDTOOLS_DIR}/corepack"
+  export PATH=${BUILDTOOLS_DIR}/bun:$PATH
 
   export PATH="${LYNX_DIR}/tools_shared:$PATH"
 }
