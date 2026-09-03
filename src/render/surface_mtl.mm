@@ -126,6 +126,10 @@ void SkitySurfaceMTL::Flush() {
   }
 }
 
+id<MTLCommandQueue> SkitySurfaceMTL::GetCommandQueue() const {
+  return skity::MTLContextGetCommandQueue(gpu_ctx_.get());
+}
+
 void SkitySurfaceMTL::Destroy() {
   gpu_surface_.reset();
   canvas_.reset();

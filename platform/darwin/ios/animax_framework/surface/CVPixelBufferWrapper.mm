@@ -99,6 +99,11 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
 }
 
 - (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration {
+  [self notifyViewBufferUpdateWithGeneration:currentGeneration commandQueue:nil];
+}
+
+- (void)notifyViewBufferUpdateWithGeneration:(NSUInteger)currentGeneration
+                                commandQueue:(nullable id<MTLCommandQueue>)commandQueue {
   DCHECK(self.backend == AnimaXMetal);
 
   if (!self.targetView) {
@@ -130,6 +135,81 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
 }
 
 - (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration
+                            commandQueue:(id<MTLCommandQueue>)commandQueue {
+  if (self.targetView || !self.frameAvailableHandler) {
+    [self notifyViewBufferUpdateWithGeneration:currentGeneration commandQueue:commandQueue];
+    return;
+  }
+  [self notifyFrameAvailableWithGeneration:currentGeneration commandQueue:commandQueue];
+}
+
+- (void)notifyFrameAvailableWithGeneration:(NSUInteger)currentGeneration
+                              commandQueue:(nullable id<MTLCommandQueue>)commandQueue {
+  if (!self.frameAvailableHandler || currentGeneration != self.generation) {
+    return;
+  }
+  AnimaXScopedCVPixelBuffer *sourceBufferScope = self.renderPixelBufferScope;
+  id<MTLTexture> sourceTexture = self.metalTexture;
+  if (!sourceBufferScope.object || !sourceTexture || !commandQueue) {
+    return;
+  }
+  id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+  if (!commandBuffer) {
+    return;
+  }
+  CVPixelBufferRef buffer = [self acquirePixelBufferFromPool];
+  if (!buffer) {
+    buffer = [CVPixelBufferWrapper createPixelBufferWithWidth:sourceTexture.width
+                                                       height:sourceTexture.height
+                                                      backend:self.backend];
+  }
+  AnimaXScopedCVPixelBuffer *frameBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:buffer];
+  if (!buffer || CVPixelBufferGetWidth(buffer) != sourceTexture.width ||
+      CVPixelBufferGetHeight(buffer) != sourceTexture.height) {
+    return;
+  }
+  CVMetalTextureRef frameTexture = nullptr;
+  CVReturn result = CVMetalTextureCacheCreateTextureFromImage(
+      kCFAllocatorDefault, self.textureCache, buffer, nil, MTLPixelFormatBGRA8Unorm,
+      sourceTexture.width, sourceTexture.height, 0, &frameTexture);
+  if (result != kCVReturnSuccess || !frameTexture) {
+    if (frameTexture) {
+      CFRelease(frameTexture);
+    }
+    ANIMAX_LOGE("Failed to create frame copy texture.")
+    return;
+  }
+  id<MTLBlitCommandEncoder> encoder = [commandBuffer blitCommandEncoder];
+  if (!encoder) {
+    CFRelease(frameTexture);
+    return;
+  }
+  // Preserve this frame before subsequent writes without replacing the render target.
+  [encoder copyFromTexture:sourceTexture
+               sourceSlice:0
+               sourceLevel:0
+              sourceOrigin:MTLOriginMake(0, 0, 0)
+                sourceSize:MTLSizeMake(sourceTexture.width, sourceTexture.height, 1)
+                 toTexture:CVMetalTextureGetTexture(frameTexture)
+          destinationSlice:0
+          destinationLevel:0
+         destinationOrigin:MTLOriginMake(0, 0, 0)];
+  [encoder endEncoding];
+  __weak typeof(self) weakSelf = self;
+  [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> completedBuffer) {
+    // Keep the submitted source and copy texture alive until GPU completion.
+    (void)sourceBufferScope;
+    CFRelease(frameTexture);
+    if (completedBuffer.status != MTLCommandBufferStatusCompleted) {
+      ANIMAX_LOGE("Failed to complete frame rendering.")
+      return;
+    }
+    [weakSelf notifyFrameAvailableWithGeneration:currentGeneration bufferScope:frameBufferScope];
+  }];
+  [commandBuffer commit];
+}
+
+- (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration
                                srcPixels:(nullable uint8_t *)srcPixels
                                    width:(size_t)width
                                   height:(size_t)height
@@ -146,12 +226,16 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   if (self.backend == AnimaXSoftware && !self.targetView) {
     // only here if using software backend to render buffer.
     AnimaXScopedCVPixelBuffer *bufferScoped = self.renderPixelBufferScope;
-    [self copyFromPixels:srcPixels
-                   width:width
-                  height:height
-                  stride:stride
-                toBuffer:bufferScoped.object];
-    return;
+    if (![self copyFromPixels:srcPixels
+                        width:width
+                       height:height
+                       stride:stride
+                     toBuffer:bufferScoped.object]) {
+      return;
+    }
+    if (!self.frameAvailableHandler) {
+      return;
+    }
   }
 
   CVPixelBufferRef distBuffer = [self acquirePixelBufferFromPool];
@@ -161,8 +245,29 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
                                                           backend:self.backend];
   }
 
-  [self copyFromPixels:srcPixels width:width height:height stride:stride toBuffer:distBuffer];
-  self.displayPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:distBuffer];
+  AnimaXScopedCVPixelBuffer *displayBufferScope =
+      [AnimaXScopedCVPixelBuffer newWrapOwned:distBuffer];
+  if (![self copyFromPixels:srcPixels
+                      width:width
+                     height:height
+                     stride:stride
+                   toBuffer:distBuffer]) {
+    return;
+  }
+  [self notifyViewUpdateWithGeneration:currentGeneration bufferScope:displayBufferScope];
+  [self notifyFrameAvailableWithGeneration:currentGeneration bufferScope:displayBufferScope];
+}
+
+- (void)notifyViewUpdateWithGeneration:(NSUInteger)currentGeneration
+                           bufferScope:(AnimaXScopedCVPixelBuffer *)displayBufferScope {
+  if (currentGeneration != self.generation) {
+    return;
+  }
+  self.displayPixelBufferScope = displayBufferScope;
+
+  if (!self.targetView) {
+    return;
+  }
 
   __weak typeof(self) weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -178,7 +283,25 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
     if (!view) {
       return;
     }
-    [view onBufferUpdated:self.displayPixelBufferScope];
+    [view onBufferUpdated:displayBufferScope];
+  });
+}
+
+- (void)notifyFrameAvailableWithGeneration:(NSUInteger)currentGeneration
+                               bufferScope:(AnimaXScopedCVPixelBuffer *)bufferScope {
+  if (currentGeneration != self.generation || !bufferScope.object || !self.frameAvailableHandler) {
+    return;
+  }
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __strong typeof(weakSelf) self = weakSelf;
+    if (!self || currentGeneration != self.generation) {
+      return;
+    }
+    AnimaXPixelBufferFrameAvailableHandler handler = self.frameAvailableHandler;
+    if (handler) {
+      handler(bufferScope.object);
+    }
   });
 }
 
@@ -206,7 +329,7 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
 
 #pragma mark - CVPixelBuffer
 
-- (void)copyFromPixels:(uint8_t *)pixels
+- (BOOL)copyFromPixels:(uint8_t *)pixels
                  width:(size_t)width
                 height:(size_t)height
                 stride:(size_t)stride
@@ -214,27 +337,28 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   DCHECK(pixels && width && height && stride);
   if (buffer == NULL) {
     ANIMAX_LOGE("Failed to copy from pixels: invalid buffer.")
-    return;
+    return NO;
   }
   size_t dstWidth = CVPixelBufferGetWidth(buffer);
   size_t dstHeight = CVPixelBufferGetHeight(buffer);
   if (!lynx::animax::BufferCopyHelper::IsSizeMatch(width, height, dstWidth, dstHeight)) {
-    return;
+    return NO;
   }
   size_t dstStride = CVPixelBufferGetBytesPerRow(buffer);
   CVReturn rc = CVPixelBufferLockBaseAddress(buffer, 0);
   if (rc != kCVReturnSuccess) {
     ANIMAX_LOGE("Failed to copy from pixels: unable to lock buffer.")
-    return;
+    return NO;
   }
   uint8_t *dstPixels = (uint8_t *)CVPixelBufferGetBaseAddress(buffer);
   if (!dstPixels) {
     ANIMAX_LOGE("Failed to copy from pixels: unable to get pixels of buffer.")
     CVPixelBufferUnlockBaseAddress(buffer, 0);
-    return;
+    return NO;
   }
   lynx::animax::BufferCopyHelper::CopyBuffer(pixels, dstPixels, height, stride, dstStride);
   CVPixelBufferUnlockBaseAddress(buffer, 0);
+  return YES;
 }
 
 - (void)rebuildPixelBufferPoolWithWidth:(size_t)width height:(size_t)height {
