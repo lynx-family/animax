@@ -196,6 +196,43 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
   return buffer;
 }
 
+- (BOOL)prepareNextRenderPixelBuffer {
+  AnimaXScopedCVPixelBuffer *currentBufferScope = self.renderPixelBufferScope;
+  CVPixelBufferRef currentBuffer = currentBufferScope.object;
+  if (!currentBuffer) {
+    return NO;
+  }
+
+  const size_t width = CVPixelBufferGetWidth(currentBuffer);
+  const size_t height = CVPixelBufferGetHeight(currentBuffer);
+  CVPixelBufferRef nextBuffer = [self acquirePixelBufferFromPool];
+  if (!nextBuffer) {
+    nextBuffer = [CVPixelBufferWrapper createPixelBufferWithWidth:width
+                                                           height:height
+                                                          backend:self.backend];
+  }
+  if (!nextBuffer) {
+    ANIMAX_LOGE("Failed to prepare the next render pixel buffer.")
+    return NO;
+  }
+
+  self.renderPixelBufferScope = [AnimaXScopedCVPixelBuffer newWrapOwned:nextBuffer];
+  [self destroyTexture];
+  [self rebuildMetalTextureIfNeeded];
+  return self.metalTexture != nil;
+}
+
+- (void)notifyFrameAvailableWithGeneration:(NSUInteger)currentGeneration
+                               bufferScope:(AnimaXScopedCVPixelBuffer *)bufferScope {
+  if (currentGeneration != self.generation || !bufferScope.object) {
+    return;
+  }
+  AnimaXPixelBufferFrameAvailableHandler handler = self.frameAvailableHandler;
+  if (handler) {
+    handler(bufferScope.object);
+  }
+}
+
 - (void)resizePixelBufferWrapperWithWidth:(size_t)width height:(size_t)height {
   [self rebuildPixelBufferPoolWithWidth:width height:height];
   if (self.backend == AnimaXMetal) {

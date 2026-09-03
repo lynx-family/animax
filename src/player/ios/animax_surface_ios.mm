@@ -92,8 +92,32 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
   animax::Canvas* Canvas() override { return skity_surface_mtl_->GetCanvas(); }
 
   void Flush() override {
-    skity_surface_mtl_->Flush();
-    [pixel_buffer_wrapper_ notifyBufferUpdateWithGeneration:gen_];
+    AnimaXPixelBufferFrameAvailableHandler frame_available_handler =
+        pixel_buffer_wrapper_.frameAvailableHandler;
+    if (!frame_available_handler) {
+      skity_surface_mtl_->Flush();
+      [pixel_buffer_wrapper_ notifyBufferUpdateWithGeneration:gen_];
+      return;
+    }
+
+    AnimaXScopedCVPixelBuffer* completed_buffer_scope =
+        pixel_buffer_wrapper_.renderPixelBufferScope;
+    const NSUInteger completed_generation = gen_;
+    CVPixelBufferWrapper* buffer_wrapper = pixel_buffer_wrapper_;
+    skity_surface_mtl_->Flush(
+        base::closure([buffer_wrapper, completed_buffer_scope, completed_generation]() {
+          [buffer_wrapper notifyFrameAvailableWithGeneration:completed_generation
+                                                 bufferScope:completed_buffer_scope];
+        }));
+
+    if (![pixel_buffer_wrapper_ prepareNextRenderPixelBuffer]) {
+      ANIMAX_LOGE("Failed to rotate the Metal render pixel buffer.")
+      skity_surface_mtl_.reset();
+      texture_mtl_ = nil;
+      return;
+    }
+    skity_surface_mtl_->Destroy();
+    CreateDrawSurface();
   }
 
   AnimaXBackend Type() const override { return AnimaXBackend::kMetal; }
@@ -128,7 +152,7 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
     DCHECK(Valid());
   }
   id<MTLTexture> texture_mtl_;
-  std::unique_ptr<Surface> skity_surface_mtl_{nullptr};
+  std::unique_ptr<SkitySurfaceMTL> skity_surface_mtl_{nullptr};
 };
 
 #pragma mark - Surface: AnimaXImageSurfaceIOSSoftware
