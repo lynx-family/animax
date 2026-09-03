@@ -35,6 +35,13 @@ typedef NS_ENUM(NSUInteger, AnimaXRenderTarget) { Layer = 0, Buffer = 1, View = 
 
 - (void)setBuffer:(nonnull CVPixelBufferRef)buffer;
 
+// The handler is dispatched to the main thread after copying the frame. View
+// targets use the CPU copy from the view update without waiting for the GPU;
+// Metal Buffer targets notify after GPU completion. The supplied buffer is an
+// independent copy, valid for the callback; retain it to use beyond the callback.
+- (void)setFrameAvailableHandler:
+    (nullable AnimaXPixelBufferFrameAvailableHandler)frameAvailableHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

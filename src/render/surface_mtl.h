@@ -5,6 +5,8 @@
 #ifndef ANIMAX_SRC_RENDER_SURFACE_MTL_H_
 #define ANIMAX_SRC_RENDER_SURFACE_MTL_H_
 
+#import <Metal/Metal.h>
+
 #include "src/render/canvas.h"
 #include "src/render/surface.h"
 
@@ -26,6 +28,8 @@ class SkitySurfaceMTL : public Surface {
   void Clear() override;
 
   void Flush() override;
+
+  id<MTLCommandQueue> GetCommandQueue() const;
 
   void Destroy() override;
 

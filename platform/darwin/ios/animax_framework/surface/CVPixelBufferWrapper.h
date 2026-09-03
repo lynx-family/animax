@@ -37,9 +37,7 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
 // renderPixelBufferScope.
 @property(atomic, strong, nullable) AnimaXScopedCVPixelBuffer *renderPixelBufferScope;
 
-// Only available when this wrapper is init with a View.
-// The surface produces a copy of renderPixelBufferScope.object and pushes it on
-// displayPixelBufferScope.
+// The latest independent pixel copy produced for the target view.
 @property(atomic, strong, nullable) AnimaXScopedCVPixelBuffer *displayPixelBufferScope;
 
 // Monotonically increasing frame/version tag.
@@ -51,9 +49,12 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
 // Note: In software mode, metalTexture is not created and is unavailable.
 @property(atomic, readonly, nullable) id<MTLTexture> metalTexture;
 
+@property(atomic, copy, nullable) AnimaXPixelBufferFrameAvailableHandler frameAvailableHandler;
+
 - (instancetype)initWithView:(nonnull UIView<AnimaXPixelBufferUpdateListener> *)view;
 
-// Called when native rendering is finished. Produce a UIImage and dispatch it to imageView.
+// Copies pixels and notifies the target view and frame handler on the main thread.
+// This CPU-copy path does not wait for GPU completion.
 - (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration
                                srcPixels:(nullable uint8_t *)srcPixels
                                    width:(size_t)width
@@ -61,6 +62,12 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
                                   stride:(size_t)stride;
 
 - (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration;
+
+// View targets notify the view and frame handler after the original CPU copy.
+// Buffer targets copy frames on the render queue and notify the handler after GPU completion.
+// Both preserve the render buffer and texture. Without a handler, use the original path.
+- (void)notifyBufferUpdateWithGeneration:(NSUInteger)currentGeneration
+                            commandQueue:(id<MTLCommandQueue>)commandQueue;
 
 // Called after rebuild pixel buffer pool, only in GPU thread.
 // Returns a pixel buffer whose size is same with the rendering pixelbuffer;

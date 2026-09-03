@@ -93,7 +93,8 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
 
   void Flush() override {
     skity_surface_mtl_->Flush();
-    [pixel_buffer_wrapper_ notifyBufferUpdateWithGeneration:gen_];
+    [pixel_buffer_wrapper_ notifyBufferUpdateWithGeneration:gen_
+                                               commandQueue:skity_surface_mtl_->GetCommandQueue()];
   }
 
   AnimaXBackend Type() const override { return AnimaXBackend::kMetal; }
@@ -128,7 +129,7 @@ class AnimaXPixelBufferSurfaceIOSMetal : public AnimaXPixelBufferSurfaceIOS {
     DCHECK(Valid());
   }
   id<MTLTexture> texture_mtl_;
-  std::unique_ptr<Surface> skity_surface_mtl_{nullptr};
+  std::unique_ptr<SkitySurfaceMTL> skity_surface_mtl_{nullptr};
 };
 
 #pragma mark - Surface: AnimaXImageSurfaceIOSSoftware
