@@ -5,9 +5,9 @@ Subject: [PATCH] Add BUILD.gn and config_override.h
 
 Change-Id: Id350fbe4b357c5c55c39798c93e838f7add518b8
 ---
- BUILD.gn          | 434 ++++++++++++++++++++++++++++++++++++++++++++++
+ BUILD.gn          | 438 ++++++++++++++++++++++++++++++++++++++++++++++
  config-override.h |  11 ++
- 2 files changed, 445 insertions(+)
+ 2 files changed, 449 insertions(+)
  create mode 100644 BUILD.gn
  create mode 100644 config-override.h
 
@@ -16,7 +16,7 @@ new file mode 100644
 index 000000000..b50867f4b
 --- /dev/null
 +++ b/BUILD.gn
-@@ -0,0 +1,434 @@
+@@ -0,0 +1,438 @@
 +# Copyright 2016 Google Inc.
 +#
 +# Use of this source code is governed by a BSD-style license that can be
@@ -31,6 +31,10 @@ index 000000000..b50867f4b
 +    ".",
 +    _src,
 +  ]
++
++  if (target_os == "wasm") {
++    cflags_cc = [ "-Wno-nontrivial-memcall" ]
++  }
 +  public_configs = [ ":harfbuzz_config" ]
 +  defines = [
 +    #"HAVE_FREETYPE",
@@ -470,4 +474,3 @@ index 000000000..899a59436
 +#define hb_mutex_impl_finish(M) HB_STMT_START { (M)->~hb_mutex_impl_t(); } HB_STMT_END
 -- 
 2.39.5 (Apple Git-154)
-

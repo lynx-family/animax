@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: The Lynx Authors <lynx.authors@example.com>
+Date: Tue, 1 Sep 2026 00:00:00 +0800
+Subject: [PATCH] Fix standalone Wasm base include path
+
+---
+ base/src/BUILD.gn | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/base/src/BUILD.gn b/base/src/BUILD.gn
+index eee7eaf24..3bb5d6f4f 100644
+--- a/base/src/BUILD.gn
++++ b/base/src/BUILD.gn
+@@ -11,3 +11,4 @@ static_library("base_static") {
++  include_dirs = [ "../.." ]
+   sources = [
+     "../platform/windows/lynx_base_env.cc",
+     "../platform/windows/lynx_base_env.h",
+--
+2.39.5
