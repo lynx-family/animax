@@ -51,6 +51,8 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
 // Note: In software mode, metalTexture is not created and is unavailable.
 @property(atomic, readonly, nullable) id<MTLTexture> metalTexture;
 
+@property(atomic, copy, nullable) AnimaXPixelBufferFrameAvailableHandler frameAvailableHandler;
+
 - (instancetype)initWithView:(nonnull UIView<AnimaXPixelBufferUpdateListener> *)view;
 
 // Called when native rendering is finished. Produce a UIImage and dispatch it to imageView.
@@ -65,6 +67,14 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
 // Called after rebuild pixel buffer pool, only in GPU thread.
 // Returns a pixel buffer whose size is same with the rendering pixelbuffer;
 - (CVPixelBufferRef)acquirePixelBufferFromPool;
+
+// Switches rendering to a different pool-backed pixel buffer. The current
+// render buffer remains alive through any scopes retained by the caller.
+- (BOOL)prepareNextRenderPixelBuffer;
+
+// Delivers a completed shared frame without copying its pixels.
+- (void)notifyFrameAvailableWithGeneration:(NSUInteger)currentGeneration
+                               bufferScope:(AnimaXScopedCVPixelBuffer *)bufferScope;
 
 // Called after the render pixel buffer is changed, only in GPU thread.
 - (void)resizePixelBufferWrapperWithWidth:(size_t)width height:(size_t)height;

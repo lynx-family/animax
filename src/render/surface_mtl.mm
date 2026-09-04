@@ -4,6 +4,9 @@
 
 #include "src/render/surface_mtl.h"
 
+#include <memory>
+#include <utility>
+
 #include "skity/gpu/gpu_context_mtl.h"
 #include "skity/gpu/gpu_surface.hpp"
 #include "src/base/log/log.h"
@@ -107,7 +110,9 @@ SkitySurfaceMTL::~SkitySurfaceMTL() = default;
 
 void SkitySurfaceMTL::Clear() {}
 
-void SkitySurfaceMTL::Flush() {
+void SkitySurfaceMTL::Flush() { Flush(nullptr); }
+
+void SkitySurfaceMTL::Flush(base::closure completion) {
   if (canvas_ == nullptr || gpu_surface_ == nullptr) {
     return;
   }
@@ -120,6 +125,27 @@ void SkitySurfaceMTL::Flush() {
     ANIMAX_TRACE_EVENT_BEGIN(kSwapFrame);
     gpu_surface_->Flush();
     ANIMAX_TRACE_EVENT_END();
+
+    if (completion) {
+      id<MTLCommandQueue> command_queue = skity::MTLContextGetCommandQueue(gpu_ctx_.get());
+      id<MTLCommandBuffer> completion_buffer = [command_queue commandBuffer];
+      if (!completion_buffer) {
+        ANIMAX_LOGE("Failed to create the Metal frame completion buffer.")
+        return;
+      }
+      auto completion_holder = std::make_shared<base::closure>(std::move(completion));
+      [completion_buffer addCompletedHandler:^(id<MTLCommandBuffer> command_buffer) {
+        if (command_buffer.error) {
+          NSString* error_description = command_buffer.error.localizedDescription;
+          ANIMAX_LOGE("Metal frame completion failed: " << error_description.UTF8String)
+          return;
+        }
+        if (*completion_holder) {
+          (*completion_holder)();
+        }
+      }];
+      [completion_buffer commit];
+    }
   } @catch (NSException* exception) {
     ANIMAX_LOGE("Flush failed with exception: " << exception.name
                                                 << ", reason: " << exception.reason)

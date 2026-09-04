@@ -90,6 +90,11 @@
   self.bufferWrapper.generation++;
 }
 
+- (void)setFrameAvailableHandler:
+    (nullable AnimaXPixelBufferFrameAvailableHandler)frameAvailableHandler {
+  self.bufferWrapper.frameAvailableHandler = frameAvailableHandler;
+}
+
 #pragma mark Reconfigure
 
 /**

@@ -35,6 +35,12 @@ typedef NS_ENUM(NSUInteger, AnimaXRenderTarget) { Layer = 0, Buffer = 1, View = 
 
 - (void)setBuffer:(nonnull CVPixelBufferRef)buffer;
 
+// The handler is called after Metal finishes rendering the frame. The supplied
+// pixel buffer is valid for the duration of the callback; retain it to share
+// the buffer beyond the callback.
+- (void)setFrameAvailableHandler:
+    (nullable AnimaXPixelBufferFrameAvailableHandler)frameAvailableHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END
