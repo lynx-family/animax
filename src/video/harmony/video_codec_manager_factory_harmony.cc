@@ -25,6 +25,7 @@ std::shared_ptr<VideoCodecManagerHarmony> VideoCodecManagerFactoryHarmony::Make(
   if (enable_sync_codec_) {
     auto sync_manager = MakeVideoCodecManagerSyncHarmony(data, native_window);
     if (sync_manager && sync_manager->Init()) {
+      ANIMAX_LOGI("Selected Harmony Sync video codec manager");
       return sync_manager;
     } else {
       ANIMAX_LOGW("MakeVideoCodecManagerSyncHarmony fail, fallback to async");
@@ -33,6 +34,7 @@ std::shared_ptr<VideoCodecManagerHarmony> VideoCodecManagerFactoryHarmony::Make(
 
   auto async_manager = MakeVideoCodecManagerAsyncHarmony(data, native_window);
   if (async_manager && async_manager->Init()) {
+    ANIMAX_LOGI("Selected Harmony Async video codec manager");
     return async_manager;
   }
 
