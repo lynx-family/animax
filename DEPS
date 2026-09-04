@@ -9,6 +9,9 @@ python_path = "python3"
 if system == "windows":
     python_path = "python"
 
+EMSDK_VERSION = "4.0.22"
+FFMPEG_REVISION = "eaddd1d7140bab19e5a4403d3c0f61fe5f59cb75"  # n7.0.3
+
 deps = {
     # Build environment setup
     'platform/android/gradle/wrapper/gradle-6.7.1-all.zip': {
@@ -83,6 +86,31 @@ deps = {
         "ignore_in_git": True,
         "condition": system in ['linux', 'darwin', 'windows']
     },
+    'buildtools/emsdk': {
+        "type": "http",
+        "url": (
+            "https://github.com/emscripten-core/emsdk/archive/refs/tags/"
+            f"{EMSDK_VERSION}.tar.gz"
+        ),
+        "ignore_in_git": True,
+        "condition": system in ['linux', 'darwin'],
+    },
+    'config_emsdk': {
+        "type": "action",
+        "cwd": os.path.join(root_dir, "buildtools/emsdk"),
+        "commands": [
+            (
+                "env -u EMSDK -u EMSDK_PYTHON -u EM_CONFIG "
+                f"./emsdk install {EMSDK_VERSION}"
+            ),
+            (
+                "env -u EMSDK -u EMSDK_PYTHON -u EM_CONFIG "
+                f"./emsdk activate {EMSDK_VERSION}"
+            ),
+        ],
+        "require": ['buildtools/emsdk'],
+        "condition": system in ['linux', 'darwin'],
+    },
     "build": {
         "type": "git",
         "url": "https://github.com/lynx-family/buildroot.git",
@@ -101,6 +129,13 @@ deps = {
         "type": "git",
         "url": "https://chromium.googlesource.com/external/gyp",
         "commit": "9d09418933ea2f75cc416e5ce38d15f62acd5c9a",
+        "ignore_in_git": True,
+        "condition": system in ['linux', 'darwin', 'windows'],
+    },
+    'third_party/ffmpeg': {
+        "type": "git",
+        "url": "https://github.com/FFmpeg/FFmpeg.git",
+        "commit": FFMPEG_REVISION,
         "ignore_in_git": True,
         "condition": system in ['linux', 'darwin', 'windows'],
     },

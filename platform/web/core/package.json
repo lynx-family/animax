@@ -1,0 +1,47 @@
+{
+  "name": "@lynx-js/animax",
+  "version": "1.0.17",
+  "description": "AnimaX for web platform",
+  "type": "module",
+  "main": "out/index.js",
+  "types": "out/index.d.ts",
+  "files": [
+    "out",
+    "public",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build:wasm": "python3 ../../../tools/build_wasm.py -t Debug",
+    "build:wasm-release": "python3 ../../../tools/build_wasm.py -t Release",
+    "clean": "rm -rf out && rm -rf public",
+    "build:types": "tsc",
+    "build:licenses": "mkdir -p out/licenses && cp ../../../LICENSE out/licenses/Apache-2.0.txt",
+    "build": "npm run clean && npm run build:wasm-release && npm run build:types && npm run build:licenses",
+    "build:release": "npm run build",
+    "build:debug": "npm run clean && npm run build:wasm && npm run build:types && npm run build:licenses"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/animax.git",
+    "directory": "platform/web/core"
+  },
+  "keywords": [
+    "AnimaX",
+    "Lottie",
+    "WebAssembly"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@webgpu/types": "^0.1.67",
+    "typescript": "^5.1.6"
+  },
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
