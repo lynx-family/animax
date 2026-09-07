@@ -7,6 +7,7 @@
 
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
+#include "src/video/custom/ffmpeg/ffmpeg_library_names.h"
 #include "src/video/custom/ffmpeg/ffmpeg_video_context.h"
 
 namespace lynx {
@@ -142,10 +143,7 @@ bool FFmpegLibLoader::LoadLibrary() {
     return true;
   }
 
-  std::vector<std::string> candidate_dlls = {
-      "ttffmpeg.dll",
-      "lynxffmpeg.dll",
-  };
+  const auto candidate_dlls = GetFFmpegLibraryNames();
 
   for (const auto& dll_name : candidate_dlls) {
     HMODULE dll = LoadLibraryExA(

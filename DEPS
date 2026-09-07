@@ -10,6 +10,7 @@ if system == "windows":
     python_path = "python"
 
 EMSDK_VERSION = "4.0.22"
+FFMPEG_REVISION = "eaddd1d7140bab19e5a4403d3c0f61fe5f59cb75"  # n7.0.3
 
 deps = {
     # Build environment setup
@@ -128,6 +129,13 @@ deps = {
         "type": "git",
         "url": "https://chromium.googlesource.com/external/gyp",
         "commit": "9d09418933ea2f75cc416e5ce38d15f62acd5c9a",
+        "ignore_in_git": True,
+        "condition": system in ['linux', 'darwin', 'windows'],
+    },
+    'third_party/ffmpeg': {
+        "type": "git",
+        "url": "https://github.com/FFmpeg/FFmpeg.git",
+        "commit": FFMPEG_REVISION,
         "ignore_in_git": True,
         "condition": system in ['linux', 'darwin', 'windows'],
     },
