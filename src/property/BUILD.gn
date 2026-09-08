@@ -17,6 +17,7 @@ property_shared_sources = [
   "property_type.h",
   "property_update_context.cc",
   "property_update_context.h",
+  "property_update_element.cc",
   "property_update_element.h",
   "property_update_request.cc",
   "property_update_response.cc",

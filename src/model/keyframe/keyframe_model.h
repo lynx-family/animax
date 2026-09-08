@@ -60,6 +60,7 @@ class KeyframeModel {
   KeyframeModel& operator=(const KeyframeModel&) = delete;
 
   long GetDurationMs();
+  CompositionModel* GetComposition() const { return composition_; }
   float GetStartFrame();
   float GetEndFrame();
 

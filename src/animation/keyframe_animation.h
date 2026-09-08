@@ -204,6 +204,9 @@ class AnimationHost {
  public:
   virtual ~AnimationHost() = default;
   void AddAnimation(KeyframeAnimation* animation);
+  const std::vector<KeyframeAnimation*>& GetAnimations() const {
+    return animations_;
+  }
 
  protected:
   std::vector<KeyframeAnimation*> animations_;
