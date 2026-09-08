@@ -8,7 +8,9 @@ buildscript {
         ndkVersion = '21.1.6352462'
         abiList = project.hasProperty('abiList') ? project.property('abiList').split(',').collect { it.trim() }.findAll { it } : ['armeabi-v7a', 'arm64-v8a', 'x86_64']
 
-        pythonExec = project.file(python_exec).absolutePath
+        def pythonExecValue = python_exec.toString()
+        def pythonExecIsPath = pythonExecValue.contains("/") || pythonExecValue.contains("\\")
+        pythonExec = pythonExecIsPath ? project.file(pythonExecValue).absolutePath : pythonExecValue
     }
 
     repositories {

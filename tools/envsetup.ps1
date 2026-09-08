@@ -7,11 +7,15 @@ $tools_path = Split-Path -Parent $MyInvocation.MyCommand.Path
 $lynx_dir_path = Split-Path -Parent $tools_path
 
 function Setup-Environment($environ_key, $environ_value) {
+  [Environment]::SetEnvironmentVariable($environ_key, $environ_value, "Process")
   [Environment]::SetEnvironmentVariable($environ_key, $environ_value, "User")
 }
 
 function Get-Environment($environ_key) {
-  $environ_value = [Environment]::GetEnvironmentVariable($environ_key, "User")
+  $environ_value = [Environment]::GetEnvironmentVariable($environ_key, "Process")
+  if (-not $environ_value) {
+    $environ_value = [Environment]::GetEnvironmentVariable($environ_key, "User")
+  }
   return $environ_value
 }
 
@@ -28,10 +32,21 @@ function Add-Environ($key, $value) {
   Setup-Environment $key $new_path
 }
 
+function Add-PythonPath-If-Exists($path) {
+  if (-not (Test-Path -LiteralPath $path)) {
+    return
+  }
+
+  Add-Environ 'PYTHONPATH' (Resolve-Path -LiteralPath $path).Path
+}
+
 function Lynx-Env-Setup {
     $buildtoolsDir = Join-Path $lynx_dir_path 'buildtools'
     Add-Environ 'PATH' (Join-Path $buildtoolsDir 'ninja')
     Add-Environ 'PATH' (Join-Path $lynx_dir_path 'tools_shared')
+    Add-PythonPath-If-Exists (Join-Path $lynx_dir_path 'third_party\py_deps')
+    Add-PythonPath-If-Exists (Join-Path $lynx_dir_path 'third_party\lynx\third_party\py_deps')
+    Add-PythonPath-If-Exists (Join-Path $lynx_dir_path '..\..\lynx\third_party\py_deps')
 }
 
 
@@ -53,19 +68,11 @@ function Android-Env-Setup {
 }
 
 function download_tools_shared_if_needed {
-  if (-not (Test-Path -Path "$lynx_root_dir_path\tools_shared")) {
+  if (-not (Test-Path -Path "$lynx_dir_path\tools_shared")) {
     & $lynx_dir_path\tools\hab.ps1 sync . --target tools_shared --target-only --no-history
   }
 }
 
-function Python-Env-Setup {
-  download_tools_shared_if_needed
-
-  python $lynx_dir_path\tools_shared\vpython_tools\vpython_env_setup.py --requirements-path $lynx_dir_path\tools\vpython_tools\requirements.txt
-  $venv_path = Join-Path $lynx_dir_path '.venv'
-  & $venv_path\Scripts\Activate.ps1
-}
-
 Lynx-Env-Setup
+download_tools_shared_if_needed
 Android-Env-Setup
-Python-Env-Setup
