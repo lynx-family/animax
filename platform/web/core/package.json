@@ -7,7 +7,9 @@
   "types": "out/index.d.ts",
   "files": [
     "out",
-    "public"
+    "public",
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build:wasm": "python3 ../../../tools/build_wasm.py -t Debug",

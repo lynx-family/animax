@@ -1,0 +1,108 @@
+name: animax_web_publish
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'animax-web-v*-alpha.*'
+
+concurrency:
+  group: animax-web-npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download Source
+        uses: actions/checkout@v6
+        with:
+          path: animax
+
+      - name: Python Setup
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install Common Dependencies
+        uses: ./animax/.github/actions/common-deps
+        with:
+          cache-backend: github
+
+      - name: Node Setup
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: npm Setup
+        shell: bash
+        run: |-
+          npm install --global npm@11
+          npm --version
+
+      - name: Validate package versions
+        id: package_meta
+        working-directory: animax
+        shell: bash
+        run: |-
+          version="$(node -p "require('./platform/web/core/package.json').version")"
+          for package_dir in platform/web/{core,video,textra}; do
+            package_name="$(node -p "require('./${package_dir}/package.json').name")"
+            package_version="$(node -p "require('./${package_dir}/package.json').version")"
+            if [[ "$package_version" != "$version" ]]; then
+              echo "Package version mismatch: $package_name is $package_version, expected $version" >&2
+              exit 1
+            fi
+          done
+
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            expected_tag="animax-web-v${version}"
+            if [[ "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+              echo "Release tag mismatch: got $GITHUB_REF_NAME, expected $expected_tag" >&2
+              exit 1
+            fi
+          fi
+
+          if [[ "$version" == *-alpha.* ]]; then
+            tag="alpha"
+          elif [[ "$version" == *-rc.* ]]; then
+            tag="next"
+          else
+            tag="latest"
+          fi
+
+          echo "Validated all AnimaX Web packages at version $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Build and validate packages
+        working-directory: animax
+        shell: bash
+        run: |-
+          source tools/envsetup.sh
+          for package_dir in platform/web/{core,video,textra}; do
+            pushd "$package_dir"
+            npm install --package-lock=false
+            npm run build
+            npm pack --dry-run
+            popd
+          done
+
+      - name: Publish packages
+        working-directory: animax
+        shell: bash
+        run: |-
+          echo "Publishing AnimaX Web packages at version ${{ steps.package_meta.outputs.version }} with dist-tag ${{ steps.package_meta.outputs.tag }}"
+          for package_dir in platform/web/{video,textra,core}; do
+            pushd "$package_dir"
+            npm publish \
+              --access public \
+              --provenance \
+              --tag "${{ steps.package_meta.outputs.tag }}"
+            popd
+          done

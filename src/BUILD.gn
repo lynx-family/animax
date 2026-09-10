@@ -1,7 +1,6 @@
 # Copyright 2025 The Lynx Authors. All rights reserved.
 # Licensed under the Apache License Version 2.0 that can be found in the
 # LICENSE file in the root directory of this source tree.
-import("../platform/web/video/video_wasm_exports.gni")
 import("animax.gni")
 
 group("animax_core") {
@@ -64,6 +63,7 @@ if (is_wasm) {
       ":source-wasm-rtti",
     ]
     data_deps = [ ":animax_textra_wasm" ]
+    inputs = [ animax_video_wasm_path ]
 
     cflags = []
 
@@ -90,15 +90,15 @@ if (is_wasm) {
       "-sUSE_ZLIB=1",
     ]
 
-    # Pass the optional Textra side module to Emscripten at link time so its
-    # imports are preserved automatically. NO_AUTOLOAD_DYLIBS keeps the module
+    # Pass optional side modules to Emscripten at link time so their imports
+    # are preserved automatically. NO_AUTOLOAD_DYLIBS keeps both modules
     # opt-in at runtime through loadDynamicLibrary().
     ldflags += [
-                 "-sMAIN_MODULE=2",
-                 "-sNO_AUTOLOAD_DYLIBS",
-                 "-sEXPORTED_FUNCTIONS=" + video_wasm_exported_functions,
-                 rebase_path(_animax_textra_wasm_output, root_build_dir),
-               ] + video_wasm_linker_export_flags
+      "-sMAIN_MODULE=2",
+      "-sNO_AUTOLOAD_DYLIBS",
+      rebase_path(animax_video_wasm_path, root_build_dir),
+      rebase_path(_animax_textra_wasm_output, root_build_dir),
+    ]
 
     if (is_debug) {
       ldflags += [

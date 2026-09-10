@@ -9,6 +9,7 @@
 #   ./script/build.sh                  # Release build (incremental)
 #   ./script/build.sh debug            # Debug build (no optimization)
 #   ./script/build.sh --force-ffmpeg    # Force recompile FFmpeg from source
+#   ./script/build.sh --wasm-only       # Build only the native side module
 #   ./script/build.sh clean            # Remove all build output
 
 set -euo pipefail
@@ -32,15 +33,17 @@ fi
 BUILD_TYPE="Release"
 FORCE_FFMPEG=false
 DO_CLEAN=false
+WASM_ONLY=false
 
 for arg in "$@"; do
   case $arg in
     debug)         BUILD_TYPE="Debug" ;;
     --force-ffmpeg) FORCE_FFMPEG=true ;;
+    --wasm-only)    WASM_ONLY=true ;;
     clean)          DO_CLEAN=true ;;
     *)
       echo "Unknown argument: $arg"
-      echo "Usage: $0 [debug] [--force-ffmpeg] [clean]"
+      echo "Usage: $0 [debug] [--force-ffmpeg] [--wasm-only] [clean]"
       exit 1
       ;;
   esac
@@ -113,6 +116,11 @@ emcc $EMCC_FLAGS -std=c++17 \
   -s WASM=1 \
   -s SIDE_MODULE=2 \
   -o "$OUT_LIB/animax-video.wasm"
+
+if [ "$WASM_ONLY" = true ]; then
+  echo "===== AnimaX Video Wasm build complete ====="
+  exit 0
+fi
 
 # --- Stage license and corresponding-source information ---
 echo "--- Staging license notices ---"
