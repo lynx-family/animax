@@ -136,6 +136,23 @@ You can run AnimaX as a standalone native library. Refer to the platform-specifi
 
 AnimaX can also be used as a component within the [Lynx](https://lynxjs.org) framework. For integration details, please refer to the [Lynx AnimaX Quick Start Guide](https://lynxjs.org/next/guide/animax/start/quick_start.html).
 
+#### Web npm package
+
+AnimaX Web is available as `@lynx-js/animax`. Optional video and Textra support
+are provided by `@lynx-js/animax-video` and `@lynx-js/animax-textra`.
+
+```bash
+tools/hab sync .
+source tools/envsetup.sh
+cd platform/web/core
+npm install
+npm run build
+npm pack --dry-run
+```
+
+See [platform/web/README.md](./platform/web/README.md) for the companion
+packages and build instructions.
+
 ## How to Contribute
 ### [Code of Conduct][coc]
 We are devoted to ensuring a positive, inclusive, and safe environment for all contributors. Please find our [Code of Conduct][coc] for detailed information.

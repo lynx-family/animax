@@ -104,6 +104,18 @@ def gn_build(root_path: str, build_type: str, package: str) -> str:
     return out_dir
 
 
+def build_video_wasm(root_path: str, build_type: str) -> None:
+    video_dir = os.path.join(root_path, 'platform', 'web', 'video')
+    command = [os.path.join(video_dir, 'script', 'build.sh'), '--wasm-only']
+    if build_type == 'Debug':
+        command.append('debug')
+    subprocess.check_call(command, cwd=video_dir)
+
+    output = os.path.join(video_dir, 'out', 'lib', 'animax-video.wasm')
+    if not os.path.isfile(output):
+        raise FileNotFoundError(f'AnimaX Video wasm is missing at {output}')
+
+
 def copy_file_if_exists(src_path: str, dst_path: str, required: bool = False):
     if not os.path.exists(src_path):
         message = f'{src_path} does not exist'
@@ -179,6 +191,9 @@ if __name__ == '__main__':
     # Ninja builds.
     root_path = os.path.realpath(os.path.join(file_path, '..'))
     configure_wasm_environment(root_path)
+
+    if args.package == 'core':
+        build_video_wasm(root_path, args.type)
 
     out_dir = gn_build(root_path, args.type, args.package)
 
