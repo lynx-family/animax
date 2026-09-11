@@ -13,6 +13,8 @@ animax_wasm_skity_libs = [
   "$root_out_dir/wasm/libjsoncpp.a",
   "$root_out_dir/wasm/libfreetype2.a",
 ]
+animax_video_wasm_path =
+    rebase_path("../platform/web/video/out/lib/animax-video.wasm")
 
 # third party deps
 # textra

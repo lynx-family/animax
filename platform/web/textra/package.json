@@ -18,7 +18,10 @@
     "out/index.js",
     "out/index.d.ts",
     "out/lib",
-    "out/licenses"
+    "out/licenses",
+    "README.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "build": "npm run clean && ./script/build.sh",

@@ -18,7 +18,10 @@
     "out/index.js",
     "out/index.d.ts",
     "out/lib",
-    "out/licenses"
+    "out/licenses",
+    "README.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "build": "npm run clean && ./script/build.sh",
@@ -36,7 +39,7 @@
     "H.265",
     "decoder"
   ],
-  "license": "Apache-2.0 AND LGPL-2.1-or-later",
+  "license": "SEE LICENSE IN THIRD_PARTY_NOTICES.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/animax.git",
