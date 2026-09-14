@@ -97,6 +97,9 @@ void AlphaVideoLayer::AttachAssetOnce() {
   // resource creation, so no scope is needed here.
   video_shader_->Init(composite_texture_width, composite_texture_height,
                       rgb_frame, a_frame);
+#ifndef OS_WIN
+  // On Windows, shader init is asynchronous, so validity cannot be checked
+  // here.
   if (!video_shader_->Valid()) {
     ANIMAX_LOGE("OnLayerError, code: "
                 << static_cast<int32_t>(EventError::kVideoPlayerError)
@@ -106,6 +109,7 @@ void AlphaVideoLayer::AttachAssetOnce() {
                              "video shader init error");
     }
   }
+#endif
 
   video_player_ = provider->CreateVideoPlayer(std::move(ability));
   DCHECK(video_player_);
@@ -243,7 +247,8 @@ int32_t AlphaVideoLayer::GetCurrentFrame() {
 }
 
 Image* AlphaVideoLayer::GetCompositeImage(RealContext* real_context) {
-  if (!video_asset_ || !video_asset_->IsValid() || !video_shader_) {
+  if (!video_asset_ || !video_asset_->IsValid() || !video_shader_ ||
+      !video_shader_->Valid()) {
     return nullptr;
   }
   if (!image_) {
