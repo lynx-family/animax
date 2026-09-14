@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import com.lynx.animax.ability.BaseAbility;
 import com.lynx.animax.service.IAnimaXSettingService;
 import com.lynx.animax.setting.AnimaXSettingValue;
+import com.lynx.animax.setting.PersistentSettingsManager;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,16 +86,28 @@ public class DeviceUtil {
 
   /**
    * Decides whether to attempt Vulkan rendering. Called by AnimaXPlayer on the hardware
-   * rendering path. Opt-in is a remote on/off switch (string "1"/"true"), then gated by the
-   * AHardwareBuffer API level and the remote blocklist. A true return only means "try": the
-   * real capability check is performed by skity in the native layer with automatic fallback
-   * to OpenGL.
+   * rendering path. Mixing GLES and Vulkan on one thread crashes some drivers, so the opt-in
+   * switch is read only from the process-wide frozen snapshot of
+   * {@link PersistentSettingsManager}: every AnimaX instance of one launch observes the same
+   * value no matter when the remote setting flips. The remote value (read through the
+   * ability's setting service, which integrations may back with their own channel) is compared
+   * against the snapshot and, when it differs, written back / removed so that the change takes
+   * effect on the NEXT launch. Both the opt-in switch and the device blocklist are read from
+   * the snapshot. A true return is then gated by the AHardwareBuffer API level, and only
+   * means "try": the real capability check is performed by
+   * skity in the native layer with automatic fallback to OpenGL.
    * Note: the result is only meaningful when software rendering is not engaged
    * (useSoftwareRender == false).
    */
   public static boolean useVulkanRender(@NonNull BaseAbility ability) {
-    // Opt-in via remote on/off switch.
-    if (!isPositiveConfigValue(getStringFromExternalEnv(sSettingTryVulkanRender, ability))) {
+    PersistentSettingsManager persistentSettings = PersistentSettingsManager.inst();
+    IAnimaXSettingService remoteService = ability.getService(IAnimaXSettingService.class);
+    persistentSettings.syncSetting(remoteService, sSettingTryVulkanRender);
+    persistentSettings.syncSetting(remoteService, sSettingVulkanBlockListName);
+    // Opt-in and blocklist are both read from the process-frozen snapshot of the persistent
+    // settings, so the backend decision cannot flip mid-process.
+    if (!isPositiveConfigValue(
+            persistentSettings.getValueByKey(sSettingTryVulkanRender).getStringOrEmpty())) {
       return false;
     }
     // The Vulkan path relies on AHardwareBuffer for GPU buffer sharing (notably the
@@ -103,8 +116,29 @@ public class DeviceUtil {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
       return false;
     }
-    // Urgently disable Vulkan on devices known to render incorrectly via the remote list.
-    return !isInSettingList(sSettingVulkanBlockListName, ability);
+    // Urgently disable Vulkan on devices known to render incorrectly via the blocklist.
+    return !isInSnapshotSettingList(persistentSettings, sSettingVulkanBlockListName);
+  }
+
+  /**
+   * Same as {@link #isInSettingList} but reads the process-frozen snapshot of the
+   * {@link PersistentSettingsManager} instead of the remote channel.
+   */
+  private static boolean isInSnapshotSettingList(
+      PersistentSettingsManager persistentSettings, String listName) {
+    AnimaXSettingValue settingValue = persistentSettings.getValueByKey(listName);
+    if (settingValue == null) {
+      return false;
+    }
+    if (settingValue.isString()) {
+      return isPositiveConfigValue(settingValue.getStringOrEmpty());
+    }
+    if (settingValue.isCollection()) {
+      Collection<String> list = settingValue.getCollectionOrEmpty();
+      return !list.isEmpty() && sDeviceType != null && !sDeviceType.isEmpty()
+          && list.contains(sDeviceType);
+    }
+    return false;
   }
 
   /**
