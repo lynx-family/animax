@@ -67,7 +67,7 @@ function android_env_setup() {
   python3 $LYNX_DIR/tools_shared/android_tools/update_local_properties.py -f $local_properties_file1 $local_properties_file2 -p ndk.dir="$ANDROID_NDK" sdk.dir="$ANDROID_SDK" cmake.dir="$CMAKE_DIR"
 }
 
-HARMONY_SDK_VERSION='6.0.0.868'
+HARMONY_SDK_VERSION='6.1.1.300'
 
 function download_tools_shared_if_needed() {
   if [ ! -d "$LYNX_DIR/tools_shared" ]; then
