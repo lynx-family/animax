@@ -101,6 +101,12 @@ void *FontAssetManagerTextra::GetFontMgrCollection() {
     return font_mgr_collection_.get();
   }
   auto *collection = new TTFontMgrCollection(CreateTextraFontManager());
+#if defined(OS_WIN)
+  // Skity's Windows font manager does not provide GetDefaultTypeface(), which
+  // is used for the generic "sans-serif" family. Use a real system family when
+  // the font named by a Lottie document is unavailable on this machine.
+  collection->SetDefaultSystemFontFamily("Segoe UI");
+#endif
   collection->SetAssetFontManager(std::make_shared<TTTextAssetFontManager>(
       font_asset_map_, asset_font_name_suffix_));
   font_mgr_collection_.reset(collection);
