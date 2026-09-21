@@ -111,3 +111,17 @@ TEST(FontAssetManagerTest, Textra) {
       kFontAssetModel.name.c_str(), style_2);
   EXPECT_EQ(typeface_model_match_0, typeface_model_match_2);
 }
+
+#if defined(OS_WIN)
+TEST(FontAssetManagerTest, TextraFallsBackWhenLottieFontIsUnavailable) {
+  ThreadAssert::Init(ThreadAssert::Type::kGPU);
+
+  FontAssetManagerTextra font_asset_manager;
+  auto *font_mgr_collection = static_cast<TTFontMgrCollection *>(
+      font_asset_manager.GetFontMgrCollection());
+  FontDescriptor descriptor;
+  descriptor.font_family_list_.push_back("__missing_animax_font__");
+
+  EXPECT_FALSE(font_mgr_collection->findTypefaces(descriptor).empty());
+}
+#endif

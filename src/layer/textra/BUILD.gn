@@ -28,6 +28,11 @@ animax_source_set("textra") {
     sources += [ "android/textra_jni.cc" ]
   } else if (is_harmony) {
     sources += [ "harmony/textra_register.cc" ]
+  } else if (is_win) {
+    sources += [
+      "win/textra_register.cc",
+      "win/textra_register.h",
+    ]
   } else if (is_wasm) {
     sources += [ "web/textra_font_manager_factory_web.cc" ]
     sources -= [ "textra_font_manager_factory.cc" ]
