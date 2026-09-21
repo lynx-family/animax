@@ -243,7 +243,18 @@ class AnimaXSurfaceAndroidVk : public AnimaXSurfaceAndroid {
     if (desc.width <= 0 || desc.height <= 0) {
       return;
     }
+    if (Width() == desc.width && Height() == desc.height &&
+        enable_anti_aliasing_ == desc.enable_anti_aliasing &&
+        gpu_native_window_ && draw_surface_) {
+      // Skip the rebuild when nothing relevant changed. Every rebuild tears
+      // down and re-creates the Vulkan swapchain, and surface updates arrive
+      // in bursts during activity transitions; that churn races the window's
+      // BufferQueue teardown and faults some Android Vulkan drivers inside
+      // vkQueuePresentKHR.
+      return;
+    }
     AnimaXSurface::Resize(desc.width, desc.height);
+    enable_anti_aliasing_ = desc.enable_anti_aliasing;
 
     // Defensive guard: if Vulkan initialization failed earlier (i.e.
     // gpu_native_window_ / draw_surface_ are null), fall back to a fresh
@@ -263,6 +274,7 @@ class AnimaXSurfaceAndroidVk : public AnimaXSurfaceAndroid {
 
  private:
   void CreateDrawSurface(const SurfaceDrawableDescription& desc) {
+    enable_anti_aliasing_ = desc.enable_anti_aliasing;
     auto context = ContextVk::GetGPUContext();
     if (!context) {
       ANIMAX_LOGE("Failed to get Vulkan GPU context");
@@ -294,6 +306,7 @@ class AnimaXSurfaceAndroidVk : public AnimaXSurfaceAndroid {
   AndroidNativeWindow window_{};
   std::unique_ptr<skity::GPUNativeWindowVK> gpu_native_window_{};
   std::unique_ptr<Surface> draw_surface_{};
+  bool enable_anti_aliasing_ = false;
 };
 
 }  // namespace
