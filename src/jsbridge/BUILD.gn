@@ -19,14 +19,11 @@ animax_napi_sources = [
   "bindings/animax/napi_value_param.h",
 ]
 
-if (is_ios || is_mac) {
+if (is_ios) {
   animax_napi_sources += [ "bindings/animax/ios/use_mod_animax.mm" ]
 }
 
 animax_source_set("jsbridge") {
   sources = animax_napi_sources
-  if (is_mac) {
-    include_dirs = [ "$napi_binding_search_path/../napi/include" ]
-  }
   deps = [ "$napi_binding_search_path/napi:napi_binding_base" ]
 }
