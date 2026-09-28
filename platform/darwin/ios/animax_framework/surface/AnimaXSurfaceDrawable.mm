@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+#import <CoreVideo/CoreVideo.h>
+
 #import <AnimaX/AnimaXSurfaceDrawable.h>
 #import "AnimaXSurfaceDrawable+Internal.h"
 #import "CVPixelBufferWrapper.h"
