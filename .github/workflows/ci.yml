@@ -65,7 +65,7 @@ jobs:
 
   ios-example-build:
     timeout-minutes: 60
-    runs-on: lynx-darwin-14-medium
+    runs-on: lynx-darwin-15.6.1-medium
     steps:
       - name: Download Source
         uses: actions/checkout@v4.2.2
