@@ -58,7 +58,8 @@ echo "gn_root_dir: $gn_root_dir"
 python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root "$gn_root_dir" $enable_trace_param --target //platform/darwin/ios:animax_podspec
 popd
 
-bundle install -V --path="$root_dir"
+export BUNDLE_PATH="$root_dir"
+bundle install -V
 
 bundle exec pod deintegrate "$project_name"
 rm -rf Podfile.lock
