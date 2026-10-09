@@ -76,7 +76,7 @@ ext.getFlavorNamesAndBuildTypes = { Project project ->
 ext.writeGnArgs = { String gnArgs ->
     exec {
         workingDir "../../"
-        commandLine pythonExec, "tools_shared/android_tools/write_gn_args.py", "--gn-args", gnArgs.replaceAll('"', '#')
+        commandLine pythonExec, "buildtools/tools_shared/tools_shared/android_tools/write_gn_args.py", "--gn-args", gnArgs.replaceAll('"', '#')
     }
 }
 
@@ -92,7 +92,7 @@ task generateAllGnCmakeTargets {
     doLast {
         exec {
             workingDir "../../"
-            commandLine pythonExec, "tools_shared/android_tools/generate_cmake_scripts_from_gn.py"
+            commandLine pythonExec, "buildtools/tools_shared/tools_shared/android_tools/generate_cmake_scripts_from_gn.py"
             println commandLine
         }
     }
@@ -114,7 +114,7 @@ task clean(type: Delete) {
     doLast {
         exec {
             workingDir "../../"
-            commandLine pythonExec, "tools_shared/android_tools/generate_cmake_scripts_from_gn.py", "--clean"
+            commandLine pythonExec, "buildtools/tools_shared/tools_shared/android_tools/generate_cmake_scripts_from_gn.py", "--clean"
             println commandLine
         }
     }

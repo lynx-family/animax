@@ -2,7 +2,7 @@ import os
 import platform
 system = platform.system().lower()
 deps = {
-    "tools_shared": {
+    "buildtools/tools_shared/tools_shared": {
         "type": "git",
         "url": "https://github.com/lynx-family/tools-shared.git",
         "commit": "a1f5807a5e89b52d4c015a946371bd29730a31c8",
