@@ -19,6 +19,8 @@ def main():
     parser.add_argument('-b', '--branch', help='')
     parser.add_argument('-c', '--commit', help='')
     parser.add_argument('--publish_info', help='')
+    parser.add_argument('--ndk27', action='store_true', default=False,
+                        help='Use NDK r27 instead of the default r21')
     parser.add_argument('--lite', default=False, action='store_true')
     parser.add_argument('--cxxstatic', default=False, action='store_true')
     parser.add_argument('--enable_16kb', default=False, action='store_true')
@@ -40,6 +42,7 @@ def main():
     property_param = f"""
 -Pin_bits
 -PVERSION={version}
+-Pndk27={str(args.ndk27).lower()}
 {param_true_if("enable_cxx_static", cxxstatic_build)}
 {param_true_if("enable_16kb_align", args.enable_16kb)}
 {param_true_if("enable_packrel", args.enable_packrel)}
