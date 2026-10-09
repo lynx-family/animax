@@ -31,9 +31,11 @@ export class AnimaXResourceLoader {
   private readonly _module: any;
   private readonly _gpuContext: AnimaXWebGPUContext | null = null;
   private readonly _gpuTextures: Map<number, GPUTexture> | null = null;
+  private _destroyed = false;
   constructor(
     moduleInstance: any,
-    gpuContext: AnimaXWebGPUContext | null = null
+    gpuContext: AnimaXWebGPUContext | null = null,
+    private readonly prepareNativeCallback: () => boolean = () => true
   ) {
     this._module = moduleInstance;
     this._gpuContext = gpuContext;
@@ -43,6 +45,7 @@ export class AnimaXResourceLoader {
   }
 
   destroy(): void {
+    this._destroyed = true;
     this.clearGpuTextures();
   }
 
@@ -93,11 +96,15 @@ export class AnimaXResourceLoader {
   }
 
   private onLoadError(callbackId: number, errorMessage: string) {
+    if (this._destroyed || !this.prepareNativeCallback()) return;
     this._module.AnimaXWasm.onResourceLoadError(callbackId, errorMessage);
     Logger.error(`Resource load error: ${errorMessage}`);
   }
 
   private onLoadSuccess(successData: SuccessData) {
+    // The callback can initialize video GL resources synchronously. Another
+    // player may have rendered since fetch/decode began, so bind our owner now.
+    if (this._destroyed || !this.prepareNativeCallback()) return;
     const {
       callbackId,
       pixelData = null,
@@ -158,6 +165,7 @@ export class AnimaXResourceLoader {
       sourceUrl
     );
     try {
+      if (this._destroyed) return;
       // Prefer GPU path if available; fallback to CPU RGBA path.
       if (this._gpuContext) {
         const ok = await this.loadBitmapAsGPUTexture(imageBitmap, callbackId);

@@ -634,7 +634,9 @@ class AnimaXViewElement
     this._activeWebGPUContext = activeWebGPUContext;
     this._resourceLoader = new AnimaXResourceLoader(
       this._module,
-      this._activeWebGPUContext
+      this._activeWebGPUContext,
+      () =>
+        this.isInitializationCurrent(generation) && this.makeContextCurrent()
     );
     const pixelRatio = this.getPixelRatio();
     this._wasm = new this._module.AnimaXWasm(pixelRatio);
@@ -690,6 +692,15 @@ class AnimaXViewElement
     }
   };
 
+  private makeContextCurrent(): boolean {
+    if (this._activeWebGPUContext) return true;
+    const success =
+      !!this._glContextHandle &&
+      this._module.GL.makeContextCurrent(this._glContextHandle);
+    if (!success) Logger.error('Failed to bind the player WebGL context');
+    return success;
+  }
+
   private destroyPlayer() {
     this._captureAfterNextFirstFrame = false;
     this.resetFrameCaptureState();
@@ -704,11 +715,14 @@ class AnimaXViewElement
       this._resourceLoader.destroy();
       this._resourceLoader = null;
     }
-    this._activeWebGPUContext = null;
     if (this._wasm) {
+      // The WASM owner releases the player and its video textures. Bind after
+      // stop callbacks, which may synchronously interact with another player.
+      this.makeContextCurrent();
       this._wasm.delete();
       this._wasm = null;
     }
+    this._activeWebGPUContext = null;
     this._glContextHandle = 0;
   }
 
