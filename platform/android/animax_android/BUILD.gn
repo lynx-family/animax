@@ -52,7 +52,7 @@ cmake_target("AnimaXAndroid") {
 
 group("animax_jni_files") {
   exec_script(
-      "../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
+      "../../../buildtools/tools_shared/tools_shared/jni_generator/generate_and_register_jni_files.py",
       [
         "-root",
         rebase_path("//"),

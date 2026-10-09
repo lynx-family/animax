@@ -54,7 +54,7 @@ runs:
         python3 tools/ios_tools/prepare_podspec_release.py --podspec AnimaX.podspec
         bundle exec pod ipc spec AnimaX.podspec > /dev/null
 
-        python3 tools_shared/gen_ios_pkg.py \
+        python3 buildtools/tools_shared/tools_shared/gen_ios_pkg.py \
           --repo AnimaX \
           --tag "$RELEASE_TAG" \
           --output_type both \
