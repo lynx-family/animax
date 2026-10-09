@@ -43,7 +43,7 @@ index e6c6291f..f642cba6 100644
  
  group("base_jni_files") {
 -  exec_script("../../../tools/build_jni/generate_and_register_jni_files.py",
-+  exec_script("../../../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
++  exec_script("../../../../../buildtools/tools_shared/tools_shared/jni_generator/generate_and_register_jni_files.py",
                [
                  "-root",
                  rebase_path("../../../"),
@@ -242,7 +242,7 @@ index b17d9fa8..5d95ea94 100644
  
  group("trace_jni_files") {
 -  exec_script("../../../tools/build_jni/generate_and_register_jni_files.py",
-+  exec_script("../../../../../tools_shared/jni_generator/generate_and_register_jni_files.py",
++  exec_script("../../../../../buildtools/tools_shared/tools_shared/jni_generator/generate_and_register_jni_files.py",
                [
                  "-root",
                  rebase_path("../../../"),
