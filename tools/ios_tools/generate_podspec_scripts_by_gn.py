@@ -17,7 +17,7 @@ import sys
 import os
 
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(root_path)
+sys.path.append(os.path.join(root_path, "buildtools", "tools_shared"))
 from tools_shared.ios_tools.generate_podspec_scripts_from_gn import generate_compile_products
 
 
