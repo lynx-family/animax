@@ -33,8 +33,8 @@ public class CodecManager {
   private int mCurrentPresentFrame;
   // Next frame number to feed into the decoder
   private int mNextInputFrame;
-  // Next frame number expected back from the decoder
-  private int mNextOutputFrame;
+  // Whether at least one input sample has been queued since the last reset.
+  private boolean mHasQueuedInput;
   // Number of frames fed into the decoder but not yet retrieved
   private int mCachedFrame;
 
@@ -154,7 +154,7 @@ public class CodecManager {
         return;
       }
 
-      ProcessFrameStatus status = processFrame(outputBufferInfo, mNextOutputFrame == toFrame);
+      ProcessFrameStatus status = processFrame(outputBufferInfo, toFrame);
       if (ProcessFrameStatus.SUCCESS == status) {
         ;
       } else if (ProcessFrameStatus.TRY_AGAIN == status) {
@@ -217,7 +217,7 @@ public class CodecManager {
     mCurrentPresentFrame = INVALID_FRAME;
     mCachedFrame = 0;
     mNextInputFrame = 0;
-    mNextOutputFrame = INVALID_FRAME;
+    mHasQueuedInput = false;
   }
 
   private boolean supportMimeType(
@@ -331,30 +331,48 @@ public class CodecManager {
     if (null == mAsset) {
       return;
     }
-    int keyFrame = mAsset.getPrevKeyFrame(toFrame);
-    if (INVALID_FRAME == mNextOutputFrame) {
+    int decodeFrame = mAsset.getDecodeFrame(toFrame);
+    int decodeStartFrame = mAsset.getDecodeStartFrame(decodeFrame);
+    if (INVALID_FRAME == decodeFrame || INVALID_FRAME == decodeStartFrame) {
+      reportError("invalid video frame index");
+      mDecoderValid = false;
+      return;
+    }
+    if (!mHasQueuedInput) {
       mCachedFrame = 0;
-      mNextInputFrame = keyFrame;
+      mNextInputFrame = decodeStartFrame;
+      return;
+    }
+    if (INVALID_FRAME == mCurrentPresentFrame) {
       return;
     }
 
-    int frameFromKeyFrame = toFrame - keyFrame + 1;
-    int frameFromCurrent = (mCurrentPresentFrame <= toFrame)
-        ? (toFrame - mCurrentPresentFrame)
-        : (toFrame + mAsset.getFrameCount() - mCurrentPresentFrame);
+    int decodeStartPresentationFrame = mAsset.getPresentationFrameForDecodeFrame(decodeStartFrame);
+    if (INVALID_FRAME == decodeStartPresentationFrame) {
+      reportError("invalid decode start frame");
+      mDecoderValid = false;
+      return;
+    }
+    int frameFromDecodeStart = getForwardFrameDistance(decodeStartPresentationFrame, toFrame) + 1;
+    int frameFromCurrent = getForwardFrameDistance(mCurrentPresentFrame, toFrame);
     if (frameFromCurrent <= mCachedFrame) {
       frameFromCurrent = 0;
     } else {
       frameFromCurrent = frameFromCurrent - mCachedFrame;
     }
-    if (frameFromCurrent > frameFromKeyFrame) {
+    if (frameFromCurrent > frameFromDecodeStart) {
       discardCachedFrame();
-      mNextInputFrame = keyFrame;
-      mNextOutputFrame = INVALID_FRAME;
+      mNextInputFrame = decodeStartFrame;
     }
   }
 
-  private ProcessFrameStatus processFrame(MediaCodec.BufferInfo outputBufferInfo, boolean render) {
+  private int getForwardFrameDistance(int fromFrame, int toFrame) {
+    return fromFrame <= toFrame ? toFrame - fromFrame
+                                : toFrame + mAsset.getFrameCount() - fromFrame;
+  }
+
+  private ProcessFrameStatus processFrame(
+      MediaCodec.BufferInfo outputBufferInfo, int targetPresentationFrame) {
     // Codec Thread
     if (null == mAsset) {
       return ProcessFrameStatus.FATAL;
@@ -391,10 +409,17 @@ public class CodecManager {
       return ProcessFrameStatus.FATAL;
     }
 
-    releaseOutputBuffer(outputBufferIndex, render);
+    int presentationFrame = mAsset.getPresentationFrame(outputBufferInfo.presentationTimeUs);
+    if (INVALID_FRAME == presentationFrame) {
+      releaseOutputBuffer(outputBufferIndex, false);
+      reportError("unknown output presentation timestamp: " + outputBufferInfo.presentationTimeUs);
+      return ProcessFrameStatus.FATAL;
+    }
+    if (!releaseOutputBuffer(outputBufferIndex, presentationFrame == targetPresentationFrame)) {
+      return ProcessFrameStatus.FATAL;
+    }
     --mCachedFrame;
-    mCurrentPresentFrame = mNextOutputFrame;
-    mNextOutputFrame = (mNextOutputFrame + 1) % mAsset.getFrameCount();
+    mCurrentPresentFrame = presentationFrame;
     return ProcessFrameStatus.SUCCESS;
   }
 
@@ -431,6 +456,7 @@ public class CodecManager {
       flush();
       mCachedFrame = 0;
     }
+    mHasQueuedInput = false;
   }
 
   private void flush() {
@@ -570,9 +596,7 @@ public class CodecManager {
     boolean success = queueInputBuffer(inputBufferIndex, offset, size, presentationTimeUs, flags);
     if (success) {
       ++mCachedFrame;
-      if (INVALID_FRAME == mNextOutputFrame) {
-        mNextOutputFrame = mNextInputFrame;
-      }
+      mHasQueuedInput = true;
       mNextInputFrame = (mNextInputFrame + 1) % mAsset.getFrameCount();
     }
     return success;

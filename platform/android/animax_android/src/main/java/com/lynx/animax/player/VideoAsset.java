@@ -9,9 +9,12 @@ import com.lynx.animax.util.AnimaXLog;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VideoAsset {
   private static final String TAG = "VideoAsset";
+  private static final int INVALID_FRAME = -1;
 
   // Android use the following codec-specific data buffer keys
   private static final String[] CODEC_SPECIFIC_DATA_KEYS = {"csd-0", "csd-1", "csd-2"};
@@ -20,6 +23,10 @@ public class VideoAsset {
   private VideoInfo mVideoInfo;
   private boolean mIsValid;
   private VideoRawData mRawData;
+  private int[] mPresentationToDecodeFrames;
+  private int[] mDecodeToPresentationFrames;
+  private int[] mDecodeStartFrames;
+  private Map<Long, Integer> mPresentationTimeToFrame;
 
   private VideoAsset() {}
 
@@ -127,6 +134,7 @@ public class VideoAsset {
               + infos.size());
       mVideoInfo.setFrameCount(infos.size());
     }
+    prepareFrameIndex(infos, mRawData.getKeyFrames());
   }
 
   private boolean IsKeyFramesValid() {
@@ -149,6 +157,89 @@ public class VideoAsset {
       index = -index - 2;
     }
     return keyFrames.get(index);
+  }
+
+  int getDecodeFrame(int presentationFrame) {
+    return getFrameAt(mPresentationToDecodeFrames, presentationFrame);
+  }
+
+  int getDecodeStartFrame(int decodeFrame) {
+    return getFrameAt(mDecodeStartFrames, decodeFrame);
+  }
+
+  int getPresentationFrameForDecodeFrame(int decodeFrame) {
+    return getFrameAt(mDecodeToPresentationFrames, decodeFrame);
+  }
+
+  int getPresentationFrame(long presentationTimeUs) {
+    if (mPresentationTimeToFrame == null) {
+      return INVALID_FRAME;
+    }
+    Integer presentationFrame = mPresentationTimeToFrame.get(presentationTimeUs);
+    return presentationFrame == null ? INVALID_FRAME : presentationFrame;
+  }
+
+  private void prepareFrameIndex(ArrayList<FrameInfo> infos, ArrayList<Integer> keyFrames) {
+    int frameCount = infos.size();
+    mPresentationToDecodeFrames = createInvalidFrameArray(frameCount);
+    mDecodeToPresentationFrames = createInvalidFrameArray(frameCount);
+    mDecodeStartFrames = createInvalidFrameArray(frameCount);
+    mPresentationTimeToFrame = new HashMap<>(frameCount);
+
+    int presentationFrame = 0;
+    for (int keyFrameIndex = 0; keyFrameIndex < keyFrames.size(); ++keyFrameIndex) {
+      int decodeStartFrame = keyFrames.get(keyFrameIndex);
+      int decodeEndFrame =
+          keyFrameIndex + 1 == keyFrames.size() ? frameCount : keyFrames.get(keyFrameIndex + 1);
+      ArrayList<Integer> decodeFrames = new ArrayList<>(decodeEndFrame - decodeStartFrame);
+      for (int decodeFrame = decodeStartFrame; decodeFrame < decodeEndFrame; ++decodeFrame) {
+        decodeFrames.add(decodeFrame);
+      }
+      Collections.sort(decodeFrames,
+          (left, right)
+              -> Long.compare(infos.get(left).getPresentationTimeUs(),
+                  infos.get(right).getPresentationTimeUs()));
+      for (int decodeFrame : decodeFrames) {
+        mPresentationToDecodeFrames[presentationFrame] = decodeFrame;
+        mDecodeToPresentationFrames[decodeFrame] = presentationFrame;
+        mPresentationTimeToFrame.put(
+            infos.get(decodeFrame).getPresentationTimeUs(), presentationFrame);
+        ++presentationFrame;
+      }
+    }
+
+    int decodeStartFrame = keyFrames.get(0);
+    for (int keyFrameIndex = 0; keyFrameIndex < keyFrames.size(); ++keyFrameIndex) {
+      int gopStartFrame = keyFrames.get(keyFrameIndex);
+      int gopEndFrame =
+          keyFrameIndex + 1 == keyFrames.size() ? frameCount : keyFrames.get(keyFrameIndex + 1);
+      int keyPresentationFrame = mDecodeToPresentationFrames[gopStartFrame];
+      boolean hasLeadingBFrames = false;
+      for (int decodeFrame = gopStartFrame + 1; decodeFrame < gopEndFrame; ++decodeFrame) {
+        if (mDecodeToPresentationFrames[decodeFrame] < keyPresentationFrame) {
+          hasLeadingBFrames = true;
+          break;
+        }
+      }
+      if (!hasLeadingBFrames) {
+        decodeStartFrame = gopStartFrame;
+      }
+      for (int decodeFrame = gopStartFrame; decodeFrame < gopEndFrame; ++decodeFrame) {
+        mDecodeStartFrames[decodeFrame] = decodeStartFrame;
+      }
+    }
+  }
+
+  private static int[] createInvalidFrameArray(int frameCount) {
+    int[] frames = new int[frameCount];
+    for (int index = 0; index < frameCount; ++index) {
+      frames[index] = INVALID_FRAME;
+    }
+    return frames;
+  }
+
+  private static int getFrameAt(int[] frames, int index) {
+    return frames == null || index < 0 || index >= frames.length ? INVALID_FRAME : frames[index];
   }
 
   public FrameInfo getFrameInfo(int frame) {
