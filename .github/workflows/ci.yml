@@ -53,7 +53,7 @@ jobs:
         with:
           path: animax
       - name: Setup gradle cache
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        uses: lynx-infra/cache@1f4c655e363ee8910dce6ee0fe9ab3289d676add
         with:
           path: ~/.gradle/caches/modules-2
           key: gradle-android-example-build
@@ -74,7 +74,7 @@ jobs:
       - name: Build Example App
         uses: ./animax/.github/actions/ios-example-build
       - name: upload artifact
-        uses: lynx-infra/upload-artifact@332ec52e99f7cbf1fbbdc9bcc09280d49147d092
+        uses: lynx-infra/upload-artifact@8aa7faa3c4aab11163cbf44dc63bcf6631843d06
         continue-on-error: true
         with:
           name: ios-example-build-arm64

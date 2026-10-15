@@ -28,7 +28,7 @@ runs:
   steps:
     - name: setup cache action
       if: ${{ inputs.cache-backend == 'lynx-infra' }}
-      uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      uses: lynx-infra/cache@1f4c655e363ee8910dce6ee0fe9ab3289d676add
       with:
         path: ~/.habitat_cache
         key: hab${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ hashFiles('animax/.habitat', 'animax/DEPS') }}
