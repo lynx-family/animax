@@ -14,6 +14,9 @@
 namespace lynx {
 namespace animax {
 
+class ColorKeyframeAnimation;
+class FloatKeyframeAnimation;
+
 class PropertyUpdateElement {
  public:
   PropertyUpdateElement() = default;
@@ -63,11 +66,12 @@ class PropertyUpdateElement {
    * @return The animation for the given property type
    */
   template <typename Animation>
-  KeyframeAnimation* GetOrCreateAnimation(std::unique_ptr<Animation>& animation,
-                                          AnimationHost& host,
-                                          AnimationListener* listener) {
+  KeyframeAnimation* GetOrCreateAnimation(
+      std::unique_ptr<Animation>& animation, AnimationHost& host,
+      AnimationListener* listener,
+      LayerPropertyType type = LayerPropertyType::kUnknown) {
     if (animation == nullptr) {
-      animation = Animation::MakeDefault();
+      animation = MakeDefaultAnimation<Animation>(host, type);
       host.AddAnimation(animation.get());
       if (listener) {
         animation->AddUpdateListener(listener);
@@ -78,6 +82,27 @@ class PropertyUpdateElement {
     }
     return animation.get();
   }
+
+ private:
+  template <typename Animation>
+  std::unique_ptr<Animation> MakeDefaultAnimation(AnimationHost& host,
+                                                  LayerPropertyType type) {
+    auto animation = MakeDocumentDefaultAnimation(
+        host, type, static_cast<Animation*>(nullptr));
+    return animation ? std::move(animation) : Animation::MakeDefault();
+  }
+
+  template <typename Animation>
+  std::unique_ptr<Animation> MakeDocumentDefaultAnimation(AnimationHost&,
+                                                          LayerPropertyType,
+                                                          Animation*) {
+    return nullptr;
+  }
+
+  std::unique_ptr<ColorKeyframeAnimation> MakeDocumentDefaultAnimation(
+      AnimationHost& host, LayerPropertyType type, ColorKeyframeAnimation*);
+  std::unique_ptr<FloatKeyframeAnimation> MakeDocumentDefaultAnimation(
+      AnimationHost& host, LayerPropertyType type, FloatKeyframeAnimation*);
 };
 
 }  // namespace animax

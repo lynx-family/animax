@@ -273,30 +273,31 @@ KeyframeAnimation* TextLayer::GetAnimationForProperty(LayerPropertyType type) {
     case LayerPropertyType::kTextColor:
     case LayerPropertyType::kColor:
       return GetOrCreateAnimation<ColorKeyframeAnimation>(
-          AnimatorPropertyForType(type).color, layer_ref, this);
+          AnimatorPropertyForType(type).color, layer_ref, this, type);
     case LayerPropertyType::kStrokeColor:
       return GetOrCreateAnimation<ColorKeyframeAnimation>(
-          AnimatorPropertyForType(type).stroke_color, layer_ref, this);
+          AnimatorPropertyForType(type).stroke_color, layer_ref, this, type);
     case LayerPropertyType::kStrokeWidth:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(
-          AnimatorPropertyForType(type).stroke_width, layer_ref, this);
+          AnimatorPropertyForType(type).stroke_width, layer_ref, this, type);
     case LayerPropertyType::kTextTracking:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(
-          AnimatorPropertyForType(type).tracking, layer_ref, this);
+          AnimatorPropertyForType(type).tracking, layer_ref, this, type);
     case LayerPropertyType::kTextSkew:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(
-          AnimatorPropertyForType(type).skew, layer_ref, this);
+          AnimatorPropertyForType(type).skew, layer_ref, this, type);
     case LayerPropertyType::kTextSize:
       return GetOrCreateAnimation<FloatKeyframeAnimation>(
-          AnimatorPropertyForType(type).text_size_callback, layer_ref, this);
+          AnimatorPropertyForType(type).text_size_callback, layer_ref, this,
+          type);
     case LayerPropertyType::kTextValue:
       return GetOrCreateAnimation<TextKeyframeAnimation>(
-          animations_.text_keyframe, layer_ref, this);
+          animations_.text_keyframe, layer_ref, this, type);
     case LayerPropertyType::kTextRangeOffset: {
       auto& animator = AnimatorPropertyForType(type);
       if (animator.range_selector) {
         return GetOrCreateAnimation<FloatKeyframeAnimation>(
-            animator.range_selector->offset, layer_ref, this);
+            animator.range_selector->offset, layer_ref, this, type);
       }
       return BaseLayer::GetAnimationForProperty(type);
     }
@@ -304,7 +305,7 @@ KeyframeAnimation* TextLayer::GetAnimationForProperty(LayerPropertyType type) {
       auto& animator = AnimatorPropertyForType(type);
       if (animator.range_selector) {
         return GetOrCreateAnimation<FloatKeyframeAnimation>(
-            animator.range_selector->start, layer_ref, this);
+            animator.range_selector->start, layer_ref, this, type);
       }
       return BaseLayer::GetAnimationForProperty(type);
     }
@@ -312,7 +313,7 @@ KeyframeAnimation* TextLayer::GetAnimationForProperty(LayerPropertyType type) {
       auto& animator = AnimatorPropertyForType(type);
       if (animator.range_selector) {
         return GetOrCreateAnimation<FloatKeyframeAnimation>(
-            animator.range_selector->end, layer_ref, this);
+            animator.range_selector->end, layer_ref, this, type);
       }
       return BaseLayer::GetAnimationForProperty(type);
     }
