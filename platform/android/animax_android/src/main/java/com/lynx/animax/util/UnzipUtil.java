@@ -32,7 +32,11 @@ public class UnzipUtil {
       if (null == entry) {
         break;
       }
-      processEntry(zipInputStream, entry, dstDirectoryPath);
+      if (!processEntry(zipInputStream, entry, dstDirectoryPath)) {
+        closeEntry(zipInputStream);
+        closeZipInputStream(zipInputStream);
+        return new Status("failed to extract entry: " + entry.getName());
+      }
       closeEntry(zipInputStream);
     }
     closeZipInputStream(zipInputStream);
@@ -108,8 +112,16 @@ public class UnzipUtil {
       File directory = new File(dstDirectoryPath + File.separator + name);
       return directory.mkdirs();
     }
-    // is file
-    return extractFile(zipInputStream, dstDirectoryPath + File.separator + name);
+    // is file - ensure parent directory exists before extracting
+    File dstFile = new File(dstDirectoryPath + File.separator + name);
+    File parentDir = dstFile.getParentFile();
+    if (parentDir != null && !parentDir.exists()) {
+      if (!parentDir.mkdirs()) {
+        AnimaXLog.e(TAG, "failed to create parent directory: " + parentDir.getAbsolutePath());
+        return false;
+      }
+    }
+    return extractFile(zipInputStream, dstFile.getAbsolutePath());
   }
 
   private static boolean extractFile(ZipInputStream zipInputStream, final String dstFilePath) {
