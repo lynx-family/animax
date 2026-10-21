@@ -9,6 +9,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, AnimaXRenderTarget) { Layer = 0, Buffer = 1, View = 2 };
 
+typedef void (^AnimaXPixelBufferFrameAvailableHandler)(CVPixelBufferRef pixelBuffer);
+
 @interface AnimaXSurfaceDrawable : NSObject
 
 - (instancetype)initWithBuffer:(nonnull CVPixelBufferRef)buffer

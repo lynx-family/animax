@@ -49,7 +49,7 @@ ANIMAX_SCOPED_OBJECT_INTERFACE(AnimaXScopedCVPixelBuffer, CVPixelBufferRef)
 // Note: In software mode, metalTexture is not created and is unavailable.
 @property(atomic, readonly, nullable) id<MTLTexture> metalTexture;
 
-@property(atomic, copy, nullable) AnimaXPixelBufferFrameAvailableHandler frameAvailableHandler;
+@property(atomic, copy, nullable) void (^frameAvailableHandler)(CVPixelBufferRef pixelBuffer);
 
 - (instancetype)initWithView:(nonnull UIView<AnimaXPixelBufferUpdateListener> *)view;
 
