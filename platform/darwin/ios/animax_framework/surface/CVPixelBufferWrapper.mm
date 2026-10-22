@@ -298,7 +298,7 @@ ANIMAX_SCOPED_OBJECT_IMPLEMENTATION(AnimaXScopedCVPixelBuffer, CVPixelBufferRef,
     if (!self || currentGeneration != self.generation) {
       return;
     }
-    AnimaXPixelBufferFrameAvailableHandler handler = self.frameAvailableHandler;
+    auto handler = self.frameAvailableHandler;
     if (handler) {
       handler(bufferScope.object);
     }
