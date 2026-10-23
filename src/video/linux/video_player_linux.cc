@@ -4,22 +4,19 @@
 
 #include "src/video/linux/video_player_linux.h"
 
+#include "src/base/gl/gl_include.h"
+#include "src/video/custom/ffmpeg/video_decoder_ffmpeg.h"
+#include "src/video/custom/video_player_custom.h"
+
 namespace lynx {
 namespace animax {
 
-// Linux does not provide a native AnimaX video backend yet. Keep the platform
-// factories available so non-video compositions can still use AnimaX.
-std::unique_ptr<VideoShader> VideoShader::Make(std::shared_ptr<AnimaXAbility>) {
-  return nullptr;
-}
-
 std::unique_ptr<VideoPlayer> VideoPlayer::MakeVideoPlayer(
-    std::shared_ptr<AnimaXAbility>) {
-  return nullptr;
-}
-
-std::shared_ptr<VideoAsset> VideoAsset::Make(VideoAssetModel) {
-  return nullptr;
+    std::shared_ptr<AnimaXAbility> ability) {
+  auto decoder = std::make_unique<VideoDecoderFFmpeg>();
+  auto player = std::make_unique<VideoPlayerCustom>(std::move(decoder));
+  player->SetTextureTarget(GL_TEXTURE_2D);
+  return player;
 }
 
 }  // namespace animax

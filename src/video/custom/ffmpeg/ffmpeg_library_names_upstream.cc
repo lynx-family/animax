@@ -10,11 +10,15 @@ namespace animax {
 std::vector<std::string> GetFFmpegLibraryNames() {
   // FFmpeg 7.x library majors. LoadLibrary resolves dependencies of these
   // libraries from the application directory.
+#if defined(OS_LINUX)
+  return {"libavformat.so.61", "libavcodec.so.61", "libavutil.so.59"};
+#else
   return {
       "avformat-61.dll",
       "avcodec-61.dll",
       "avutil-59.dll",
   };
+#endif
 }
 
 }  // namespace animax

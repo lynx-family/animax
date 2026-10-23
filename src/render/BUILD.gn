@@ -95,6 +95,9 @@ animax_source_set("skity") {
   } else {
     sources += [ "image_gl_factory_default.cc" ]
   }
+  if (is_linux && !enable_unittests) {
+    sources += [ "skity_promise_texture.h" ]
+  }
 
   if (is_ios || is_mac) {
     sources += [

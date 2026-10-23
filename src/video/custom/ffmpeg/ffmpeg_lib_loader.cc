@@ -3,7 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 #include "src/video/custom/ffmpeg/ffmpeg_lib_loader.h"
 
+#if defined(OS_WIN)
 #include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 #include "src/base/log/log.h"
 #include "src/base/thread/thread_assert.h"
@@ -146,9 +150,13 @@ bool FFmpegLibLoader::LoadLibrary() {
   const auto candidate_dlls = GetFFmpegLibraryNames();
 
   for (const auto& dll_name : candidate_dlls) {
+#if defined(OS_WIN)
     HMODULE dll = LoadLibraryExA(
         dll_name.c_str(), nullptr,
         LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+#else
+    void* dll = dlopen(dll_name.c_str(), RTLD_NOW | RTLD_LOCAL);
+#endif
     if (dll) {
       dlls_.push_back(dll);
       ANIMAX_LOGI(dll_name << " loaded successfully");
@@ -182,8 +190,12 @@ bool FFmpegLibLoader::LoadAllSymbols() {
   auto load_symbols = [this](const std::vector<SymbolConfig>& symbols) -> bool {
     for (const auto& symbol : symbols) {
       *symbol.func_ptr = nullptr;
-      for (HMODULE dll : dlls_) {
+      for (auto dll : dlls_) {
+#if defined(OS_WIN)
         *symbol.func_ptr = GetProcAddress(dll, symbol.symbol_name);
+#else
+        *symbol.func_ptr = dlsym(dll, symbol.symbol_name);
+#endif
         if (*symbol.func_ptr) {
           break;
         }
