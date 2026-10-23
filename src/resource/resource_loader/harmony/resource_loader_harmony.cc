@@ -349,14 +349,6 @@ ResourceLoaderHarmony::CreateDownloadToLocalHttpLoader() {
 
 void ResourceLoaderHarmony::Load(ResourceRequest request,
                                  CallbackType callback) {
-  auto shared_platform_loader = platform_loader_.lock();
-  if (shared_platform_loader == nullptr) {
-    callback(ResourceResponse{},
-             LoaderError{.code = kReferToMessage,
-                         .message = "Platform loader is null."});
-    return;
-  }
-
   switch (request.type) {
     case ResourceRequestType::kLoadRawData: {
       // TODO(aiyongbiao.rick): Construct loader matrix to support file and
