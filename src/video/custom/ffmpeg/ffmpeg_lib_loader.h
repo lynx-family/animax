@@ -4,7 +4,9 @@
 #ifndef ANIMAX_SRC_VIDEO_CUSTOM_FFMPEG_FFMPEG_LIB_LOADER_H_
 #define ANIMAX_SRC_VIDEO_CUSTOM_FFMPEG_FFMPEG_LIB_LOADER_H_
 
+#if defined(OS_WIN)
 #include <Windows.h>
+#endif
 
 #include <cstdint>
 #include <memory>
@@ -102,7 +104,11 @@ class FFmpegLibLoader {
   bool LoadLibrary();
   bool LoadAllSymbols();
 
+#if defined(OS_WIN)
   std::vector<HMODULE> dlls_;
+#else
+  std::vector<void*> dlls_;
+#endif
   bool is_symbols_valid_ = false;
 
   // Function pointers

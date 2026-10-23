@@ -82,9 +82,28 @@ animax_source_set("video") {
     deps = [ ":wasm-rtti-video" ]
   } else if (is_linux && !enable_unittests) {
     sources += [
-      "linux/video_player_linux.cc",
-      "linux/video_player_linux.h",
-    ]
+                 "custom/ffmpeg/ffmpeg_lib_loader.cc",
+                 "custom/ffmpeg/ffmpeg_lib_loader.h",
+                 "custom/ffmpeg/ffmpeg_library_names.h",
+                 "custom/ffmpeg/ffmpeg_video_context.cc",
+                 "custom/ffmpeg/ffmpeg_video_context.h",
+                 "custom/ffmpeg/video_asset_ffmpeg.cc",
+                 "custom/ffmpeg/video_asset_ffmpeg.h",
+                 "custom/ffmpeg/video_decoder_ffmpeg.cc",
+                 "custom/ffmpeg/video_decoder_ffmpeg.h",
+                 "custom/video_shader_yuv.cc",
+                 "custom/video_shader_yuv.h",
+                 "linux/animax_ability_linux.h",
+                 "linux/video_player_linux.cc",
+                 "linux/video_player_linux.h",
+                 "linux/video_shader_linux.cc",
+                 "linux/video_shader_linux.h",
+                 "video_shader_gl.cc",
+                 "video_shader_gl.h",
+               ] + animax_ffmpeg_loader_sources
+    include_dirs = animax_ffmpeg_include_dirs
+    deps = animax_ffmpeg_deps
+    libs = [ "dl" ]
   } else if (is_win) {
     sources += animax_ffmpeg_loader_sources + [
                  "custom/ffmpeg/ffmpeg_lib_loader.cc",

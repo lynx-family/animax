@@ -97,9 +97,9 @@ void AlphaVideoLayer::AttachAssetOnce() {
   // resource creation, so no scope is needed here.
   video_shader_->Init(composite_texture_width, composite_texture_height,
                       rgb_frame, a_frame);
-#ifndef OS_WIN
-  // On Windows, shader init is asynchronous, so validity cannot be checked
-  // here.
+#if !defined(OS_WIN) && !defined(OS_LINUX)
+  // On Windows and Linux, shader init is asynchronous, so validity cannot be
+  // checked here.
   if (!video_shader_->Valid()) {
     ANIMAX_LOGE("OnLayerError, code: "
                 << static_cast<int32_t>(EventError::kVideoPlayerError)
