@@ -1,3 +1,4 @@
 source 'https://rubygems.org'
 gem "cocoapods", '1.11.3'
 gem 'ffi', '~> 1.15.5'
+gem 'bigdecimal'
