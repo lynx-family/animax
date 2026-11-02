@@ -59,12 +59,9 @@ class TTTextAssetFontManager : public ttoffice::tttext::IFontManager {
  private:
   Font *FindFontIgnoreSuffix(const std::string &font_name) const {
     std::string base_name = font_name;
-    if (font_name.size() > asset_font_name_suffix_.size() &&
-        font_name.compare(font_name.size() - asset_font_name_suffix_.size(),
-                          asset_font_name_suffix_.size(),
-                          asset_font_name_suffix_) == 0) {
-      base_name = font_name.substr(
-          0, font_name.size() - asset_font_name_suffix_.size());
+    const auto suffix_position = font_name.rfind(asset_font_name_suffix_ + ":");
+    if (suffix_position != std::string::npos) {
+      base_name = font_name.substr(0, suffix_position);
     }
     auto it = font_asset_map_.find(base_name);
     if (it != font_asset_map_.end()) {
@@ -89,8 +86,12 @@ FontAssetManagerTextra::~FontAssetManagerTextra() = default;
 
 std::string FontAssetManagerTextra::RedirectNameWithSuffix(
     const std::string &font_name) const {
-  if (font_asset_map_.find(font_name) != font_asset_map_.end()) {
-    return font_name + asset_font_name_suffix_;
+  auto it = font_asset_map_.find(font_name);
+  if (it != font_asset_map_.end()) {
+    // Both the collection and the shared shaper cache key by font descriptor.
+    // A late font must not reuse a descriptor shaped with the fallback.
+    return font_name + asset_font_name_suffix_ + ":" +
+           std::to_string(it->second->GetDataRevision());
   }
   return font_name;
 }

@@ -10,14 +10,30 @@ namespace lynx {
 namespace animax {
 
 void FontAsset::SetRawData(std::unique_ptr<RawData> raw_data) {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  if (raw_data && (!raw_data->Data() || raw_data->Length() == 0)) {
+    raw_data.reset();
+  }
   raw_data_ = std::move(raw_data);
+  ++data_revision_;
 }
 
-bool FontAsset::IsLoaded() const { return font_ || raw_data_; }
+bool FontAsset::IsLoaded() const {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  return raw_data_ || (model_.path_origin == FontPathOrigin::kLocal && font_);
+}
 
-Font* FontAsset::GetFont() {
-  if (font_) {
-    return font_.get();
+uint64_t FontAsset::GetDataRevision() const {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  return data_revision_;
+}
+
+Font* FontAsset::GetFont() { return GetFontSnapshot().get(); }
+
+std::shared_ptr<Font> FontAsset::GetFontSnapshot() {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  if (font_ && font_data_revision_ == data_revision_) {
+    return font_;
   }
 
   if (raw_data_) {
@@ -27,14 +43,17 @@ Font* FontAsset::GetFont() {
   } else {
     font_ = Font::MakeFromName(Model().family, Model().style);
   }
+  font_data_revision_ = data_revision_;
 
-  return font_.get();
+  return font_;
 }
 
 void FontAsset::ResetModel(FontAssetModel info) {
+  std::lock_guard<std::mutex> lock(data_mutex_);
   model_ = std::move(info);
   raw_data_ = nullptr;
   font_ = nullptr;
+  ++data_revision_;
 }
 
 }  // namespace animax

@@ -30,25 +30,25 @@ TextContentDefault::TextContentDefault(const TextContentDataSource& data_source)
 
 void TextContentDefault::Draw(Canvas& canvas, int32_t alpha) {
   auto* font_asset = data_source_.GetFontAsset();
-  if (!font_asset || !font_asset->GetFont()) {
+  auto font = font_asset ? font_asset->GetFontSnapshot() : nullptr;
+  if (!font) {
     return;
   }
 
   ConfigurePaint(alpha);
 
-  DrawTextWithFont(data_source_.GetDocumentData(), *font_asset, canvas);
+  DrawTextWithFont(data_source_.GetDocumentData(), *font, canvas);
 }
 
 bool TextContentDefault::GetRect(RectF& out_rect) {
   out_rect.Set(0.f, 0.f, 0.f, 0.f);
   auto* font_asset = data_source_.GetFontAsset();
-  if (!font_asset || !font_asset->GetFont()) {
+  auto font = font_asset ? font_asset->GetFontSnapshot() : nullptr;
+  if (!font) {
     return false;
   }
 
   const auto& document_data = data_source_.GetDocumentData();
-  auto font = font_asset->GetFont();
-  DCHECK(font);
 
   float text_size = data_source_.GetTextSize();
   font->SetTextSize(text_size);
@@ -58,7 +58,7 @@ bool TextContentDefault::GetRect(RectF& out_rect) {
   bool has_line = false;
   float left = 0.f, top = 0.f, right = 0.f, bottom = 0.f;
 
-  ForEachLayoutLine(document_data, *font_asset, tracking,
+  ForEachLayoutLine(document_data, *font, tracking,
                     [&](const TextSubLine& line, float x, float y) {
                       float line_left = x;
                       float line_top = y - document_data.GetSize();
@@ -106,28 +106,24 @@ void TextContentDefault::ConfigurePaint(int32_t alpha) {
 }
 
 void TextContentDefault::DrawTextWithFont(const DocumentData& document_data,
-                                          FontAsset& font_asset,
-                                          Canvas& canvas) {
-  auto font = font_asset.GetFont();
-  DCHECK(font);
-
+                                          Font& font, Canvas& canvas) {
   float text_size = data_source_.GetTextSize();
-  font->SetTextSize(text_size);
+  font.SetTextSize(text_size);
 
   constexpr float text_size_scale = 100.f;
   float tracking = data_source_.GetTracking() * text_size / text_size_scale;
-  ForEachLayoutLine(document_data, font_asset, tracking,
+  ForEachLayoutLine(document_data, font, tracking,
                     [&](const TextSubLine& line, float x, float y) {
                       canvas.Save();
                       canvas.Translate(x, y);
                       DrawFontTextLine(line.text_, document_data, canvas,
-                                       tracking, *font);
+                                       tracking, font);
                       canvas.Restore();
                     });
 }
 
 void TextContentDefault::ForEachLayoutLine(
-    const DocumentData& document_data, FontAsset& font_asset, float tracking,
+    const DocumentData& document_data, Font& font, float tracking,
     const std::function<void(const TextSubLine&, float, float)>& visitor) {
   auto& text = document_data.GetText();
   std::vector<std::string> text_lines;
@@ -140,8 +136,7 @@ void TextContentDefault::ForEachLayoutLine(
     auto box_width =
         (box_size && !box_size->IsEmpty()) ? box_size->GetX() : 0.f;
     std::vector<TextSubLine*> lines;
-    SplitGlyphTextIntoLines(text_line, box_width, font_asset, 0.f, tracking,
-                            lines);
+    SplitGlyphTextIntoLines(text_line, box_width, font, 0.f, tracking, lines);
     for (auto& line : lines) {
       line_index++;
       float x = 0.f, y = 0.f;
@@ -152,8 +147,8 @@ void TextContentDefault::ForEachLayoutLine(
 }
 
 void TextContentDefault::SplitGlyphTextIntoLines(
-    const std::string& text_line, float box_width, FontAsset& font_asset,
-    float font_scale, float tracking, std::vector<TextSubLine*>& text_lines) {
+    const std::string& text_line, float box_width, Font& font, float font_scale,
+    float tracking, std::vector<TextSubLine*>& text_lines) {
   auto text_line_u32 = base::U8StringToU32(text_line);
   int32_t line_count = 0;
   float current_line_width = 0;
@@ -167,8 +162,7 @@ void TextContentDefault::SplitGlyphTextIntoLines(
   for (auto i = 0; i < (int32_t)text_line_u32.length(); i++) {
     auto c = chars[i];
     float current_char_width =
-        font_asset.GetFont()->MeasureText(
-            base::U32StringToU8(text_line_u32.substr(i, 1))) +
+        font.MeasureText(base::U32StringToU8(text_line_u32.substr(i, 1))) +
         tracking;
     auto is_space = std::iswspace(c);
     if (is_space) {

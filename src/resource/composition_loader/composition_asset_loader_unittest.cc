@@ -13,9 +13,11 @@
 #include "src/base/monitor/trace_event.h"
 #include "src/model/composition_model.h"
 #include "src/parser/composition_parser.h"
+#include "src/resource/asset/font_asset.h"
 #include "src/resource/loader/exec_loader.h"
 #include "src/resource/log_util.h"
 #include "src/resource/resource_loader_listener.h"
+#include "src/testing/font_test_data.h"
 
 using namespace ::testing;
 using namespace lynx::animax;
@@ -75,6 +77,19 @@ std::shared_ptr<CompositionModel> GetNoAssetCompositionModel() {
   return CompositionParser::Parse(
       kCompositionModelJSONNoAsset,
       std::string_view{kCompositionModelJSONNoAsset}.length(), 1.0f);
+}
+
+std::shared_ptr<CompositionModel> GetFontOnlyCompositionModel(
+    FontPathOrigin origin = FontPathOrigin::kFontUrl) {
+  auto model = GetNoAssetCompositionModel();
+  model->GetFonts().emplace(
+      kFontAssetID, std::make_shared<FontAsset>(
+                        FontAssetModel{.family = "Lato",
+                                       .name = kFontAssetID,
+                                       .style = "Black",
+                                       .path = "https://example.com/font/a.ttf",
+                                       .path_origin = origin}));
+  return model;
 }
 
 }  // namespace
@@ -163,6 +178,56 @@ TEST(CompositionAssetLoaderTest, LoadCompositionAssetNoAsset) {
         oss << res;
         EXPECT_FALSE(oss.str().empty());
       });
+}
+
+TEST(CompositionAssetLoaderTest, LoadsRemoteFontAfterFallbackWasCreated) {
+  auto model = GetFontOnlyCompositionModel();
+  auto font_asset = model->GetFonts().at(kFontAssetID);
+  ASSERT_NE(nullptr, font_asset->GetFont());
+  ASSERT_FALSE(font_asset->IsLoaded());
+
+  auto resource_loader = std::make_shared<MockResourceLoader>();
+  EXPECT_CALL(*resource_loader, Load(_, _))
+      .WillOnce(Invoke([](ResourceRequest request, auto callback) {
+        EXPECT_EQ(ResourceRequestType::kLoadRawData, request.type);
+        EXPECT_EQ("https://example.com/font/a.ttf", request.uri_info.uri);
+        EXPECT_EQ(kFontAssetID, request.id);
+        callback(ResourceResponse{.payload = MakeRawDataResourcePayload(
+                                      MakeTestFontData())},
+                 {});
+      }));
+  auto loader =
+      CompositionAssetLoader::Make<CompositionAssetLoader>(resource_loader);
+  bool callback_called = false;
+  loader->Load(
+      CompositionAssetRequest{.model = model},
+      [&callback_called](CompositionAssetResponse response, LoaderError error) {
+        callback_called = true;
+        EXPECT_FALSE(!!error);
+        ASSERT_EQ(1u, response.asset_responses.size());
+        EXPECT_FALSE(!!response.asset_responses.front().error);
+      });
+  EXPECT_TRUE(callback_called);
+  EXPECT_TRUE(model->IsAssetsLoaded());
+  EXPECT_TRUE(font_asset->IsLoaded());
+  EXPECT_EQ(1u, font_asset->GetDataRevision());
+}
+
+TEST(CompositionAssetLoaderTest, DoesNotRequestLocalFont) {
+  auto model = GetFontOnlyCompositionModel(FontPathOrigin::kLocal);
+  auto resource_loader = std::make_shared<MockResourceLoader>();
+  EXPECT_CALL(*resource_loader, Load(_, _)).Times(0);
+  auto loader =
+      CompositionAssetLoader::Make<CompositionAssetLoader>(resource_loader);
+  bool callback_called = false;
+  loader->Load(
+      CompositionAssetRequest{.model = model},
+      [&callback_called](CompositionAssetResponse response, LoaderError error) {
+        callback_called = true;
+        EXPECT_FALSE(!!error);
+        EXPECT_TRUE(response.asset_responses.empty());
+      });
+  EXPECT_TRUE(callback_called);
 }
 
 TEST(CompositionAssetLoaderTest, LoadCompositionAssetAllFailure) {

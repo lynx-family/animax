@@ -124,7 +124,8 @@ std::unique_ptr<skity::TypefaceDelegate> Font::MakeFallbackDelegate() {
 std::shared_ptr<Font> Font::MakeFont(const void* bytes, size_t len,
                                      const std::string& style) {
   skity::FontStyle font_style = ParseFontStyle(style);
-  const auto data = skity::Data::MakeWithProc(bytes, len, nullptr, nullptr);
+  // Shaped text can retain the typeface after the asset's bytes are replaced.
+  const auto data = skity::Data::MakeWithCopy(bytes, len);
   auto typeface = skity::Typeface::MakeFromData(data);
   typeface =
       typeface ? typeface : skity::Typeface::GetDefaultTypeface(font_style);

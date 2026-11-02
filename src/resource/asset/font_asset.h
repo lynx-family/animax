@@ -5,7 +5,9 @@
 #ifndef ANIMAX_SRC_RESOURCE_ASSET_FONT_ASSET_H_
 #define ANIMAX_SRC_RESOURCE_ASSET_FONT_ASSET_H_
 
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "include/base/macros.h"
@@ -52,32 +54,45 @@ class FontAsset : public BaseAsset<FontAsset> {
 
   /**
    * Sets the raw data for the font.
-   * If the font is never loaded, call GetFont() will load the font with the raw
-   * data.
+   * Publishes resource data without replacing the GPU-owned Font. GetFont()
+   * rebuilds it lazily when the data revision changes. Empty data clears the
+   * resource data.
    * @param raw_data Unique pointer to the raw data of the font.
    */
   void SetRawData(std::unique_ptr<RawData> raw_data);
 
   /**
    * Determines whether the font is loaded.
-   * A font is considered loaded, either if its raw data is set, or if the font
-   * has been loaded.
+   * External fonts require nonempty resource data. A system-font fallback
+   * created before that data arrives must not suppress the resource request.
    *
    * @return true if the font is loaded; false otherwise.
    */
   bool IsLoaded() const;
 
+  // Safe to observe from the resource and GPU threads.
+  ANIMAX_EXPORT uint64_t GetDataRevision() const;
+
   /**
    * Retrieves the Font object associated with this asset.
-   * Loads the Font if it is not already loaded.
+   * Loads or refreshes the Font on the GPU thread. SetRawData() does not
+   * invalidate the returned pointer, but a later GetFont() or ResetModel() may.
+   * Use GetFontSnapshot() to retain it across refreshes.
    *
    * @return Pointer to the Font object.
    */
   ANIMAX_EXPORT Font* GetFont();
 
+  // Keeps one GPU-owned font alive throughout drawing or measurement, even if
+  // a later GetFont() refreshes the asset after a resource update.
+  ANIMAX_EXPORT std::shared_ptr<Font> GetFontSnapshot();
+
  private:
   FontAssetModel model_{};
+  mutable std::mutex data_mutex_;
   std::unique_ptr<RawData> raw_data_ = nullptr;
+  uint64_t data_revision_ = 0;
+  uint64_t font_data_revision_ = 0;
   std::shared_ptr<Font> font_ = nullptr;
 };
 
