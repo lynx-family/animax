@@ -51,12 +51,27 @@ float TextContentTextra::GetBoxBaselineOffset() const {
   return lottie_ascent - first_line->GetMaxAscent();
 }
 
-void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
-  if (!data_source_.GetLayoutOnlyOnce()) {
+void TextContentTextra::UpdateLayoutIfNeeded(int32_t alpha) {
+  auto font_name = data_source_.GetFontName();
+  // Static text can already have a layout made with a fallback font. Its
+  // revision-bearing font name changes when the requested data arrives.
+  if (!data_source_.GetLayoutOnlyOnce() || font_name != layout_font_name_) {
     layout_context_.reset();
     gradient_shaders_.clear();
     gradient_shaders_initialized_ = false;
   }
+
+  if (!layout_context_) {
+    ConfigurePlatformPainter(data_source_, alpha);
+    layout_context_ = std::make_unique<TextContentLayoutContext>();
+    layout_context_->Layout(data_source_, paint_->GetPaint(), alpha);
+    layout_font_name_ = std::move(font_name);
+    layout_alpha_ = alpha;
+  }
+}
+
+void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
+  UpdateLayoutIfNeeded(alpha);
 
   // Offset by the box position
   auto& document_data = data_source_.GetDocumentData();
@@ -70,12 +85,6 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
   auto baseline_shift = document_data.GetBaselineShift();
   if (baseline_shift != 0) {
     canvas.Translate(0, -baseline_shift);
-  }
-
-  if (layout_context_ == nullptr) {
-    ConfigurePlatformPainter(data_source_, alpha);
-    layout_context_ = std::make_unique<TextContentLayoutContext>();
-    layout_context_->Layout(data_source_, paint_->GetPaint(), alpha);
   }
 
   auto* layout_region = layout_context_->GetLayoutRegion();
@@ -150,6 +159,10 @@ void TextContentTextra::Draw(Canvas& canvas, int32_t alpha) {
 bool TextContentTextra::GetRect(RectF& out_rect) {
   if (!layout_context_) {
     return false;
+  }
+
+  if (layout_font_name_ != data_source_.GetFontName()) {
+    UpdateLayoutIfNeeded(layout_alpha_);
   }
 
   auto& document_data = data_source_.GetDocumentData();
