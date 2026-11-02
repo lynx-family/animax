@@ -52,11 +52,10 @@ class TextContentDefault : public TextContent {
     }
   };
   void ConfigurePaint(int32_t alpha);
-  void DrawTextWithFont(const DocumentData& document_data,
-                        FontAsset& font_asset, Canvas& canvas);
+  void DrawTextWithFont(const DocumentData& document_data, Font& font,
+                        Canvas& canvas);
   void SplitGlyphTextIntoLines(const std::string& text_line, float box_width,
-                               FontAsset& font_asset, float font_scale,
-                               float tracking,
+                               Font& font, float font_scale, float tracking,
                                std::vector<TextSubLine*>& text_lines);
   void OffsetCanvas(Canvas& canvas, const DocumentData& document_data,
                     int32_t line_index, float line_width);
@@ -64,7 +63,7 @@ class TextContentDefault : public TextContent {
   void GetLineOffset(const DocumentData& document_data, int32_t line_index,
                      float line_width, float& out_x, float& out_y);
   void ForEachLayoutLine(
-      const DocumentData& document_data, FontAsset& font_asset, float tracking,
+      const DocumentData& document_data, Font& font, float tracking,
       const std::function<void(const TextSubLine&, float, float)>& visitor);
 
   void DrawFontTextLine(const std::u32string& text,
