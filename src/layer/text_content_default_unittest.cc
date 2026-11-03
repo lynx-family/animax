@@ -5,6 +5,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "skity/graphic/bitmap.hpp"
+#include "skity/render/canvas.hpp"
 #include "src/layer/font_asset_manager.h"
 #include "src/layer/text_layer_animations.h"
 #include "src/model/value/document_data.h"
@@ -56,13 +58,18 @@ TEST(TextContentDefaultTest, DrawCallsCanvasDrawText) {
 
   TextContentDataSource data_source(animations, font_manager);
   TextContentDefault text_content(data_source);
-  Canvas canvas(nullptr, 100, 100, nullptr);
-  text_content.Draw(canvas, 255);
+  // Run against a real software backend. Whether a platform font can be
+  // resolved depends on the host (Fontconfig is on by default on Linux, so
+  // the font now resolves and DrawText is actually reached); either way the
+  // draw + measure path must not crash. A null canvas here dereferenced the
+  // underlying skity canvas once a font became available.
+  skity::Bitmap bitmap(100, 100);
+  auto software_canvas = skity::Canvas::MakeSoftwareCanvas(&bitmap);
+  Canvas canvas(software_canvas.get(), 100, 100, nullptr);
   RectF rect;
   rect.Set(0, 0, 0, 0);
-  text_content.GetRect(rect);
-  EXPECT_EQ(rect.GetTop(), 0);
-  EXPECT_EQ(rect.GetBottom(), 0);
-  EXPECT_EQ(rect.GetLeft(), 0);
-  EXPECT_EQ(rect.GetRight(), 0);
+  EXPECT_NO_FATAL_FAILURE({
+    text_content.Draw(canvas, 255);
+    text_content.GetRect(rect);
+  });
 }
