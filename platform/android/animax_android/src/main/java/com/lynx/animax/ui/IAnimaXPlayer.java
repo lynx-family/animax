@@ -14,6 +14,7 @@ import com.lynx.animax.listener.IAnimationListener;
 import com.lynx.animax.property.AnimaXKeyPath;
 import com.lynx.animax.property.AnimaXKeyPathListCallback;
 import com.lynx.animax.property.AnimaXPropertyCallback;
+import com.lynx.animax.property.AnimaXTextMeasureCallback;
 import com.lynx.animax.property.AnimaXValueCallback;
 import com.lynx.animax.property.AnimaXValueParam;
 import com.lynx.animax.property.LayerPropertyType;
@@ -410,6 +411,20 @@ public interface IAnimaXPlayer {
    */
   void getKeysForKeyPath(
       @NonNull AnimaXKeyPath keyPath, @NonNull AnimaXKeyPathListCallback callback);
+
+  /**
+   * Measures a text layer's intrinsic width without drawing or advancing playback.
+   * Paragraph box constraints and layer transforms are ignored. Uses the current text, size and
+   * tracking, in original JSON composition units. Only the target font is loaded if needed, even
+   * with dynamic resources; playback and other assets remain deferred. Names must be unique.
+   * Empty text succeeds with zero; missing, ambiguous, unsupported or stale layers fail.
+   * For pre-play layout, disable autoplay, wait for ready and property-update completion,
+   * then measure and apply layout updates before calling play.
+   * @param layerName Layer name to measure, rather than a key path pattern
+   * @param callback Asynchronous completion on the main thread; failure returns a zero width
+   */
+  void getTextIntrinsicWidth(
+      @NonNull String layerName, @NonNull AnimaXTextMeasureCallback callback);
 
   // Monitor
 

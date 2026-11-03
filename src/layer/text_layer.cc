@@ -221,6 +221,30 @@ void TextLayer::GetBounds(RectF& out_bounds, Matrix& parent_matrix,
   }
 }
 
+bool TextLayer::SupportsIntrinsicWidth() const {
+  return animations_.text_keyframe && text_content_ &&
+         text_content_->SupportsIntrinsicWidth();
+}
+
+bool TextLayer::IsTextEmpty() const {
+  return data_source_->GetDocumentData().GetText().empty();
+}
+
+std::shared_ptr<FontAsset> TextLayer::GetTextFontAsset() const {
+  if (!data_source_ || !animations_.text_keyframe) {
+    return nullptr;
+  }
+  const auto& font_name = data_source_->GetDocumentData().GetFontName();
+  auto& fonts = composition_.GetFonts();
+  auto it = fonts.find(font_name);
+  return it != fonts.end() ? it->second : nullptr;
+}
+
+bool TextLayer::GetTextIntrinsicWidth(float& width) {
+  width = 0.f;
+  return SupportsIntrinsicWidth() && text_content_->GetIntrinsicWidth(width);
+}
+
 inline KeyframeAnimation* TextLayer::GetAnimationFromAnimatorProperty(
     const TextLayerAnimations::AnimatorProperty& animator,
     LayerPropertyType type) {

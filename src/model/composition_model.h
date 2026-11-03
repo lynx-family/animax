@@ -21,8 +21,10 @@
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "include/resource/uri_info.h"
 #include "src/layer/font_asset_manager.h"
 #include "src/model/marker_model.h"
 #include "src/model/rect_model.h"
@@ -69,6 +71,12 @@ class CompositionModel {
   // Do not use it for rendering or animator progress.
   float GetTimelineEndFrame() const;
   float GetScale() { return scale_; }
+  const MainResourceUriInfo& GetMainResourceUriInfo() const {
+    return main_resource_uri_info_;
+  }
+  void SetMainResourceUriInfo(MainResourceUriInfo info) {
+    main_resource_uri_info_ = std::move(info);
+  }
   // Returns the playback duration in frames used by animation internals.
   float GetDurationFrames() { return end_frame_ - start_frame_; }
   // Returns the raw half-open timeline duration in frames used for reporting
@@ -141,6 +149,7 @@ class CompositionModel {
   float frame_rate_ = 30;
 
   float scale_ = 1;
+  MainResourceUriInfo main_resource_uri_info_;
   bool has_dash_pattern_ = false;
   bool enable_3d_ = false;
 

@@ -62,6 +62,11 @@ void AnimaXCompositionLoader::LoadCompositionModelAsset(
   pipeline_->LoadCompositionModelAsset(std::move(model), std::move(callback));
 }
 
+void AnimaXCompositionLoader::LoadTextFontResource(
+    ResourceRequest request, ResourceLoader::CallbackType callback) {
+  pipeline_->LoadTextFontResource(std::move(request), std::move(callback));
+}
+
 void AnimaXCompositionLoader::Trace(TraceEventType type) {
   pipeline_->Trace(type);
 }

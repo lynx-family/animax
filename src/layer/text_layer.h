@@ -19,6 +19,8 @@
 #ifndef ANIMAX_SRC_LAYER_TEXT_LAYER_H_
 #define ANIMAX_SRC_LAYER_TEXT_LAYER_H_
 
+#include <memory>
+
 #include "include/base/macros.h"
 #include "src/content/effect/blur_element.h"
 #include "src/layer/base_layer.h"
@@ -29,6 +31,7 @@
 
 namespace lynx {
 namespace animax {
+class FontAsset;
 class TextContent;
 class TextContentDataSource;
 class TextLayer : public BaseLayer {
@@ -40,6 +43,11 @@ class TextLayer : public BaseLayer {
   void DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) override;
   void GetBounds(RectF& out_bounds, Matrix& parent_matrix,
                  bool apply_parent) override;
+
+  bool SupportsIntrinsicWidth() const;
+  bool IsTextEmpty() const;
+  std::shared_ptr<FontAsset> GetTextFontAsset() const;
+  bool GetTextIntrinsicWidth(float& width);
 
   KeyframeAnimation* GetAnimationForProperty(LayerPropertyType type) override;
 

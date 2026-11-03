@@ -5,7 +5,9 @@
 #ifndef ANIMAX_SRC_RESOURCE_ASSET_FONT_ASSET_H_
 #define ANIMAX_SRC_RESOURCE_ASSET_FONT_ASSET_H_
 
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "include/base/macros.h"
@@ -65,7 +67,11 @@ class FontAsset : public BaseAsset<FontAsset> {
    *
    * @return true if the font is loaded; false otherwise.
    */
-  bool IsLoaded() const;
+  ANIMAX_EXPORT bool IsLoaded() const;
+  // Checks resource bytes without accepting the rendering fallback typeface.
+  ANIMAX_EXPORT bool HasValidFontData() const;
+  // Read and incremented only on the renderer thread.
+  uint64_t GetRevision() const { return revision_; }
 
   /**
    * Retrieves the Font object associated with this asset.
@@ -77,6 +83,8 @@ class FontAsset : public BaseAsset<FontAsset> {
 
  private:
   FontAssetModel model_{};
+  mutable std::mutex font_mutex_;
+  uint64_t revision_ = 0;
   std::unique_ptr<RawData> raw_data_ = nullptr;
   std::shared_ptr<Font> font_ = nullptr;
 };

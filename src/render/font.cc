@@ -155,6 +155,14 @@ std::shared_ptr<Font> Font::MakeFromName(const std::string& family_name,
                                 std::make_unique<skity::FontStyle>(font_style));
 }
 
+bool Font::IsValidFontData(const void* bytes, size_t len) {
+  if (!bytes || len == 0) {
+    return false;
+  }
+  const auto data = skity::Data::MakeWithProc(bytes, len, nullptr, nullptr);
+  return skity::Typeface::MakeFromData(data) != nullptr;
+}
+
 bool Font::HasDefaultTypeface() {
   return skity::Typeface::GetDefaultTypeface() != nullptr;
 }

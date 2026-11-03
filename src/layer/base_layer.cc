@@ -547,6 +547,13 @@ void BaseLayer::HitTest(float x, float y,
   }
 }
 
+void BaseLayer::FindLayersByName(const std::string& name,
+                                 std::vector<BaseLayer*>& matches) {
+  if (layer_model_.GetName() == name) {
+    matches.push_back(this);
+  }
+}
+
 bool BaseLayer::GetBoundsByName(const std::string& layer_name,
                                 LayerBoundsSpace bounds_space,
                                 RectF& out_bounds) {

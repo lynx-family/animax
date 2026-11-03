@@ -192,6 +192,31 @@ bool TextContentTextra::GetRect(RectF& out_rect) {
   return true;
 }
 
+bool TextContentTextra::GetIntrinsicWidth(float& width) {
+  width = 0.f;
+  if (data_source_.GetDocumentData().GetText().empty()) {
+    return true;
+  }
+  auto* font_asset = data_source_.GetFontAsset();
+  if (font_asset && font_asset->Model().path_origin != FontPathOrigin::kLocal &&
+      !font_asset->HasValidFontData()) {
+    return false;
+  }
+  // Measurement uses current properties without populating the drawing cache.
+  TextContentLayoutContext context;
+  context.Layout(data_source_, paint_->GetPaint(), 255, true);
+  auto* region = context.GetLayoutRegion();
+  if (!region) {
+    return false;
+  }
+  const float measured_width = region->GetLayoutedWidth();
+  if (!std::isfinite(measured_width) || measured_width < 0.f) {
+    return false;
+  }
+  width = measured_width;
+  return true;
+}
+
 void TextContentTextra::ConfigurePlatformPainter(
     const TextContentDataSource& data_source, int32_t alpha) {
   // anti-aliasing default to true

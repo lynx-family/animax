@@ -23,6 +23,7 @@
 #include "src/layer/text_content_data_source.h"
 #include "src/layer/text_layer_animations.h"
 #include "src/layer/textra/font_asset_manager_textra.h"
+#include "src/layer/textra/text_content_textra.h"
 #include "src/model/value/document_data.h"
 #include "src/resource/asset/font_asset.h"
 
@@ -152,6 +153,117 @@ TEST_F(TextContentLayoutContextTest, LayoutWithBoxUsesFixedRegion) {
   EXPECT_FLOAT_EQ(layout_region->GetPageWidth(), 240.f);
   EXPECT_FLOAT_EQ(layout_region->GetPageHeight(), 80.f);
   EXPECT_GT(layout_region->GetLineCount(), 0u);
+}
+
+TEST_F(TextContentLayoutContextTest, IntrinsicWidthIgnoresBoxBeforeDrawing) {
+  auto document_data = CreateDocumentData(std::make_unique<PointF>(20.f, 1.f));
+  auto data_source = CreateDataSource(document_data);
+  TextContentTextra text(*data_source);
+
+  float width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(width));
+  EXPECT_GT(width, document_data.GetBoxSize()->GetX());
+  RectF bounds;
+  // Measurement must not populate or change the drawing layout's bounds.
+  EXPECT_FALSE(text.GetRect(bounds));
+
+  TextContentLayoutContext context;
+  context.Layout(*data_source, CreatePaint());
+  EXPECT_TRUE(context.IsBoxMode());
+  EXPECT_FLOAT_EQ(context.GetLayoutRegion()->GetPageWidth(), 20.f);
+  EXPECT_FLOAT_EQ(context.GetLayoutRegion()->GetPageHeight(), 1.f);
+}
+
+TEST_F(TextContentLayoutContextTest,
+       IntrinsicWidthReadsCurrentTextAndTextSize) {
+  auto document_data = CreateDocumentData(std::make_unique<PointF>(20.f, 1.f));
+  document_data.SetText("M");
+  auto data_source = CreateDataSource(document_data);
+  TextContentTextra text(*data_source);
+
+  float short_width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(short_width));
+  document_data.SetText("MMMM");
+  float long_width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(long_width));
+  EXPECT_GT(long_width, short_width * 3.f);
+
+  animations_.animator_property_list.resize(1);
+  auto& property = animations_.animator_property_list.front();
+  property.text_size_callback =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(48.f);
+  float larger_width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(larger_width));
+  EXPECT_NEAR(larger_width, long_width * 2.f, 0.1f);
+
+  property.tracking =
+      AnimationFactory::Make<FloatKeyframeAnimation, Float>(10.f);
+  float tracked_width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(tracked_width));
+  EXPECT_GT(tracked_width, larger_width);
+}
+
+TEST_F(TextContentLayoutContextTest,
+       IntrinsicWidthPreservesExplicitLineBreaks) {
+  auto document_data = CreateDocumentData(std::make_unique<PointF>(20.f, 1.f));
+  document_data.SetText("MMMM");
+  auto data_source = CreateDataSource(document_data);
+  TextContentTextra text(*data_source);
+  float single_line_width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(single_line_width));
+
+  document_data.SetText("MMMM\nM");
+  float multiline_width = 0.f;
+  ASSERT_TRUE(text.GetIntrinsicWidth(multiline_width));
+  EXPECT_NEAR(multiline_width, single_line_width, 0.1f);
+}
+
+TEST_F(TextContentLayoutContextTest, IntrinsicWidthRejectsUnloadedCustomFont) {
+  auto model = kFontAssetModel;
+  model.path = "https://example.com/custom.ttf";
+  model.path_origin = FontPathOrigin::kFontUrl;
+  auto font = std::make_shared<FontAsset>(std::move(model));
+  font_manager_.GetFontAssetMap()[kFontAssetModel.name] = font;
+  auto document_data = CreateDocumentData(nullptr);
+  auto data_source = CreateDataSource(document_data);
+  TextContentTextra text(*data_source);
+
+  float width = 100.f;
+  EXPECT_FALSE(text.GetIntrinsicWidth(width));
+  EXPECT_FLOAT_EQ(width, 0.f);
+  EXPECT_FALSE(font->IsLoaded());
+}
+
+TEST_F(TextContentLayoutContextTest, IntrinsicWidthEmptyTextDoesNotLoadFont) {
+  auto model = kFontAssetModel;
+  model.path_origin = FontPathOrigin::kFontUrl;
+  auto font = std::make_shared<FontAsset>(model);
+  font_manager_.GetFontAssetMap()[model.name] = font;
+  auto document_data = CreateDocumentData(nullptr);
+  document_data.SetText("");
+  auto data_source = CreateDataSource(document_data);
+  TextContentTextra text(*data_source);
+  float width = 100.f;
+  EXPECT_TRUE(text.GetIntrinsicWidth(width));
+  EXPECT_FLOAT_EQ(width, 0.f);
+  EXPECT_FALSE(font->IsLoaded());
+}
+
+TEST_F(TextContentLayoutContextTest, IntrinsicWidthRejectsCorruptCustomFont) {
+  auto model = kFontAssetModel;
+  model.path_origin = FontPathOrigin::kFontUrl;
+  auto font = std::make_shared<FontAsset>(model);
+  static constexpr char kInvalidFont[] = "not a font";
+  font->SetRawData(RawData::MakeRawData(kInvalidFont, sizeof(kInvalidFont),
+                                        nullptr, nullptr));
+  font_manager_.GetFontAssetMap()[model.name] = font;
+  auto document_data = CreateDocumentData(nullptr);
+  auto data_source = CreateDataSource(document_data);
+  TextContentTextra text(*data_source);
+  float width = 100.f;
+  EXPECT_TRUE(font->IsLoaded());
+  EXPECT_FALSE(text.GetIntrinsicWidth(width));
+  EXPECT_FLOAT_EQ(width, 0.f);
 }
 
 TEST_F(TextContentLayoutContextTest, LayoutWithRangeSelectorAppliesRangeStyle) {

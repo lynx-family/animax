@@ -537,4 +537,24 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
   }
 }
 
+- (void)getTextIntrinsicWidth:(NSString *)layerName
+                   completion:(void (^)(BOOL success, CGFloat width))completion {
+  if (!completion) {
+    return;
+  }
+  void (^callback)(BOOL, CGFloat) = [completion copy];
+  auto complete = [callback](bool success, float width) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      callback(success, success ? static_cast<CGFloat>(width) : 0);
+    });
+  };
+  const char *name = layerName.UTF8String;
+  if (!_player || !name || layerName.length == 0) {
+    complete(false, 0.f);
+    return;
+  }
+  std::string utf8Name(name, [layerName lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+  _player->GetTextIntrinsicWidth(utf8Name, std::move(complete));
+}
+
 @end
