@@ -19,12 +19,11 @@ class AudioLayer : public BaseLayer {
 
   void Init() override;
 
-  // We need to trigger audio controller in this function so that we can reuse
-  // the visible/hidden logic in base layer.
-  void DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) override;
+  void UpdateAudio() override;
+  void DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) override {}
 
  private:
-  double GetCurrentProgress();
+  double GetCurrentTimeMs();
   void AttachToAssetOnce();
   std::shared_ptr<AudioAsset> audio_asset_;
   std::shared_ptr<AudioController> audio_controller_;
