@@ -11,17 +11,18 @@ import java.nio.ByteBuffer;
 public class AudioPlayer implements IAudioRendererListener {
   static private final String TAG = "AudioPlayer";
   @NonNull private final AudioRenderer mRenderer;
-  @NonNull private final AudioInfo mAudioInfo;
   @NonNull private final ByteBuffer mAudioData;
   private final int mAudioDataCapacity;
+  private final double mDurationMs;
 
   private int mAudioStartPosition = 0;
 
   private AudioPlayer(@NonNull AudioInfo info, @NonNull ByteBuffer data) {
-    mAudioInfo = info;
     mAudioData = data;
     mAudioDataCapacity = mAudioData.capacity();
-    mRenderer = new AudioRenderer(mAudioInfo);
+    mRenderer = new AudioRenderer(info);
+    // Playback and seeking use decoded PCM, whose length can differ from metadata.
+    mDurationMs = mRenderer.getDurationMs(mAudioDataCapacity);
     mRenderer.setRendererListener(this);
   }
 
@@ -52,14 +53,14 @@ public class AudioPlayer implements IAudioRendererListener {
 
   @CalledByNative
   public double getDuration() {
-    return mAudioInfo.getDuration() / 1000.0;
+    return mDurationMs;
   }
 
   @CalledByNative
   public double getAudioTime() {
     return (double) ((mAudioStartPosition + mRenderer.getPlaybackHeadPositionInByte())
                % mAudioDataCapacity)
-        / mAudioDataCapacity * mAudioInfo.getDuration() / 1000.0;
+        / mAudioDataCapacity * mDurationMs;
   }
 
   @CalledByNative

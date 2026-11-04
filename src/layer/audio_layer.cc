@@ -41,25 +41,25 @@ void AudioLayer::Init() {
   }
 }
 
-void AudioLayer::DrawLayer(Canvas &canvas, Matrix &matrix, int32_t alpha) {
-  if (!audio_controller_) {
+void AudioLayer::UpdateAudio() {
+  if (!visible_ || layer_model_.IsHidden() || !audio_controller_) {
     return;
   }
   AttachToAssetOnce();
-  audio_controller_->OnProgress(GetCurrentProgress());
+  audio_controller_->OnTimeUpdate(GetCurrentTimeMs());
 }
 
-double AudioLayer::GetCurrentProgress() {
+double AudioLayer::GetCurrentTimeMs() {
   auto &keyframe = in_out_animation_->GetCurrentKeyframe();
-  float progress =
-      in_out_animation_->GetProgress() - keyframe.GetStartProgress();
+  double progress = static_cast<double>(in_out_animation_->GetProgress()) -
+                    keyframe.GetStartProgress();
   if (progress < 0) {
     return 0;
   }
-  if (progress > 1) {
-    return 1;
-  }
-  return progress;
+  // Both progress values use the composition's playback frame span. Convert
+  // their difference to elapsed time before passing it to the audio player.
+  return progress * composition_.GetDurationFrames() * 1000.0 /
+         composition_.GetFrameRate();
 }
 
 void AudioLayer::AttachToAssetOnce() {

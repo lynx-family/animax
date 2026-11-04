@@ -76,6 +76,13 @@ bool AudioPlayerHarmony::Init(std::shared_ptr<AudioAsset> asset) {
   }
 
   bytes_per_frame_ = info.channel_count * info.byte_per_sample;
+  if (bytes_per_frame_ <= 0 || info.sample_rate <= 0) {
+    ANIMAX_LOGE("Init failed: invalid PCM frame size or sample rate")
+    return false;
+  }
+  // Playback and seeking use decoded PCM, whose length can differ from
+  // metadata.
+  duration_ms_ = (data.size() / bytes_per_frame_) * 1000.0 / info.sample_rate;
 
   OH_AudioStreamBuilder* builder = nullptr;
   if (OH_AudioStreamBuilder_Create(&builder, AUDIOSTREAM_TYPE_RENDERER) !=
@@ -146,12 +153,7 @@ void AudioPlayerHarmony::SeekToProgress(double progress) {
   read_offset_ = start_position_bytes_;
 }
 
-double AudioPlayerHarmony::GetDuration() {
-  if (!asset_harmony_) {
-    return 0;
-  }
-  return asset_harmony_->GetAudioInfo().duration / 1000.0;
-}
+double AudioPlayerHarmony::GetDuration() { return duration_ms_; }
 
 double AudioPlayerHarmony::GetAudioTime() {
   if (!asset_harmony_ || !renderer_.Ptr()) {

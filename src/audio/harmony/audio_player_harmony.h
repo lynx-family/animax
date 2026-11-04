@@ -51,6 +51,7 @@ class AudioPlayerHarmony : public AudioPlayer {
   ScopedOHObject<OH_AudioRenderer, OH_AudioRenderer_Release> renderer_;
 
   int32_t bytes_per_frame_ = 0;
+  double duration_ms_ = 0;
 
   std::mutex playback_mutex_;
 

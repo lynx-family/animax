@@ -123,4 +123,8 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
   public int alignByteToFrames(int bytePosition) {
     return bytePosition / mBytePerFrame * mBytePerFrame;
   }
+
+  double getDurationMs(int byteCount) {
+    return (byteCount / mBytePerFrame) * 1000.0 / mAudioTrack.getSampleRate();
+  }
 }

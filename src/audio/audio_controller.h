@@ -20,7 +20,10 @@ class AudioController : public std::enable_shared_from_this<AudioController> {
  public:
   void OnResume();
   void OnPause();
-  void OnProgress(double progress);
+  // Bracket a layer-tree audio update, not a skipped render.
+  void BeginFrame();
+  void EndFrame();
+  void OnTimeUpdate(double time_ms);
   void SetMuted(bool mute);
   void SetAudioPlayer(std::unique_ptr<AudioPlayer> player);
   bool HasAudioPlayer();
@@ -29,6 +32,7 @@ class AudioController : public std::enable_shared_from_this<AudioController> {
   bool mute_ = false;
   bool can_play_ = false;
   bool is_playing_ = false;
+  bool updated_this_frame_ = false;
   std::unique_ptr<AudioPlayer> audio_player_;
 };
 }  // namespace animax
