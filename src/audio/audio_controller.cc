@@ -12,15 +12,26 @@
 namespace lynx {
 namespace animax {
 
-void AudioController::OnProgress(double progress) {
+void AudioController::BeginFrame() { updated_this_frame_ = false; }
+
+void AudioController::EndFrame() {
+  if (!updated_this_frame_ && is_playing_) {
+    audio_player_->Pause();
+    is_playing_ = false;
+    // Keep can_play_: leaving a layer's active interval is not a global pause.
+  }
+}
+
+void AudioController::OnTimeUpdate(double time_ms) {
+  updated_this_frame_ = true;
   if (!audio_player_ || !can_play_ || mute_) {
     return;
   }
 
-  // Compares the timestamp of animation and audio.
-  if (audio_player_->NeedSync(progress)) {
-    // Flush the audio buffer and update the head to current frame.
-    audio_player_->SeekToProgress(progress);
+  // A stopped/new player must discard its previous position and buffers even
+  // when the target differs by less than the continuous-playback threshold.
+  if (!audio_player_->SyncToTime(time_ms, !is_playing_)) {
+    return;
   }
 
   // AudioTrack don't have a data request callback until Android 10,
@@ -52,6 +63,7 @@ void AudioController::SetMuted(bool mute) {
 
 void AudioController::SetAudioPlayer(std::unique_ptr<AudioPlayer> player) {
   audio_player_ = std::move(player);
+  is_playing_ = false;
 }
 
 bool AudioController::HasAudioPlayer() { return audio_player_ != nullptr; }
