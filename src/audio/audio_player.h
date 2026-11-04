@@ -30,11 +30,36 @@ class AudioPlayer {
   virtual void Pause() = 0;
   virtual void SeekToProgress(double progress) = 0;
 
-  bool NeedSync(double progress) {
-    auto duration = GetDuration();
-    auto animation_time = progress * duration;
-    auto diff = std::abs(GetAudioTime() - animation_time);
-    auto diff_in_loop = std::abs(duration - diff);
+  // time_ms is elapsed layer-local time, not composition-normalized progress.
+  // Returns false when the timestamp or audio duration is invalid.
+  bool SyncToTime(double time_ms, bool force_seek = false) {
+    const double duration_ms = GetDuration();
+    if (!std::isfinite(time_ms) || time_ms < 0 || !std::isfinite(duration_ms) ||
+        duration_ms <= 0) {
+      return false;
+    }
+    // Preserve source looping and use the same target for comparison and seek.
+    const double target_ms = std::fmod(time_ms, duration_ms);
+    // Lifecycle positioning must not count as repeated drift corrections.
+    if (force_seek || NeedSync(target_ms, duration_ms)) {
+      SeekToProgress(target_ms / duration_ms);
+    }
+    return true;
+  }
+
+  static std::unique_ptr<AudioPlayer> MakeAudioPlayer(
+      std::shared_ptr<AnimaXAbility> ability,
+      std::shared_ptr<AudioAsset> asset);
+
+ protected:
+  AudioPlayer() {}
+  virtual double GetDuration() = 0;
+  virtual double GetAudioTime() = 0;
+
+ private:
+  bool NeedSync(double target_ms, double duration_ms) {
+    auto diff = std::abs(GetAudioTime() - target_ms);
+    auto diff_in_loop = std::abs(duration_ms - diff);
     auto threshold = kBaseSyncThreshold * factor_;
     bool ret = diff > threshold && diff_in_loop > threshold;
     if (ret && increase_factor_time_ <= kMaxIncreaseFactorTime) {
@@ -66,16 +91,6 @@ class AudioPlayer {
     return ret;
   }
 
-  static std::unique_ptr<AudioPlayer> MakeAudioPlayer(
-      std::shared_ptr<AnimaXAbility> ability,
-      std::shared_ptr<AudioAsset> asset);
-
- protected:
-  AudioPlayer() {}
-  virtual double GetDuration() = 0;
-  virtual double GetAudioTime() = 0;
-
- private:
   std::queue<int64_t> seek_timestamps_;
   double factor_ = 1.0;
   int increase_factor_time_ = 0;

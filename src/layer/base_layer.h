@@ -48,6 +48,8 @@ class BaseLayer : public Content,
   virtual void SetContents(std::vector<Content*>& contents_before,
                            std::vector<Content*>& contents_after) override {}
   virtual void SetProgress(float progress);
+  // Update audio from timeline state independently of visual bounds/clipping.
+  virtual void UpdateAudio() {}
   virtual void DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) = 0;
   BlurEffectModel* GetBlurEffect();
   DropShadowEffectModel* GetDropEffect();

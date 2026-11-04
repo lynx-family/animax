@@ -205,6 +205,20 @@ void CompositionLayer::GetBounds(RectF& out_bounds, Matrix& parent_matrix,
   }
 }
 
+void CompositionLayer::UpdateAudio() {
+  if (!visible_ || layer_model_.IsHidden()) {
+    return;
+  }
+  for (auto& layer : layers_) {
+    layer->UpdateAudio();
+  }
+  // Matte compositions own audio too. Visit each once, independently of how
+  // many visual layers use it as a matte.
+  for (auto& layer : matte_target_layers_) {
+    layer->UpdateAudio();
+  }
+}
+
 void CompositionLayer::ResolveChildKeyPath(
     const AnimaXKeyPath& path, int32_t depth,
     ResolvedKeyPathElements& match_elements,
