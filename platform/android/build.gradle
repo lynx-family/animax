@@ -6,7 +6,6 @@ buildscript {
     ext {
         kotlin_version = '1.5.32'
         compileSdkVersion = 30
-        ndkVersion = '21.1.6352462'
         abiList = project.hasProperty('abiList') ? project.property('abiList').split(',').collect { it.trim() }.findAll { it } : ['armeabi-v7a', 'arm64-v8a', 'x86_64']
 
         pythonExec = project.file(python_exec).absolutePath
@@ -25,6 +24,7 @@ buildscript {
 }
 
 apply from: file("../../tools/gradle/versions.gradle")
+apply from: file("../../tools/gradle/ndk.gradle")
 
 ext.enable_coverage_bool = (enable_coverage == 'true')
 
@@ -90,6 +90,7 @@ task generateAllGnCmakeTargets {
         }
     }
     doLast {
+        rootProject.ext.configureGnNdk()
         exec {
             workingDir "../../"
             commandLine pythonExec, "buildtools/tools_shared/tools_shared/android_tools/generate_cmake_scripts_from_gn.py"

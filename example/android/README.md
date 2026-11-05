@@ -118,7 +118,16 @@ If you have installed the Android SDK before, please set ANDROID_HOME to the ins
     export ANDROID_NDK=<path-to-android-ndk>
     ```
 
-    > **Note**: The NDK version must be **21.1.6352462**. Other versions may cause build failures.
+    > **Note**: Builds default to NDK **21.1.6352462**. To use NDK
+    > **27.3.13750724**, install it under `$ANDROID_HOME/ndk/` and pass
+    > `-Pndk27=true` to Gradle. The SDK publishing script accepts `--ndk27`.
+    > For another revision, `-Pndk_version=VERSION` takes precedence over `ndk27`.
+    > Setup preserves `ANDROID_NDK` for shell tools without pinning Gradle to
+    > that directory. Set `ANDROID_NDK_PATH` only for an explicit directory
+    > override matching the selected NDK version; setup writes it as `ndk.dir`.
+    > Before switching NDK versions in an existing checkout, manually remove
+    > stale `ndk.dir` entries from `platform/android/local.properties` and
+    > `example/android/local.properties`.
 
 - Windows
 
