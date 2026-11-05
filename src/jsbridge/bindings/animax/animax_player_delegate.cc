@@ -162,16 +162,18 @@ void AnimaXPlayerDelegate::SetResourceProperty(
 void AnimaXPlayerDelegate::SubmitResourcePropertiesUpdate(
     std::unique_ptr<NapiOnPropertyCallback> callback) {
   auto player = weak_player_.lock();
-  if (player) {
-    player->LoadAssetsWithCallback([callback = std::move(callback)]() mutable {
-      if (!callback) {
-        return;
-      }
-      auto task_runner = NapiTaskRunner{callback->Env(nullptr)};
-      task_runner.PostTask(
-          [callback = std::move(callback)]() { callback->Invoke(true, 0); });
-    });
+  if (!player || !callback) {
+    return;
   }
+
+  // Create the runner on the JS thread while the environment is still alive.
+  auto task_runner = NapiTaskRunner{callback->Env(nullptr)};
+  player->LoadAssetsWithCallback(
+      [callback = std::move(callback),
+       task_runner = std::move(task_runner)]() mutable {
+        task_runner.PostTask(
+            [callback = std::move(callback)]() { callback->Invoke(true, 0); });
+      });
 }
 
 void AnimaXPlayerDelegate::Play() {
