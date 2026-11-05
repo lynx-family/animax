@@ -6,6 +6,7 @@
 #define ANIMAX_SRC_LAYER_TEXTRA_TEXT_CONTENT_TEXTRA_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "src/layer/text_content.h"
@@ -28,12 +29,15 @@ class TextContentTextra : public TextContent {
   bool GetRect(RectF& out_rect) override;
 
  private:
+  void UpdateLayoutIfNeeded(int32_t alpha);
   float GetBoxBaselineOffset() const;
   void ConfigurePlatformPainter(const TextContentDataSource& data_source,
                                 int32_t alpha);
 
   const TextContentDataSource& data_source_;
   std::unique_ptr<TextContentLayoutContext> layout_context_;
+  std::string layout_font_name_;
+  int32_t layout_alpha_ = 255;
   std::unique_ptr<Paint> paint_;
   std::vector<std::shared_ptr<skity::Shader>> gradient_shaders_;
   bool gradient_shaders_initialized_ = false;

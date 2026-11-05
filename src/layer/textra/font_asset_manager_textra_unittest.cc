@@ -4,10 +4,12 @@
 #include "src/layer/textra/font_asset_manager_textra.h"
 
 #include "gtest/gtest.h"
+#include "skity/text/font.hpp"
 #include "skity/text/typeface.hpp"
 #include "src/base/thread/thread_assert.h"
 #include "src/layer/textra/textra_include.h"
 #include "src/render/font.h"
+#include "src/testing/font_test_data.h"
 
 using namespace lynx::animax;
 using namespace ttoffice::tttext;
@@ -102,14 +104,56 @@ TEST(FontAssetManagerTest, Textra) {
   TypefaceRef typeface_model_match_1 =
       asset_font_manager->matchFamilyStyleCharacter(
           kFontAssetModel.name.c_str(), style_1, nullptr, 0, 0);
-  EXPECT_EQ(typeface_model_match_0, typeface_model_match_1);
+  ASSERT_NE(nullptr, typeface_model_match_0);
+  ASSERT_NE(nullptr, typeface_model_match_1);
+  EXPECT_EQ(typeface_model_match_0->GetUniqueId(),
+            typeface_model_match_1->GetUniqueId());
 
   FontStyle style_2 = ttoffice::tttext::FontStyle(
       FontStyle::kLight_Weight, FontStyle::kSemiCondensed_Width,
       FontStyle::kOblique_Slant);
   TypefaceRef typeface_model_match_2 = asset_font_manager->legacyMakeTypeface(
       kFontAssetModel.name.c_str(), style_2);
-  EXPECT_EQ(typeface_model_match_0, typeface_model_match_2);
+  ASSERT_NE(nullptr, typeface_model_match_2);
+  EXPECT_EQ(typeface_model_match_0->GetUniqueId(),
+            typeface_model_match_2->GetUniqueId());
+}
+
+TEST(FontAssetManagerTest, LateRemoteFontDoesNotReuseFallbackDescriptor) {
+  ThreadAssert::Init(ThreadAssert::Type::kGPU);
+  auto model = kFontAssetModel;
+  model.path_origin = FontPathOrigin::kScriptUrl;
+  model.path = "https://example.com/font.ttf";
+  auto asset = std::make_shared<FontAsset>(model);
+  FontAssetManagerTextra manager;
+  manager.GetFontAssetMap().emplace(model.name, asset);
+  auto *collection =
+      static_cast<TTFontMgrCollection *>(manager.GetFontMgrCollection());
+  FontDescriptor descriptor;
+  descriptor.font_family_list_.push_back(
+      manager.RedirectNameWithSuffix(model.name));
+  auto fallback_faces = collection->findTypefaces(descriptor);
+  ASSERT_FALSE(fallback_faces.empty());
+  EXPECT_FALSE(asset->IsLoaded());
+
+  asset->SetRawData(MakeTestFontData());
+
+  auto updated_name = manager.RedirectNameWithSuffix(model.name);
+  EXPECT_NE(descriptor.font_family_list_.front(), updated_name);
+  descriptor.font_family_list_ = {updated_name};
+  auto loaded_faces = collection->findTypefaces(descriptor);
+  ASSERT_EQ(1u, loaded_faces.size());
+  EXPECT_EQ(asset->GetFont()->GetFont().GetTypeface()->TypefaceId(),
+            loaded_faces.front()->GetUniqueId());
+  EXPECT_NE(fallback_faces.front()->GetUniqueId(),
+            loaded_faces.front()->GetUniqueId());
+
+  // A shaped result may outlive the asset data that produced its typeface.
+  asset->ResetModel(model);
+  EXPECT_NE(0u, loaded_faces.front()->UnicharToGlyph('A'));
+  EXPECT_GT(loaded_faces.front()->GetHorizontalAdvance(
+                loaded_faces.front()->UnicharToGlyph('A'), 24.f),
+            0.f);
 }
 
 #if defined(OS_WIN)
