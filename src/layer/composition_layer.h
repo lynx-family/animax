@@ -29,6 +29,7 @@ class CompositionLayer : public BaseLayer {
   void DrawLayer(Canvas& canvas, Matrix& matrix, int32_t alpha) override;
 
   void SetProgress(float progress) override;
+  void UpdateAudio() override;
 
   void SetLayerModels(LayerModelList& layers) {
     layer_models_.clear();

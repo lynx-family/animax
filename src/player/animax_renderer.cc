@@ -259,6 +259,19 @@ void AnimaXRenderer::Render(double progress) {
   ResizeCanvas(*canvas);
   canvas_matrix_ = canvas->GetMatrix();
   std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+  for (auto& weak_controller : audio_controllers_) {
+    if (auto controller = weak_controller.lock()) {
+      controller->BeginFrame();
+    }
+  }
+  if (!audio_controllers_.empty()) {
+    layer_->UpdateAudio();
+  }
+  for (auto& weak_controller : audio_controllers_) {
+    if (auto controller = weak_controller.lock()) {
+      controller->EndFrame();
+    }
+  }
   layer_->Draw(*canvas, *matrix, 255);
   canvas->Restore();
 
