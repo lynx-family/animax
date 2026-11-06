@@ -45,6 +45,8 @@ void main() {
 }
 
 const char *VideoShaderHarmony::GetFragmentShader() const {
+  // Keep one texture() call site: some Harmony emulators sample later external
+  // texture call sites with an inconsistent Y direction.
   static const char *fs = R"(#version 300 es
 #extension GL_OES_EGL_image_external: require
 #extension GL_OES_EGL_image_external_essl3 : enable
@@ -61,10 +63,14 @@ out vec4 color;
 void main() {
     vec2 alphaFrameCoord = vec2(tc.x * aFrame.z + aFrame.x, tc.y * aFrame.w + aFrame.y);
     alphaFrameCoord = (transformMatrix * vec4(alphaFrameCoord.x, 1.0 - alphaFrameCoord.y, 0.0, 1.0)).xy;
-    float a = texture(video, alphaFrameCoord).r;
     vec2 rgbFrameCoord = vec2(tc.x * rgbFrame.z + rgbFrame.x, tc.y * rgbFrame.w + rgbFrame.y);
     rgbFrameCoord = (transformMatrix * vec4(rgbFrameCoord.x, 1.0 - rgbFrameCoord.y, 0.0, 1.0)).xy;
-    color = vec4(texture(video, rgbFrameCoord).rgb, a);
+    vec4 samples[2];
+    for (int i = 0; i < 2; ++i) {
+        vec2 coord = i == 0 ? alphaFrameCoord : rgbFrameCoord;
+        samples[i] = texture(video, coord);
+    }
+    color = vec4(samples[1].rgb, samples[0].r);
 }
 )";
   return fs;
