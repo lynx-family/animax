@@ -50,7 +50,7 @@ android {
                               '-Wno-unused-command-line-argument'
                     arguments '-DANDROID_ARM_MODE=arm',
                               '-DENABLE_ASAN=true',
-                              '-DANDROID_STL=c++_shared',
+                              '-DANDROID_STL='+getCppLib(),
                               '-DFLAVOR_NAME=asan'
                     abiFilters(*(rootProject.ext.abiList.grep{ it != 'x86' }))
                 }
@@ -62,7 +62,7 @@ android {
                 cmake {
                     cppFlags '-Wl,-ldl',
                             '-Wno-unused-command-line-argument'
-                    arguments '-DANDROID_STL=c++_shared',
+                    arguments '-DANDROID_STL='+getCppLib(),
                               '-DFLAVOR_NAME=noasan'
                 }
             }
@@ -77,7 +77,7 @@ android {
                     arguments '-DANDROID_PLATFORM=android-18',
                               '-DANDROID_TOOLCHAIN=clang',
                               '-DANDROID_LD=lld',
-                              '-DANDROID_STL=c++_shared',
+                              '-DANDROID_STL='+getCppLib(),
                               '-DLOCAL_ARM_NEON=true',
                               '-DBUILD_TYPE=release',
                               '-LH'
@@ -95,7 +95,7 @@ android {
                     arguments '-DANDROID_PLATFORM=android-18',
                               '-DANDROID_TOOLCHAIN=clang',
                               '-DANDROID_LD=lld',
-                              '-DANDROID_STL=c++_shared',
+                              '-DANDROID_STL='+getCppLib(),
                               '-DLOCAL_ARM_NEON=true',
                               '-DBUILD_TYPE=debug',
                               '-LH'
