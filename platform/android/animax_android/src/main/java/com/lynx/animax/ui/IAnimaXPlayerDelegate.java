@@ -12,6 +12,7 @@ import com.lynx.animax.listener.IAnimationListener;
 import com.lynx.animax.property.AnimaXKeyPath;
 import com.lynx.animax.property.AnimaXKeyPathListCallback;
 import com.lynx.animax.property.AnimaXPropertyCallback;
+import com.lynx.animax.property.AnimaXTextMeasureCallback;
 import com.lynx.animax.property.AnimaXValueCallback;
 import com.lynx.animax.property.AnimaXValueParam;
 import com.lynx.animax.property.LayerPropertyType;
@@ -399,5 +400,13 @@ public interface IAnimaXPlayerDelegate {
   default void getKeysForKeyPath(
       @NonNull AnimaXKeyPath keyPath, @NonNull AnimaXKeyPathListCallback callback) {
     getPlayer().getKeysForKeyPath(keyPath, callback);
+  }
+
+  /**
+   * @see IAnimaXPlayer#getTextIntrinsicWidth(String, AnimaXTextMeasureCallback)
+   */
+  default void getTextIntrinsicWidth(
+      @NonNull String layerName, @NonNull AnimaXTextMeasureCallback callback) {
+    getPlayer().getTextIntrinsicWidth(layerName, callback);
   }
 }

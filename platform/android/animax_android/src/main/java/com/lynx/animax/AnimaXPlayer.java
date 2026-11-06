@@ -22,6 +22,7 @@ import com.lynx.animax.loader.AnimaXResourceLoaderHolder;
 import com.lynx.animax.property.AnimaXKeyPath;
 import com.lynx.animax.property.AnimaXKeyPathListCallback;
 import com.lynx.animax.property.AnimaXPropertyCallback;
+import com.lynx.animax.property.AnimaXTextMeasureCallback;
 import com.lynx.animax.property.AnimaXValueCallback;
 import com.lynx.animax.property.AnimaXValueParam;
 import com.lynx.animax.property.LayerPropertyType;
@@ -694,6 +695,19 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     nativeGetKeysForKeyPath(mPtr, keyPath, callback);
   }
 
+  @Override
+  public void getTextIntrinsicWidth(
+      @NonNull String layerName, @NonNull AnimaXTextMeasureCallback callback) {
+    if (callback == null) {
+      return;
+    }
+    if (layerName == null || layerName.isEmpty() || !checkNativeReady()) {
+      callback.onTextMeasureComplete(false, 0f);
+      return;
+    }
+    nativeGetTextIntrinsicWidth(mPtr, layerName, callback);
+  }
+
   // Monitor
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   @Override
@@ -815,6 +829,9 @@ public class AnimaXPlayer implements IAnimaXPlayer {
 
   private native void nativeGetKeysForKeyPath(
       long player, AnimaXKeyPath keyPath, AnimaXKeyPathListCallback callback);
+
+  private native void nativeGetTextIntrinsicWidth(
+      long player, String layerName, AnimaXTextMeasureCallback callback);
 
   private native long nativeGetMemoryUsageBytes(long player);
 }

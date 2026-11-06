@@ -4,6 +4,7 @@
 
 #include "src/player/animax_renderer.h"
 
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -16,8 +17,10 @@
 #include "include/player/animax_surface.h"
 #include "include/property/property_update_request.h"
 #include "src/layer/composition_layer.h"
+#include "src/layer/text_helper.h"
 #include "src/model/composition_model.h"
 #include "src/model/text/font_character_model.h"
+#include "src/parser/composition_parser.h"
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/render/canvas.h"
@@ -54,6 +57,42 @@ class MockAnimaXSurface : public AnimaXSurface {
   bool valid_;
   lynx::animax::Canvas* canvas_;
   AnimaXBackend type_ = AnimaXBackend::kGL;
+};
+
+class IntrinsicWidthTextContent : public TextContent {
+ public:
+  explicit IntrinsicWidthTextContent(const TextContentDataSource& data_source)
+      : data_source_(data_source) {}
+  void Draw(Canvas&, int32_t) override {}
+  bool GetRect(RectF&) override { return false; }
+  bool SupportsIntrinsicWidth() const override { return true; }
+  bool GetIntrinsicWidth(float& width) override {
+    width = data_source_.GetTextSize();
+    return true;
+  }
+
+ private:
+  const TextContentDataSource& data_source_;
+};
+
+class IntrinsicWidthTextHelper : public TextHelper {
+ public:
+  std::unique_ptr<TextContent> CreateTextContent(
+      const TextContentDataSource& data_source) override {
+    return std::make_unique<IntrinsicWidthTextContent>(data_source);
+  }
+};
+
+class ScopedTextHelperOverride {
+ public:
+  explicit ScopedTextHelperOverride(TextHelper* helper)
+      : previous_(&TextHelper::Impl()) {
+    TextHelper::RegisterImpl(helper);
+  }
+  ~ScopedTextHelperOverride() { TextHelper::RegisterImpl(previous_); }
+
+ private:
+  TextHelper* previous_;
 };
 
 class AnimaXRendererTest : public ::testing::Test {
@@ -444,4 +483,112 @@ TEST_F(AnimaXRendererTest, UpdateSurface_WithExistingSurface_UpdatesCorrectly) {
   renderer_->UpdateSurface(std::move(update_factory));
   EXPECT_EQ(renderer_->GetWidth(), 800.0);
   EXPECT_EQ(renderer_->GetHeight(), 600.0);
+}
+
+namespace {
+constexpr char kIntrinsicTextJSON[] = R"({
+ "v":"5.6.10","w":100,"h":100,"ip":0,"op":60,"fr":30,
+ "fonts":{"list":[{"fName":"test","fFamily":"Test","fStyle":"Regular","origin":3,"fPath":"https://example.com/font.ttf"}]},
+ "assets":[],"layers":[
+  {"ty":5,"ind":1,"nm":"text","ip":0,"op":60,"ks":{},
+   "t":{"d":{"k":[{"s":{"t":"M","f":"test","s":24,"j":0,"tr":0,"lh":28,"sz":[20,1],"ps":[0,0]}}]}}},
+  {"ty":3,"ind":2,"nm":"non-text","ip":0,"op":60,"ks":{}}
+ ]})";
+
+std::shared_ptr<CompositionModel> MakeIntrinsicComposition(float scale = 1.f) {
+  return CompositionParser::Parse(kIntrinsicTextJSON,
+                                  std::strlen(kIntrinsicTextJSON), scale);
+}
+}  // namespace
+
+TEST_F(AnimaXRendererTest, TextIntrinsicWidthUsesJSONUnitsWithoutDrawing) {
+  IntrinsicWidthTextHelper helper;
+  ScopedTextHelperOverride scoped_helper(&helper);
+  renderer_->CreateSurface([]() -> std::unique_ptr<AnimaXSurface> {
+    return std::make_unique<MockAnimaXSurface>(100, 100);
+  });
+  for (float scale : {1.f, 2.f}) {
+    auto model = MakeIntrinsicComposition(scale);
+    ASSERT_NE(model, nullptr);
+    renderer_->UpdateComposition(0, model);
+    AnimaXRenderer::TextIntrinsicWidthRequest request;
+    ASSERT_TRUE(renderer_->PrepareTextIntrinsicWidth("text", request));
+    EXPECT_EQ(request.font_request.type, ResourceRequestType::kLoadRawData);
+    EXPECT_EQ(request.font_request.uri_info.content_type,
+              UriInfo::ContentType::kFont);
+    EXPECT_EQ(request.font_request.uri_info.uri,
+              "https://example.com/font.ttf");
+    EXPECT_FALSE(model->IsAssetsLoaded());
+    float width = 0.f;
+    EXPECT_TRUE(renderer_->MeasureTextIntrinsicWidth(request, nullptr, width));
+    EXPECT_FLOAT_EQ(width, 24.f);
+    EXPECT_FALSE(renderer_->PrepareTextIntrinsicWidth("missing", request));
+    EXPECT_FALSE(renderer_->PrepareTextIntrinsicWidth("non-text", request));
+    EXPECT_FALSE(renderer_->PrepareTextIntrinsicWidth("", request));
+  }
+}
+
+TEST_F(AnimaXRendererTest, TextIntrinsicWidthRejectsAmbiguousNames) {
+  IntrinsicWidthTextHelper helper;
+  ScopedTextHelperOverride scoped_helper(&helper);
+  renderer_->CreateSurface([]() -> std::unique_ptr<AnimaXSurface> {
+    return std::make_unique<MockAnimaXSurface>(100, 100);
+  });
+  std::string json = kIntrinsicTextJSON;
+  json.replace(json.find("non-text"), 8, "text");
+  auto model = CompositionParser::Parse(json.data(), json.size(), 1.f);
+  renderer_->UpdateComposition(0, model);
+  AnimaXRenderer::TextIntrinsicWidthRequest request;
+  // A text layer and a non-text layer with the same name are also ambiguous.
+  EXPECT_FALSE(renderer_->PrepareTextIntrinsicWidth("text", request));
+}
+
+TEST_F(AnimaXRendererTest, TextIntrinsicWidthRejectsFontAndCompositionChanges) {
+  IntrinsicWidthTextHelper helper;
+  ScopedTextHelperOverride scoped_helper(&helper);
+  renderer_->CreateSurface([]() -> std::unique_ptr<AnimaXSurface> {
+    return std::make_unique<MockAnimaXSurface>(100, 100);
+  });
+  auto model = MakeIntrinsicComposition();
+  renderer_->UpdateComposition(0, model);
+  AnimaXRenderer::TextIntrinsicWidthRequest request;
+  ASSERT_TRUE(renderer_->PrepareTextIntrinsicWidth("text", request));
+  auto font = request.font;
+  auto font_model = font->Model();
+  font->ResetModel(font_model);
+  // Resetting A -> B -> A must invalidate a request even when metadata matches.
+  font->ResetModel(font_model);
+  static constexpr char kBytes[] = "late font";
+  float width = 100.f;
+  EXPECT_FALSE(renderer_->MeasureTextIntrinsicWidth(
+      request, RawData::MakeRawData(kBytes, sizeof(kBytes), nullptr, nullptr),
+      width));
+  EXPECT_FLOAT_EQ(width, 0.f);
+  EXPECT_FALSE(font->IsLoaded());
+  ASSERT_TRUE(renderer_->PrepareTextIntrinsicWidth("text", request));
+  renderer_->UpdateComposition(1, MakeIntrinsicComposition());
+  EXPECT_FALSE(renderer_->MeasureTextIntrinsicWidth(
+      request, RawData::MakeRawData(kBytes, sizeof(kBytes), nullptr, nullptr),
+      width));
+  EXPECT_FALSE(font->IsLoaded());
+  ASSERT_TRUE(renderer_->PrepareTextIntrinsicWidth("text", request));
+  auto active_font = request.font;
+  renderer_->MarkDestroyed();
+  EXPECT_FALSE(renderer_->MeasureTextIntrinsicWidth(
+      request, RawData::MakeRawData(kBytes, sizeof(kBytes), nullptr, nullptr),
+      width));
+  EXPECT_FALSE(active_font->IsLoaded());
+}
+
+TEST_F(AnimaXRendererTest,
+       TextIntrinsicWidthUnsupportedEngineDoesNotPrepareFont) {
+  TextHelper helper;
+  ScopedTextHelperOverride scoped_helper(&helper);
+  renderer_->CreateSurface([]() -> std::unique_ptr<AnimaXSurface> {
+    return std::make_unique<MockAnimaXSurface>(100, 100);
+  });
+  renderer_->UpdateComposition(0, MakeIntrinsicComposition());
+  AnimaXRenderer::TextIntrinsicWidthRequest request;
+  EXPECT_FALSE(renderer_->PrepareTextIntrinsicWidth("text", request));
+  EXPECT_FALSE(request.font_request.uri_info.Valid());
 }

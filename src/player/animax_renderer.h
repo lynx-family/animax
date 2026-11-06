@@ -6,12 +6,14 @@
 #define ANIMAX_SRC_PLAYER_ANIMAX_RENDERER_H_
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <string>
 
 #include "base/include/lynx_actor.h"
 #include "include/player/animax_fit_position.h"
 #include "include/player/animax_surface.h"
+#include "include/resource/resource_task.h"
 #include "src/base/monitor/metrics_data_source.h"
 #include "src/base/monitor/timestamp_recorder.h"
 #include "src/model/rect_model.h"
@@ -32,6 +34,8 @@ class AnimaXMetricsManager;
 class Canvas;
 class AnimaXPropertyUpdater;
 class AudioController;
+class FontAsset;
+class TextLayer;
 
 class AnimaXRenderer : public MetricsDataSource {
  public:
@@ -53,6 +57,9 @@ class AnimaXRenderer : public MetricsDataSource {
   CompositionLayer* GetCompositionLayer() const { return layer_.get(); }
   std::shared_ptr<CompositionModel> GetComposition() const { return model_; }
   bool IsCompositionAssetsLoaded();
+  int32_t GetCompositionSourceIndex() const {
+    return composition_source_index_;
+  }
   void EnsureSubscribeValidOrWarn();
 
   // Rendering operation
@@ -63,6 +70,19 @@ class AnimaXRenderer : public MetricsDataSource {
   void OnTap(float x, float y);
   bool GetLayerBounds(const std::string& layer_name,
                       LayerBoundsSpace bounds_space, RectF& out_bounds);
+
+  struct TextIntrinsicWidthRequest {
+    std::shared_ptr<FontAsset> font;
+    uint64_t font_revision = 0;
+    uint64_t layer_generation = 0;
+    std::string layer_name;
+    ResourceRequest font_request;
+  };
+  bool PrepareTextIntrinsicWidth(const std::string& layer_name,
+                                 TextIntrinsicWidthRequest& request);
+  bool MeasureTextIntrinsicWidth(const TextIntrinsicWidthRequest& request,
+                                 std::unique_ptr<RawData> font_data,
+                                 float& width);
 
   // Object fit and position
   void SetObjectFit(const ObjectFit object_fit);
@@ -108,6 +128,7 @@ class AnimaXRenderer : public MetricsDataSource {
   void ResizeCanvas(Canvas& canvas);
   void NotifyFirstFrameIfNeeded();
 
+  TextLayer* FindUniqueTextLayer(const std::string& name);
   void StartAnimationIfNeeded();
   void StartAnimation();
 
@@ -124,6 +145,8 @@ class AnimaXRenderer : public MetricsDataSource {
   std::shared_ptr<CompositionModel> model_;
   std::unique_ptr<CompositionLayer> layer_;
   std::unique_ptr<LayerModel> layer_model_;
+  uint64_t layer_generation_ = 0;
+  int32_t composition_source_index_ = -1;
   std::unique_ptr<Matrix> canvas_matrix_;
 
   ObjectFit object_fit_ = ObjectFit::kContain;

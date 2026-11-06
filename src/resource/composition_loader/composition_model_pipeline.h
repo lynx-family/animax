@@ -149,6 +149,9 @@ class CompositionModelPipeline
   void LoadCompositionModelAsset(std::shared_ptr<CompositionModel> model,
                                  AssetLoader::CallbackType callback);
 
+  void LoadTextFontResource(ResourceRequest request,
+                            ResourceLoader::CallbackType callback);
+
   void OnResourceLoaderTraceEvent(TraceEventType trace_event,
                                   std::string main_uri = {},
                                   std::string asset_id = {}) override;
@@ -177,6 +180,7 @@ class CompositionModelPipeline
   ModelLoader::Ptr zip_composition_model_loader_{};
   ModelLoader::Ptr json_alpha_video_model_loader_{};
   AssetLoader::Ptr composition_asset_loader_{};
+  ResourceLoader::Ptr resource_loader_{};
   fml::RefPtr<fml::TaskRunner> task_runner_{};
   TimestampRecorder resource_thread_recorder_;
 };

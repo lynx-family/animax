@@ -23,6 +23,8 @@ void CompositionModelPipeline::Init(ResourceLoader::Ptr resource_loader,
                                     UnzipLoader::Ptr unzip_loader) {
   auto resource_thread_resource_loader =
       ResourceThreadExecLoader(resource_loader);
+  resource_loader_ =
+      resource_loader ? resource_thread_resource_loader : nullptr;
   json_composition_model_loader_ =
       ResourceThreadExecLoader(JSONCompositionModelLoader::MakeLoader(
           resource_thread_resource_loader, weak_from_this()));
@@ -96,6 +98,7 @@ void CompositionModelPipeline::LoadCompositionModel(
 
         self->main_uri_info_.base_uri = res.base_uri;
         self->main_uri_info_.main_uri = res.main_uri;
+        res.model->SetMainResourceUriInfo(self->main_uri_info_);
         res.model->should_reset_identity_ = !has_dynamic_resource;
         // we assume that animations of type AlphaVideo will be
         // passed in as zip files.
@@ -155,6 +158,17 @@ void CompositionModelPipeline::LoadCompositionModelAsset(
   }
 
   composition_asset_loader_->Load(std::move(request), std::move(exec_callback));
+}
+
+void CompositionModelPipeline::LoadTextFontResource(
+    ResourceRequest request, ResourceLoader::CallbackType callback) {
+  if (!resource_loader_) {
+    callback({}, LoaderError{.code = LoaderErrorCode::kInvalidLoaderRequest,
+                             .message = "Text font resource is unavailable."});
+    return;
+  }
+  // Do not run the composition asset loader: videos and audio remain deferred.
+  resource_loader_->Load(std::move(request), std::move(callback));
 }
 
 void CompositionModelPipeline::SetSrcPolyfill(

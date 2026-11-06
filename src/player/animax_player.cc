@@ -610,6 +610,61 @@ void AnimaXPlayer::GetLayerBounds(const std::string& layer_name,
   });
 }
 
+void AnimaXPlayer::GetTextIntrinsicWidth(const std::string& layer_name,
+                                         TextIntrinsicWidthCallback callback) {
+  if (!callback) {
+    return;
+  }
+  auto renderer_actor = renderer_actor_;
+  auto loader_actor = loader_actor_;
+  const auto source_index = source_state_.GetIndex();
+  auto weak_player = weak_from_this();
+  renderer_actor->Act([layer_name, source_index, weak_player, renderer_actor,
+                       loader_actor,
+                       callback = std::move(callback)](auto& renderer) mutable {
+    auto player = weak_player.lock();
+    AnimaXRenderer::TextIntrinsicWidthRequest request;
+    if (!player || player->source_state_.GetIndex() != source_index ||
+        renderer->GetCompositionSourceIndex() != source_index ||
+        !renderer->PrepareTextIntrinsicWidth(layer_name, request)) {
+      callback(false, 0.f);
+      return;
+    }
+    if (!request.font_request.uri_info.Valid()) {
+      float width = 0.f;
+      const bool success =
+          renderer->MeasureTextIntrinsicWidth(request, nullptr, width);
+      callback(success, success ? width : 0.f);
+      return;
+    }
+    auto font_request = std::move(request.font_request);
+    auto complete = [request = std::move(request), source_index, weak_player,
+                     renderer_actor, callback = std::move(callback)](
+                        ResourceResponse response, LoaderError error) mutable {
+      renderer_actor->Act(
+          [request = std::move(request), response = std::move(response),
+           source_index, weak_player, error = std::move(error),
+           callback = std::move(callback)](auto& renderer) mutable {
+            auto player = weak_player.lock();
+            float width = 0.f;
+            const bool success =
+                player && player->source_state_.GetIndex() == source_index &&
+                !error &&
+                response.payload.type == ResourcePayloadType::kRawData &&
+                response.payload.raw_data &&
+                renderer->MeasureTextIntrinsicWidth(
+                    request, std::move(response.payload.raw_data), width);
+            callback(success, success ? width : 0.f);
+          });
+    };
+    loader_actor->Act([font_request = std::move(font_request),
+                       complete = std::move(complete)](auto& loader) mutable {
+      loader->LoadTextFontResource(std::move(font_request),
+                                   std::move(complete));
+    });
+  });
+}
+
 void AnimaXPlayer::MarkPlatformSurfaceAsInvalid(bool isInvalid) {
   renderer_actor_->Act([isInvalid](auto& renderer) {
     renderer->MarkPlatformSurfaceAsInvalid(isInvalid);

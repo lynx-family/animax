@@ -44,6 +44,8 @@ animax_source_set("build") {
     "gen/AnimaXResourceLoader_register_jni.h",
     "gen/AnimaXSurfaceDrawable_jni.h",
     "gen/AnimaXSurfaceDrawable_register_jni.h",
+    "gen/AnimaXTextMeasureCallback_jni.h",
+    "gen/AnimaXTextMeasureCallback_register_jni.h",
     "gen/AnimaXUnzipLoader_jni.h",
     "gen/AnimaXUnzipLoader_register_jni.h",
     "gen/AnimaXValueCallback_jni.h",

@@ -112,20 +112,21 @@ bool ConfigureRangeStyle(
 
 void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
                                       const skity::Paint& paint,
-                                      int32_t layer_alpha) {
+                                      int32_t layer_alpha, bool ignore_box) {
   auto& document_data = data_source.GetDocumentData();
   auto* box_size = document_data.GetBoxSize();
   const auto box_width =
       (box_size && !box_size->IsEmpty()) ? box_size->GetX() : 0.f;
   const auto box_height =
       (box_size && !box_size->IsEmpty()) ? box_size->GetY() : 0.f;
-  is_box_mode_ = box_width > 0 && box_height > 0;
+  is_box_mode_ = !ignore_box && box_width > 0 && box_height > 0;
 
   // Create paragraph
   ttoffice::tttext::ParagraphStyle paragraph_style;
   paragraph_ = TTParagraph::Create();
   paragraph_style.SetHorizontalAlign(
-      ToHorizontalAlignment(document_data.GetJustification()));
+      ignore_box ? TTHorizontalAlignment::kLeft
+                 : ToHorizontalAlignment(document_data.GetJustification()));
   paragraph_style.SetLineHeightInPx(document_data.GetLineHeight(),
                                     ttoffice::tttext::RulerType::kExact);
   paragraph_style.SetVerticalAlign(
