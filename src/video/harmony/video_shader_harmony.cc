@@ -70,7 +70,7 @@ void main() {
         vec2 coord = i == 0 ? alphaFrameCoord : rgbFrameCoord;
         samples[i] = texture(video, coord);
     }
-    color = vec4(samples[1].rgb, samples[0].r);
+    color = vec4(min(samples[1].rgb, vec3(samples[0].r)), samples[0].r);
 }
 )";
   return fs;
