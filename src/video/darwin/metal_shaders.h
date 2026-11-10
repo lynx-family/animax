@@ -71,7 +71,7 @@ fragment float4 fragmentShader(RasterizerData input [[ stage_in ]],
     constexpr sampler textureSampler (mag_filter::linear, min_filter::linear);
     float3 rgb = texture.sample(textureSampler, input.rgb_texture_coordinate).rgb;
     float alpha = texture.sample(textureSampler, input.alpha_texture_coordinate).r;
-    return float4(rgb, alpha);
+    return float4(min(rgb, float3(alpha)), alpha);
 }
 )";
 
