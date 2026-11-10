@@ -102,7 +102,7 @@ void main() {
     vec3 rgbColor = yuvToRgb(y, u, v);
     float alpha = yuvToR(ay, au, av);
 
-    fragColor = vec4(rgbColor, alpha);
+    fragColor = vec4(min(rgbColor, vec3(alpha)), alpha);
 }
 )";
   return fragment;
