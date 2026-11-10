@@ -64,7 +64,7 @@ void main() {
     float a = texture(video, alphaFrameCoord).r;
     vec2 rgbFrameCoord = vec2(tc.x * rgbFrame.z + rgbFrame.x, tc.y * rgbFrame.w + rgbFrame.y);
     rgbFrameCoord = (transformMatrix * vec4(rgbFrameCoord.x, 1.0 - rgbFrameCoord.y, 0.0, 1.0)).xy;
-    color = vec4(texture(video, rgbFrameCoord).rgb, a);
+    color = vec4(min(texture(video, rgbFrameCoord).rgb, vec3(a)), a);
 }
 )";
   return fs;
