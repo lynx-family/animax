@@ -38,6 +38,8 @@ animax_source_set("property") {
       "android/animax_key_path_list_callback_android.h",
       "android/animax_property_callback_android.cc",
       "android/animax_property_callback_android.h",
+      "android/animax_text_measure_callback_android.cc",
+      "android/animax_text_measure_callback_android.h",
       "android/animax_value_callback_android.cc",
       "android/animax_value_callback_android.h",
       "android/animax_value_param_android.cc",

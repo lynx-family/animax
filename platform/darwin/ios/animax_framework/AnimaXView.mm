@@ -401,6 +401,11 @@
   [_player updateVisibilityState:visible forType:state];
 }
 
+- (void)getTextIntrinsicWidth:(NSString *)layerName
+                   completion:(void (^)(BOOL success, CGFloat width))completion {
+  [_player getTextIntrinsicWidth:layerName completion:completion];
+}
+
 - (void)onHide:(VisibilityState)state {
   [_player onHide:state];
 }

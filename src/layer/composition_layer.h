@@ -48,6 +48,9 @@ class CompositionLayer : public BaseLayer {
   void HitTest(float x, float y,
                std::unordered_set<std::string>& hit_layers) override;
 
+  void FindLayersByName(const std::string& name,
+                        std::vector<BaseLayer*>& matches) override;
+
   bool GetBoundsByName(const std::string& layer_name,
                        LayerBoundsSpace bounds_space,
                        RectF& out_bounds) override;

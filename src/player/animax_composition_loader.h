@@ -81,6 +81,9 @@ class AnimaXCompositionLoader : public MetricsDataSource {
   void LoadCompositionModelAsset(std::shared_ptr<CompositionModel> model,
                                  AssetLoader::CallbackType callback);
 
+  void LoadTextFontResource(ResourceRequest request,
+                            ResourceLoader::CallbackType callback);
+
   void Trace(TraceEventType type) override;
 
   TimestampArray ExportTimestamps() const override;

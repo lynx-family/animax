@@ -26,6 +26,8 @@ class TextContentTextra : public TextContent {
 
   void Draw(Canvas& canvas, int32_t alpha) override;
   bool GetRect(RectF& out_rect) override;
+  bool SupportsIntrinsicWidth() const override { return true; }
+  bool GetIntrinsicWidth(float& width) override;
 
  private:
   float GetBoxBaselineOffset() const;

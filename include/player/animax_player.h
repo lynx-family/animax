@@ -332,6 +332,22 @@ class ANIMAX_EXPORT AnimaXPlayer
   void GetLayerBounds(const std::string &layer_name,
                       LayerBoundsSpace bounds_space,
                       LayerBoundsCallback callback);
+  using TextIntrinsicWidthCallback = base::MoveOnlyClosure<void, bool, float>;
+  /**
+   * Measures the maximum unwrapped text line width in original JSON units.
+   * The exact layer name must uniquely identify a text layer. Paragraph box
+   * wrapping and layer transforms are ignored; explicit line breaks remain.
+   * Only the target font is loaded when necessary, through the configured
+   * resource loader. No frame is drawn and playback is not started.
+   * Unknown, ambiguous or non-text layers, unavailable text engines, stale
+   * requests and font loading errors return false and zero. Empty text returns
+   * true and zero. The callback runs on the renderer thread. This read-only
+   * query does not invalidate an existing drawing layout. For pre-play dynamic
+   * layout, disable autoplay and wait for ready and property updates to finish,
+   * measure, apply layout updates, then start playback.
+   */
+  void GetTextIntrinsicWidth(const std::string &layer_name,
+                             TextIntrinsicWidthCallback callback);
   /**
    * Mark the platform surface as invalid or valid.
    * @param isInvalid True to mark as invalid, false otherwise.

@@ -21,6 +21,11 @@ class ANIMAX_EXPORT TextContent {
   void Init(TextLayer* layer) { layer_ = layer; };
   virtual void Draw(Canvas& canvas, int32_t alpha) = 0;
   virtual bool GetRect(RectF& out_rect) = 0;
+  virtual bool SupportsIntrinsicWidth() const { return false; }
+  virtual bool GetIntrinsicWidth(float& width) {
+    width = 0.f;
+    return false;
+  }
 
  protected:
   TextLayer* layer_ = nullptr;

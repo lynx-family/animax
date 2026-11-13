@@ -236,6 +236,20 @@ void CompositionLayer::HitTest(float x, float y,
   }
 }
 
+void CompositionLayer::FindLayersByName(const std::string& name,
+                                        std::vector<BaseLayer*>& matches) {
+  BaseLayer::FindLayersByName(name, matches);
+  for (auto& layer : layers_) {
+    layer->FindLayersByName(name, matches);
+  }
+  for (auto& layer : matte_target_layers_) {
+    layer->FindLayersByName(name, matches);
+  }
+  if (camera_layer_) {
+    camera_layer_->FindLayersByName(name, matches);
+  }
+}
+
 bool CompositionLayer::GetBoundsByName(const std::string& layer_name,
                                        LayerBoundsSpace bounds_space,
                                        RectF& out_bounds) {

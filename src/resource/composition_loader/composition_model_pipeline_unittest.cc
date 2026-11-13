@@ -141,6 +141,10 @@ TEST(CompositionModelPipelineTest,
         [exp1](CompositionAssetResponse response, LoaderError error) {
           EXPECT_NE(nullptr, response.model);
           EXPECT_FALSE(!!error);
+          EXPECT_EQ(response.model->GetMainResourceUriInfo().base_uri,
+                    "https://example.com/test/");
+          EXPECT_EQ(response.model->GetMainResourceUriInfo().main_uri,
+                    "https://example.com/test/test.json");
           // We do not load composition asset if the resource is marked as a
           // dynamic
           EXPECT_EQ(0, response.asset_responses.size());

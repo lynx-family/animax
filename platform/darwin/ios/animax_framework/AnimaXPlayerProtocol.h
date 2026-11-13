@@ -151,6 +151,19 @@ typedef NS_ENUM(NSUInteger, VisibilityState) {
  */
 - (void)getKeysForKeyPath:(AnimaXKeyPath *)keyPath callback:(id<AnimaXKeyPathListCallback>)callback;
 
+/**
+ * Measures the maximum unwrapped line width in original JSON composition units.
+ * Uses current text, size and tracking; ignores paragraph boxes and layer transforms.
+ * Loads only the target font if necessary, including with dynamic resources; does not play or draw.
+ * layerName must uniquely identify a text layer, rather than a key path pattern.
+ * Empty text succeeds with zero. Missing, ambiguous, unsupported or stale layers, or font load
+ * errors fail with zero. Completion is always dispatched asynchronously to the main thread.
+ * For pre-play layout, disable autoplay, wait for ready and property-update completion,
+ * then measure and apply layout updates before calling play.
+ */
+- (void)getTextIntrinsicWidth:(NSString *)layerName
+                   completion:(void (^)(BOOL success, CGFloat width))completion;
+
 @end
 
 NS_ASSUME_NONNULL_END

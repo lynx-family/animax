@@ -5,8 +5,10 @@
 #include "src/player/animax_renderer.h"
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 #include "include/player/animax_player.h"
 #include "include/player/animax_surface.h"
@@ -18,16 +20,19 @@
 #include "src/base/util/event_warning_checker.h"
 #include "src/base/util/memory_calculator.h"
 #include "src/layer/composition_layer.h"
+#include "src/layer/text_layer.h"
 #include "src/parser/layer_parser.h"
 #include "src/player/animax_ability.h"
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/player/animax_player_context.h"
 #include "src/property/animax_property_updater.h"
+#include "src/render/font.h"
 #include "src/render/matrix.h"
 #include "src/render/real_context.h"
 #include "src/render/surface.h"
 #include "src/resource/log_util.h"
+#include "src/resource/uri/uri_util.h"
 
 namespace lynx {
 namespace animax {
@@ -170,6 +175,8 @@ void AnimaXRenderer::UpdateSurface(SurfaceUpdateFactory update_factory) {
 
 void AnimaXRenderer::UpdateComposition(
     int32_t src_index, std::shared_ptr<CompositionModel> model) {
+  ++layer_generation_;
+  composition_source_index_ = src_index;
   model_ = std::move(model);
   StartAnimationIfNeeded();
 }
@@ -199,6 +206,7 @@ void AnimaXRenderer::StartAnimationIfNeeded() {
 }
 
 void AnimaXRenderer::StartAnimation() {
+  ++layer_generation_;
   audio_controllers_.clear();
   has_rendered_first_frame_ = false;
   auto& bounds = model_->GetBounds();
@@ -327,6 +335,85 @@ bool AnimaXRenderer::GetLayerBounds(const std::string& layer_name,
   return layer_->GetBoundsByName(layer_name, bounds_space, out_bounds);
 }
 
+TextLayer* AnimaXRenderer::FindUniqueTextLayer(const std::string& name) {
+  if (is_destroyed_ || !layer_ || !model_ || name.empty()) {
+    return nullptr;
+  }
+  std::vector<BaseLayer*> matches;
+  layer_->FindLayersByName(name, matches);
+  if (matches.size() != 1 ||
+      matches.front()->GetLayerModel().GetLayerType() != LayerType::kText) {
+    return nullptr;
+  }
+  return static_cast<TextLayer*>(matches.front());
+}
+
+bool AnimaXRenderer::PrepareTextIntrinsicWidth(
+    const std::string& layer_name, TextIntrinsicWidthRequest& request) {
+  request = {};
+  auto* text = FindUniqueTextLayer(layer_name);
+  if (!text || !text->SupportsIntrinsicWidth() ||
+      !std::isfinite(model_->GetScale()) || model_->GetScale() <= 0.f) {
+    return false;
+  }
+  request.layer_generation = layer_generation_;
+  request.layer_name = layer_name;
+  request.font = text->GetTextFontAsset();
+  auto& font = request.font;
+  if (!font) {
+    return true;
+  }
+  request.font_revision = font->GetRevision();
+  if (text->IsTextEmpty() ||
+      font->Model().path_origin == FontPathOrigin::kLocal || font->IsLoaded()) {
+    return true;
+  }
+  request.font_request = ResourceRequest{
+      .type = ResourceRequestType::kLoadRawData,
+      .uri_info = UriInfoFromFontAsset(model_->GetMainResourceUriInfo(), *font),
+      .id = font->Model().name,
+      .main_uri = model_->GetMainResourceUriInfo().main_uri,
+  };
+  // An overlapping asset load may finish before URI resolution. An empty URI
+  // then means the font is ready and no additional request is needed.
+  return request.font_request.uri_info.Valid() || font->IsLoaded();
+}
+
+bool AnimaXRenderer::MeasureTextIntrinsicWidth(
+    const TextIntrinsicWidthRequest& request,
+    std::unique_ptr<RawData> font_data, float& width) {
+  width = 0.f;
+  if (request.layer_generation != layer_generation_) {
+    return false;
+  }
+  auto* text = FindUniqueTextLayer(request.layer_name);
+  if (!text || text->GetTextFontAsset() != request.font ||
+      (request.font && request.font_revision != request.font->GetRevision())) {
+    return false;
+  }
+  // Only GPU-owned validation may commit a font loaded for this request. A
+  // late resource callback must not populate a changed font or composition.
+  if (font_data) {
+    if (!request.font ||
+        !Font::IsValidFontData(font_data->Data(), font_data->Length())) {
+      return false;
+    }
+    if (!request.font->IsLoaded()) {
+      request.font->SetRawData(std::move(font_data));
+    }
+  }
+  float measured = 0.f;
+  if (!text->GetTextIntrinsicWidth(measured)) {
+    return false;
+  }
+  const float result = measured / model_->GetScale();
+  if (!std::isfinite(result) || result < 0.f) {
+    return false;
+  }
+  width = result;
+  return true;
+}
+
 void AnimaXRenderer::SetObjectFit(const ObjectFit object_fit) {
   object_fit_ = object_fit;
   OnRerender();
@@ -359,6 +446,7 @@ void AnimaXRenderer::EnsureSubscribeValidOrWarn() {
 }
 
 void AnimaXRenderer::Destroy() {
+  ++layer_generation_;
   ANIMAX_LOGI("AnimaXRenderer Destroy");
   surface_ = nullptr;
   layer_ = nullptr;

@@ -17,7 +17,8 @@ class TextContentDataSource;
 class TextContentLayoutContext {
  public:
   void Layout(const TextContentDataSource& data_source,
-              const skity::Paint& paint, int32_t layer_alpha = 255);
+              const skity::Paint& paint, int32_t layer_alpha = 255,
+              bool ignore_box = false);
   ttoffice::tttext::LayoutRegion* GetLayoutRegion() const {
     return layout_region_.get();
   }

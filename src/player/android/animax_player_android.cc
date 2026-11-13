@@ -27,6 +27,7 @@
 #include "src/property/android/animax_key_path_android.h"
 #include "src/property/android/animax_key_path_list_callback_android.h"
 #include "src/property/android/animax_property_callback_android.h"
+#include "src/property/android/animax_text_measure_callback_android.h"
 #include "src/property/android/animax_value_callback_android.h"
 #include "src/property/android/animax_value_param_android.h"
 #include "src/property/property_type.h"
@@ -794,6 +795,28 @@ static void GetKeysForKeyPath(JNIEnv* env, jobject jcaller, jlong player,
       [callback = std::move(animax_callback)](
           const std::vector<lynx::animax::AnimaXKeyPath>& key_paths) {
         callback->OnKeyPathCallback(key_paths);
+      });
+}
+
+static void GetTextIntrinsicWidth(JNIEnv* env, jobject jcaller, jlong player,
+                                  jstring layer_name, jobject callback) {
+  if (!callback) {
+    return;
+  }
+  auto animax_callback =
+      std::make_unique<lynx::animax::AnimaXTextMeasureCallbackAndroid>(
+          env, callback);
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr || !layer_name) {
+    animax_callback->OnComplete(false, 0.f);
+    return;
+  }
+
+  auto name =
+      lynx::base::android::JNIConvertHelper::ConvertToString(env, layer_name);
+  player_ptr->GetTextIntrinsicWidth(
+      name, [callback = std::move(animax_callback)](bool success, float width) {
+        callback->OnComplete(success, width);
       });
 }
 
