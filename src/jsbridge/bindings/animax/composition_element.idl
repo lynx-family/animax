@@ -11,9 +11,15 @@ interface CompositionElement {
     // layerBoundsSpace : enum Parent = 0 (Default), Root = 1
     void getLayerBounds(ByteString layerName, long layerBoundsSpace, OnLayerBoundsCallback callback);
 
+    // TransformPosition = 4 returns {x, y, z} in native parent-space units.
+    // Unsupported properties or missing layers return (false, undefined).
+    void getLayerProperty(long type, ByteString layerName, OnLayerPropertyCallback callback);
+
     void play();
 };
 
 [HolderStorageNamespace = binding] callback OnPropertyCallback = void (boolean success, long errorType);
+
+[HolderStorageNamespace = binding] callback OnLayerPropertyCallback = void (boolean success, any value);
 
 [HolderStorageNamespace = binding] callback OnLayerBoundsCallback = void (boolean success, float x, float y, float width, float height);

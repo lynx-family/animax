@@ -23,6 +23,7 @@
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/player/animax_player_context.h"
+#include "src/player/layer_query.h"
 #include "src/property/animax_property_updater.h"
 #include "src/render/matrix.h"
 #include "src/render/real_context.h"
@@ -305,13 +306,30 @@ void AnimaXRenderer::OnTap(float x, float y) {
   });
 }
 
-bool AnimaXRenderer::GetLayerBounds(const std::string& layer_name,
-                                    LayerBoundsSpace bounds_space,
-                                    RectF& out_bounds) {
+LayerQueryResult AnimaXRenderer::QueryLayer(const std::string& layer_name,
+                                            LayerQueryType query,
+                                            LayerBoundsSpace bounds_space) {
   if (!layer_ || layer_name.empty()) {
-    return false;
+    return {};
   }
-  return layer_->GetBoundsByName(layer_name, bounds_space, out_bounds);
+  auto* layer = layer_->FindByName(layer_name);
+  if (!layer) {
+    return {};
+  }
+  switch (query) {
+    case LayerQueryType::kBounds: {
+      RectF bounds;
+      layer->GetBoundsInSpace(bounds_space, bounds);
+      return {true,
+              {bounds.GetLeft(), bounds.GetTop()},
+              bounds.GetWidth(),
+              bounds.GetHeight()};
+    }
+    case LayerQueryType::kPosition:
+      return {true, layer->GetPositionInParent()};
+    default:
+      return {};
+  }
 }
 
 void AnimaXRenderer::SetObjectFit(const ObjectFit object_fit) {
