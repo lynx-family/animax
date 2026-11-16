@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+// cspell:ignore NOPTS
+
 #include "src/video/custom/ffmpeg/ffmpeg_lib_loader.h"
 
 #if defined(OS_WIN)
@@ -68,47 +70,80 @@ bool FFmpegLibLoader::IsValid() const {
   return !dlls_.empty() && is_symbols_valid_;
 }
 
-FFmpegVideoContext::FramePtr FFmpegLibLoader::DecodeFrameData(
+VideoSendStatus FFmpegLibLoader::SendPacket(
     const FFmpegVideoContext* video_context, const uint8_t* data,
-    size_t data_size) {
+    size_t data_size, int64_t pts) {
   ThreadAssert::Assert(ThreadAssert::Type::kGPU);
-  if (!IsValid() || !video_context || !video_context->IsValid() || !data) {
-    return nullptr;
+  if (!IsValid() || !video_context || !video_context->IsValid()) {
+    return VideoSendStatus::kError;
   }
 
   auto codec_ctx = video_context->GetCodecContext().get();
-
-  FFmpegVideoContext::FramePtr frame(av_frame_alloc_func_(), FrameDeleter());
-  if (!frame) {
-    return nullptr;
+  if (data_size == 0) {
+    return avcodec_send_packet_func_(codec_ctx, nullptr) == 0
+               ? VideoSendStatus::kSuccess
+               : VideoSendStatus::kError;
+  }
+  if (!data) {
+    return VideoSendStatus::kError;
   }
 
   FFmpegVideoContext::PacketPtr packet(av_packet_alloc_func_(),
                                        PacketDeleter());
-  if (!packet) {
-    return nullptr;
+  if (!packet || av_new_packet_func_(packet.get(), data_size) < 0) {
+    return VideoSendStatus::kError;
   }
 
-  av_new_packet_func_(packet.get(), data_size);
   memcpy(packet->data, data, data_size);
+  packet->pts = pts;
   int ret = avcodec_send_packet_func_(codec_ctx, packet.get());
   if (ret < 0) {
-    return nullptr;
+    ANIMAX_LOGE("Failed to send video packet: " << ret);
+  }
+  return ret == 0 ? VideoSendStatus::kSuccess : VideoSendStatus::kError;
+}
+
+bool FFmpegLibLoader::Flush(const FFmpegVideoContext* video_context) {
+  ThreadAssert::Assert(ThreadAssert::Type::kGPU);
+  if (!IsValid() || !video_context || !video_context->IsValid()) {
+    return false;
+  }
+  avcodec_flush_buffers_func_(video_context->GetCodecContext().get());
+  return true;
+}
+
+VideoDecodeStatus FFmpegLibLoader::ReceiveFrame(
+    const FFmpegVideoContext* video_context,
+    FFmpegVideoContext::FramePtr& frame) {
+  ThreadAssert::Assert(ThreadAssert::Type::kGPU);
+  if (!IsValid() || !video_context || !video_context->IsValid()) {
+    return VideoDecodeStatus::kError;
   }
 
-  ret = avcodec_receive_frame_func_(codec_ctx, frame.get());
-
-  if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0) {
-    return nullptr;
+  FFmpegVideoContext::FramePtr output(av_frame_alloc_func_(), FrameDeleter());
+  if (!output) {
+    return VideoDecodeStatus::kError;
   }
-
-  return frame;
+  int ret = avcodec_receive_frame_func_(video_context->GetCodecContext().get(),
+                                        output.get());
+  if (ret == AVERROR(EAGAIN)) {
+    return VideoDecodeStatus::kNeedInput;
+  }
+  if (ret == AVERROR_EOF) {
+    return VideoDecodeStatus::kEndOfStream;
+  }
+  if (ret < 0) {
+    ANIMAX_LOGE("Failed to receive video frame: " << ret);
+    return VideoDecodeStatus::kError;
+  }
+  frame = std::move(output);
+  return VideoDecodeStatus::kFrameReady;
 }
 
 bool FFmpegLibLoader::ReadVideoFramesData(
     const FFmpegVideoContext* video_context,
     std::vector<std::vector<uint8_t>>& frames_data,
-    std::vector<int32_t>& key_frames) {
+    std::vector<int32_t>& key_frames, std::vector<int64_t>& frame_pts) {
   if (!IsValid() || !video_context || !video_context->IsValid()) {
     return false;
   }
@@ -131,6 +166,11 @@ bool FFmpegLibLoader::ReadVideoFramesData(
 
       auto& raw_data = frames_data.emplace_back(packet->size);
       memcpy(raw_data.data(), packet->data, packet->size);
+      frame_pts.push_back(packet->pts == AV_NOPTS_VALUE
+                              ? AV_NOPTS_VALUE
+                              : av_rescale_q_func_(packet->pts,
+                                                   stream->time_base,
+                                                   AV_TIME_BASE_Q));
       index++;
     }
     av_packet_unref_func_(packet.get());
@@ -236,6 +276,9 @@ bool FFmpegLibLoader::LoadAllSymbols() {
        "avcodec_send_packet"},
       {reinterpret_cast<void**>(&avcodec_receive_frame_func_),
        "avcodec_receive_frame"},
+      {reinterpret_cast<void**>(&avcodec_flush_buffers_func_),
+       "avcodec_flush_buffers"},
+      {reinterpret_cast<void**>(&av_rescale_q_func_), "av_rescale_q"},
       {reinterpret_cast<void**>(&av_packet_unref_func_), "av_packet_unref"},
       {reinterpret_cast<void**>(&av_seek_frame_func_), "av_seek_frame"},
       {reinterpret_cast<void**>(&avformat_network_init_func_),

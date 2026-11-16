@@ -85,6 +85,7 @@ FFmpegVideoContext::FFmpegVideoContext(const std::string& video_path) {
     return;
   }
 
+  codec_context_->pkt_timebase = AV_TIME_BASE_Q;
   if (FFmpegLibLoader::Instance().avcodec_open2_func_(codec_context_.get(),
                                                       codec, nullptr) < 0) {
     ANIMAX_LOGE("Failed to open codec");

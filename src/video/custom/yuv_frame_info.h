@@ -6,6 +6,7 @@
 #define ANIMAX_SRC_VIDEO_CUSTOM_YUV_FRAME_INFO_H_
 
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include "include/base/macros.h"
@@ -24,6 +25,7 @@ class ANIMAX_EXPORT YUVFrameInfo {
  public:
   static constexpr size_t kMaxChannels = 4;
   static constexpr size_t kYUVChannels = 3;
+  static constexpr int64_t kNoPts = std::numeric_limits<int64_t>::min();
 
   YUVFrameInfo() = default;
   ~YUVFrameInfo() = default;
@@ -68,6 +70,10 @@ class ANIMAX_EXPORT YUVFrameInfo {
   uint32_t GetWidth() const;
   uint32_t GetHeight() const;
 
+  // Presentation timestamp in microseconds, on the input packet timeline.
+  int64_t GetPts() const { return pts_; }
+  void SetPts(int64_t pts) { pts_ = pts; }
+
   void SetLineSize(uint32_t channel, uint32_t line_size);
   void SetWidth(uint32_t width);
   void SetHeight(uint32_t height);
@@ -75,6 +81,7 @@ class ANIMAX_EXPORT YUVFrameInfo {
   void SetYUVPixFmt(YUVPixFmt pix_fmt);
 
  private:
+  int64_t pts_ = kNoPts;
   uint32_t line_size_[kMaxChannels] = {0};
   uint32_t width_ = 0;
   uint32_t height_ = 0;

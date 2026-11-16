@@ -10,6 +10,7 @@
 #include "include/player/animax_player.h"
 #include "src/render/texture_info.h"
 #include "src/resource/asset/video_asset.h"
+#include "src/video/custom/video_decode_status.h"
 #include "src/video/custom/yuv_frame_info.h"
 
 namespace lynx {
@@ -39,20 +40,22 @@ class VideoDecoderCustom {
    */
   virtual bool DestroyDecoder() = 0;
 
-  /**
-   * Decode a single frame of video data
-   *
-   * This is the main decoding method that converts compressed video data into
-   * a YUV frame. If a reusable frame is provided, the decoder will attempt to
-   * reuse the existing frame object to avoid memory allocation overhead.
-   * @param data Compressed video frame data to decode.
-   * @param reusable_frame Reusable YUV frame information.
-   * @return Decoded YUV frame information, or nullptr if
-   * decoding fails.
-   */
-  virtual std::shared_ptr<YUVFrameInfo> DecodeFrameData(
-      std::vector<uint8_t>& data,
-      const std::shared_ptr<YUVFrameInfo>& reusable_frame) = 0;
+  // Submit a packet after ReceiveFrame returns kNeedInput, or immediately
+  // after creation for codec parameter sets. Empty data ends input; send it
+  // once, then receive the remaining frames. A successful packet must not be
+  // submitted again. Calls to SendPacket and ReceiveFrame must be serialized.
+  // pts is in microseconds; parameter sets and EOS use YUVFrameInfo::kNoPts.
+  virtual VideoSendStatus SendPacket(std::vector<uint8_t>& data,
+                                     int64_t pts) = 0;
+
+  // Receive the next frame in display order. A non-null frame is reused;
+  // its contents are valid only when kFrameReady is returned.
+  virtual VideoDecodeStatus ReceiveFrame(
+      std::shared_ptr<YUVFrameInfo>& frame) = 0;
+
+  // Discard buffered input/output for seek, retaining the decoder instance
+  // and codec configuration. The next packet must start at a keyframe.
+  virtual bool Flush() = 0;
 };
 
 }  // namespace animax

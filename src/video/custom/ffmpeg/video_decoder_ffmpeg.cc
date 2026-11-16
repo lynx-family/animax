@@ -48,25 +48,36 @@ bool VideoDecoderFFmpeg::DestroyDecoder() {
   return true;
 }
 
-std::shared_ptr<YUVFrameInfo> VideoDecoderFFmpeg::DecodeFrameData(
-    std::vector<uint8_t>& data,
-    const std::shared_ptr<YUVFrameInfo>& reusable_frame) {
+VideoSendStatus VideoDecoderFFmpeg::SendPacket(std::vector<uint8_t>& data,
+                                               int64_t pts) {
   if (!IsValid()) {
-    return nullptr;
+    return VideoSendStatus::kError;
+  }
+  return FFmpegLibLoader::Instance().SendPacket(video_context_.get(),
+                                                data.data(), data.size(), pts);
+}
+
+bool VideoDecoderFFmpeg::Flush() {
+  return FFmpegLibLoader::Instance().Flush(video_context_.get());
+}
+
+VideoDecodeStatus VideoDecoderFFmpeg::ReceiveFrame(
+    std::shared_ptr<YUVFrameInfo>& frame_info) {
+  if (!IsValid()) {
+    return VideoDecodeStatus::kError;
   }
 
-  DCHECK(!data.empty());
-
-  auto frame = FFmpegLibLoader::Instance().DecodeFrameData(
-      video_context_.get(), data.data(), data.size());
-  if (!frame) {
-    return nullptr;
+  FFmpegVideoContext::FramePtr frame;
+  auto status =
+      FFmpegLibLoader::Instance().ReceiveFrame(video_context_.get(), frame);
+  if (status != VideoDecodeStatus::kFrameReady) {
+    return status;
   }
 
-  auto yuv_info =
-      reusable_frame ? reusable_frame : std::make_shared<YUVFrameInfo>();
+  auto yuv_info = frame_info ? frame_info : std::make_shared<YUVFrameInfo>();
   yuv_info->SetWidth(frame->width);
   yuv_info->SetHeight(frame->height);
+  yuv_info->SetPts(frame->pts);
 
   auto pix_format = static_cast<AVPixelFormat>(frame->format);
   switch (pix_format) {
@@ -81,7 +92,7 @@ std::shared_ptr<YUVFrameInfo> VideoDecoderFFmpeg::DecodeFrameData(
       break;
     default:
       ANIMAX_LOGE("Invalid video pixel format " << pix_format);
-      return nullptr;
+      return VideoDecodeStatus::kError;
   }
 
   for (int i = 0; i < YUVFrameInfo::kYUVChannels; i++) {
@@ -89,7 +100,8 @@ std::shared_ptr<YUVFrameInfo> VideoDecoderFFmpeg::DecodeFrameData(
     yuv_info->UpdateChannelData(i, frame->data[i]);
   }
 
-  return yuv_info;
+  frame_info = std::move(yuv_info);
+  return VideoDecodeStatus::kFrameReady;
 }
 
 }  // namespace animax
