@@ -17,6 +17,7 @@ class AnimaXPlayer;
 class NapiOnPropertyCallback;
 class NapiLayerPropertyCallback;
 class NapiOnLayerBoundsCallback;
+class NapiOnLayerPropertyCallback;
 
 /**
  * AnimaXPlayerDelegate is a delegate that bridge the call between napi and
@@ -74,6 +75,10 @@ class AnimaXPlayerDelegate : public binding::ImplBase {
   void GetLayerBounds(const Napi::String& layer_name,
                       const Napi::Number& layer_bounds_space,
                       std::unique_ptr<NapiOnLayerBoundsCallback> callback);
+
+  void GetLayerProperty(const Napi::Number& type,
+                        const Napi::String& layer_name,
+                        std::unique_ptr<NapiOnLayerPropertyCallback> callback);
 
   /**
    * Run on GPU thread and call AnimaXPlayer's play function

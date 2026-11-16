@@ -18,6 +18,7 @@
 #include "src/model/layer_model.h"
 #include "src/player/animax_player_context.h"
 #include "src/player/layer_event_listener.h"
+#include "src/player/layer_query.h"
 #include "src/render/mask_filter.h"
 #include "src/render/paint.h"
 
@@ -145,9 +146,9 @@ class BaseLayer : public Content,
   virtual void HitTest(float x, float y,
                        std::unordered_set<std::string>& hit_layers);
 
-  virtual bool GetBoundsByName(const std::string& layer_name,
-                               LayerBoundsSpace bounds_space,
-                               RectF& out_bounds);
+  virtual BaseLayer* FindByName(const std::string& layer_name);
+  void GetBoundsInSpace(LayerBoundsSpace bounds_space, RectF& out_bounds);
+  LayerPosition GetPositionInParent();
 
  protected:
   friend class InOutAnimationListener;
