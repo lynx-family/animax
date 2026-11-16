@@ -9,7 +9,10 @@
 
 #include "gtest/gtest.h"
 #include "skity/render/canvas.hpp"
+#include "src/animation/interpolator/interpolator.h"
 #include "src/model/animatable/animatable_transform_model.h"
+#include "src/model/keyframe/keyframe_model.h"
+#include "src/parser/animatable/animatable_transform_parser.h"
 #include "src/render/canvas.h"
 
 namespace lynx {
@@ -62,15 +65,84 @@ class TestBaseLayer : public BaseLayer {
   int32_t draw_count_ = 0;
 };
 
-std::unique_ptr<LayerModel> MakeTestLayerModel(CompositionModel& composition) {
+std::unique_ptr<LayerModel> MakeTestLayerModel(
+    CompositionModel& composition,
+    std::unique_ptr<AnimatableTransformModel> transform =
+        std::make_unique<AnimatableTransformModel>()) {
   auto layer_model = LayerModel::Make(composition);
   layer_model->Init("test", LayerType::kSolid, 1, -1, "", 0, 0,
                     std::make_unique<Color>(), 1.f, 0.f, 0.f, 0.f, nullptr,
-                    nullptr, false,
-                    std::make_unique<AnimatableTransformModel>(),
+                    nullptr, false, std::move(transform),
                     static_cast<int32_t>(MatteType::kNone), -1, false, nullptr,
                     nullptr, nullptr, true, nullptr, BlendModeType::kMultiply);
   return layer_model;
+}
+
+TEST(BaseLayerTest, FindsExactNameAndReturnsIdentityPosition) {
+  CompositionModel composition(1.f);
+  auto layer_model = MakeTestLayerModel(composition);
+  TestBaseLayer layer(*layer_model, composition, RectF());
+  layer.Init();
+
+  EXPECT_EQ(layer.FindByName("missing"), nullptr);
+  auto* match = layer.FindByName("test");
+  ASSERT_EQ(match, &layer);
+  const auto position = match->GetPositionInParent();
+  EXPECT_FLOAT_EQ(position.x, 0.f);
+  EXPECT_FLOAT_EQ(position.y, 0.f);
+  EXPECT_FLOAT_EQ(position.z, 0.f);
+}
+
+TEST(BaseLayerTest, PositionQueryPreservesNativeUnitsAndIgnoresTransforms) {
+  CompositionModel composition(2.f);
+  rapidjson::Document json;
+  json.Parse(R"({
+    "a": {"k": [10, 20, 0]},
+    "p": {"k": [100, 200, 30]},
+    "s": {"k": [200, 150, 100]},
+    "r": {"k": 45}
+  })");
+  auto layer_model = MakeTestLayerModel(
+      composition, AnimatableTransformParser::Parse(json, composition));
+  TestBaseLayer parent(*layer_model, composition, RectF());
+  parent.Init();
+  TestBaseLayer layer(*layer_model, composition, RectF());
+  layer.Init();
+  layer.SetParentLayer(&parent);
+
+  const auto position = layer.GetPositionInParent();
+  EXPECT_FLOAT_EQ(position.x, 200.f);
+  EXPECT_FLOAT_EQ(position.y, 400.f);
+  EXPECT_FLOAT_EQ(position.z, 60.f);
+}
+
+TEST(BaseLayerTest, PositionQueryUsesCurrentProgressWithoutDrawing) {
+  CompositionModel composition(1.f);
+  composition.Init(std::make_unique<RectF>(0.f, 0.f, 200.f, 100.f), 0.f, 100.f,
+                   30.f, false);
+  auto position_value = std::make_unique<AnimatablePointValue>();
+  position_value->GetKeyframes().push_back(std::make_unique<KeyframeModel>(
+      composition, ValueFactory::Make<PointF>(10.f, 20.f),
+      ValueFactory::Make<PointF>(30.f, 60.f),
+      std::make_unique<LinearInterpolator>(), 0.f, 100.f));
+  auto transform = std::make_unique<AnimatableTransformModel>(
+      nullptr, std::move(position_value), nullptr, nullptr, nullptr, nullptr,
+      nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  auto layer_model = MakeTestLayerModel(composition, std::move(transform));
+  TestBaseLayer layer(*layer_model, composition, RectF());
+  layer.Init();
+  layer.SetProgress(0.5f);
+
+  const auto position = layer.GetPositionInParent();
+  EXPECT_FLOAT_EQ(position.x, 20.f);
+  EXPECT_FLOAT_EQ(position.y, 40.f);
+  EXPECT_FLOAT_EQ(position.z, 0.f);
+
+  // Later animation evaluation must not change the returned snapshot.
+  layer.SetProgress(1.f);
+  EXPECT_FLOAT_EQ(layer.GetPositionInParent().x, 30.f);
+  EXPECT_FLOAT_EQ(position.x, 20.f);
+  EXPECT_FLOAT_EQ(position.y, 40.f);
 }
 
 TEST(BaseLayerTest, CanvasBoundsUseInverseOfProjectedZ0Plane) {

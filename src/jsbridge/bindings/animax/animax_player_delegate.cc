@@ -12,9 +12,11 @@
 #include "include/property/property_update_request.h"
 #include "include/property/property_update_response.h"
 #include "src/jsbridge/bindings/animax/napi_on_layer_bounds_callback.h"
+#include "src/jsbridge/bindings/animax/napi_on_layer_property_callback.h"
 #include "src/jsbridge/bindings/animax/napi_on_property_callback.h"
 #include "src/jsbridge/bindings/animax/napi_task_runner.h"
 #include "src/jsbridge/bindings/animax/napi_value_param.h"
+#include "src/player/layer_query.h"
 
 namespace lynx {
 namespace animax {
@@ -202,5 +204,45 @@ void AnimaXPlayerDelegate::GetLayerBounds(
             });
       });
 }
+
+void AnimaXPlayerDelegate::GetLayerProperty(
+    const Napi::Number& type, const Napi::String& layer_name,
+    std::unique_ptr<NapiOnLayerPropertyCallback> callback) {
+  auto player = weak_player_.lock();
+  if (!player || !callback) {
+    return;
+  }
+  auto query = LayerQueryType::kUnsupported;
+  if (type.DoubleValue() ==
+      static_cast<double>(LayerPropertyType::kTransformPosition)) {
+    query = LayerQueryType::kPosition;
+  }
+  auto task_runner = NapiTaskRunner{callback->Env(nullptr)};
+  player->QueryLayer(
+      layer_name.Utf8Value(), query, LayerBoundsSpace::kParent,
+      [callback = std::move(callback), task_runner = std::move(task_runner)](
+          const LayerQueryResult& result) mutable {
+        task_runner.PostTask([result, callback = std::move(callback)] {
+          bool valid;
+          auto env = callback->Env(&valid);
+          if (!valid) {
+            return;
+          }
+          Napi::ContextScope context_scope(env);
+          Napi::HandleScope handle_scope(env);
+          if (result.success) {
+            const auto& position = result.position;
+            auto value = Napi::Object::New(env);
+            value.Set("x", position.x);
+            value.Set("y", position.y);
+            value.Set("z", position.z);
+            callback->Invoke(true, value);
+            return;
+          }
+          callback->Invoke(false, env.Undefined());
+        });
+      });
+}
+
 }  // namespace animax
 }  // namespace lynx

@@ -20,6 +20,7 @@
 #include "src/model/text/font_character_model.h"
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
+#include "src/player/layer_query.h"
 #include "src/render/canvas.h"
 
 using namespace lynx::animax;
@@ -171,6 +172,38 @@ TEST_F(AnimaXRendererTest,
   renderer_->UpdateComposition(0, model);
 
   EXPECT_EQ(renderer_->GetComposition(), model);
+}
+
+TEST_F(AnimaXRendererTest, QueryLayerHandlesUnrecognizedEnums) {
+  renderer_->CreateSurface(
+      [] { return std::make_unique<MockAnimaXSurface>(100, 100); });
+  auto model = std::make_shared<CompositionModel>(1.f);
+  model->Init(std::make_unique<RectF>(0.f, 0.f, 100.f, 100.f), 0.f, 30.f, 30.f,
+              false);
+  renderer_->UpdateComposition(0, model);
+
+  constexpr char kLayerName[] = "__container";
+  EXPECT_TRUE(renderer_
+                  ->QueryLayer(kLayerName, LayerQueryType::kBounds,
+                               LayerBoundsSpace::kParent)
+                  .success);
+  EXPECT_TRUE(renderer_
+                  ->QueryLayer(kLayerName, LayerQueryType::kBounds,
+                               LayerBoundsSpace::kRoot)
+                  .success);
+  EXPECT_TRUE(renderer_
+                  ->QueryLayer(kLayerName, LayerQueryType::kPosition,
+                               LayerBoundsSpace::kParent)
+                  .success);
+  EXPECT_FALSE(renderer_
+                   ->QueryLayer(kLayerName, static_cast<LayerQueryType>(99),
+                                LayerBoundsSpace::kParent)
+                   .success);
+  // Unrecognized bounds spaces use the default parent coordinate space.
+  EXPECT_TRUE(renderer_
+                  ->QueryLayer(kLayerName, LayerQueryType::kBounds,
+                               static_cast<LayerBoundsSpace>(2))
+                  .success);
 }
 
 TEST_F(AnimaXRendererTest, UpdateComposition_WithNullModel_HandlesGracefully) {

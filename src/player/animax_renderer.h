@@ -28,6 +28,8 @@ class CompositionModel;
 class CompositionLayer;
 class LayerModel;
 class Matrix;
+enum class LayerQueryType;
+struct LayerQueryResult;
 class AnimaXMetricsManager;
 class Canvas;
 class AnimaXPropertyUpdater;
@@ -61,8 +63,9 @@ class AnimaXRenderer : public MetricsDataSource {
 
   // Tap event handler
   void OnTap(float x, float y);
-  bool GetLayerBounds(const std::string& layer_name,
-                      LayerBoundsSpace bounds_space, RectF& out_bounds);
+  LayerQueryResult QueryLayer(const std::string& layer_name,
+                              LayerQueryType query,
+                              LayerBoundsSpace bounds_space);
 
   // Object fit and position
   void SetObjectFit(const ObjectFit object_fit);

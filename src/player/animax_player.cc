@@ -16,6 +16,7 @@
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/player/animax_renderer.h"
+#include "src/player/layer_query.h"
 #include "src/resource/log_util.h"
 
 namespace lynx {
@@ -592,26 +593,27 @@ void AnimaXPlayer::OnTap(float x, float y) {
 void AnimaXPlayer::GetLayerBounds(const std::string& layer_name,
                                   LayerBoundsSpace bounds_space,
                                   LayerBoundsCallback callback) {
-  auto invoke_callback = [callback = std::move(callback)](
-                             bool success, float x = 0.f, float y = 0.f,
-                             float width = 0.f, float height = 0.f) mutable {
-    if (callback != nullptr) {
-      callback(success, x, y, width, height);
-    }
-  };
+  QueryLayer(layer_name, LayerQueryType::kBounds, bounds_space,
+             [callback = std::move(callback)](const LayerQueryResult& result) {
+               if (callback) {
+                 callback(result.success, result.position.x, result.position.y,
+                          result.width, result.height);
+               }
+             });
+}
 
+void AnimaXPlayer::QueryLayer(const std::string& layer_name,
+                              LayerQueryType query,
+                              LayerBoundsSpace bounds_space,
+                              LayerQueryCallback callback) {
   if (layer_name.empty()) {
-    invoke_callback(false);
+    callback({});
     return;
   }
 
-  renderer_actor_->Act([layer_name, bounds_space,
-                        invoke_callback = std::move(invoke_callback)](
-                           auto& renderer) mutable {
-    RectF bounds;
-    bool success = renderer->GetLayerBounds(layer_name, bounds_space, bounds);
-    invoke_callback(success, bounds.GetLeft(), bounds.GetTop(),
-                    bounds.GetWidth(), bounds.GetHeight());
+  renderer_actor_->Act([layer_name, query, bounds_space,
+                        callback = std::move(callback)](auto& renderer) {
+    callback(renderer->QueryLayer(layer_name, query, bounds_space));
   });
 }
 

@@ -42,6 +42,9 @@ class AnimaXMainController;
 class AnimaXRenderer;
 class AnimaXCompositionLoader;
 class AnimaXPlayerBuilder;
+class AnimaXPlayerDelegate;
+enum class LayerQueryType;
+struct LayerQueryResult;
 struct AnimaXPlayerContext;
 struct CompositionAssetResponse;
 struct LoaderError;
@@ -401,6 +404,12 @@ class ANIMAX_EXPORT AnimaXPlayer
 
  private:
   friend class AnimaXPlayerBuilder;
+  friend class AnimaXPlayerDelegate;
+
+  using LayerQueryCallback =
+      base::MoveOnlyClosure<void, const LayerQueryResult &>;
+  void QueryLayer(const std::string &layer_name, LayerQueryType query,
+                  LayerBoundsSpace bounds_space, LayerQueryCallback callback);
 
   explicit AnimaXPlayer(AnimaXPlayerBuilder &builder);
 

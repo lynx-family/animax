@@ -547,22 +547,29 @@ void BaseLayer::HitTest(float x, float y,
   }
 }
 
-bool BaseLayer::GetBoundsByName(const std::string& layer_name,
-                                LayerBoundsSpace bounds_space,
-                                RectF& out_bounds) {
-  if (layer_model_.GetName() != layer_name) {
-    return false;
-  }
+BaseLayer* BaseLayer::FindByName(const std::string& layer_name) {
+  return layer_model_.GetName() == layer_name ? this : nullptr;
+}
 
+void BaseLayer::GetBoundsInSpace(LayerBoundsSpace bounds_space,
+                                 RectF& out_bounds) {
   if (bounds_space == LayerBoundsSpace::kRoot) {
     GetBounds(out_bounds, *parent_matrix_, false);
-    return true;
+    return;
   }
 
   // LayerBoundsSpace::kParent
   static Matrix kIdentityMatrix;
   GetBounds(out_bounds, kIdentityMatrix, false);
-  return true;
+}
+
+LayerPosition BaseLayer::GetPositionInParent() {
+  if (auto* animation = transform_->GetPosition()) {
+    const auto& position = animation->GetValue();
+    return {position.GetX(), position.GetY(), position.GetZ()};
+  }
+  // Identity positions can be omitted when parsing the transform.
+  return {};
 }
 
 void InOutAnimationListener::OnValueChanged() {
