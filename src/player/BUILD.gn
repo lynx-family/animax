@@ -24,6 +24,7 @@ player_shared_sources = [
   "animax_renderer.h",
   "animax_surface.cc",
   "layer_event_listener.h",
+  "layer_query.h",
   "value_animator_listener.h",
   "vsync_dispatcher.cc",
   "vsync_dispatcher.h",
