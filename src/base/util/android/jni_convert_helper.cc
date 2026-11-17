@@ -4,6 +4,7 @@
 
 #include "src/base/util/android/jni_convert_helper.h"
 
+#include "base/include/byte_utils.h"
 #include "base/include/platform/android/java_type.h"
 
 namespace lynx {
@@ -57,8 +58,9 @@ std::vector<uint8_t> JNIConvertHelper::ConvertJavaBinary(JNIEnv* env,
   if (!bytes.IsNull()) {
     jbyte* temp = env->GetByteArrayElements(bytes.Get(), JNI_FALSE);
     if (position >= 0 && limit >= position) {
-      binary.assign(reinterpret_cast<const uint8_t*>(temp) + position,
-                    reinterpret_cast<const uint8_t*>(temp) + limit);
+      base::AssignByteArray(binary,
+                            reinterpret_cast<const uint8_t*>(temp) + position,
+                            static_cast<size_t>(limit - position));
     }
     env->ReleaseByteArrayElements(bytes.Get(), temp, JNI_FALSE);
   }

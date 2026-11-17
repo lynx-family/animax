@@ -10,6 +10,7 @@
 
 #include <fstream>
 
+#include "base/include/byte_utils.h"
 #include "base/include/string/string_utils.h"
 #include "src/base/log/log.h"
 #include "src/base/util/harmony/scoped_object_harmony.h"
@@ -247,8 +248,8 @@ ResourceLoaderHarmony::CreateBitmapHttpLoader() {
                                      .message = "Load bitmap failed."});
                 return;
               }
-              callback(std::vector<uint8_t>(response.data.begin(),
-                                            response.data.end()),
+              callback(base::CopyByteArray(response.data.data(),
+                                           response.data.size()),
                        LoaderError{});
             });
       });
