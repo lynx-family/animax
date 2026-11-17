@@ -72,7 +72,7 @@ class CompositionModel {
   // Returns the playback duration in frames used by animation internals.
   float GetDurationFrames() { return end_frame_ - start_frame_; }
   // Returns the raw half-open timeline duration in frames used for reporting
-  // and time-remapping calculations that originate from timeline values.
+  // only. Rendering and keyframe progress use GetDurationFrames().
   double GetTimelineDurationFrames() const;
   float GetFrameRate() { return frame_rate_; }
 
