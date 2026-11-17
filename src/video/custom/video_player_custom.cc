@@ -69,9 +69,10 @@ std::shared_ptr<YUVFrameInfo> VideoPlayerCustom::DecodeAndCacheFrame(
 
   if (cur_keyframe_index != new_keyframe_index || target_index < begin_index) {
     begin_index = new_keyframe_index;
-    if (cur_keyframe_index != new_keyframe_index) {
-      ClearAllCachedFrames();
-    }
+    // Replaying from a keyframe requires every following packet, including on
+    // a backward seek within the same GOP. Cached future frames must not cause
+    // reference packets to be skipped after the decoder has restarted.
+    ClearAllCachedFrames();
   }
 
   for (int32_t index = begin_index; index <= target_index; ++index) {

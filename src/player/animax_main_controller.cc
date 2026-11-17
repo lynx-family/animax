@@ -4,6 +4,7 @@
 
 #include "src/player/animax_main_controller.h"
 
+#include <algorithm>
 #include <cmath>
 
 #include "include/player/animax_player.h"
@@ -359,13 +360,17 @@ void AnimaXMainController::OnEnd() {
 }
 
 void AnimaXMainController::OnProgress(double progress, double current_frame) {
-  // Round frame to nearest integer and recalculate progress if there is video
-  // layer in the composition
+  // Keep integer video frames, but normalize in the same playback domain as
+  // layer keyframes. Rounding the duration moves cut boundaries backwards.
   if (model_meta_.has_video_layer &&
       model_meta_.end_frame > model_meta_.start_frame) {
     current_frame = std::round(current_frame);
-    progress = (current_frame - model_meta_.start_frame) /
-               std::round(model_meta_.end_frame - model_meta_.start_frame);
+    // Match keyframe float arithmetic so fractional starts stay on cut bounds.
+    const float frame_offset =
+        static_cast<float>(current_frame) - model_meta_.start_frame;
+    const float duration_frames =
+        model_meta_.end_frame - model_meta_.start_frame;
+    progress = std::clamp(frame_offset / duration_frames, 0.f, 1.f);
   }
 
   current_frame_ = current_frame;
