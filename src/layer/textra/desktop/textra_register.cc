@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "src/layer/textra/win/textra_register.h"
+#include "src/layer/textra/desktop/textra_register.h"
 
 #include <mutex>
 
@@ -12,7 +12,7 @@
 namespace lynx {
 namespace animax {
 
-void RegisterAnimaXTextraWindows() {
+void RegisterAnimaXTextraDesktop() {
   static std::once_flag once;
   std::call_once(once, [] {
     static base::NoDestructor<TextHelperTextra> impl;
