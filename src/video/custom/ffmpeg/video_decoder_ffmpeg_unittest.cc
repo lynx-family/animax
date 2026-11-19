@@ -76,12 +76,13 @@ TEST_F(VideoDecoderFFmpegTest, DestroyDecoder) {
   EXPECT_FALSE(decoder->IsValid());
 }
 
-TEST_F(VideoDecoderFFmpegTest, DecodeFrameWithoutDecoder) {
+TEST_F(VideoDecoderFFmpegTest, SendAndReceiveWithoutDecoder) {
   auto decoder = std::make_unique<VideoDecoderFFmpeg>();
   std::vector<uint8_t> data;
   auto reusable_frame = std::make_shared<YUVFrameInfo>();
 
-  EXPECT_EQ(nullptr, decoder->DecodeFrameData(data, reusable_frame));
+  EXPECT_EQ(VideoSendStatus::kError, decoder->SendPacket(data, 0));
+  EXPECT_EQ(VideoDecodeStatus::kError, decoder->ReceiveFrame(reusable_frame));
 }
 
 }  // namespace

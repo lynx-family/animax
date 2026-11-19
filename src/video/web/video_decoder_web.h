@@ -27,9 +27,11 @@ class VideoDecoderWeb final : public VideoDecoderCustom {
 
   bool DestroyDecoder() override;
 
-  std::shared_ptr<YUVFrameInfo> DecodeFrameData(
-      std::vector<uint8_t>& data,
-      const std::shared_ptr<YUVFrameInfo>& reusable_frame) override;
+  VideoSendStatus SendPacket(std::vector<uint8_t>& data, int64_t pts) override;
+
+  bool Flush() override;
+
+  VideoDecodeStatus ReceiveFrame(std::shared_ptr<YUVFrameInfo>& frame) override;
 
  private:
   VideoDecoderPtr decoder_;

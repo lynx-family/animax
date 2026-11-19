@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "src/video/custom/video_decode_status.h"
+
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
@@ -83,8 +85,8 @@ void DestroyVideoDecoder(FFmpegDecoderWeb* decoder);
  *
  * Iterates through all packets in the demuxed stream, collecting raw
  * packet data and recording key-frame indices. After calling this,
- * the decoder's read position is at end-of-stream; use DecodeFrame()
- * for individual frame decoding instead of re-reading from source.
+ * the decoder's read position is at end-of-stream; use SendPacket() and
+ * ReceiveFrame() for decoding instead of re-reading from source.
  *
  * @param decoder      Valid decoder created by CreateVideoDecoder().
  * @param key_frames   [out] Indices of key frames within the frame list.
@@ -93,23 +95,17 @@ void DestroyVideoDecoder(FFmpegDecoderWeb* decoder);
  */
 bool PrepareFrameData(FFmpegDecoderWeb* decoder,
                       std::vector<int32_t>* key_frames,
-                      std::vector<std::vector<uint8_t>>* frames_data);
+                      std::vector<std::vector<uint8_t>>* frames_data,
+                      std::vector<int64_t>* frame_pts);
 
-/**
- * Decode a single video frame from raw packet data.
- *
- * Sends the packet to the decoder and receives one decoded frame.
- * For multi-layer codecs like H.265, multiple calls may be needed
- * per output frame (returns nullptr with EAGAIN internally).
- *
- * @param decoder  Valid decoder with an opened codec context.
- * @param data     Raw packet data (one encoded frame).
- * @param size     Size of the packet data in bytes.
- * @return         Decoded AVFrame on success, nullptr on failure or EOF.
- *                 Caller must free with ReleaseFrame().
- */
-AVFrame* DecodeFrame(FFmpegDecoderWeb* decoder, const uint8_t* data,
-                     int32_t size);
+bool Flush(FFmpegDecoderWeb* decoder);
+
+// A zero-sized packet ends input and starts draining delayed frames.
+VideoSendStatus SendPacket(FFmpegDecoderWeb* decoder, const uint8_t* data,
+                           int32_t size, int64_t pts);
+
+// On kFrameReady, the caller owns the frame and frees it with ReleaseFrame().
+VideoDecodeStatus ReceiveFrame(FFmpegDecoderWeb* decoder, AVFrame*& frame);
 
 /**
  * Extract YUV pixel data from a decoded frame.
@@ -117,7 +113,7 @@ AVFrame* DecodeFrame(FFmpegDecoderWeb* decoder, const uint8_t* data,
  * Reads dimensions, pixel format, linesize pointers, and plane data
  * pointers from the given AVFrame into plain C-compatible output params.
  *
- * @param frame         Decoded frame from DecodeFrame(). May be nullptr.
+ * @param frame         Decoded frame from ReceiveFrame(). May be nullptr.
  * @param width         [out] Frame width in pixels.
  * @param height        [out] Frame height in pixels.
  * @param format        [out] Pixel format: 1=YUV420P, 2=YUV422P, 3=YUV444P,
@@ -129,7 +125,7 @@ AVFrame* DecodeFrame(FFmpegDecoderWeb* decoder, const uint8_t* data,
  */
 bool GetFrameData(AVFrame* frame, int32_t* width, int32_t* height,
                   int32_t* format, int32_t (*yuv_linesize)[3],
-                  uint8_t* (*yuv_data)[3]);
+                  uint8_t* (*yuv_data)[3], int64_t* pts);
 
 /**
  * Release a decoded frame and free its memory.

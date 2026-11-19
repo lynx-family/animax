@@ -151,6 +151,19 @@ public class VideoAsset {
     return keyFrames.get(index);
   }
 
+  @CalledByNative
+  public long[] getFrameTimestamps() {
+    if (mRawData == null) {
+      return new long[0];
+    }
+    ArrayList<FrameInfo> infos = mRawData.getFrameInfos();
+    long[] timestamps = new long[infos.size()];
+    for (int i = 0; i < infos.size(); i++) {
+      timestamps[i] = infos.get(i).getPresentationTimeUs();
+    }
+    return timestamps;
+  }
+
   public FrameInfo getFrameInfo(int frame) {
     if (null == mRawData) {
       return null;

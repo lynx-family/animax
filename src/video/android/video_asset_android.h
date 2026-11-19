@@ -22,6 +22,7 @@ class ANIMAX_EXPORT VideoAssetAndroid : public VideoAsset {
 
   std::vector<uint8_t> GetVideoParameterSets() const override;
   std::vector<uint8_t> GetFrameRawData(int32_t frame) const override;
+  std::vector<int64_t> GetFrameTimestamps() const override;
   int GetPrevKeyFrame(const int32_t frame) const override;
   /**
    * Checks whether the current asset format is HEVC/H.265.

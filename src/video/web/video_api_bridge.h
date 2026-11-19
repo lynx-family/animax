@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "src/video/custom/video_decode_status.h"
+
 // These functions are only declared in the main module. The actual
 // implementations are provided by the side module (animax_video.wasm) and
 // injected at runtime.
@@ -52,18 +54,21 @@ void animax_video_decoder_free(void* decoder);
 bool animax_video_prepare_frame_data(void* decoder, int32_t* width,
                                      int32_t* height, int32_t* frame_count,
                                      double* frame_rate, void* key_frames,
-                                     void* frame_data);
+                                     void* frame_data, void* frame_pts);
 
-/**
- * Allocates a decoded frame.
- *
- * @param decoder Decoder pointer
- * @param data Frame data pointer
- * @param size Frame data size
- * @return Frame pointer, returns nullptr on failure
- */
-void* animax_video_frame_alloc(void* decoder, const uint8_t* data,
-                               int32_t size);
+// Discard buffered frames for seek, preserving codec configuration.
+bool animax_video_flush(void* decoder);
+
+// Send a packet, or end input when size is zero.
+lynx::animax::VideoSendStatus animax_video_send_packet(void* decoder,
+                                                       const uint8_t* data,
+                                                       int32_t size,
+                                                       int64_t pts);
+
+// On kFrameReady, the caller owns the frame and frees it with
+// animax_video_frame_free().
+lynx::animax::VideoDecodeStatus animax_video_receive_frame(void* decoder,
+                                                           void** frame);
 
 /**
  * Frees a frame.
@@ -85,7 +90,7 @@ void animax_video_frame_free(void* frame);
  */
 bool animax_video_get_frame_data(void* frame, int32_t* width, int32_t* height,
                                  int32_t* format, int32_t (*yuv_linesize)[3],
-                                 uint8_t* (*yuv_data)[3]);
+                                 uint8_t* (*yuv_data)[3], int64_t* pts);
 }
 
 namespace lynx {
