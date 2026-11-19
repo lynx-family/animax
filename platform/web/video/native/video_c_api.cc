@@ -58,17 +58,6 @@ bool animax_video_prepare_frame_data(void* decoder, int32_t* width,
 }
 
 EMSCRIPTEN_KEEPALIVE
-void* animax_video_frame_alloc(void* decoder, const uint8_t* data,
-                               int32_t size) {
-  if (!decoder || !data || size <= 0) {
-    return nullptr;
-  }
-  auto* decoder_ptr =
-      static_cast<lynx::animax::video_wasm::FFmpegDecoderWeb*>(decoder);
-  return lynx::animax::video_wasm::DecodeFrame(decoder_ptr, data, size);
-}
-
-EMSCRIPTEN_KEEPALIVE
 bool animax_video_flush(void* decoder) {
   return lynx::animax::video_wasm::Flush(
       static_cast<lynx::animax::video_wasm::FFmpegDecoderWeb*>(decoder));
