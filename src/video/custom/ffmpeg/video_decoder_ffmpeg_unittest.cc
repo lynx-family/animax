@@ -5,7 +5,7 @@
 #include "src/video/custom/ffmpeg/video_decoder_ffmpeg.h"
 
 #include "gtest/gtest.h"
-#include "src/video/custom/ffmpeg/video_asset_ffmpeg.h"
+#include "src/base/thread/thread_assert.h"
 #include "src/video/custom/video_decoder_custom.h"
 #include "src/video/custom/yuv_frame_info.h"
 
@@ -13,49 +13,18 @@ using namespace lynx::animax;
 
 namespace {
 
-class MockVideoAsset : public VideoAssetFFmpeg {
- public:
-  explicit MockVideoAsset(VideoAssetModel model)
-      : VideoAssetFFmpeg(std::move(model)){};
-  ~MockVideoAsset() override = default;
-
-  bool PrepareFrameData(const std::string& video_path) override { return true; }
-
-  int32_t GetFrameCount() const override { return 20; }
-
-  int GetPrevKeyFrame(const int32_t frame) const override { return frame; }
-
-  std::vector<uint8_t> GetVideoParameterSets() const override {
-    return {0, 0, 0, 0};
-  }
-
-  std::vector<uint8_t> GetFrameRawData(int32_t frame) const override {
-    return {0, 0, 0, 0};
-  }
-};
-
 class VideoDecoderFFmpegTest : public ::testing::Test {
  protected:
-  VideoDecoderFFmpegTest() = default;
-  ~VideoDecoderFFmpegTest() override = default;
-};
+  void SetUp() override { ThreadAssert::Init(ThreadAssert::Type::kResource); }
+  void TearDown() override { ThreadAssert::Init(previous_thread_); }
 
-TEST_F(VideoDecoderFFmpegTest, Create) {
-  auto decoder = std::make_unique<VideoDecoderFFmpeg>();
-  EXPECT_NE(nullptr, decoder.get());
-}
+ private:
+  const ThreadAssert::Type previous_thread_ = ThreadAssert::GetCurrent();
+};
 
 TEST_F(VideoDecoderFFmpegTest, InitialState) {
   auto decoder = std::make_unique<VideoDecoderFFmpeg>();
   EXPECT_FALSE(decoder->IsValid());
-}
-
-TEST_F(VideoDecoderFFmpegTest, CreateDecoder) {
-  auto decoder = std::make_unique<VideoDecoderFFmpeg>();
-  auto asset = std::make_shared<MockVideoAsset>(VideoAssetModel());
-
-  EXPECT_TRUE(decoder->CreateDecoder(asset));
-  EXPECT_TRUE(decoder->IsValid());
 }
 
 TEST_F(VideoDecoderFFmpegTest, CreateDecoderWithNull) {
@@ -65,23 +34,28 @@ TEST_F(VideoDecoderFFmpegTest, CreateDecoderWithNull) {
   EXPECT_FALSE(decoder->IsValid());
 }
 
-TEST_F(VideoDecoderFFmpegTest, DestroyDecoder) {
-  auto decoder = std::make_unique<VideoDecoderFFmpeg>();
-  auto asset = std::make_shared<MockVideoAsset>(VideoAssetModel());
-
-  EXPECT_TRUE(decoder->CreateDecoder(asset));
-  EXPECT_TRUE(decoder->IsValid());
-
-  EXPECT_TRUE(decoder->DestroyDecoder());
-  EXPECT_FALSE(decoder->IsValid());
-}
-
 TEST_F(VideoDecoderFFmpegTest, DecodeFrameWithoutDecoder) {
   auto decoder = std::make_unique<VideoDecoderFFmpeg>();
   std::vector<uint8_t> data;
   auto reusable_frame = std::make_shared<YUVFrameInfo>();
 
   EXPECT_EQ(nullptr, decoder->DecodeFrameData(data, reusable_frame));
+}
+
+TEST_F(VideoDecoderFFmpegTest, PacketApiRejectsUninitializedDecoder) {
+  VideoDecoderFFmpeg decoder;
+  std::vector<uint8_t> packet{0, 0, 0, 0};
+  auto frame = std::make_shared<YUVFrameInfo>();
+  frame->SetPts(17);
+  const auto reusable_frame = frame;
+
+  EXPECT_EQ(VideoSendStatus::kError, decoder.SendPacket(packet, 17));
+  EXPECT_EQ(VideoDecodeStatus::kError, decoder.ReceiveFrame(frame));
+  EXPECT_EQ(reusable_frame, frame);
+  EXPECT_EQ(17, frame->GetPts());
+
+  ThreadAssert::Init(ThreadAssert::Type::kGPU);
+  EXPECT_FALSE(decoder.Flush());
 }
 
 }  // namespace

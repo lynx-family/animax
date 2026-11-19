@@ -22,11 +22,15 @@ class VideoAssetFFmpeg : public VideoAsset {
   int GetPrevKeyFrame(const int32_t frame) const override;
   std::vector<uint8_t> GetVideoParameterSets() const override;
   std::vector<uint8_t> GetFrameRawData(int32_t frame) const override;
+  std::vector<int64_t> GetFrameTimestamps() const override {
+    return frame_pts_;
+  }
   const std::string& GetVideoPath() const { return video_path_; }
 
  private:
   std::vector<int32_t> key_frames_;
   std::vector<std::vector<uint8_t>> frames_data_;
+  std::vector<int64_t> frame_pts_;
   int32_t frame_count_ = 0;
   std::string video_path_;
 };
