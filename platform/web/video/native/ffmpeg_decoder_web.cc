@@ -201,43 +201,6 @@ bool PrepareFrameData(FFmpegDecoderWeb* decoder,
   return true;
 }
 
-AVFrame* DecodeFrame(FFmpegDecoderWeb* decoder, const uint8_t* data,
-                     int32_t size) {
-  if (!decoder || !decoder->codec_context || !data || size <= 0) {
-    return nullptr;
-  }
-
-  auto packet = av_packet_alloc();
-  if (!packet) {
-    return nullptr;
-  }
-  if (av_new_packet(packet, size) < 0) {
-    av_packet_free(&packet);
-    return nullptr;
-  }
-  memcpy(packet->data, data, static_cast<size_t>(size));
-
-  int ret = avcodec_send_packet(decoder->codec_context, packet);
-  av_packet_free(&packet);
-
-  if (ret < 0) {
-    return nullptr;
-  }
-
-  auto frame = av_frame_alloc();
-  if (!frame) {
-    return nullptr;
-  }
-
-  ret = avcodec_receive_frame(decoder->codec_context, frame);
-  if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0) {
-    av_frame_free(&frame);
-    return nullptr;
-  }
-
-  return frame;
-}
-
 bool Flush(FFmpegDecoderWeb* decoder) {
   if (!decoder || !decoder->codec_context) {
     return false;

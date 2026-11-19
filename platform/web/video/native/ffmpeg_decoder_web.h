@@ -98,22 +98,6 @@ bool PrepareFrameData(FFmpegDecoderWeb* decoder,
                       std::vector<std::vector<uint8_t>>* frames_data,
                       std::vector<int64_t>* frame_pts);
 
-/**
- * Decode a single video frame from raw packet data.
- *
- * Sends the packet to the decoder and receives one decoded frame.
- * For multi-layer codecs like H.265, multiple calls may be needed
- * per output frame (returns nullptr with EAGAIN internally).
- *
- * @param decoder  Valid decoder with an opened codec context.
- * @param data     Raw packet data (one encoded frame).
- * @param size     Size of the packet data in bytes.
- * @return         Decoded AVFrame on success, nullptr on failure or EOF.
- *                 Caller must free with ReleaseFrame().
- */
-AVFrame* DecodeFrame(FFmpegDecoderWeb* decoder, const uint8_t* data,
-                     int32_t size);
-
 bool Flush(FFmpegDecoderWeb* decoder);
 
 // A zero-sized packet ends input and starts draining delayed frames.

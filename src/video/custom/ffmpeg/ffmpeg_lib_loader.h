@@ -44,19 +44,6 @@ class FFmpegLibLoader {
    */
   bool IsValid() const;
 
-  /**
-   * Decodes video frame data using the provided video context.
-   * @param video_context Pointer to the FFmpegVideoContext containing codec
-   * information.
-   * @param data Pointer to the encoded frame data.
-   * @param data_size Size of the encoded frame data.
-   * @return A FramePtr containing the decoded AVFrame, or nullptr if decoding
-   * fails.
-   */
-  FFmpegVideoContext::FramePtr DecodeFrameData(
-      const FFmpegVideoContext* video_context, const uint8_t* data,
-      size_t data_size);
-
   // A zero-sized packet ends input and starts draining delayed frames.
   VideoSendStatus SendPacket(const FFmpegVideoContext* video_context,
                              const uint8_t* data, size_t data_size,

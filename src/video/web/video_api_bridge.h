@@ -56,17 +56,6 @@ bool animax_video_prepare_frame_data(void* decoder, int32_t* width,
                                      double* frame_rate, void* key_frames,
                                      void* frame_data, void* frame_pts);
 
-/**
- * Allocates a decoded frame.
- *
- * @param decoder Decoder pointer
- * @param data Frame data pointer
- * @param size Frame data size
- * @return Frame pointer, returns nullptr on failure
- */
-void* animax_video_frame_alloc(void* decoder, const uint8_t* data,
-                               int32_t size);
-
 // Discard buffered frames for seek, preserving codec configuration.
 bool animax_video_flush(void* decoder);
 

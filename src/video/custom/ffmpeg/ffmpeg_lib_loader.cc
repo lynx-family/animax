@@ -70,43 +70,6 @@ bool FFmpegLibLoader::IsValid() const {
   return !dlls_.empty() && is_symbols_valid_;
 }
 
-FFmpegVideoContext::FramePtr FFmpegLibLoader::DecodeFrameData(
-    const FFmpegVideoContext* video_context, const uint8_t* data,
-    size_t data_size) {
-  ThreadAssert::Assert(ThreadAssert::Type::kGPU);
-  if (!IsValid() || !video_context || !video_context->IsValid() || !data) {
-    return nullptr;
-  }
-
-  auto codec_ctx = video_context->GetCodecContext().get();
-
-  FFmpegVideoContext::FramePtr frame(av_frame_alloc_func_(), FrameDeleter());
-  if (!frame) {
-    return nullptr;
-  }
-
-  FFmpegVideoContext::PacketPtr packet(av_packet_alloc_func_(),
-                                       PacketDeleter());
-  if (!packet) {
-    return nullptr;
-  }
-
-  av_new_packet_func_(packet.get(), data_size);
-  memcpy(packet->data, data, data_size);
-  int ret = avcodec_send_packet_func_(codec_ctx, packet.get());
-  if (ret < 0) {
-    return nullptr;
-  }
-
-  ret = avcodec_receive_frame_func_(codec_ctx, frame.get());
-
-  if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0) {
-    return nullptr;
-  }
-
-  return frame;
-}
-
 VideoSendStatus FFmpegLibLoader::SendPacket(
     const FFmpegVideoContext* video_context, const uint8_t* data,
     size_t data_size, int64_t pts) {
