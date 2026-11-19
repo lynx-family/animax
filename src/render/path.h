@@ -11,7 +11,8 @@
 
 namespace skity {
 class Path;
-}
+class PathBuilder;
+}  // namespace skity
 namespace lynx {
 namespace animax {
 
@@ -96,10 +97,12 @@ class Path : public Value {
 
   skity::Path const& GetPath() const;
 
-  skity::Path& GetPath();
+  skity::PathBuilder& GetBuilder();
 
  private:
-  std::unique_ptr<skity::Path> path_;
+  mutable std::unique_ptr<skity::Path> path_;
+  mutable std::unique_ptr<skity::PathBuilder> builder_;
+  mutable bool building_ = true;
 };
 
 }  // namespace animax

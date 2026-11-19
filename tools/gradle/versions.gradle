@@ -30,9 +30,19 @@ requiredDependencyVersions.each { key ->
     }
 }
 
+// Skity publishes Android prereleases as Maven snapshots; CocoaPods uses the tag version.
+def skityVersion = dependencyVersions.getProperty("SKITY_VERSION")
+def skityPrerelease = skityVersion ==~ /.+-(alpha|beta)\.\d+/
 allprojects {
+    if (skityPrerelease) {
+        repositories.maven {
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            mavenContent { snapshotsOnly() }
+            content { includeModule("org.lynxsdk.lynx", "skity-native") }
+        }
+    }
     ext.LYNX_VERSION = dependencyVersions.getProperty("LYNX_VERSION")
-    ext.SKITY_VERSION = dependencyVersions.getProperty("SKITY_VERSION")
+    ext.SKITY_VERSION = skityPrerelease ? "${skityVersion}-SNAPSHOT" : skityVersion
     ext.TEXTRA_VERSION = dependencyVersions.getProperty("TEXTRA_VERSION")
     ext.PRIMJS_VERSION = dependencyVersions.getProperty("PRIMJS_VERSION")
 }

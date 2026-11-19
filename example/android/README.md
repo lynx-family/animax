@@ -188,6 +188,18 @@ After getting the project repository, execute the following commands in the root
 
 ## Build and Run
 
+The example and SDK builds resolve Skity prereleases from the Maven Central
+snapshot repository. If your app consumes a published AnimaX version that
+depends on a Skity snapshot, add this to your app's dependency repositories:
+
+```groovy
+maven {
+    url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+    mavenContent { snapshotsOnly() }
+    content { includeModule("org.lynxsdk.lynx", "skity-native") }
+}
+```
+
 You can compile AnimaXExample through the command line terminal or Android Studio. The following two methods are introduced respectively.
 
 ### Method 1: Build and Run using Android Studio
