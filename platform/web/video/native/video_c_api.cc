@@ -2,9 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+// cspell:ignore linesize
+
 #include <emscripten.h>
 
 #include "ffmpeg_decoder_web.h"
+#include "src/video/web/video_api_bridge.h"
 
 extern "C" {
 
@@ -30,7 +33,7 @@ EMSCRIPTEN_KEEPALIVE
 bool animax_video_prepare_frame_data(void* decoder, int32_t* width,
                                      int32_t* height, int32_t* frame_count,
                                      double* frame_rate, void* key_frames,
-                                     void* frame_data) {
+                                     void* frame_data, void* frame_pts) {
   if (!decoder) {
     return false;
   }
@@ -42,7 +45,8 @@ bool animax_video_prepare_frame_data(void* decoder, int32_t* width,
       static_cast<std::vector<std::vector<uint8_t>>*>(frame_data);
 
   bool ret = lynx::animax::video_wasm::PrepareFrameData(
-      decoder_ptr, key_frames_ptr, frames_data_ptr);
+      decoder_ptr, key_frames_ptr, frames_data_ptr,
+      static_cast<std::vector<int64_t>*>(frame_pts));
   if (ret) {
     *width = decoder_ptr->width;
     *height = decoder_ptr->height;
@@ -65,6 +69,36 @@ void* animax_video_frame_alloc(void* decoder, const uint8_t* data,
 }
 
 EMSCRIPTEN_KEEPALIVE
+bool animax_video_flush(void* decoder) {
+  return lynx::animax::video_wasm::Flush(
+      static_cast<lynx::animax::video_wasm::FFmpegDecoderWeb*>(decoder));
+}
+
+EMSCRIPTEN_KEEPALIVE
+lynx::animax::VideoSendStatus animax_video_send_packet(void* decoder,
+                                                       const uint8_t* data,
+                                                       int32_t size,
+                                                       int64_t pts) {
+  auto* decoder_ptr =
+      static_cast<lynx::animax::video_wasm::FFmpegDecoderWeb*>(decoder);
+  return lynx::animax::video_wasm::SendPacket(decoder_ptr, data, size, pts);
+}
+
+EMSCRIPTEN_KEEPALIVE
+lynx::animax::VideoDecodeStatus animax_video_receive_frame(void* decoder,
+                                                           void** frame) {
+  if (!frame) {
+    return lynx::animax::VideoDecodeStatus::kError;
+  }
+  auto* decoder_ptr =
+      static_cast<lynx::animax::video_wasm::FFmpegDecoderWeb*>(decoder);
+  AVFrame* output = nullptr;
+  auto status = lynx::animax::video_wasm::ReceiveFrame(decoder_ptr, output);
+  *frame = output;
+  return status;
+}
+
+EMSCRIPTEN_KEEPALIVE
 void animax_video_frame_free(void* frame) {
   if (!frame) {
     return;
@@ -76,14 +110,14 @@ void animax_video_frame_free(void* frame) {
 EMSCRIPTEN_KEEPALIVE
 bool animax_video_get_frame_data(void* frame, int32_t* width, int32_t* height,
                                  int32_t* format, int32_t (*yuv_linesize)[3],
-                                 uint8_t* (*yuv_data)[3]) {
+                                 uint8_t* (*yuv_data)[3], int64_t* pts) {
   if (!frame) {
     return false;
   }
 
   auto* frame_ptr = static_cast<AVFrame*>(frame);
-  return lynx::animax::video_wasm::GetFrameData(frame_ptr, width, height,
-                                                format, yuv_linesize, yuv_data);
+  return lynx::animax::video_wasm::GetFrameData(
+      frame_ptr, width, height, format, yuv_linesize, yuv_data, pts);
 }
 
 }  // extern "C"
