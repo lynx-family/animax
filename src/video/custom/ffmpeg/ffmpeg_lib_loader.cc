@@ -117,9 +117,12 @@ VideoSendStatus FFmpegLibLoader::SendPacket(
 
   auto codec_ctx = video_context->GetCodecContext().get();
   if (data_size == 0) {
-    return avcodec_send_packet_func_(codec_ctx, nullptr) == 0
-               ? VideoSendStatus::kSuccess
-               : VideoSendStatus::kError;
+    int ret = avcodec_send_packet_func_(codec_ctx, nullptr);
+    if (ret < 0) {
+      ANIMAX_LOGE("Failed to send end-of-stream packet: " << ret);
+      return VideoSendStatus::kError;
+    }
+    return VideoSendStatus::kSuccess;
   }
   if (!data) {
     return VideoSendStatus::kError;
@@ -127,17 +130,25 @@ VideoSendStatus FFmpegLibLoader::SendPacket(
 
   FFmpegVideoContext::PacketPtr packet(av_packet_alloc_func_(),
                                        PacketDeleter());
-  if (!packet || av_new_packet_func_(packet.get(), data_size) < 0) {
+  if (!packet) {
+    ANIMAX_LOGE("Failed to allocate video packet");
+    return VideoSendStatus::kError;
+  }
+
+  int ret = av_new_packet_func_(packet.get(), data_size);
+  if (ret < 0) {
+    ANIMAX_LOGE("Failed to allocate video packet data: " << ret);
     return VideoSendStatus::kError;
   }
 
   memcpy(packet->data, data, data_size);
   packet->pts = pts;
-  int ret = avcodec_send_packet_func_(codec_ctx, packet.get());
+  ret = avcodec_send_packet_func_(codec_ctx, packet.get());
   if (ret < 0) {
     ANIMAX_LOGE("Failed to send video packet: " << ret);
+    return VideoSendStatus::kError;
   }
-  return ret == 0 ? VideoSendStatus::kSuccess : VideoSendStatus::kError;
+  return VideoSendStatus::kSuccess;
 }
 
 bool FFmpegLibLoader::Flush(const FFmpegVideoContext* video_context) {
