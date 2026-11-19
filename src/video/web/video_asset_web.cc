@@ -45,6 +45,7 @@ bool VideoAssetWeb::PrepareFrameData(std::unique_ptr<RawData> raw_data) {
 
   frames_data_.clear();
   key_frames_.clear();
+  frame_pts_.clear();
   raw_data_ = std::move(raw_data);
 
   VideoDecoderPtr decoder(
@@ -57,7 +58,7 @@ bool VideoAssetWeb::PrepareFrameData(std::unique_ptr<RawData> raw_data) {
 
   if (!animax_video_prepare_frame_data(
           decoder.get(), &video_width_, &video_height_, &frame_count_,
-          &frame_rate_, &key_frames_, &frames_data_)) {
+          &frame_rate_, &key_frames_, &frames_data_, &frame_pts_)) {
     ANIMAX_LOGE("Failed to prepare video frame data");
     return false;
   }

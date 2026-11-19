@@ -107,6 +107,7 @@ emcc $EMCC_FLAGS -std=c++17 \
   -fno-exceptions \
   -fno-rtti \
   -I"$NATIVE_DIR" \
+  -I"$ANIMAX_ROOT" \
   -I"$FFMPEG_LIB/include" \
   "$FFMPEG_LIB/lib/libavcodec.a" \
   "$FFMPEG_LIB/lib/libavformat.a" \

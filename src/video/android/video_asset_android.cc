@@ -34,6 +34,14 @@ std::vector<uint8_t> VideoAssetAndroid::GetFrameRawData(int32_t frame) const {
                                                                     ref.Get());
 }
 
+std::vector<int64_t> VideoAssetAndroid::GetFrameTimestamps() const {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  auto ref = Java_VideoAsset_getFrameTimestamps(env, JavaObject());
+  std::vector<jlong> timestamps(env->GetArrayLength(ref.Get()));
+  env->GetLongArrayRegion(ref.Get(), 0, timestamps.size(), timestamps.data());
+  return {timestamps.begin(), timestamps.end()};
+}
+
 std::vector<uint8_t> VideoAssetAndroid::GetVideoParameterSets() const {
   JNIEnv* env = lynx::base::android::AttachCurrentThread();
   auto ref = Java_VideoAsset_getVideoParameterSets(env, JavaObject());
