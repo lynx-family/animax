@@ -45,44 +45,6 @@ bool VideoDecoderWeb::DestroyDecoder() {
   return true;
 }
 
-std::shared_ptr<YUVFrameInfo> VideoDecoderWeb::DecodeFrameData(
-    std::vector<uint8_t>& data,
-    const std::shared_ptr<YUVFrameInfo>& reusable_frame) {
-  if (!IsValid() || !decoder_) {
-    return nullptr;
-  }
-
-  VideoFramePtr frame(animax_video_frame_alloc(
-      decoder_.get(), data.data(), static_cast<int32_t>(data.size())));
-  if (!frame) {
-    return nullptr;
-  }
-
-  int32_t width, height, format;
-  int64_t pts;
-  int32_t yuv_linesize[3];
-  uint8_t* yuv_data[3];
-
-  if (!animax_video_get_frame_data(frame.get(), &width, &height, &format,
-                                   &yuv_linesize, &yuv_data, &pts)) {
-    return nullptr;
-  }
-
-  auto frame_info = reusable_frame != nullptr
-                        ? reusable_frame
-                        : std::make_shared<YUVFrameInfo>();
-
-  frame_info->SetWidth(width);
-  frame_info->SetHeight(height);
-  frame_info->SetYUVPixFmt(static_cast<YUVPixFmt>(format));
-  for (int i = 0; i < YUVFrameInfo::kYUVChannels; i++) {
-    frame_info->SetLineSize(i, yuv_linesize[i]);
-    frame_info->UpdateChannelData(i, yuv_data[i]);
-  }
-
-  return frame_info;
-}
-
 VideoSendStatus VideoDecoderWeb::SendPacket(std::vector<uint8_t>& data,
                                             int64_t pts) {
   if (!IsValid()) {

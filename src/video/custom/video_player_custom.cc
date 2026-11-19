@@ -4,6 +4,8 @@
 
 #include "src/video/custom/video_player_custom.h"
 
+#include <algorithm>
+
 #include "src/base/gl/gl_include.h"
 #include "src/base/log/log.h"
 #include "src/render/texture_info_frame_data.h"
@@ -58,50 +60,76 @@ std::shared_ptr<YUVFrameInfo> VideoPlayerCustom::DecodeAndCacheFrame(
     return nullptr;
   }
 
-  auto cache_frame_info = GetCachedFrame(target_index);
+  if (target_index < 0 ||
+      static_cast<size_t>(target_index) >= display_pts_.size()) {
+    return nullptr;
+  }
+
+  const auto target_pts = display_pts_[target_index];
+  auto cache_frame_info = GetCachedFrame(target_pts);
   if (cache_frame_info) {
     return cache_frame_info;
   }
 
-  const int32_t cur_keyframe_index = asset_->GetPrevKeyFrame(decoded_index_);
-  const int32_t new_keyframe_index = asset_->GetPrevKeyFrame(target_index);
-  int32_t begin_index = (decoded_index_ + 1) % asset_->GetFrameCount();
-
-  if (cur_keyframe_index != new_keyframe_index || target_index < begin_index) {
-    begin_index = new_keyframe_index;
-    // Replaying from a keyframe requires every following packet, including on
-    // a backward seek within the same GOP. Cached future frames must not cause
-    // reference packets to be skipped after the decoder has restarted.
-    ClearAllCachedFrames();
+  if (target_pts <= decoded_pts_ || target_index > display_index_ + 1) {
+    const auto start_packet = FindDecodeStartPacket(target_pts);
+    if ((target_pts <= decoded_pts_ || start_packet > next_packet_index_) &&
+        !SeekToPacket(start_packet)) {
+      return nullptr;
+    }
   }
 
-  for (int32_t index = begin_index; index <= target_index; ++index) {
-    if (IsFrameCached(index)) {
-      continue;
+  auto frame = GetReusableFrame();
+  while (decoded_pts_ < target_pts) {
+    switch (decoder_->ReceiveFrame(frame)) {
+      case VideoDecodeStatus::kFrameReady:
+        decoded_pts_ = frame->GetPts();
+        if (decoded_pts_ == YUVFrameInfo::kNoPts) {
+          ANIMAX_LOGE("VideoPlayerCustom: Decoded frame has no timestamp.");
+          return nullptr;
+        }
+        CacheFrame(frame);
+        if (decoded_pts_ < target_pts) {
+          frame = GetReusableFrame();
+        }
+        break;
+      case VideoDecodeStatus::kNeedInput: {
+        if (input_ended_) {
+          ANIMAX_LOGE("VideoPlayerCustom: Decoder requested input after EOS.");
+          return nullptr;
+        }
+        std::vector<uint8_t> data;
+        int64_t pts = YUVFrameInfo::kNoPts;
+        if (next_packet_index_ < asset_->GetFrameCount()) {
+          data = asset_->GetFrameRawData(next_packet_index_);
+          if (data.empty()) {
+            return nullptr;
+          }
+          pts = packet_pts_[next_packet_index_];
+        }
+        if (decoder_->SendPacket(data, pts) != VideoSendStatus::kSuccess) {
+          return nullptr;
+        }
+        if (data.empty()) {
+          input_ended_ = true;
+        } else {
+          ++next_packet_index_;
+        }
+        break;
+      }
+      case VideoDecodeStatus::kEndOfStream:
+      case VideoDecodeStatus::kError:
+        return nullptr;
     }
-
-    auto frame_data = asset_->GetFrameRawData(index);
-    if (frame_data.empty()) {
-      break;
-    }
-
-    auto decoded_frame =
-        decoder_->DecodeFrameData(frame_data, GetReusableFrame());
-    if (!decoded_frame) {
-      break;
-    }
-
-    decoded_index_ = index;
-    CacheFrame(index, std::move(decoded_frame));
   }
 
-  return GetCachedFrame(target_index);
+  return GetCachedFrame(target_pts);
 }
 
 std::shared_ptr<YUVFrameInfo> VideoPlayerCustom::GetCachedFrame(
-    const int32_t target_index) const {
+    int64_t pts) const {
   std::shared_lock lock(mutex_);
-  auto cached_iter = frame_cache_.find(target_index);
+  auto cached_iter = frame_cache_.find(pts);
   if (cached_iter != frame_cache_.end()) {
     return cached_iter->second;
   }
@@ -118,13 +146,8 @@ std::shared_ptr<YUVFrameInfo> VideoPlayerCustom::GetReusableFrame() {
   return frame;
 }
 
-bool VideoPlayerCustom::IsFrameCached(const int32_t frame_index) const {
-  std::shared_lock lock(mutex_);
-  return frame_cache_.find(frame_index) != frame_cache_.end();
-}
-
-void VideoPlayerCustom::CacheFrame(const int32_t target_index,
-                                   std::shared_ptr<YUVFrameInfo> frameInfo) {
+void VideoPlayerCustom::CacheFrame(
+    const std::shared_ptr<YUVFrameInfo>& frameInfo) {
   std::unique_lock lock(mutex_);
 
   if (frame_cache_.size() >= kMaxCacheSize) {
@@ -135,7 +158,7 @@ void VideoPlayerCustom::CacheFrame(const int32_t target_index,
     frame_cache_.erase(oldest);
   }
 
-  frame_cache_[target_index] = frameInfo;
+  frame_cache_[frameInfo->GetPts()] = frameInfo;
 }
 
 void VideoPlayerCustom::ClearAllCachedFrames() {
@@ -155,18 +178,62 @@ void VideoPlayerCustom::AttachAsset(std::shared_ptr<VideoAsset> asset) {
   }
 
   asset_ = asset;
-  bool ret = decoder_->CreateDecoder(asset);
-  if (!ret) {
+  display_index_ = kCurrentFrameInvalid;
+  decoder_->DestroyDecoder();
+  ClearAllCachedFrames();
+  decoded_pts_ = YUVFrameInfo::kNoPts;
+  next_packet_index_ = 0;
+  input_ended_ = false;
+
+  packet_pts_ = asset_->GetFrameTimestamps();
+  display_pts_ = packet_pts_;
+  std::sort(display_pts_.begin(), display_pts_.end());
+  if (display_pts_.empty() ||
+      display_pts_.size() != static_cast<size_t>(asset_->GetFrameCount()) ||
+      display_pts_.front() == YUVFrameInfo::kNoPts ||
+      std::adjacent_find(display_pts_.begin(), display_pts_.end()) !=
+          display_pts_.end()) {
+    ANIMAX_LOGE("VideoPlayerCustom: Invalid frame timestamps.");
+    return;
+  }
+
+  if (!decoder_->CreateDecoder(asset_)) {
     ANIMAX_LOGE("VideoPlayerCustom: Failed to create decoder");
     return;
   }
 
   std::vector<uint8_t> data = asset_->GetVideoParameterSets();
-  if (!data.empty()) {
-    decoder_->DecodeFrameData(data, nullptr);
+  if (!data.empty() && decoder_->SendPacket(data, YUVFrameInfo::kNoPts) !=
+                           VideoSendStatus::kSuccess) {
+    decoder_->DestroyDecoder();
+    return;
   }
 
   PrepareNextFrame();
+}
+
+int32_t VideoPlayerCustom::FindDecodeStartPacket(int64_t target_pts) const {
+  const auto packet =
+      std::find(packet_pts_.begin(), packet_pts_.end(), target_pts);
+  int32_t key_packet = asset_->GetPrevKeyFrame(
+      static_cast<int32_t>(packet - packet_pts_.begin()));
+  // An open GOP can put its keyframe before B packets displayed before it.
+  // Those B frames still need the preceding GOP's references.
+  while (key_packet > 0 && packet_pts_[key_packet] > target_pts) {
+    key_packet = asset_->GetPrevKeyFrame(key_packet - 1);
+  }
+  return std::max(key_packet, 0);
+}
+
+bool VideoPlayerCustom::SeekToPacket(int32_t packet_index) {
+  if (!decoder_->Flush()) {
+    return false;
+  }
+  ClearAllCachedFrames();
+  decoded_pts_ = YUVFrameInfo::kNoPts;
+  next_packet_index_ = packet_index;
+  input_ended_ = false;
+  return true;
 }
 
 const std::array<float, 16>& VideoPlayerCustom::GetTransform() {
@@ -178,8 +245,8 @@ void VideoPlayerCustom::PrepareNextFrame() {
     return;
   }
 
-  int32_t next_index = (decoded_index_ + 1) % asset_->GetFrameCount();
-  if (next_index != display_index_) {
+  int32_t next_index = display_index_ + 1;
+  if (next_index < asset_->GetFrameCount() && next_index != display_index_) {
     DecodeAndCacheFrame(next_index);
   }
 }

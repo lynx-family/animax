@@ -34,14 +34,6 @@ TEST_F(VideoDecoderFFmpegTest, CreateDecoderWithNull) {
   EXPECT_FALSE(decoder->IsValid());
 }
 
-TEST_F(VideoDecoderFFmpegTest, DecodeFrameWithoutDecoder) {
-  auto decoder = std::make_unique<VideoDecoderFFmpeg>();
-  std::vector<uint8_t> data;
-  auto reusable_frame = std::make_shared<YUVFrameInfo>();
-
-  EXPECT_EQ(nullptr, decoder->DecodeFrameData(data, reusable_frame));
-}
-
 TEST_F(VideoDecoderFFmpegTest, PacketApiRejectsUninitializedDecoder) {
   VideoDecoderFFmpeg decoder;
   std::vector<uint8_t> packet{0, 0, 0, 0};

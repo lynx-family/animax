@@ -4,6 +4,8 @@
 
 #include "src/video/custom/video_player_custom.h"
 
+#include <array>
+
 #include "gtest/gtest.h"
 #include "src/render/texture_info_frame_data.h"
 #include "src/render/texture_info_gl.h"
@@ -19,21 +21,47 @@ class MockVideoDecoderCustom : public VideoDecoderCustom {
   bool IsValid() override { return true; }
 
   bool CreateDecoder(std::shared_ptr<VideoAsset> asset) override {
+    return Flush();
+  }
+
+  bool Flush() override {
+    has_frame_ = false;
+    input_ended_ = false;
     return true;
   }
 
   bool DestroyDecoder() override { return true; }
 
-  std::shared_ptr<YUVFrameInfo> DecodeFrameData(
-      std::vector<uint8_t>& data,
-      const std::shared_ptr<YUVFrameInfo>& reusable_frame) override {
-    return std::make_shared<YUVFrameInfo>();
+  VideoSendStatus SendPacket(std::vector<uint8_t>& data, int64_t pts) override {
+    has_frame_ = !data.empty();
+    input_ended_ = data.empty();
+    pts_ = pts;
+    return VideoSendStatus::kSuccess;
+  }
+
+  VideoDecodeStatus ReceiveFrame(
+      std::shared_ptr<YUVFrameInfo>& frame) override {
+    if (!has_frame_) {
+      return input_ended_ ? VideoDecodeStatus::kEndOfStream
+                          : VideoDecodeStatus::kNeedInput;
+    }
+    has_frame_ = false;
+    if (!frame) {
+      frame = std::make_shared<YUVFrameInfo>();
+    }
+    frame->SetPts(pts_);
+    return VideoDecodeStatus::kFrameReady;
   }
 
   std::unique_ptr<TextureInfo> UpdateTexturesFromYuvFrame(
       const std::shared_ptr<YUVFrameInfo>& frame_info) {
     return std::make_unique<TextureInfoGL>(0, 0, 0, 0);
   }
+
+ private:
+  bool has_frame_ = false;
+  bool input_ended_ = false;
+  int64_t pts_ = YUVFrameInfo::kNoPts;
 };
 
 class MockVideoAsset : public VideoAsset {
@@ -48,11 +76,17 @@ class MockVideoAsset : public VideoAsset {
 
   int32_t GetFrameCount() const override { return 20; }
 
+  std::vector<int64_t> GetFrameTimestamps() const override {
+    std::vector<int64_t> timestamps;
+    for (int i = 0; i < GetFrameCount(); ++i) {
+      timestamps.push_back(i);
+    }
+    return timestamps;
+  }
+
   int GetPrevKeyFrame(const int32_t frame) const override { return frame; }
 
-  std::vector<uint8_t> GetVideoParameterSets() const override {
-    return {0, 0, 0, 0};
-  }
+  std::vector<uint8_t> GetVideoParameterSets() const override { return {}; }
 
   std::vector<uint8_t> GetFrameRawData(int32_t frame) const override {
     return {0, 0, 0, 0};
@@ -85,30 +119,43 @@ TEST_F(VideoPlayerCustomTest, UpdateTexture) {
 // packets and writes the decoded frame identity into a reusable Y plane.
 class SequentialGopDecoder : public MockVideoDecoderCustom {
  public:
-  std::shared_ptr<YUVFrameInfo> DecodeFrameData(
-      std::vector<uint8_t>& data,
-      const std::shared_ptr<YUVFrameInfo>& reusable_frame) override {
-    if (data.size() != 1) {
-      return nullptr;
+  bool Flush() override {
+    decoded_index_ = -1;
+    return MockVideoDecoderCustom::Flush();
+  }
+
+  VideoSendStatus SendPacket(std::vector<uint8_t>& data, int64_t pts) override {
+    if (!data.empty()) {
+      if (data.size() != 1) {
+        return VideoSendStatus::kError;
+      }
+      const int index = data[0];
+      if (index % 12 != 0 && index != decoded_index_ + 1) {
+        ++missing_reference_packets_;
+        return VideoSendStatus::kError;
+      }
+      decoded_index_ = index;
+      ++decoded_packet_count_;
     }
-    const int index = data[0];
-    if (index % 12 != 0 && index != decoded_index_ + 1) {
-      ++missing_reference_packets_;
-      return nullptr;
+    return MockVideoDecoderCustom::SendPacket(data, pts);
+  }
+
+  VideoDecodeStatus ReceiveFrame(
+      std::shared_ptr<YUVFrameInfo>& frame) override {
+    const bool reused = frame != nullptr;
+    auto status = MockVideoDecoderCustom::ReceiveFrame(frame);
+    if (status == VideoDecodeStatus::kFrameReady) {
+      if (reused) {
+        ++reused_frame_count_;
+      }
+      const uint8_t pixel = static_cast<uint8_t>(decoded_index_);
+      frame->SetWidth(1);
+      frame->SetHeight(1);
+      frame->SetYUVPixFmt(YUVPixFmt::kYUVPixFmtI400);
+      frame->SetLineSize(0, 1);
+      frame->UpdateChannelData(0, &pixel);
     }
-    decoded_index_ = index;
-    ++decoded_packet_count_;
-    if (reusable_frame) {
-      ++reused_frame_count_;
-    }
-    auto frame =
-        reusable_frame ? reusable_frame : std::make_shared<YUVFrameInfo>();
-    frame->SetWidth(1);
-    frame->SetHeight(1);
-    frame->SetYUVPixFmt(YUVPixFmt::kYUVPixFmtI400);
-    frame->SetLineSize(0, 1);
-    frame->UpdateChannelData(0, data.data());
-    return frame;
+    return status;
   }
 
   int missing_reference_packets_ = 0;
@@ -165,16 +212,104 @@ TEST_F(VideoPlayerCustomTest, CachedFramePreservesDecodeFrontierAndPixels) {
 
   ExpectDecodedFrame(player, 9);
   EXPECT_EQ(11, decoder_ptr->decoded_packet_count_);  // Includes prefetch 10.
-  // Frame 1 is the oldest cached entry. Prefetch evicts it after the cache hit;
-  // its returned pixels must remain intact until the caller uploads them.
+  // Frames 1 and 2 are cached, so neither display nor prefetch needs a packet.
   ExpectDecodedFrame(player, 1);
-  EXPECT_EQ(12, decoder_ptr->decoded_packet_count_);  // Prefetch 11 only.
+  EXPECT_EQ(11, decoder_ptr->decoded_packet_count_);
   EXPECT_EQ(nullptr, player.UpdateTexture(1));
-  EXPECT_EQ(12, decoder_ptr->decoded_packet_count_);
-  ExpectDecodedFrame(player, 9);
-  EXPECT_EQ(13, decoder_ptr->decoded_packet_count_);  // Prefetch keyframe 12.
+  EXPECT_EQ(11, decoder_ptr->decoded_packet_count_);
+  ExpectDecodedFrame(player, 11);
+  EXPECT_EQ(13, decoder_ptr->decoded_packet_count_);  // Decode 11, prefetch 12.
   EXPECT_EQ(0, decoder_ptr->missing_reference_packets_);
   EXPECT_GT(decoder_ptr->reused_frame_count_, 0);
+}
+
+// One GOP of three packets with presentation order 0, 1, 2 and packet order
+// 0, 2, 1. The last frame is available only after draining the decoder.
+class DelayedFrameDecoder : public MockVideoDecoderCustom {
+ public:
+  bool Flush() override {
+    ++flush_count;
+    next_packet_ = 0;
+    next_frame_ = 0;
+    draining_ = false;
+    return true;
+  }
+
+  VideoSendStatus SendPacket(std::vector<uint8_t>& data, int64_t pts) override {
+    if (data.empty()) {
+      EXPECT_EQ(YUVFrameInfo::kNoPts, pts);
+      EXPECT_EQ(3u, next_packet_);
+      EXPECT_FALSE(draining_);
+      draining_ = true;
+      ++drain_count;
+      return VideoSendStatus::kSuccess;
+    }
+    if (next_packet_ >= kPacketPts.size() || draining_) {
+      ADD_FAILURE() << "Unexpected packet at " << next_packet_;
+      return VideoSendStatus::kError;
+    }
+    EXPECT_EQ(kPacketPts[next_packet_], pts);
+    EXPECT_EQ(std::vector<uint8_t>{static_cast<uint8_t>(next_packet_)}, data);
+    ++next_packet_;
+    return VideoSendStatus::kSuccess;
+  }
+
+  VideoDecodeStatus ReceiveFrame(
+      std::shared_ptr<YUVFrameInfo>& frame) override {
+    if (next_frame_ == 3) {
+      return VideoDecodeStatus::kEndOfStream;
+    }
+    if ((next_frame_ == 0 && next_packet_ < 2) ||
+        (next_frame_ == 1 && next_packet_ < 3) ||
+        (next_frame_ == 2 && !draining_)) {
+      return VideoDecodeStatus::kNeedInput;
+    }
+    if (!frame) {
+      frame = std::make_shared<YUVFrameInfo>();
+    }
+    const uint8_t pixel = next_frame_++;
+    frame->SetPts(pixel);
+    frame->SetWidth(1);
+    frame->SetHeight(1);
+    frame->SetYUVPixFmt(YUVPixFmt::kYUVPixFmtI400);
+    frame->SetLineSize(0, 1);
+    frame->UpdateChannelData(0, &pixel);
+    return VideoDecodeStatus::kFrameReady;
+  }
+
+  int drain_count = 0;
+  int flush_count = 0;
+
+ private:
+  static constexpr std::array<int64_t, 3> kPacketPts{0, 2, 1};
+  size_t next_packet_ = 0;
+  uint8_t next_frame_ = 0;
+  bool draining_ = false;
+};
+
+class ReorderedVideoAsset : public MockVideoAsset {
+ public:
+  ReorderedVideoAsset() : MockVideoAsset(VideoAssetModel()) {}
+  int32_t GetFrameCount() const override { return 3; }
+  std::vector<int64_t> GetFrameTimestamps() const override { return {0, 2, 1}; }
+  int GetPrevKeyFrame(int32_t frame) const override { return 0; }
+  std::vector<uint8_t> GetFrameRawData(int32_t frame) const override {
+    return {static_cast<uint8_t>(frame)};
+  }
+};
+
+TEST_F(VideoPlayerCustomTest, ReordersFramesAndDrainsDelayedTailOnce) {
+  auto decoder = std::make_unique<DelayedFrameDecoder>();
+  auto* decoder_ptr = decoder.get();
+  VideoPlayerCustom player(std::move(decoder));
+  player.AttachAsset(std::make_shared<ReorderedVideoAsset>());
+
+  EXPECT_EQ(0, decoder_ptr->drain_count);
+  for (int index : {0, 1, 2}) {
+    ExpectDecodedFrame(player, index);
+  }
+  EXPECT_EQ(1, decoder_ptr->drain_count);
+  EXPECT_EQ(1, decoder_ptr->flush_count);  // Initialization only.
 }
 
 }  // namespace

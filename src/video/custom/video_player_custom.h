@@ -30,19 +30,18 @@ class ANIMAX_EXPORT VideoPlayerCustom : public VideoPlayer {
   uint32_t texture_target_ = 0;
   // Frame managment
   void ClearAllCachedFrames();
-  void CacheFrame(const int32_t target_index,
-                  std::shared_ptr<YUVFrameInfo> frameInfo);
-  bool IsFrameCached(const int32_t frame_index) const;
-  std::shared_ptr<YUVFrameInfo> GetCachedFrame(
-      const int32_t target_index) const;
+  void CacheFrame(const std::shared_ptr<YUVFrameInfo>& frameInfo);
+  std::shared_ptr<YUVFrameInfo> GetCachedFrame(int64_t pts) const;
   std::shared_ptr<YUVFrameInfo> GetReusableFrame();
   static constexpr size_t kMaxCacheSize = 10;
 
   // Decode ability
+  int32_t FindDecodeStartPacket(int64_t target_pts) const;
+  bool SeekToPacket(int32_t packet_index);
   std::shared_ptr<YUVFrameInfo> DecodeAndCacheFrame(const int32_t target_index);
   void PrepareNextFrame();
 
-  std::unordered_map<int32_t, std::shared_ptr<YUVFrameInfo>> frame_cache_;
+  std::unordered_map<int64_t, std::shared_ptr<YUVFrameInfo>> frame_cache_;
   std::vector<std::shared_ptr<YUVFrameInfo>> reusable_frame_pool_;
   std::unique_ptr<VideoDecoderCustom> decoder_ = nullptr;
   std::array<float, 16> transform_{};
@@ -50,7 +49,11 @@ class ANIMAX_EXPORT VideoPlayerCustom : public VideoPlayer {
   mutable std::shared_mutex mutex_;
   static constexpr int32_t kCurrentFrameInvalid = -1;
   int32_t display_index_ = kCurrentFrameInvalid;
-  int32_t decoded_index_ = kCurrentFrameInvalid;
+  std::vector<int64_t> packet_pts_;
+  std::vector<int64_t> display_pts_;
+  int64_t decoded_pts_ = YUVFrameInfo::kNoPts;
+  int32_t next_packet_index_ = 0;
+  bool input_ended_ = false;
 };
 
 }  // namespace animax
