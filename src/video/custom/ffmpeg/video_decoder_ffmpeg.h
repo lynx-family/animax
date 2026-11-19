@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "include/player/animax_player.h"
+#include "src/video/custom/video_decode_status.h"
 #include "src/video/custom/video_decoder_custom.h"
 
 namespace lynx {
@@ -29,6 +30,12 @@ class VideoDecoderFFmpeg final : public VideoDecoderCustom {
   std::shared_ptr<YUVFrameInfo> DecodeFrameData(
       std::vector<uint8_t>& data,
       const std::shared_ptr<YUVFrameInfo>& reusable_frame) override;
+
+  VideoSendStatus SendPacket(std::vector<uint8_t>& data, int64_t pts);
+
+  bool Flush();
+
+  VideoDecodeStatus ReceiveFrame(std::shared_ptr<YUVFrameInfo>& frame);
 
  private:
   std::unique_ptr<FFmpegVideoContext> video_context_;

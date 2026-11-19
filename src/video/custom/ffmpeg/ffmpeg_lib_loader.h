@@ -15,6 +15,7 @@
 
 #include "base/include/no_destructor.h"
 #include "src/video/custom/ffmpeg/ffmpeg_video_context.h"
+#include "src/video/custom/video_decode_status.h"
 
 extern "C" {
 #include "libavcodec/avcodec.h"
@@ -56,6 +57,16 @@ class FFmpegLibLoader {
       const FFmpegVideoContext* video_context, const uint8_t* data,
       size_t data_size);
 
+  // A zero-sized packet ends input and starts draining delayed frames.
+  VideoSendStatus SendPacket(const FFmpegVideoContext* video_context,
+                             const uint8_t* data, size_t data_size,
+                             int64_t pts);
+
+  bool Flush(const FFmpegVideoContext* video_context);
+
+  VideoDecodeStatus ReceiveFrame(const FFmpegVideoContext* video_context,
+                                 FFmpegVideoContext::FramePtr& frame);
+
   /**
    * Reads all video frames and keyframe indices from the provided video
    * context.
@@ -68,7 +79,8 @@ class FFmpegLibLoader {
    */
   bool ReadVideoFramesData(const FFmpegVideoContext* video_context,
                            std::vector<std::vector<uint8_t>>& frames_data,
-                           std::vector<int32_t>& key_frames);
+                           std::vector<int32_t>& key_frames,
+                           std::vector<int64_t>& frame_pts);
 
   /**
    * Frees an AVFormatContext and its associated resources.
@@ -130,6 +142,8 @@ class FFmpegLibLoader {
   decltype(&av_read_frame) av_read_frame_func_ = nullptr;
   decltype(&avcodec_send_packet) avcodec_send_packet_func_ = nullptr;
   decltype(&avcodec_receive_frame) avcodec_receive_frame_func_ = nullptr;
+  decltype(&avcodec_flush_buffers) avcodec_flush_buffers_func_ = nullptr;
+  decltype(&av_rescale_q) av_rescale_q_func_ = nullptr;
   decltype(&av_packet_unref) av_packet_unref_func_ = nullptr;
   decltype(&av_seek_frame) av_seek_frame_func_ = nullptr;
   decltype(&avformat_network_init) avformat_network_init_func_ = nullptr;

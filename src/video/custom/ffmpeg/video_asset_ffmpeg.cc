@@ -31,9 +31,10 @@ bool VideoAssetFFmpeg::PrepareFrameData(const std::string& video_path) {
   video_path_ = video_path;
   frames_data_.clear();
   key_frames_.clear();
+  frame_pts_.clear();
 
-  if (!FFmpegLibLoader::Instance().ReadVideoFramesData(&context, frames_data_,
-                                                       key_frames_)) {
+  if (!FFmpegLibLoader::Instance().ReadVideoFramesData(
+          &context, frames_data_, key_frames_, frame_pts_)) {
     ANIMAX_LOGE("Failed to read video frames data");
     return false;
   }

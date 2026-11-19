@@ -94,6 +94,10 @@ class VideoAsset : public BaseAsset<VideoAsset>,
     return {};
   }
 
+  // Presentation timestamps in microseconds, in GetFrameRawData packet order.
+  // Used by custom decoders; other players do not require this metadata.
+  virtual std::vector<int64_t> GetFrameTimestamps() const { return {}; }
+
   int32_t GetVideoWidth() const { return video_width_; }
   int32_t GetVideoHeight() const { return video_height_; }
   float GetFrameRate() const { return frame_rate_; }

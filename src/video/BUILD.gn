@@ -4,6 +4,7 @@
 import("../animax.gni")
 
 video_shared_sources = [
+  "custom/video_decode_status.h",
   "custom/video_decoder_custom.h",
   "custom/video_player_custom.cc",
   "custom/video_player_custom.h",
