@@ -48,50 +48,6 @@ bool VideoDecoderFFmpeg::DestroyDecoder() {
   return true;
 }
 
-std::shared_ptr<YUVFrameInfo> VideoDecoderFFmpeg::DecodeFrameData(
-    std::vector<uint8_t>& data,
-    const std::shared_ptr<YUVFrameInfo>& reusable_frame) {
-  if (!IsValid()) {
-    return nullptr;
-  }
-
-  DCHECK(!data.empty());
-
-  auto frame = FFmpegLibLoader::Instance().DecodeFrameData(
-      video_context_.get(), data.data(), data.size());
-  if (!frame) {
-    return nullptr;
-  }
-
-  auto yuv_info =
-      reusable_frame ? reusable_frame : std::make_shared<YUVFrameInfo>();
-  yuv_info->SetWidth(frame->width);
-  yuv_info->SetHeight(frame->height);
-
-  auto pix_format = static_cast<AVPixelFormat>(frame->format);
-  switch (pix_format) {
-    case AV_PIX_FMT_YUV420P:
-      yuv_info->SetYUVPixFmt(YUVPixFmt::kYUVPixFmtI420);
-      break;
-    case AV_PIX_FMT_YUV422P:
-      yuv_info->SetYUVPixFmt(YUVPixFmt::kYUVPixFmtI422);
-      break;
-    case AV_PIX_FMT_YUV444P:
-      yuv_info->SetYUVPixFmt(YUVPixFmt::kYUVPixFmtI444);
-      break;
-    default:
-      ANIMAX_LOGE("Invalid video pixel format " << pix_format);
-      return nullptr;
-  }
-
-  for (int i = 0; i < YUVFrameInfo::kYUVChannels; i++) {
-    yuv_info->SetLineSize(i, frame->linesize[i]);
-    yuv_info->UpdateChannelData(i, frame->data[i]);
-  }
-
-  return yuv_info;
-}
-
 VideoSendStatus VideoDecoderFFmpeg::SendPacket(std::vector<uint8_t>& data,
                                                int64_t pts) {
   if (!IsValid()) {
