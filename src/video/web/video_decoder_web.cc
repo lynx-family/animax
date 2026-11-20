@@ -1,6 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+// cspell:ignore linesize
+
 #include "src/video/web/video_decoder_web.h"
 
 #include "src/base/log/log.h"
@@ -56,11 +59,12 @@ std::shared_ptr<YUVFrameInfo> VideoDecoderWeb::DecodeFrameData(
   }
 
   int32_t width, height, format;
+  int64_t pts;
   int32_t yuv_linesize[3];
   uint8_t* yuv_data[3];
 
   if (!animax_video_get_frame_data(frame.get(), &width, &height, &format,
-                                   &yuv_linesize, &yuv_data)) {
+                                   &yuv_linesize, &yuv_data, &pts)) {
     return nullptr;
   }
 
@@ -77,6 +81,56 @@ std::shared_ptr<YUVFrameInfo> VideoDecoderWeb::DecodeFrameData(
   }
 
   return frame_info;
+}
+
+VideoSendStatus VideoDecoderWeb::SendPacket(std::vector<uint8_t>& data,
+                                            int64_t pts) {
+  if (!IsValid()) {
+    return VideoSendStatus::kError;
+  }
+  return animax_video_send_packet(decoder_.get(), data.data(),
+                                  static_cast<int32_t>(data.size()), pts);
+}
+
+bool VideoDecoderWeb::Flush() { return animax_video_flush(decoder_.get()); }
+
+VideoDecodeStatus VideoDecoderWeb::ReceiveFrame(
+    std::shared_ptr<YUVFrameInfo>& frame_info) {
+  if (!IsValid()) {
+    return VideoDecodeStatus::kError;
+  }
+
+  void* raw_frame = nullptr;
+  auto status = animax_video_receive_frame(decoder_.get(), &raw_frame);
+  VideoFramePtr frame(raw_frame);
+  if (status != VideoDecodeStatus::kFrameReady) {
+    return status;
+  }
+
+  int32_t width, height, format;
+  int64_t pts;
+  int32_t yuv_linesize[3];
+  uint8_t* yuv_data[3];
+
+  if (!animax_video_get_frame_data(frame.get(), &width, &height, &format,
+                                   &yuv_linesize, &yuv_data, &pts)) {
+    return VideoDecodeStatus::kError;
+  }
+
+  if (!frame_info) {
+    frame_info = std::make_shared<YUVFrameInfo>();
+  }
+
+  frame_info->SetWidth(width);
+  frame_info->SetHeight(height);
+  frame_info->SetPts(pts);
+  frame_info->SetYUVPixFmt(static_cast<YUVPixFmt>(format));
+  for (int i = 0; i < YUVFrameInfo::kYUVChannels; i++) {
+    frame_info->SetLineSize(i, yuv_linesize[i]);
+    frame_info->UpdateChannelData(i, yuv_data[i]);
+  }
+
+  return VideoDecodeStatus::kFrameReady;
 }
 
 }  // namespace animax
