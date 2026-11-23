@@ -71,6 +71,8 @@ class ANIMAX_EXPORT AnimaXPlayer
    * AnimaXSurface.
    */
   void CreateSurface(SurfaceCreationFactory creation_factory);
+  // Runs after render tasks that were already submitted to the renderer actor.
+  void RunAfterPendingRenderTasks(base::closure callback);
   /**
    * Update the current surface using the provided factory function.
    * The factory function will be executed on the GPU thread.
