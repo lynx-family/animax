@@ -141,6 +141,11 @@ void AnimaXPlayer::UpdateSurface(SurfaceUpdateFactory update_factory) {
       });
 }
 
+void AnimaXPlayer::RunAfterPendingRenderTasks(base::closure callback) {
+  renderer_actor_->Act(
+      [callback = std::move(callback)](auto&) mutable { callback(); });
+}
+
 void AnimaXPlayer::SetJson(const char* json) {
   std::string json_string = std::string(json);
   SetJson(std::move(json_string));
