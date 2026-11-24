@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 #include "src/jsbridge/bindings/animax/napi_composition_element.h"
+#include "src/jsbridge/bindings/animax/preload_loader.h"
+#include "src/jsbridge/bindings/animax/preloaded_resource.h"
 
 #ifdef USE_PRIMJS_NAPI
 #include "third_party/napi/include/primjs_napi_defines.h"
@@ -13,6 +15,8 @@ namespace animax {
 
 Napi::Object Load(Napi::Env env, Napi::Object animax) {
   NapiCompositionElement::Install(env, animax);
+  InstallPreloadBindings(env, animax);
+  InstallPreloadLoaders(env, animax);
   return animax;
 }
 

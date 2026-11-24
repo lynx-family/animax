@@ -31,8 +31,8 @@ animax_napi_sources = [
   "bindings/animax/napi_value_param.h",
   "bindings/animax/preload_host.cc",
   "bindings/animax/preload_host.h",
-  "bindings/animax/preload_model_memory.cc",
-  "bindings/animax/preload_model_memory.h",
+  "bindings/animax/preload_loader.cc",
+  "bindings/animax/preload_loader.h",
   "bindings/animax/preloaded_resource.cc",
   "bindings/animax/preloaded_resource.h",
 ]
