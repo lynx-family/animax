@@ -59,7 +59,7 @@ class FontAsset : public BaseAsset<FontAsset> {
    * resource data.
    * @param raw_data Unique pointer to the raw data of the font.
    */
-  void SetRawData(std::unique_ptr<RawData> raw_data);
+  ANIMAX_EXPORT void SetRawData(std::unique_ptr<RawData> raw_data);
 
   /**
    * Determines whether the font is loaded.
@@ -68,7 +68,7 @@ class FontAsset : public BaseAsset<FontAsset> {
    *
    * @return true if the font is loaded; false otherwise.
    */
-  bool IsLoaded() const;
+  ANIMAX_EXPORT bool IsLoaded() const;
 
   // Safe to observe from the resource and GPU threads.
   ANIMAX_EXPORT uint64_t GetDataRevision() const;

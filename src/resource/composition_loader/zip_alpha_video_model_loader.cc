@@ -58,44 +58,58 @@ ZipAlphaVideoModelLoader::Ptr ZipAlphaVideoModelLoader::MakePipeline(
                 });
           });
 
-  // Step 2: Parses the raw data into a Lottie model, handling errors in parsing
-  // and providing the model to the task.
-  auto raw_data_to_model =
-      MakeLambdaLoader<ZipCompositionModelTask, CompositionModelResponse>(
-          [weak_model_loader](ZipCompositionModelTask task,
-                              auto callback) mutable {
-            auto raw_data = std::move(task.json_data);
-            const auto unzip_folder_path = task.response.base_uri;
-            const auto config_json_file_path_str =
-                ConcatFilePaths(unzip_folder_path, kConfigJSONFileName);
-            CompositionModelLoader::OnResourceLoaderTraceEvent(
-                weak_model_loader, TraceEventType::kParseCompositionStart,
-                config_json_file_path_str);
-            auto model = AlphaPlayerAssetParser::Parse(
-                task.response.base_uri,
-                static_cast<const char*>(raw_data->Data()), raw_data->Length(),
-                task.request.scale, task.request.enable_audio);
-            CompositionModelLoader::OnResourceLoaderTraceEvent(
-                weak_model_loader, TraceEventType::kParseCompositionEnd,
-                config_json_file_path_str);
+  // Step 2: Independent loading keeps validated configuration without preparing
+  // video. The legacy path still builds the complete model from local media.
+  auto raw_data_to_model = MakeLambdaLoader<ZipCompositionModelTask,
+                                            CompositionModelResponse>(
+      [weak_model_loader](ZipCompositionModelTask task, auto callback) mutable {
+        auto raw_data = std::move(task.json_data);
+        const auto unzip_folder_path = task.response.base_uri;
+        const auto config_json_file_path_str =
+            ConcatFilePaths(unzip_folder_path, kConfigJSONFileName);
+        CompositionModelLoader::OnResourceLoaderTraceEvent(
+            weak_model_loader, TraceEventType::kParseCompositionStart,
+            config_json_file_path_str);
+        if (task.request.model_only) {
+          auto config = AlphaPlayerAssetParser::ParseConfig(
+              task.response.base_uri,
+              static_cast<const char*>(raw_data->Data()), raw_data->Length());
+          CompositionModelLoader::OnResourceLoaderTraceEvent(
+              weak_model_loader, TraceEventType::kParseCompositionEnd,
+              config_json_file_path_str);
+          if (!config || task.response.base_uri.empty()) {
+            callback({}, LoaderError{.code = kCompositionParserError,
+                                     .message = "Failed to parse AlphaPlayer "
+                                                "config.json."});
+            return;
+          }
+          task.response.alpha_player_config = std::move(config);
+          callback(std::move(task.response), {});
+          return;
+        }
+        auto model = AlphaPlayerAssetParser::Parse(
+            task.response.base_uri, static_cast<const char*>(raw_data->Data()),
+            raw_data->Length(), task.request.scale, task.request.enable_audio);
+        CompositionModelLoader::OnResourceLoaderTraceEvent(
+            weak_model_loader, TraceEventType::kParseCompositionEnd,
+            config_json_file_path_str);
 
-            if (!model) {
-              callback({}, LoaderError{.code = kCompositionParserError});
-              return;
-            }
+        if (!model) {
+          callback({}, LoaderError{.code = kCompositionParserError});
+          return;
+        }
 
-            task.response.model = std::move(model);
+        task.response.model = std::move(model);
 
-            if (!task.response.model || task.response.base_uri.empty()) {
-              callback(
-                  std::move(task.response),
-                  LoaderError{
-                      .code = kCompositionParserError,
-                      "Failed to convert config.json into CompositionModel."});
-            } else {
-              callback(std::move(task.response), {});
-            }
-          });
+        if (!task.response.model || task.response.base_uri.empty()) {
+          callback(std::move(task.response),
+                   LoaderError{
+                       .code = kCompositionParserError,
+                       "Failed to convert config.json into CompositionModel."});
+        } else {
+          callback(std::move(task.response), {});
+        }
+      });
 
   // Constructs the complete pipeline from the provided loaders.
   auto pipeline = config_json_to_raw_data | raw_data_to_model;

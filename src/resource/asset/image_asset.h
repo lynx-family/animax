@@ -34,7 +34,7 @@ class ImageAsset : public BaseAsset<ImageAsset> {
    * @return true either if the bitmap has been set or the Image has been
    * loaded.
    */
-  bool IsLoaded() const;
+  ANIMAX_EXPORT bool IsLoaded() const;
 
   /**
    * Determines whether the image asset is stored in Base64 format.
@@ -56,7 +56,7 @@ class ImageAsset : public BaseAsset<ImageAsset> {
    * @param bitmap Unique pointer to a Bitmap object representing the image
    * data.
    */
-  void SetBitmap(std::unique_ptr<Bitmap> bitmap);
+  ANIMAX_EXPORT void SetBitmap(std::unique_ptr<Bitmap> bitmap);
 
   /**
    * Retrieves the Image object using bitmap for rendering in a specified

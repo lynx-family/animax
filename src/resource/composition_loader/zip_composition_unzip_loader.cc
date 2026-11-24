@@ -57,6 +57,7 @@ ZipCompositionUnzipLoader::Ptr ZipCompositionUnzipLoader::MakePipeline(
             ResourceRequest resource_request{
                 .type = ResourceRequestType::kDownloadToLocal,
                 .uri_info = task.request.uri_info,
+                .cache_by_content = task.request.model_only,
             };
             resource_loader->Load(
                 std::move(resource_request),

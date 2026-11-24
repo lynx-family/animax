@@ -15,5 +15,11 @@ void AudioAsset::ResetModel(AudioAssetModel info) { model_ = std::move(info); }
 
 bool AudioAsset::IsValid() { return is_valid_; }
 
+int64_t AudioAsset::GetMemoryUsageBytes() const {
+  return sizeof(AudioAsset) + model_.id.capacity() +
+         model_.dir_name.capacity() + model_.file_name.capacity() +
+         file_path_.capacity();
+}
+
 }  // namespace animax
 }  // namespace lynx

@@ -5,6 +5,7 @@
 #include "src/resource/asset/video_asset.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "src/base/log/log.h"
 #include "src/base/util/misc_util.h"
@@ -18,6 +19,11 @@ VideoAsset::VideoAsset(VideoAssetModel info) : model_{std::move(info)} {
 
 VideoAsset::~VideoAsset() {
   ANIMAX_LOGI("Video asset is destroyed, this: " << this);
+}
+
+int64_t VideoAsset::GetMemoryUsageBytes() const {
+  return sizeof(VideoAsset) + model_.id.capacity() +
+         model_.dir_name.capacity() + model_.file_name.capacity();
 }
 
 std::string VideoAsset::ComposeUrl(const std::string& prefix) const {
@@ -61,6 +67,47 @@ void VideoAsset::ResetModel(VideoAssetModel info) {
   video_height_ = 0;
   frame_rate_ = 0.f;
   is_valid_ = false;
+}
+
+LoaderError VideoAsset::ResolvePreparedModel(VideoAssetModel* model) const {
+  if (!model || !IsValid() || video_width_ <= 0 || video_height_ <= 0 ||
+      !std::isfinite(GetFrameRate()) || GetFrameRate() <= 0.f ||
+      GetFrameCount() <= 0) {
+    return {kInvalidRawData, "Prepared video is invalid"};
+  }
+
+  auto resolved = *model;
+  if (resolved.rgb_frame == std::array<int32_t, 4>{} &&
+      resolved.a_frame == std::array<int32_t, 4>{}) {
+    if (video_width_ & 1) {
+      return {kInvalidRawData,
+              "Cannot recover video regions from an odd width"};
+    }
+    resolved.a_frame = {0, 0, video_width_ / 2, video_height_};
+    resolved.rgb_frame = {video_width_ / 2, 0, video_width_ / 2, video_height_};
+  }
+
+  const auto valid_region = [this](const std::array<int32_t, 4>& region) {
+    return region[0] >= 0 && region[1] >= 0 && region[2] > 0 && region[3] > 0 &&
+           static_cast<int64_t>(region[0]) + region[2] <= video_width_ &&
+           static_cast<int64_t>(region[1]) + region[3] <= video_height_;
+  };
+  if (!valid_region(resolved.rgb_frame) || !valid_region(resolved.a_frame)) {
+    return {kInvalidRawData,
+            "Video regions exceed the prepared video dimensions"};
+  }
+
+  *model = std::move(resolved);
+  return {};
+}
+
+LoaderError VideoAsset::SetPreparedModel(VideoAssetModel model) {
+  auto error = ResolvePreparedModel(&model);
+  if (error) {
+    return error;
+  }
+  model_ = std::move(model);
+  return {};
 }
 
 }  // namespace animax

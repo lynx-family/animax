@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+// cspell:ignore extensionless
 #include "src/resource/composition_loader/composition_model_pipeline.h"
 
 #include "include/resource/loader_error.h"
@@ -18,6 +19,16 @@
 
 namespace lynx {
 namespace animax {
+
+std::shared_ptr<CompositionModelPipeline>
+CompositionModelPipeline::MakeForPreload(ResourceLoader::Ptr resource_loader,
+                                         UnzipLoader::Ptr unzip_loader,
+                                         bool enable_audio) {
+  auto pipeline = std::make_shared<CompositionModelPipeline>();
+  pipeline->Init(std::move(resource_loader), std::move(unzip_loader));
+  pipeline->SetEnableAudio(enable_audio);
+  return pipeline;
+}
 
 void CompositionModelPipeline::Init(ResourceLoader::Ptr resource_loader,
                                     UnzipLoader::Ptr unzip_loader) {
@@ -136,6 +147,38 @@ void CompositionModelPipeline::LoadCompositionModelFromJSONString(
       .enable_audio = enable_audio_,
   };
   LoadCompositionModel(std::move(request), std::move(callback));
+}
+
+void CompositionModelPipeline::LoadCompositionModelOnlyFromURI(
+    std::string uri, float scale, ModelLoader::CallbackType callback) {
+  auto request = CompositionModelRequest{
+      .uri_info = UriInfo{.scheme = ParseUriScheme(uri),
+                          .content_type = ParseUriMainResourceContentType(
+                              uri, allow_extensionless_json_),
+                          .uri = std::move(uri)},
+      .scale = scale,
+      .enable_audio = enable_audio_,
+      .model_only = true,
+  };
+  auto loader = ChooseLoaderForCompositionModelRequest(request);
+  if (!loader) {
+    callback({},
+             LoaderError{.code = kInvalidLoader,
+                         .message = "Composition model loader is not ready."});
+    return;
+  }
+  loader->Load(
+      std::move(request),
+      [callback = std::move(callback),
+       has_dynamic_resource = has_dynamic_resource_](
+          CompositionModelResponse response, LoaderError error) mutable {
+        if (!error && response.model) {
+          // Match the legacy post-parse assignment; do not change the identity
+          // optimization used while parsing just to skip asset preparation.
+          response.model->should_reset_identity_ = !has_dynamic_resource;
+        }
+        callback(std::move(response), std::move(error));
+      });
 }
 
 void CompositionModelPipeline::LoadCompositionModelAsset(

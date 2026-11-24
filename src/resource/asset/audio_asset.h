@@ -8,6 +8,8 @@
 #include <atomic>
 #include <memory>
 
+#include "include/base/macros.h"
+#include "include/resource/loader_error.h"
 #include "src/audio/audio_controller.h"
 #include "src/resource/asset/asset.h"
 #include "src/resource/asset/audio_asset_model.h"
@@ -38,15 +40,15 @@ class AudioAsset : public BaseAsset<AudioAsset> {
    *
    * @return Constant reference to the AudioAssetModel.
    */
-  const AudioAssetModel& Model() const;
+  ANIMAX_EXPORT const AudioAssetModel& Model() const;
 
   /**
-   * Replaces the current AudioAssetModel with a new model and unloads the
-   * associated audio.
+   * Replaces the current AudioAssetModel without changing prepared audio data
+   * or its validity. This does not load audio from the new model's source.
    *
    * @param info New AudioAssetModel to replace the current one.
    */
-  void ResetModel(AudioAssetModel info);
+  ANIMAX_EXPORT void ResetModel(AudioAssetModel info);
 
   /**
    * Loads the audio from a local path.
@@ -55,7 +57,16 @@ class AudioAsset : public BaseAsset<AudioAsset> {
    */
   virtual void LoadLocal(const std::string& file_path) = 0;
 
-  bool IsValid();
+  // Independent loading only publishes complete audio. Each call uses a fresh
+  // candidate; backends opt in without tightening legacy playback behavior.
+  virtual LoaderError PrepareForPreload(const std::string& file_path) {
+    return {kNoSuchLoader, "Independent audio preparation is unavailable"};
+  }
+
+  ANIMAX_EXPORT bool IsValid();
+
+  // Owned CPU storage only. Platform decoder/OS allocations are not included.
+  virtual int64_t GetMemoryUsageBytes() const;
 
  protected:
   std::atomic<bool> is_valid_ = false;
