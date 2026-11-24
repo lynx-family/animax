@@ -54,11 +54,11 @@ void AnimaXRenderer::UpdateSurfaceInternal(
   auto controller_actor = weak_controller_actor_.lock();
   if (!surface || !surface->Valid()) {
     if (controller_actor) {
-      controller_actor->Act(
-          [error = EventError::kSurfaceInitError,
-           message = "Failed to update AnimaXSurface."](auto& controller) {
-            controller->NotifyError(error, message);
-          });
+      controller_actor->Act([error = EventError::kSurfaceInitError,
+                             message = "Failed to update AnimaXSurface.",
+                             id = installation_id_](auto& controller) {
+        controller->NotifyInstallationError(error, message, id);
+      });
     }
     return;
   }
@@ -90,7 +90,8 @@ void AnimaXRenderer::UpdateSurfaceInternal(
     }
   }
 
-  if (!has_surface_before_) {
+  if (!has_surface_before_ ||
+      (installation_id_ != 0 && !installed_model_initialized_)) {
     // If this is the first surface assigned to the renderer, initiate
     // animation.
     has_surface_before_ = true;
@@ -175,8 +176,24 @@ void AnimaXRenderer::UpdateComposition(
   StartAnimationIfNeeded();
 }
 
+bool AnimaXRenderer::IsCurrentInstallation(uint64_t installation_id) const {
+  if (is_destroyed_ || installation_id != installation_id_) {
+    return false;
+  }
+  auto context = weak_context_.lock();
+  auto player = context ? context->weak_player.lock() : nullptr;
+  return installation_id == 0 ||
+         (player && player->IsCurrentInstallation(installation_id));
+}
+
 void AnimaXRenderer::StartAnimationIfNeeded() {
   if (!surface_ || !model_) {
+    return;
+  }
+  if (installation_id_ != 0 &&
+      (installed_model_initialized_ || !surface_->Valid() || width_ <= 0 ||
+       height_ <= 0 || is_invalid_platform_surface_ ||
+       !IsCurrentInstallation(installation_id_))) {
     return;
   }
   if (surface_->Type() == AnimaXBackend::kSoftware &&
@@ -187,19 +204,25 @@ void AnimaXRenderer::StartAnimationIfNeeded() {
     // software.
     auto controller_actor = weak_controller_actor_.lock();
     if (controller_actor) {
-      controller_actor->Act([](auto& controller) {
-        controller->NotifyError(
+      controller_actor->Act([id = installation_id_](auto& controller) {
+        controller->NotifyInstallationError(
             EventError::kVideoPlayerSoftwareRenderingNotSupported,
-            "Video layers can't be rendered in software.");
+            "Video layers can't be rendered in software.", id);
       });
     }
-    model_->GetVideos().clear();
+    if (installation_id_ == 0) {
+      model_->GetVideos().clear();
+    }
     return;
   }
   StartAnimation();
 }
 
 void AnimaXRenderer::StartAnimation() {
+  // Player teardown can win after the installation check. Keep its context
+  // alive through layer initialization instead of locking the weak ref twice.
+  auto context = weak_context_.lock();
+  if (installation_id_ != 0 && !context) return;
   audio_controllers_.clear();
   has_rendered_first_frame_ = false;
   auto& bounds = model_->GetBounds();
@@ -210,9 +233,17 @@ void AnimaXRenderer::StartAnimation() {
   layer_ = std::unique_ptr<CompositionLayer>(
       new CompositionLayer(*layer_model_, *model_));
   layer_->SetLayerModels(model_->GetLayers());
-  layer_->SetEventListener(weak_playback_handler_);
+  if (installation_id_ != 0) {
+    layer_playback_handler_ = std::make_shared<AnimaXPlaybackEventHandler>();
+    layer_playback_handler_->Init(context);
+    layer_playback_handler_->SetInstallationId(installation_id_);
+    layer_->SetEventListener(layer_playback_handler_);
+  } else {
+    layer_->SetEventListener(weak_playback_handler_);
+  }
   layer_->SetPlayerContext(weak_context_);
   layer_->Init();
+  installed_model_initialized_ = true;
 
   auto controller_actor = weak_controller_actor_.lock();
   if (!controller_actor) {
@@ -227,6 +258,7 @@ void AnimaXRenderer::StartAnimation() {
       .image_count = model_->GetImages().size(),
       .video_count = model_->GetVideos().size(),
       .font_count = model_->GetFonts().size(),
+      .installation_id = installation_id_,
   };
   controller_actor->Act([meta = std::move(meta)](auto& controller) {
     controller->UpdateProperties(meta);
@@ -237,7 +269,7 @@ void AnimaXRenderer::Render(double progress) {
   if (disable_render_in_background_ && is_in_background_.load()) {
     return;
   }
-  if (is_destroyed_ || !surface_ || !surface_->Valid() ||
+  if (is_destroyed_ || !layer_ || !surface_ || !surface_->Valid() ||
       is_invalid_platform_surface_) {
     return;
   }
@@ -314,8 +346,11 @@ void AnimaXRenderer::OnTap(float x, float y) {
   if (!controller_actor) {
     return;
   }
-  controller_actor->Act([hit_layers = std::move(hit_layers)](auto& controller) {
-    controller->NotifyTapEvent(std::move(hit_layers));
+  // Keep the hit-test result tied to the model that produced it across
+  // dispatch.
+  controller_actor->Act([hit_layers = std::move(hit_layers),
+                         id = installation_id_](auto& controller) {
+    controller->NotifyTapEvent(std::move(hit_layers), id);
   });
 }
 
@@ -379,7 +414,15 @@ void AnimaXRenderer::EnsureSubscribeValidOrWarn() {
 void AnimaXRenderer::Destroy() {
   ANIMAX_LOGI("AnimaXRenderer Destroy");
   surface_ = nullptr;
+  if (installation_id_ != 0) {
+    OnPause();
+    audio_controllers_.clear();
+  }
   layer_ = nullptr;
+  if (installation_id_ != 0) {
+    layer_model_ = nullptr;
+    layer_playback_handler_ = nullptr;
+  }
   model_ = nullptr;
 }
 
@@ -387,6 +430,9 @@ void AnimaXRenderer::MarkDestroyed() { is_destroyed_ = true; }
 
 void AnimaXRenderer::MarkPlatformSurfaceAsInvalid(bool is_invalid) {
   is_invalid_platform_surface_ = is_invalid;
+  if (!is_invalid && installation_id_ != 0 && !installed_model_initialized_) {
+    StartAnimationIfNeeded();
+  }
 }
 
 void AnimaXRenderer::ResizeCanvas(Canvas& canvas) {
@@ -475,8 +521,8 @@ void AnimaXRenderer::NotifyFirstFrameIfNeeded() {
 
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([](auto& controller) {
-      controller->NotifyCurrentFrameEvent(Event::kFirstFrame);
+    controller_actor->Act([id = installation_id_](auto& controller) {
+      controller->NotifyInstallationFrameEvent(Event::kFirstFrame, id);
     });
   }
 
@@ -484,6 +530,18 @@ void AnimaXRenderer::NotifyFirstFrameIfNeeded() {
 }
 
 void AnimaXRenderer::Reload() {
+  if (installation_id_ != 0) {
+    if (!installed_model_initialized_) {
+      StartAnimationIfNeeded();
+      return;
+    }
+    if (auto controller = weak_controller_actor_.lock()) {
+      controller->Act([id = installation_id_](auto& impl) {
+        impl->NotifyInstallationFrameEvent(Event::kReady, id);
+      });
+    }
+    return;
+  }
   auto controller_actor = weak_controller_actor_.lock();
   if (!controller_actor) {
     return;
@@ -519,6 +577,13 @@ void AnimaXRenderer::UpdateLayerProperty(
 
 void AnimaXRenderer::SetResourceProperty(
     std::unique_ptr<ResourceUpdateRequest> request) {
+  auto context = weak_context_.lock();
+  auto player = context ? context->weak_player.lock() : nullptr;
+  if (player && player->IsCompositionMode()) {
+    request->InvokeCallback(
+        PropertyUpdateResponse(PropertyUpdateResult::kSourceConflict));
+    return;
+  }
   property_updater_->SetResourceProperty(std::move(request));
 }
 
@@ -599,8 +664,11 @@ void AnimaXRenderer::OnRerender() {
   if (has_rendered_first_frame_) {
     auto controller_actor = weak_controller_actor_.lock();
     if (controller_actor) {
-      controller_actor->Act(
-          [](auto& controller) { controller->SeekToCurrentFrame(); });
+      controller_actor->Act([id = installation_id_](auto& controller) {
+        if (controller->IsCurrentInstallation(id)) {
+          controller->SeekToCurrentFrame();
+        }
+      });
     }
   }
 }

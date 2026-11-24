@@ -23,6 +23,7 @@ AnimaXMainController::AnimaXMainController(
     std::shared_ptr<VSyncMonitor> vsync_monitor,
     std::weak_ptr<AnimaXPlaybackEventHandler> playback_handler)
     : weak_player_(std::move(weak_player)),
+      weak_playback_handler_(playback_handler),
       value_animator_(AnimaXValueAnimator::Create(
           std::move(vsync_monitor), std::move(playback_handler))) {
   event_dispatcher_ =
@@ -62,7 +63,42 @@ void AnimaXMainController::NotifyWarning(const EventWarning warning,
 }
 
 void AnimaXMainController::NotifyCurrentFrameEvent(const Event event) {
-  event_dispatcher_->NotifyFrameEvent(event, GetCurrentFrame());
+  event_dispatcher_->NotifyFrameEvent(event, GetCurrentFrame(),
+                                      model_meta_.installation_id);
+}
+
+bool AnimaXMainController::IsCurrentInstallation(uint64_t id) const {
+  if (id != model_meta_.installation_id) {
+    return false;
+  }
+  auto player = weak_player_.lock();
+  return id == 0 || (player && player->IsCurrentInstallation(id));
+}
+
+void AnimaXMainController::NotifyInstallationFrameEvent(Event event,
+                                                        uint64_t id) {
+  if (IsCurrentInstallation(id)) {
+    event_dispatcher_->NotifyFrameEvent(event, GetCurrentFrame(), id);
+  }
+}
+
+void AnimaXMainController::NotifyInstallationError(EventError error,
+                                                   const std::string& message,
+                                                   uint64_t id) {
+  auto player = weak_player_.lock();
+  // Layer initialization can fail before its metadata reaches this controller.
+  if (id == 0 || (player && player->IsCurrentInstallation(id))) {
+    event_dispatcher_->NotifyError(error, message, id);
+  }
+}
+
+void AnimaXMainController::OnCompositionInstalled(uint64_t id) {
+  auto player = weak_player_.lock();
+  if (player && player->IsCurrentInstallation(id)) {
+    value_animator_->Stop();
+    event_tracker_->Reset();
+    current_src_.clear();
+  }
 }
 
 void AnimaXMainController::NotifyFpsEvent(double fps, int32_t max_drop) {
@@ -70,8 +106,12 @@ void AnimaXMainController::NotifyFpsEvent(double fps, int32_t max_drop) {
 }
 
 void AnimaXMainController::NotifyTapEvent(
-    const std::unordered_set<std::string>& hit_layers) {
-  event_dispatcher_->NotifyTap(hit_layers);
+    const std::unordered_set<std::string>& hit_layers,
+    uint64_t installation_id) {
+  if (installation_id != 0 && !IsCurrentInstallation(installation_id)) {
+    return;
+  }
+  event_dispatcher_->NotifyTap(hit_layers, installation_id);
 }
 
 // Value animator operations
@@ -88,6 +128,13 @@ void AnimaXMainController::SeekToFrame(double frame) {
 }
 
 void AnimaXMainController::SeekToCurrentFrame() {
+  if (!IsCurrentInstallation(model_meta_.installation_id)) return;
+  if (model_meta_.installation_id != 0 &&
+      model_meta_.end_frame <= model_meta_.start_frame) {
+    // A static model without a playback interval still needs Surface redraws.
+    OnProgress(0, model_meta_.start_frame);
+    return;
+  }
   value_animator_->SeekToFrame(current_frame_, current_loop_);
 }
 
@@ -114,6 +161,7 @@ void AnimaXMainController::Pause() {
 }
 
 void AnimaXMainController::Resume() {
+  if (!IsCurrentInstallation(model_meta_.installation_id)) return;
   EnsureReadyOrWarn("Resume");
   event_dispatcher_->ClearPrevNotifiedFrame();
   value_animator_->Resume();
@@ -131,9 +179,26 @@ void AnimaXMainController::Seek(double frame) {
 }
 
 void AnimaXMainController::UpdateProperties(const CompositionModelMeta& meta) {
-  model_meta_ = meta;
-  // stop last animation
-  value_animator_->Stop();
+  auto player = weak_player_.lock();
+  if (meta.installation_id != 0 &&
+      (!player || !player->IsCurrentInstallation(meta.installation_id))) {
+    return;
+  }
+  if (meta.installation_id == 0) {
+    // Retain the existing metadata/cancel ordering for src/json.
+    model_meta_ = meta;
+    value_animator_->Stop();
+  } else {
+    // Stop while the handler still identifies the old animator. Its queued
+    // pause/cancel/progress tasks must not affect the new installation.
+    value_animator_->Stop();
+    model_meta_ = meta;
+    // The update cursor still holds a frame of the previous timeline.
+    event_dispatcher_->ClearPrevNotifiedFrame();
+  }
+  if (auto handler = weak_playback_handler_.lock()) {
+    handler->SetInstallationId(meta.installation_id);
+  }
   current_frame_ = meta.start_frame;
   current_progress_ = 0.0;
   current_loop_ = 0;
@@ -157,7 +222,11 @@ void AnimaXMainController::UpdateProperties(const CompositionModelMeta& meta) {
         NotifyWarning(warning, warning_message);
       });
 
-  if (autoplay_) {
+  if (meta.installation_id != 0 && meta.end_frame <= meta.start_frame) {
+    // A static composition has no playable interval but still has a frame.
+    // The animator can neither seek nor start it, even with autoplay.
+    OnProgress(0, meta.start_frame);
+  } else if (autoplay_) {
     ANIMAX_LOGI("AutoPlay true");
     PlayFromStart();
   } else if (!EnableDynamicResourceFeature()) {
@@ -256,6 +325,7 @@ void AnimaXMainController::SetDynamicResource(bool dynamic) {
 }
 
 void AnimaXMainController::Reload() {
+  if (!IsCurrentInstallation(model_meta_.installation_id)) return;
   if (autoplay_) {
     PlayFromStart();
   } else {
@@ -292,6 +362,7 @@ void AnimaXMainController::Play() {
 }
 
 void AnimaXMainController::PlaySegment(double start_frame, double end_frame) {
+  if (!IsCurrentInstallation(model_meta_.installation_id)) return;
   auto player = weak_player_.lock();
   if (!player) {
     return;
@@ -375,11 +446,12 @@ void AnimaXMainController::OnProgress(double progress, double current_frame) {
 
   current_frame_ = current_frame;
   current_progress_ = progress;
-  event_dispatcher_->NotifyUpdateEvent(current_frame_);
+  event_dispatcher_->NotifyUpdateEvent(current_frame_,
+                                       model_meta_.installation_id);
 
   auto player = weak_player_.lock();
   if (player) {
-    player->OnProgress(progress, current_frame);
+    player->OnProgress(progress, current_frame, model_meta_.installation_id);
   }
 }
 
@@ -440,6 +512,7 @@ double AnimaXMainController::GetCurrentFrame() { return current_frame_; }
 double AnimaXMainController::GetProgress() { return current_progress_; }
 
 bool AnimaXMainController::IsAnimationReady() {
+  if (!IsCurrentInstallation(model_meta_.installation_id)) return false;
   return event_tracker_->GetEventValue(
       PlayerEventTracker::AnimationEventType::kReady);
 }

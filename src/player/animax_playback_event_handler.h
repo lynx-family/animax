@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_PLAYER_ANIMAX_PLAYBACK_EVENT_HANDLER_H_
 #define ANIMAX_SRC_PLAYER_ANIMAX_PLAYBACK_EVENT_HANDLER_H_
 
+#include <atomic>
 #include <memory>
 
 #include "base/include/lynx_actor.h"
@@ -32,6 +33,10 @@ class AnimaXPlaybackEventHandler
 
   void Init(std::shared_ptr<AnimaXPlayerContext> context);
 
+  // Updated only after the previous animator stops. Each dispatched task
+  // captures this value before crossing threads.
+  void SetInstallationId(uint64_t id) { installation_id_.store(id); }
+
   // ValueAnimatorListener overrides
   void OnStart() override;
   void OnResume() override;
@@ -53,6 +58,7 @@ class AnimaXPlaybackEventHandler
   void OnFps(float fps, uint32_t session_max_drop_value) override;
 
  private:
+  std::atomic<uint64_t> installation_id_{0};
   std::weak_ptr<shell::LynxActor<AnimaXMainController>> weak_controller_actor_;
   std::weak_ptr<shell::LynxActor<AnimaXRenderer>> weak_renderer_actor;
 };

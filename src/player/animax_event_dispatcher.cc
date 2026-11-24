@@ -59,19 +59,20 @@ void AnimaXEventDispatcher::ClearPrevNotifiedFrame() {
   prev_notified_frame_ = -1;
 }
 
-void AnimaXEventDispatcher::NotifyUpdateEvent(double frame) {
+void AnimaXEventDispatcher::NotifyUpdateEvent(double frame,
+                                              uint64_t installation_id) {
   const auto current_frame = static_cast<int32_t>(std::round(frame));
   if (-1 == prev_notified_frame_) {
     prev_notified_frame_ = current_frame;
     if (subscribed_frames_.count(current_frame)) {
-      NotifyFrameEvent(Event::kUpdate, current_frame);
+      NotifyFrameEvent(Event::kUpdate, current_frame, installation_id);
     }
   } else if (speed_ < 0.0) {
     for (auto frame = prev_notified_frame_ - 1; frame >= current_frame;
          --frame) {
       prev_notified_frame_ = frame;
       if (subscribed_frames_.count(frame)) {
-        NotifyFrameEvent(Event::kUpdate, frame);
+        NotifyFrameEvent(Event::kUpdate, frame, installation_id);
       }
     }
   } else {
@@ -80,7 +81,7 @@ void AnimaXEventDispatcher::NotifyUpdateEvent(double frame) {
          ++frame) {
       prev_notified_frame_ = frame;
       if (subscribed_frames_.count(frame)) {
-        NotifyFrameEvent(Event::kUpdate, frame);
+        NotifyFrameEvent(Event::kUpdate, frame, installation_id);
       }
     }
   }
@@ -104,6 +105,10 @@ void AnimaXEventDispatcher::NotifyEvent(Event event,
 EventParamMap AnimaXEventDispatcher::ConvertEventParamsIntoMap(
     const Event event, std::unique_ptr<IEventParams> params_in) {
   EventParamMap params_out;
+  if (params_in->installation_id != 0) {
+    params_out[EventKeys::kInstallationId] =
+        std::to_string(params_in->installation_id);
+  }
   if (event == Event::kError) {
     auto* error_params = static_cast<ErrorParams*>(params_in.get());
     params_out[EventKeys::kCode] = error_params->code_;
@@ -149,14 +154,18 @@ EventParamMap AnimaXEventDispatcher::ConvertEventParamsIntoMap(
 }
 
 void AnimaXEventDispatcher::NotifyError(const EventError err,
-                                        const std::string& err_msg) {
+                                        const std::string& err_msg,
+                                        uint64_t installation_id) {
   auto params = std::unique_ptr<ErrorParams>(new ErrorParams(err, err_msg));
+  params->installation_id = installation_id;
   NotifyEvent(Event::kError, std::move(params));
 }
 
 void AnimaXEventDispatcher::NotifyTap(
-    const std::unordered_set<std::string>& hit_layers) {
+    const std::unordered_set<std::string>& hit_layers,
+    uint64_t installation_id) {
   auto params = std::unique_ptr<TapParams>(new TapParams(hit_layers));
+  params->installation_id = installation_id;
   NotifyEvent(Event::kTapLayer, std::move(params));
 }
 
@@ -175,9 +184,10 @@ void AnimaXEventDispatcher::NotifyWarning(const EventWarning warning,
   NotifyEvent(Event::kWarning, std::move(params));
 }
 
-void AnimaXEventDispatcher::NotifyFrameEvent(Event event,
-                                             double current_frame) {
+void AnimaXEventDispatcher::NotifyFrameEvent(Event event, double current_frame,
+                                             uint64_t installation_id) {
   auto params = std::unique_ptr<FrameParams>(new FrameParams(current_frame));
+  params->installation_id = installation_id;
   NotifyEvent(event, std::move(params));
 }
 

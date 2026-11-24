@@ -98,6 +98,7 @@ struct EventKeys {
   static constexpr const char* kTotal = "total";
   static constexpr const char* kLoopIndex = "loopIndex";
   static constexpr const char* kPlayerId = "elementID";
+  static constexpr const char* kInstallationId = "installationId";
 };
 
 class AnimaXPlayer;

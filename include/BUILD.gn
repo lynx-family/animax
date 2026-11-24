@@ -14,6 +14,7 @@ animax_public_headers = [
   "player/animax_event.h",
   "player/animax_player_builder.h",
   "player/animax_player.h",
+  "player/composition_binding.h",
   "player/animax_surface.h",
   "player/vsync_monitor.h",
   "resource/bitmap.h",

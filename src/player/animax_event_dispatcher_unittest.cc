@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -160,6 +162,55 @@ TEST_F(AnimaXEventDispatcherTest,
   SUCCEED();
 }
 
+TEST_F(AnimaXEventDispatcherTest,
+       UpdateEventsIncludeInstallationIdInBothDirections) {
+  std::vector<std::pair<double, std::string>> updates;
+  dispatcher_->AddEventListener([&updates](std::weak_ptr<AnimaXPlayer>,
+                                           Event event,
+                                           const EventParamMap& params) {
+    EXPECT_EQ(Event::kUpdate, event);
+    auto current = params.find(EventKeys::kCurrent);
+    auto installation = params.find(EventKeys::kInstallationId);
+    ASSERT_NE(params.end(), current);
+    ASSERT_TRUE(current->second.double_val.has_value());
+    ASSERT_NE(params.end(), installation);
+    ASSERT_NE(nullptr, installation->second.string_val);
+    updates.emplace_back(*current->second.double_val,
+                         *installation->second.string_val);
+  });
+  dispatcher_->SubscribeUpdateEvent(10);
+  dispatcher_->SubscribeUpdateEvent(12);
+
+  dispatcher_->NotifyUpdateEvent(10, 1234567890123ULL);
+  dispatcher_->NotifyUpdateEvent(13, 1234567890123ULL);
+  dispatcher_->ClearPrevNotifiedFrame();
+  dispatcher_->SetSpeed(-1.0);
+  dispatcher_->NotifyUpdateEvent(12, 456);
+  dispatcher_->NotifyUpdateEvent(9, 456);
+
+  const std::vector<std::pair<double, std::string>> expected = {
+      {10, "1234567890123"}, {12, "1234567890123"}, {12, "456"}, {10, "456"}};
+  EXPECT_EQ(expected, updates);
+}
+
+TEST_F(AnimaXEventDispatcherTest, UpdateEventOmitsLegacyInstallationId) {
+  int event_count = 0;
+  dispatcher_->AddEventListener([&event_count](std::weak_ptr<AnimaXPlayer>,
+                                               Event event,
+                                               const EventParamMap& params) {
+    ++event_count;
+    EXPECT_EQ(Event::kUpdate, event);
+    EXPECT_EQ(params.end(), params.find(EventKeys::kInstallationId));
+    auto current = params.find(EventKeys::kCurrent);
+    ASSERT_NE(params.end(), current);
+    ASSERT_TRUE(current->second.double_val.has_value());
+    EXPECT_DOUBLE_EQ(10, *current->second.double_val);
+  });
+  dispatcher_->SubscribeUpdateEvent(10);
+  dispatcher_->NotifyUpdateEvent(10);
+  EXPECT_EQ(1, event_count);
+}
+
 TEST_F(AnimaXEventDispatcherTest, SetSpeed_UpdatesSpeed) {
   dispatcher_->SetSpeed(2.0);
 
@@ -191,6 +242,33 @@ TEST_F(AnimaXEventDispatcherTest, NotifyTap_NotifiesTapEvent) {
 
   dispatcher_->AddEventListener(std::move(mock_listener));
   dispatcher_->NotifyTap(hit_layers);
+}
+
+TEST_F(AnimaXEventDispatcherTest, TapEventsIncludeOnlyNonzeroInstallationId) {
+  int event_count = 0;
+  dispatcher_->AddEventListener([&event_count](std::weak_ptr<AnimaXPlayer>,
+                                               Event event,
+                                               const EventParamMap& params) {
+    EXPECT_EQ(Event::kTapLayer, event);
+    auto layers = params.find(EventKeys::kLayerList);
+    ASSERT_NE(params.end(), layers);
+    ASSERT_NE(nullptr, layers->second.string_vector_val);
+    EXPECT_THAT(*layers->second.string_vector_val,
+                ::testing::UnorderedElementsAre("layer1", "layer2"));
+    auto installation = params.find(EventKeys::kInstallationId);
+    if (event_count == 0) {
+      EXPECT_EQ(params.end(), installation);
+    } else {
+      ASSERT_NE(params.end(), installation);
+      ASSERT_NE(nullptr, installation->second.string_val);
+      EXPECT_EQ("789", *installation->second.string_val);
+    }
+    ++event_count;
+  });
+  const std::unordered_set<std::string> hit_layers = {"layer1", "layer2"};
+  dispatcher_->NotifyTap(hit_layers);
+  dispatcher_->NotifyTap(hit_layers, 789);
+  EXPECT_EQ(2, event_count);
 }
 
 TEST_F(AnimaXEventDispatcherTest, NotifyWarning_NotifiesWarningEvent) {

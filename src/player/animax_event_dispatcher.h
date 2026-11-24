@@ -40,12 +40,14 @@ class AnimaXEventDispatcher {
    * @param err Error code.
    * @param err_msg Error message string.
    */
-  void NotifyError(const EventError err, const std::string& err_msg);
+  void NotifyError(const EventError err, const std::string& err_msg,
+                   uint64_t installation_id = 0);
   /**
    * Notify a tap event on specified layers.
    * @param hit_layers Set of layer names that were tapped.
    */
-  void NotifyTap(const std::unordered_set<std::string>& hit_layers);
+  void NotifyTap(const std::unordered_set<std::string>& hit_layers,
+                 uint64_t installation_id = 0);
   /**
    * Notify a warning event with message.
    * @param warning Warning code.
@@ -58,7 +60,8 @@ class AnimaXEventDispatcher {
    * @param event Event type.
    * @param current_frame Current frame number.
    */
-  void NotifyFrameEvent(Event event, double current_frame);
+  void NotifyFrameEvent(Event event, double current_frame,
+                        uint64_t installation_id = 0);
   /**
    * Notify an fps event with current frame, max drop value and fps.
    * @param current_frame Current frame number.
@@ -71,7 +74,7 @@ class AnimaXEventDispatcher {
    * Notify an update event with current frame.
    * @param current_frame Current frame number.
    */
-  void NotifyUpdateEvent(double current_frame);
+  void NotifyUpdateEvent(double current_frame, uint64_t installation_id = 0);
 
   void SetSpeed(double speed);
 

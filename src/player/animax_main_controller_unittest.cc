@@ -118,6 +118,107 @@ TEST_F(AnimaXMainControllerTest, OnProgress_UpdatesCurrentFrame) {
   EXPECT_DOUBLE_EQ(0.5, controller_actor_->Impl()->GetProgress());
 }
 
+TEST_F(AnimaXMainControllerTest, LegacyProgressUpdateOmitsInstallationId) {
+  auto* controller = controller_actor_->Impl();
+  controller->SetAutoplay(false);
+  mock_playback_handler_.reset();
+  controller->UpdateProperties(CompositionModelMeta{
+      .start_frame = 0.0f,
+      .end_frame = 50.0f,
+      .frame_rate = 30.0f,
+  });
+  int update_count = 0;
+  controller->AddEventListener([&update_count](std::weak_ptr<AnimaXPlayer>,
+                                               Event event,
+                                               const EventParamMap& params) {
+    if (event != Event::kUpdate) {
+      return;
+    }
+    ++update_count;
+    EXPECT_EQ(params.end(), params.find(EventKeys::kInstallationId));
+    auto current = params.find(EventKeys::kCurrent);
+    ASSERT_NE(params.end(), current);
+    ASSERT_TRUE(current->second.double_val.has_value());
+    EXPECT_DOUBLE_EQ(10, *current->second.double_val);
+  });
+  controller->SubscribeUpdateEvent(10);
+  controller->OnProgress(0.2, 10.0);
+  EXPECT_EQ(1, update_count);
+}
+
+TEST_F(AnimaXMainControllerTest, RejectsMismatchedTapAndKeepsLegacyTap) {
+  auto* controller = controller_actor_->Impl();
+  int tap_count = 0;
+  controller->AddEventListener([&tap_count](std::weak_ptr<AnimaXPlayer>,
+                                            Event event,
+                                            const EventParamMap& params) {
+    EXPECT_EQ(Event::kTapLayer, event);
+    EXPECT_EQ(params.end(), params.find(EventKeys::kInstallationId));
+    auto layers = params.find(EventKeys::kLayerList);
+    ASSERT_NE(params.end(), layers);
+    ASSERT_NE(nullptr, layers->second.string_vector_val);
+    EXPECT_THAT(*layers->second.string_vector_val,
+                ::testing::UnorderedElementsAre("coupon"));
+    ++tap_count;
+  });
+
+  controller->NotifyTapEvent({"coupon"}, 42);
+  EXPECT_EQ(0, tap_count);
+  controller->NotifyTapEvent({"coupon"});
+  EXPECT_EQ(1, tap_count);
+}
+
+TEST_F(AnimaXMainControllerTest,
+       BindingCancellationOnlyCompletesMatchingRequest) {
+  ASSERT_TRUE(player_->SetCompositionMode(true));
+  StrictMock<::testing::MockFunction<void(bool, std::string, std::string)>>
+      completion;
+  auto request =
+      player_->BeginCompositionBinding(2, completion.AsStdFunction());
+  ASSERT_TRUE(request->IsPending());
+  EXPECT_EQ(2u, request->Id());
+
+  player_->CancelCompositionBinding(1);
+  EXPECT_TRUE(request->IsPending());
+
+  EXPECT_CALL(completion,
+              Call(false, "Superseded", ::testing::Not(::testing::IsEmpty())))
+      .Times(1);
+  player_->CancelCompositionBinding(2);
+  EXPECT_FALSE(request->IsPending());
+  player_->CancelCompositionBinding(2);
+}
+
+TEST_F(AnimaXMainControllerTest,
+       BindingSupersessionAndRemovalAllowAnotherRequest) {
+  ASSERT_TRUE(player_->SetCompositionMode(true));
+  StrictMock<::testing::MockFunction<void(bool, std::string, std::string)>>
+      first_completion, second_completion, retry_completion;
+  auto first =
+      player_->BeginCompositionBinding(1, first_completion.AsStdFunction());
+  ASSERT_TRUE(first->IsPending());
+
+  EXPECT_CALL(first_completion, Call(false, "Superseded", ::testing::_))
+      .Times(1);
+  auto second =
+      player_->BeginCompositionBinding(2, second_completion.AsStdFunction());
+  EXPECT_FALSE(first->IsPending());
+  ASSERT_TRUE(second->IsPending());
+
+  EXPECT_CALL(second_completion, Call(false, "Destroyed", ::testing::_))
+      .Times(1);
+  player_->CancelPendingCompositionBinding();
+  EXPECT_FALSE(second->IsPending());
+
+  auto retry =
+      player_->BeginCompositionBinding(3, retry_completion.AsStdFunction());
+  ASSERT_TRUE(retry->IsPending());
+  EXPECT_CALL(retry_completion, Call(false, "Destroyed", ::testing::_))
+      .Times(1);
+  player_->Destroy();
+  EXPECT_FALSE(retry->IsPending());
+}
+
 TEST_F(AnimaXMainControllerTest,
        UpdateProperties_ReportsTimelineTotalAndDuration) {
   controller_actor_->Impl()->SetAutoplay(false);
