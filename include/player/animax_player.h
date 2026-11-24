@@ -20,10 +20,12 @@
 #include "include/player/animax_event.h"
 #include "include/player/animax_fit_position.h"
 #include "include/player/animax_surface.h"
+#include "include/player/composition_binding.h"
 #include "include/property/property_update_request.h"
 
 namespace lynx {
 namespace animax {
+class PreloadHost;
 class LayerModel;
 class AnimaXValueAnimator;
 class CompositionModelPipeline;
@@ -52,6 +54,34 @@ struct LoaderError;
 class ANIMAX_EXPORT AnimaXPlayer
     : public std::enable_shared_from_this<AnimaXPlayer> {
  public:
+  // Select once during component creation, before its source props execute.
+  bool SetCompositionMode(bool enabled);
+  bool IsCompositionMode() const;
+  void SetCompositionHost(std::weak_ptr<PreloadHost> host,
+                          CompositionHostGuard guard);
+  uint64_t GetInstanceToken() const { return instance_token_; }
+  std::string GetPlayerID() const;
+  CompositionBindingError ValidatePlayerReceiver(
+      uint64_t token, const std::shared_ptr<PreloadHost> &owner) const;
+  CompositionBindingError ValidateCompositionReceiver(
+      uint64_t token, const std::shared_ptr<PreloadHost> &owner) const;
+
+  std::shared_ptr<CompositionBindingRequest> BeginCompositionBinding(
+      uint64_t request_id, CompositionBindingRequest::Completion completion);
+  // Node removal can precede native destruction. Cancel only an installation
+  // still in progress; committed results and the reusable player stay intact.
+  void CancelPendingCompositionBinding();
+  // Cancel the matching updateComposition request without disposing its data.
+  // An older caller must not cancel a newer binding. The original completion
+  // reports the outcome; an already committed installation remains successful.
+  void CancelCompositionBinding(uint64_t request_id);
+  // Static validation runs at the head of the Composition FIFO, before any
+  // default asset preparation. The Renderer checks mutable state again.
+  CompositionBindingError ValidateCompositionBinding(
+      const std::shared_ptr<CompositionBindingRequest> &request,
+      const std::shared_ptr<PreloadHost> &owner, float scale) const;
+  bool IsCurrentInstallation(uint64_t installation_id) const;
+
   /**
    * Destructor.
    * IMPORTANT: Always call Destroy() before destroying the player instance.
@@ -311,6 +341,8 @@ class ANIMAX_EXPORT AnimaXPlayer
    * @param current_frame Current frame index.
    */
   void OnProgress(double progress, double current_frame);
+  void OnProgress(double progress, double current_frame,
+                  uint64_t installation_id);
   /**
    * Handle a tap event at the specified coordinates.
    * @param x X coordinate of the tap.
@@ -422,6 +454,8 @@ class ANIMAX_EXPORT AnimaXPlayer
                          std::shared_ptr<CompositionModel> model);
   bool EnableDynamicResourceFeature();
 
+  const uint64_t instance_token_;
+  std::shared_ptr<CompositionBindingState> binding_state_;
   float scale_ = 1.f;
   bool allow_extensionless_json_ = false;
   struct SourceState {

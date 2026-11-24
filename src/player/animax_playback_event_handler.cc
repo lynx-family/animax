@@ -24,7 +24,8 @@ void AnimaXPlaybackEventHandler::Init(
 void AnimaXPlaybackEventHandler::OnStart() {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([](auto& controller) {
+    controller_actor->Act([id = installation_id_.load()](auto& controller) {
+      if (!controller->IsCurrentInstallation(id)) return;
       controller->NotifyCurrentFrameEvent(Event::kStart);
     });
   }
@@ -33,14 +34,18 @@ void AnimaXPlaybackEventHandler::OnStart() {
 void AnimaXPlaybackEventHandler::OnResume() {
   auto renderer_actor = weak_renderer_actor.lock();
   if (renderer_actor) {
-    renderer_actor->Act([](auto& renderer) { renderer->OnResume(); });
+    renderer_actor->Act([id = installation_id_.load()](auto& renderer) {
+      if (renderer->IsCurrentInstallation(id)) renderer->OnResume();
+    });
   }
 }
 
 void AnimaXPlaybackEventHandler::OnPause() {
   auto renderer_actor = weak_renderer_actor.lock();
   if (renderer_actor) {
-    renderer_actor->Act([](auto& renderer) { renderer->OnPause(); });
+    renderer_actor->Act([id = installation_id_.load()](auto& renderer) {
+      if (renderer->IsCurrentInstallation(id)) renderer->OnPause();
+    });
   }
 }
 
@@ -48,7 +53,9 @@ void AnimaXPlaybackEventHandler::OnProgress(double progress,
                                             double current_frame) {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([progress, current_frame](auto& controller) {
+    controller_actor->Act([progress, current_frame,
+                           id = installation_id_.load()](auto& controller) {
+      if (!controller->IsCurrentInstallation(id)) return;
       controller->OnProgress(progress, current_frame);
     });
   }
@@ -57,31 +64,41 @@ void AnimaXPlaybackEventHandler::OnProgress(double progress,
 void AnimaXPlaybackEventHandler::OnNewLoop(int32_t current_loop) {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([current_loop](auto& controller) {
-      controller->OnNewLoop(current_loop);
-    });
+    controller_actor->Act(
+        [current_loop, id = installation_id_.load()](auto& controller) {
+          if (!controller->IsCurrentInstallation(id)) return;
+          controller->OnNewLoop(current_loop);
+        });
   }
 }
 
 void AnimaXPlaybackEventHandler::OnEnd() {
   auto renderer_actor = weak_renderer_actor.lock();
   if (renderer_actor) {
-    renderer_actor->Act([](auto& renderer) { renderer->OnEnd(); });
+    renderer_actor->Act([id = installation_id_.load()](auto& renderer) {
+      if (renderer->IsCurrentInstallation(id)) renderer->OnEnd();
+    });
   }
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([](auto& controller) { controller->OnEnd(); });
+    controller_actor->Act([id = installation_id_.load()](auto& controller) {
+      if (!controller->IsCurrentInstallation(id)) return;
+      controller->OnEnd();
+    });
   }
 }
 
 void AnimaXPlaybackEventHandler::OnCancel() {
   auto renderer_actor = weak_renderer_actor.lock();
   if (renderer_actor) {
-    renderer_actor->Act([](auto& renderer) { renderer->OnCancel(); });
+    renderer_actor->Act([id = installation_id_.load()](auto& renderer) {
+      if (renderer->IsCurrentInstallation(id)) renderer->OnCancel();
+    });
   }
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([](auto& controller) {
+    controller_actor->Act([id = installation_id_.load()](auto& controller) {
+      if (!controller->IsCurrentInstallation(id)) return;
       controller->NotifyCurrentFrameEvent(Event::kCancel);
     });
   }
@@ -91,9 +108,11 @@ void AnimaXPlaybackEventHandler::OnWarning(const EventWarning warning,
                                            const std::string& warning_msg) {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([warning, warning_msg](auto& controller) {
-      controller->NotifyWarning(warning, warning_msg);
-    });
+    controller_actor->Act(
+        [warning, warning_msg, id = installation_id_.load()](auto& controller) {
+          if (!controller->IsCurrentInstallation(id)) return;
+          controller->NotifyWarning(warning, warning_msg);
+        });
   }
 }
 
@@ -101,9 +120,10 @@ void AnimaXPlaybackEventHandler::OnLayerError(const EventError err,
                                               const std::string& err_msg) {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([err, err_msg](auto& controller) {
-      controller->NotifyError(err, err_msg);
-    });
+    controller_actor->Act(
+        [err, err_msg, id = installation_id_.load()](auto& controller) {
+          controller->NotifyInstallationError(err, err_msg, id);
+        });
   }
 }
 
@@ -116,7 +136,9 @@ void AnimaXPlaybackEventHandler::OnFps(float fps,
                                        uint32_t session_max_drop_value) {
   auto controller_actor = weak_controller_actor_.lock();
   if (controller_actor) {
-    controller_actor->Act([fps, session_max_drop_value](auto& controller) {
+    controller_actor->Act([fps, session_max_drop_value,
+                           id = installation_id_.load()](auto& controller) {
+      if (!controller->IsCurrentInstallation(id)) return;
       controller->NotifyFpsEvent(fps, session_max_drop_value);
     });
   }
@@ -125,7 +147,9 @@ void AnimaXPlaybackEventHandler::OnFps(float fps,
 void AnimaXPlaybackEventHandler::OnRerender() {
   auto renderer_actor = weak_renderer_actor.lock();
   if (renderer_actor) {
-    renderer_actor->Act([](auto& renderer) { renderer->OnRerender(); });
+    renderer_actor->Act([id = installation_id_.load()](auto& renderer) {
+      if (renderer->IsCurrentInstallation(id)) renderer->OnRerender();
+    });
   }
 }
 

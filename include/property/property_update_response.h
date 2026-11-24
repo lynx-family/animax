@@ -30,6 +30,7 @@ enum class PropertyUpdateResult : uint16_t {
   kKeyPathMismatched,       // Key path does not match any elements
   kPropertyNotFound,        // Property not found in the matching elements
   kInvalidOperation,  // Operation not supported or invalid in this context
+  kSourceConflict,    // Resource writes are unavailable in composition mode
   kEnumCount,
 };
 

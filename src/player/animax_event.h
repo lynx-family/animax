@@ -23,6 +23,7 @@ const char* StringifyEventWarning(EventWarning warning);
 class IEventParams {
  public:
   virtual ~IEventParams() = default;
+  uint64_t installation_id = 0;
 };
 
 class TapParams : public IEventParams {

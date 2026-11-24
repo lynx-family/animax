@@ -4,6 +4,8 @@
 
 #include "include/player/animax_player.h"
 
+#include <cmath>
+
 #include "include/player/animax_player_builder.h"
 #include "include/player/animax_surface.h"
 #include "src/base/log/log.h"
@@ -16,14 +18,218 @@
 #include "src/player/animax_main_controller.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/player/animax_renderer.h"
+#include "src/player/composition_binding_state.h"
 #include "src/player/layer_query.h"
 #include "src/resource/log_util.h"
 
 namespace lynx {
 namespace animax {
+namespace {
+std::atomic<uint64_t> next_instance_token{1};
+
+}  // namespace
+
+CompositionBindingRequest::CompositionBindingRequest(
+    std::shared_ptr<CompositionBindingState> state, uint64_t id,
+    Completion completion)
+    : state_(std::move(state)), id_(id), completion_(std::move(completion)) {}
+
+bool CompositionBindingRequest::IsPending() const {
+  return phase_.load() == Phase::kPending;
+}
+
+void CompositionBindingRequest::Fail(std::string code, std::string message) {
+  Completion completion;
+  {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    if (phase_ != Phase::kPending) {
+      return;
+    }
+    phase_ = Phase::kFailed;
+    completion = std::move(completion_);
+  }
+  if (completion) {
+    completion(false, std::move(code), std::move(message));
+  }
+}
+
+bool AnimaXPlayer::SetCompositionMode(bool enabled) {
+  std::lock_guard<std::mutex> lock(binding_state_->mutex);
+  if (binding_state_->mode_locked) {
+    return binding_state_->composition_mode == enabled;
+  }
+  binding_state_->mode_locked = true;
+  binding_state_->composition_mode = enabled;
+  return true;
+}
+
+bool AnimaXPlayer::IsCompositionMode() const {
+  std::lock_guard<std::mutex> lock(binding_state_->mutex);
+  return binding_state_->composition_mode;
+}
+
+void AnimaXPlayer::SetCompositionHost(std::weak_ptr<PreloadHost> host,
+                                      CompositionHostGuard guard) {
+  std::lock_guard<std::mutex> lock(binding_state_->mutex);
+  // A component belongs to the page that created it for its entire lifetime.
+  if (!binding_state_->valid || binding_state_->host_guard) {
+    return;
+  }
+  binding_state_->host = std::move(host);
+  binding_state_->host_guard = std::move(guard);
+}
+
+std::string AnimaXPlayer::GetPlayerID() const {
+  // The ID is assigned synchronously at creation and never changes.
+  return controller_actor_->Impl()->GetPlayerID();
+}
+
+CompositionBindingError AnimaXPlayer::ValidatePlayerReceiver(
+    uint64_t token, const std::shared_ptr<PreloadHost>& owner) const {
+  CompositionHostGuard guard;
+  {
+    std::lock_guard<std::mutex> lock(binding_state_->mutex);
+    if (token != instance_token_) {
+      return {"InstanceMismatch", "The component instance has changed"};
+    }
+    if (!binding_state_->valid) {
+      return {"Destroyed", "The component has been destroyed"};
+    }
+    const auto& host = binding_state_->host;
+    if (!owner || host.expired() || !binding_state_->host_guard) {
+      return {"UnsupportedCapability", "The component has no preload host"};
+    }
+    if (host.owner_before(owner) || owner.owner_before(host)) {
+      return {"HostMismatch", "The component belongs to another preload host"};
+    }
+    guard = binding_state_->host_guard;
+  }
+  // Do not acquire host validity while holding the Player lock.
+  if (!guard([] {})) {
+    return {"EnvironmentUnavailable", "Preload host is unavailable"};
+  }
+  return {};
+}
+
+CompositionBindingError AnimaXPlayer::ValidateCompositionReceiver(
+    uint64_t token, const std::shared_ptr<PreloadHost>& owner) const {
+  auto error = ValidatePlayerReceiver(token, owner);
+  if (!error.IsSuccess()) return error;
+  std::lock_guard<std::mutex> lock(binding_state_->mutex);
+  if (!binding_state_->composition_mode) {
+    return {"SourceConflict", "The component uses src/json loading"};
+  }
+  return {};
+}
+
+std::shared_ptr<CompositionBindingRequest>
+AnimaXPlayer::BeginCompositionBinding(
+    uint64_t request_id, CompositionBindingRequest::Completion completion) {
+  auto request =
+      std::shared_ptr<CompositionBindingRequest>(new CompositionBindingRequest(
+          binding_state_, request_id, std::move(completion)));
+  CompositionBindingRequest::Completion previous_completion;
+  CompositionBindingError error;
+  {
+    std::lock_guard<std::mutex> lock(binding_state_->mutex);
+    if (!binding_state_->valid) {
+      error = {"Destroyed", "The component has been destroyed"};
+    } else if (request_id == 0 ||
+               request_id <= binding_state_->latest_request_id) {
+      error = {"Superseded", "A newer binding request has already arrived"};
+    } else {
+      if (auto previous = binding_state_->pending.lock()) {
+        if (previous->phase_ == CompositionBindingRequest::Phase::kPending) {
+          previous->phase_ = CompositionBindingRequest::Phase::kFailed;
+          previous_completion = std::move(previous->completion_);
+        }
+      }
+      binding_state_->latest_request_id = request_id;
+      binding_state_->pending = request;
+    }
+  }
+  if (previous_completion) {
+    previous_completion(false, "Superseded", "A newer binding request arrived");
+  }
+  if (!error.IsSuccess()) {
+    request->Fail(std::move(error.code), std::move(error.message));
+  }
+  return request;
+}
+
+void AnimaXPlayer::CancelPendingCompositionBinding() {
+  std::shared_ptr<CompositionBindingRequest> pending;
+  {
+    std::lock_guard<std::mutex> lock(binding_state_->mutex);
+    if (!binding_state_->composition_mode) {
+      return;
+    }
+    pending = binding_state_->pending.lock();
+  }
+  if (pending) {
+    // Fail is a no-op after commitment and dispatches completion outside the
+    // state lock. Do not wait for preparation or permanently destroy a node
+    // that may later be inserted into the tree again.
+    pending->Fail("Destroyed",
+                  "The component was removed before binding completed");
+  }
+}
+
+void AnimaXPlayer::CancelCompositionBinding(uint64_t request_id) {
+  std::shared_ptr<CompositionBindingRequest> pending;
+  {
+    std::lock_guard<std::mutex> lock(binding_state_->mutex);
+    if (!binding_state_->composition_mode) {
+      return;
+    }
+    pending = binding_state_->pending.lock();
+    if (!pending || pending->Id() != request_id) {
+      return;
+    }
+  }
+  // Fail takes the same state lock as Renderer commitment, so call it after
+  // releasing the lock above. If commitment won, cancellation is a no-op;
+  // otherwise the original completion reports failure without consuming data.
+  pending->Fail("Superseded", "The binding request was cancelled");
+}
+
+CompositionBindingError AnimaXPlayer::ValidateCompositionBinding(
+    const std::shared_ptr<CompositionBindingRequest>& request,
+    const std::shared_ptr<PreloadHost>& owner, float scale) const {
+  auto error = ValidateCompositionReceiver(instance_token_, owner);
+  if (!error.IsSuccess()) {
+    return error;
+  }
+  std::lock_guard<std::mutex> lock(binding_state_->mutex);
+  if (!request || request->state_ != binding_state_) {
+    return {"InstanceMismatch",
+            "The binding request belongs to another player"};
+  }
+  if (!binding_state_->valid) {
+    return {"Destroyed", "The component has been destroyed"};
+  }
+  if (request->phase_ != CompositionBindingRequest::Phase::kPending ||
+      request->id_ != binding_state_->latest_request_id) {
+    return {"Superseded", "The binding request is no longer pending"};
+  }
+  if (!std::isfinite(scale) || scale <= 0 || scale != scale_) {
+    return {"ScaleMismatch", "Composition scale " + std::to_string(scale) +
+                                 " differs from player scale " +
+                                 std::to_string(scale_)};
+  }
+  return {};
+}
+
+bool AnimaXPlayer::IsCurrentInstallation(uint64_t installation_id) const {
+  std::lock_guard<std::mutex> lock(binding_state_->mutex);
+  return binding_state_->valid &&
+         binding_state_->installed_id == installation_id;
+}
 
 AnimaXPlayer::AnimaXPlayer(AnimaXPlayerBuilder& builder)
-    : scale_(builder.scale_),
+    : instance_token_(next_instance_token.fetch_add(1)),
+      binding_state_(std::make_shared<CompositionBindingState>()),
+      scale_(builder.scale_),
       allow_extensionless_json_(builder.allow_extensionless_json_),
       ability_(builder.ability_),
       disable_playback_on_asset_load_failure_(
@@ -113,6 +319,16 @@ const PlayerEventTracker::EventNameArray& AnimaXPlayer::GetEventNames() {
 }
 
 void AnimaXPlayer::Destroy() {
+  std::shared_ptr<CompositionBindingRequest> pending;
+  {
+    std::lock_guard<std::mutex> lock(binding_state_->mutex);
+    binding_state_->valid = false;
+    pending = binding_state_->pending.lock();
+  }
+  if (pending) {
+    pending->Fail("Destroyed", "The component has been destroyed");
+  }
+
   ANIMAX_LOGI("AnimaXPlayer Destroy"
               << ", this: " << this);
   controller_actor_->Act(
@@ -153,6 +369,7 @@ void AnimaXPlayer::SetJson(const char* json) {
 }
 
 void AnimaXPlayer::SetJson(std::string json) {
+  if (!SetCompositionMode(false)) return;
   if (json.empty()) {
     ANIMAX_RESOURCE_LOGE("SetJson failed, json is empty, this: " << this);
     return;
@@ -197,6 +414,7 @@ void AnimaXPlayer::SetComposition(std::shared_ptr<CompositionModel> model) {
 }
 
 void AnimaXPlayer::SetSrc(const std::string& src) {
+  if (!SetCompositionMode(false)) return;
   if (src.empty()) {
     ANIMAX_RESOURCE_LOGE("SetSrc failed, src is empty, this: " << this);
     return;
@@ -272,6 +490,7 @@ void AnimaXPlayer::SetEstimatedMemoryUsage(int64_t usage) {
 
 void AnimaXPlayer::SetSrcPolyfill(
     std::unordered_map<std::string, std::string> polyfill) {
+  if (IsCompositionMode()) return;
   loader_actor_->Act([polyfill = std::move(polyfill)](auto& loader) {
     loader->SetSrcPolyfill(std::move(polyfill));
   });
@@ -287,6 +506,9 @@ void AnimaXPlayer::LoadAssetsWithCallback(
       return;
     }
 
+    if (player->IsCompositionMode()) {
+      return;
+    }
     auto composition = renderer->GetComposition();
     if (!composition) {
       ANIMAX_LOGI("LoadAssetsWithCallback failed, composition is null");
@@ -307,6 +529,7 @@ void AnimaXPlayer::LoadAssetsWithCallback(
 void AnimaXPlayer::LoadCompositionAssets(
     std::shared_ptr<CompositionModel> composition,
     base::MoveOnlyClosure<void> completion) {
+  if (IsCompositionMode()) return;
   auto handle_asset_loading = [weak_player = weak_from_this(),
                                completion = std::move(completion)](
                                   CompositionAssetResponse res,
@@ -325,12 +548,15 @@ void AnimaXPlayer::LoadCompositionAssets(
                                        auto& controller) { completion(); });
   };
 
-  loader_actor_->Act([composition = std::move(composition),
-                      handle_asset_loading = std::move(handle_asset_loading)](
-                         auto& loader) mutable {
-    loader->LoadCompositionModelAsset(std::move(composition),
-                                      std::move(handle_asset_loading));
-  });
+  loader_actor_->Act(
+      [composition = std::move(composition), weak_player = weak_from_this(),
+       handle_asset_loading =
+           std::move(handle_asset_loading)](auto& loader) mutable {
+        auto player = weak_player.lock();
+        if (!player || player->IsCompositionMode()) return;
+        loader->LoadCompositionModelAsset(std::move(composition),
+                                          std::move(handle_asset_loading));
+      });
 }
 
 void AnimaXPlayer::OnCompositionLoaded(int32_t src_index,
@@ -422,9 +648,14 @@ void AnimaXPlayer::SetAutoplay(const bool autoplay) {
 }
 
 void AnimaXPlayer::SetDynamicResource(bool dynamic) {
+  if (dynamic && IsCompositionMode()) return;
   ANIMAX_LOGI("SetDynamicResource: " << std::to_string(dynamic));
   controller_actor_->Act(
-      [dynamic](auto& controller) { controller->SetDynamicResource(dynamic); });
+      [dynamic, weak_player = weak_from_this()](auto& controller) {
+        auto player = weak_player.lock();
+        if (dynamic && player && player->IsCompositionMode()) return;
+        controller->SetDynamicResource(dynamic);
+      });
 
   loader_actor_->Act(
       [dynamic](auto& loader) { loader->SetHasDynamicResource(dynamic); });
@@ -582,8 +813,16 @@ void AnimaXPlayer::OnHide(VisibilityState state) {
 }
 
 void AnimaXPlayer::OnProgress(double progress, double current_frame) {
-  renderer_actor_->Act(
-      [progress](auto& renderer) { renderer->Render(progress); });
+  OnProgress(progress, current_frame, 0);
+}
+
+void AnimaXPlayer::OnProgress(double progress, double current_frame,
+                              uint64_t installation_id) {
+  renderer_actor_->Act([progress, installation_id](auto& renderer) {
+    if (renderer->IsCurrentInstallation(installation_id)) {
+      renderer->Render(progress);
+    }
+  });
 }
 
 void AnimaXPlayer::OnTap(float x, float y) {

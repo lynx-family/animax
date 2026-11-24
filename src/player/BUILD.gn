@@ -23,6 +23,7 @@ player_shared_sources = [
   "animax_renderer.cc",
   "animax_renderer.h",
   "animax_surface.cc",
+  "composition_binding_state.h",
   "layer_event_listener.h",
   "layer_query.h",
   "value_animator_listener.h",

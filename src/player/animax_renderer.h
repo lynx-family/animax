@@ -52,6 +52,7 @@ class AnimaXRenderer : public MetricsDataSource {
   // Composition management
   void UpdateComposition(int32_t src_index,
                          std::shared_ptr<CompositionModel> model);
+  bool IsCurrentInstallation(uint64_t installation_id) const;
   CompositionLayer* GetCompositionLayer() const { return layer_.get(); }
   std::shared_ptr<CompositionModel> GetComposition() const { return model_; }
   bool IsCompositionAssetsLoaded();
@@ -124,6 +125,10 @@ class AnimaXRenderer : public MetricsDataSource {
    */
   bool is_invalid_platform_surface_ = false;
 
+  uint64_t installation_id_ = 0;
+  bool installed_model_initialized_ = false;
+  // Fixed to the layer's installation, unlike the animator's current handler.
+  std::shared_ptr<AnimaXPlaybackEventHandler> layer_playback_handler_;
   std::shared_ptr<CompositionModel> model_;
   std::unique_ptr<CompositionLayer> layer_;
   std::unique_ptr<LayerModel> layer_model_;

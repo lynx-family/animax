@@ -36,6 +36,7 @@ struct CompositionModelMeta {
   size_t image_count = 0;
   size_t video_count = 0;
   size_t font_count = 0;
+  uint64_t installation_id = 0;
 };
 
 class AnimaXMainController {
@@ -52,8 +53,14 @@ class AnimaXMainController {
   void NotifyError(const EventError error, const std::string& message);
   void NotifyWarning(const EventWarning warning, const std::string& message);
   void NotifyCurrentFrameEvent(const Event event);
+  void NotifyInstallationFrameEvent(Event event, uint64_t installation_id);
+  void NotifyInstallationError(EventError error, const std::string& message,
+                               uint64_t installation_id);
+  bool IsCurrentInstallation(uint64_t installation_id) const;
+  void OnCompositionInstalled(uint64_t installation_id);
   void NotifyFpsEvent(double fps, int32_t max_drop);
-  void NotifyTapEvent(const std::unordered_set<std::string>& hit_layers);
+  void NotifyTapEvent(const std::unordered_set<std::string>& hit_layers,
+                      uint64_t installation_id = 0);
 
   // Value animator operations
   void SeekToFrame(double frame);
@@ -122,6 +129,7 @@ class AnimaXMainController {
   bool IsAnimationReady();
 
   std::weak_ptr<AnimaXPlayer> weak_player_;
+  std::weak_ptr<AnimaXPlaybackEventHandler> weak_playback_handler_;
   std::shared_ptr<AnimaXEventDispatcher> event_dispatcher_;
   std::shared_ptr<AnimaXValueAnimator> value_animator_;
   std::shared_ptr<PlayerEventTracker> event_tracker_ =
