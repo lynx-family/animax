@@ -1,0 +1,4 @@
+[ImplementedAs="PreloadedImage"]
+interface Image {
+    void dispose();
+};

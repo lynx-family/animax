@@ -60,11 +60,6 @@ class ANIMAX_EXPORT Bitmap {
   uint64_t TextureID() const;  // check HasTexture() first
 
  private:
-  friend class BoundCompositionMemory;
-  // ImageGL transfers this Bitmap to skity::Data; the ticket follows its
-  // actual final deleter rather than the originating ImageAsset.
-  std::shared_ptr<void> bound_memory_ticket_;
-
   struct BitmapPixels {
     const void* data = nullptr;
     BitmapDeleter deleter = nullptr;

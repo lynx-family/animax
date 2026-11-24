@@ -10,15 +10,11 @@ namespace lynx {
 namespace animax {
 
 void FontAsset::SetRawData(std::unique_ptr<RawData> raw_data) {
-  // Declared before the lock so the charge is released after unlocking; its
-  // release callback must not run under data_mutex_.
-  std::shared_ptr<void> released_ticket;
   std::lock_guard<std::mutex> lock(data_mutex_);
   if (raw_data && (!raw_data->Data() || raw_data->Length() == 0)) {
     raw_data.reset();
   }
   raw_data_ = std::move(raw_data);
-  released_ticket = std::move(bound_raw_data_memory_ticket_);
   ++data_revision_;
 }
 
@@ -53,12 +49,9 @@ std::shared_ptr<Font> FontAsset::GetFontSnapshot() {
 }
 
 void FontAsset::ResetModel(FontAssetModel info) {
-  // Released after unlocking, as in SetRawData.
-  std::shared_ptr<void> released_ticket;
   std::lock_guard<std::mutex> lock(data_mutex_);
   model_ = std::move(info);
   raw_data_ = nullptr;
-  released_ticket = std::move(bound_raw_data_memory_ticket_);
   font_ = nullptr;
   ++data_revision_;
 }
