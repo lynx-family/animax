@@ -18,6 +18,9 @@ class ANIMAX_EXPORT VideoAssetAndroid : public VideoAsset {
   ~VideoAssetAndroid() override = default;
 
   bool PrepareFrameData(const std::string& video_path) override;
+  LoaderError PrepareFrameDataForPreload(
+      const std::string& video_path) override;
+  int64_t GetMemoryUsageBytes() const override;
   int32_t GetFrameCount() const override { return frame_count_; }
 
   std::vector<uint8_t> GetVideoParameterSets() const override;

@@ -6,13 +6,15 @@
 #define ANIMAX_SRC_RESOURCE_RESOURCE_LOADER_HARMONY_RESOURCE_LOADER_HARMONY_H_
 
 #include "core/public/lynx_resource_loader.h"
+#include "include/base/macros.h"
 #include "include/resource/loader.h"
 #include "include/resource/resource_task.h"
 
 namespace lynx {
 namespace animax {
 
-class ResourceLoaderHarmony : public Loader<ResourceRequest, ResourceResponse> {
+class ANIMAX_EXPORT ResourceLoaderHarmony
+    : public Loader<ResourceRequest, ResourceResponse> {
  public:
   using Loader = Loader<ResourceRequest, ResourceResponse>::Ptr;
 

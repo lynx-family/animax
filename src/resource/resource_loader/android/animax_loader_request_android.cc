@@ -16,6 +16,7 @@ namespace {
 constexpr const char* kImageWidthKey = "image_width";
 constexpr const char* kImageHeightKey = "image_height";
 constexpr const char* kImageKey = "image";
+constexpr const char* kImageSizeModeKey = "image_size_mode";
 constexpr const char* kSchemeKey = "scheme";
 }  // namespace
 
@@ -28,6 +29,10 @@ base::android::ScopedLocalJavaRef<jobject> ResourceRequestToAnimaXLoaderRequest(
     map.PushString(kImageKey, "");
     map.PushInt(kImageWidthKey, resource_request.width);
     map.PushInt(kImageHeightKey, resource_request.height);
+    if (resource_request.image_size_mode != ImageSizeMode::kDefault) {
+      map.PushInt(kImageSizeModeKey,
+                  static_cast<int>(resource_request.image_size_mode));
+    }
     map.PushInt(kSchemeKey, static_cast<int>(resource_request.uri_info.scheme));
   }
   auto request = Java_AnimaXLoaderRequest_createRequestWithParams(

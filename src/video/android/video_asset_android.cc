@@ -90,6 +90,24 @@ bool VideoAssetAndroid::IsHEVCFormat() const {
   return ret;
 }
 
+LoaderError VideoAssetAndroid::PrepareFrameDataForPreload(
+    const std::string& video_path) {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  if (!PrepareFrameData(video_path) ||
+      !Java_VideoAsset_isPreparedForPreload(env, JavaObject())) {
+    return {kInvalidRawData,
+            "Video preparation did not finish with valid samples"};
+  }
+  return {};
+}
+
+int64_t VideoAssetAndroid::GetMemoryUsageBytes() const {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  return VideoAsset::GetMemoryUsageBytes() + sizeof(VideoAssetAndroid) -
+         sizeof(VideoAsset) +
+         Java_VideoAsset_getPreparedDataSize(env, JavaObject());
+}
+
 bool VideoAssetAndroid::IsSupportDecodeBySystem(
     bool require_hardware_accelerated) const {
   JNIEnv* env = lynx::base::android::AttachCurrentThread();

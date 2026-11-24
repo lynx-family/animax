@@ -109,6 +109,26 @@ public class VideoAsset {
     return IsKeyFramesValid();
   }
 
+  @CalledByNative
+  public boolean isPreparedForPreload() {
+    // The extractor only publishes its frame buffer after reaching EOS.
+    // loadLocal's historical result alone does not include this outcome.
+    return mIsValid && IsKeyFramesValid() && mRawData.getFrameBuffer() != null
+        && !mRawData.getFrameInfos().isEmpty();
+  }
+
+  @CalledByNative
+  public long getPreparedDataSize() {
+    if (mRawData == null || mRawData.getFrameBuffer() == null) {
+      return 0;
+    }
+    // Includes the direct compressed-data buffer and index values. Java
+    // collection/object headers and MediaFormat internals are not estimated.
+    return (long) mRawData.getFrameBuffer().capacity()
+        + (long) mRawData.getKeyFrames().size() * Integer.BYTES
+        + (long) mRawData.getFrameInfos().size() * (2 * Integer.BYTES + Long.BYTES);
+  }
+
   private void prepareFrameBuffer() {
     AnimaXLog.i(TAG, "prepareFrameBuffer");
     if (null == mVideoInfo) {

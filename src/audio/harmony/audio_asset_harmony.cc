@@ -24,6 +24,14 @@ std::shared_ptr<AudioAsset> AudioAsset::Make(AudioAssetModel model) {
 AudioAssetHarmony::AudioAssetHarmony(AudioAssetModel model)
     : AudioAsset(std::move(model)) {}
 
+LoaderError AudioAssetHarmony::PrepareForPreload(const std::string& file_path) {
+  LoadLocal(file_path);
+  return IsValid() && !read_failed_
+             ? LoaderError{}
+             : LoaderError{kInvalidRawData,
+                           "Audio preparation did not complete"};
+}
+
 void AudioAssetHarmony::LoadLocal(const std::string& file_path) {
   int fd = open(file_path.c_str(), O_RDONLY);
   if (fd == -1) {
@@ -76,6 +84,11 @@ const AudioInfo& AudioAssetHarmony::GetAudioInfo() const { return *info_; }
 
 const std::vector<uint8_t>& AudioAssetHarmony::GetAudioData() const {
   return audio_data_;
+}
+
+int64_t AudioAssetHarmony::GetMemoryUsageBytes() const {
+  return AudioAsset::GetMemoryUsageBytes() + sizeof(AudioAssetHarmony) -
+         sizeof(AudioAsset) + sizeof(AudioInfo) + audio_data_.capacity();
 }
 
 void AudioAssetHarmony::FindAudioTrack() {
@@ -217,6 +230,7 @@ bool AudioAssetHarmony::PrepareDecodedData(int64_t file_size) {
               OH_AVBuffer_SetBufferAttr(in_buffer, &attr);
             }
           } else {
+            read_failed_ = true;
             is_input_eos = true;
             OH_AVCodecBufferAttr attr = {0, 0, 0, AVCODEC_BUFFER_FLAGS_EOS};
             OH_AVBuffer_SetBufferAttr(in_buffer, &attr);

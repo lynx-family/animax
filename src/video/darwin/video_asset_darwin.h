@@ -20,6 +20,8 @@ class VideoAssetDarwin : public VideoAsset {
   explicit VideoAssetDarwin(VideoAssetModel model);
   ~VideoAssetDarwin() override;
   bool PrepareFrameData(const std::string& video_path) override;
+  LoaderError PrepareFrameDataForPreload(const std::string& video_path) override;
+  int64_t GetMemoryUsageBytes() const override;
   bool PrepareFrameData(std::unique_ptr<RawData> raw_data) override { return false; }
   int32_t GetFrameCount() const override { return frame_infos_.size(); }
 
@@ -38,7 +40,7 @@ class VideoAssetDarwin : public VideoAsset {
  private:
   static bool IsKeyFrame(CMSampleBufferRef current_sample_buffer);
 
-  bool PrepareFrameData(NSString* file_path);
+  bool PrepareFrameData(const std::string& video_path, LoaderError* preload_error);
   void ComputePresentationIndex(std::vector<std::pair<double, uint32_t>>& gop,
                                 uint32_t& sorted_num);
   void ComputePresentationFrameToDecodeFrame();

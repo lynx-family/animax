@@ -45,61 +45,8 @@ public class AudioAssetExtractor {
       return null;
     }
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    boolean needInput = true;
-
     try {
-      decoder.start();
-      ByteBuffer buffer = ByteBuffer.allocate(8 * 1024);
-      int invalidLoopCount = 0;
-      while (!decoder.isFinished()) {
-        boolean hasInput = false;
-        if (needInput) {
-          ByteBuffer inputBuffer = decoder.getInputBuffer();
-          if (inputBuffer != null) {
-            int frameCount = 1;
-            while (frameCount <= MAX_FRAME_COUNT_PER_LOOP) {
-              extractor.readSampleData(buffer, 0);
-              if (inputBuffer.position() + buffer.limit() > inputBuffer.capacity()) {
-                break;
-              }
-              inputBuffer.put(buffer);
-              if (!extractor.advance()) {
-                needInput = false;
-                break;
-              }
-              frameCount++;
-            }
-            inputBuffer.flip();
-            int flags = needInput ? 0 : MediaCodec.BUFFER_FLAG_END_OF_STREAM;
-            decoder.queueInputBuffer(0, inputBuffer.limit(), 0, flags);
-            hasInput = true;
-          }
-        }
-        ByteBuffer outputBuffer = decoder.getOutputBuffer();
-        if (outputBuffer == null) {
-          if (!hasInput) {
-            invalidLoopCount++;
-          }
-          if (invalidLoopCount > MAX_INVALID_LOOP_COUNT) {
-            break;
-          } else {
-            continue;
-          }
-        }
-        if (outputBuffer.hasArray()) {
-          outputStream.write(outputBuffer.array(),
-              outputBuffer.arrayOffset() + decoder.getBufferInfo().offset,
-              decoder.getBufferInfo().size);
-        } else {
-          byte[] pcmChunk = new byte[decoder.getBufferInfo().size];
-          outputBuffer.get(pcmChunk);
-          outputStream.write(pcmChunk);
-        }
-        decoder.releaseOutPutBuffer();
-      }
-      if (!decoder.isFinished()) {
-        AnimaXLog.e(TAG, "Failed to decode audio asset: the decoder is in infinite loop.");
-      }
+      decodeAudioData(extractor, decoder, outputStream);
     } catch (Exception e) {
       AnimaXLog.e(TAG, "Failed to decode audio asset: " + e.getMessage());
     } finally {
@@ -108,6 +55,116 @@ public class AudioAssetExtractor {
       extractor.release();
     }
     return ByteBuffer.wrap(outputStream.toByteArray());
+  }
+
+  // Keep the old entry point's partial-data behavior. Independent loading uses
+  // this overload and only publishes nonempty PCM after a normal decoder EOS.
+  @Nullable
+  static ByteBuffer extractDecodedAudioData(
+      @NonNull AudioInfo info, String fileUrl, int trackIndex, boolean requireComplete) {
+    if (!requireComplete) {
+      return extractDecodedAudioData(info, fileUrl, trackIndex);
+    }
+    if (fileUrl == null || fileUrl.isEmpty() || trackIndex < 0) {
+      return null;
+    }
+    MediaExtractor extractor = new MediaExtractor();
+    AudioAssetDecoder decoder = null;
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    boolean completed = false;
+    try {
+      if (!setDataSource(extractor, fileUrl)) {
+        return null;
+      }
+      extractor.selectTrack(trackIndex);
+      decoder = new AudioAssetDecoder(info);
+      if (!decoder.isValid()) {
+        return null;
+      }
+      completed = decodeAudioData(extractor, decoder, outputStream);
+    } catch (Exception e) {
+      AnimaXLog.e(TAG, "Failed to decode independent audio: " + e.getMessage());
+    } finally {
+      // A failed start can also make stop throw. Each resource must still be
+      // released, and cleanup failure must not turn partial PCM into success.
+      if (decoder != null) {
+        try {
+          decoder.stop();
+        } catch (RuntimeException e) {
+          completed = false;
+        }
+        try {
+          decoder.release();
+        } catch (RuntimeException e) {
+          completed = false;
+        }
+      }
+      try {
+        extractor.release();
+      } catch (RuntimeException e) {
+        completed = false;
+      }
+    }
+    return completed && outputStream.size() > 0 ? ByteBuffer.wrap(outputStream.toByteArray())
+                                                : null;
+  }
+
+  private static boolean decodeAudioData(MediaExtractor extractor, AudioAssetDecoder decoder,
+      ByteArrayOutputStream outputStream) throws IOException {
+    boolean needInput = true;
+    decoder.start();
+    ByteBuffer buffer = ByteBuffer.allocate(8 * 1024);
+    int invalidLoopCount = 0;
+    while (!decoder.isFinished()) {
+      boolean hasInput = false;
+      if (needInput) {
+        ByteBuffer inputBuffer = decoder.getInputBuffer();
+        if (inputBuffer != null) {
+          int frameCount = 1;
+          while (frameCount <= MAX_FRAME_COUNT_PER_LOOP) {
+            extractor.readSampleData(buffer, 0);
+            if (inputBuffer.position() + buffer.limit() > inputBuffer.capacity()) {
+              break;
+            }
+            inputBuffer.put(buffer);
+            if (!extractor.advance()) {
+              needInput = false;
+              break;
+            }
+            frameCount++;
+          }
+          inputBuffer.flip();
+          int flags = needInput ? 0 : MediaCodec.BUFFER_FLAG_END_OF_STREAM;
+          decoder.queueInputBuffer(0, inputBuffer.limit(), 0, flags);
+          hasInput = true;
+        }
+      }
+      ByteBuffer outputBuffer = decoder.getOutputBuffer();
+      if (outputBuffer == null) {
+        if (!hasInput) {
+          invalidLoopCount++;
+        }
+        if (invalidLoopCount > MAX_INVALID_LOOP_COUNT) {
+          break;
+        } else {
+          continue;
+        }
+      }
+      if (outputBuffer.hasArray()) {
+        outputStream.write(outputBuffer.array(),
+            outputBuffer.arrayOffset() + decoder.getBufferInfo().offset,
+            decoder.getBufferInfo().size);
+      } else {
+        byte[] pcmChunk = new byte[decoder.getBufferInfo().size];
+        outputBuffer.get(pcmChunk);
+        outputStream.write(pcmChunk);
+      }
+      decoder.releaseOutPutBuffer();
+    }
+    if (!decoder.isFinished()) {
+      AnimaXLog.e(TAG, "Failed to decode audio asset: the decoder is in infinite loop.");
+    }
+    return decoder.isFinished();
   }
 
   /**
@@ -122,22 +179,22 @@ public class AudioAssetExtractor {
     }
     AudioInfo audioInfo = new AudioInfo();
     MediaExtractor extractor = new MediaExtractor();
-
-    if (!setDataSource(extractor, fileUrl)) {
-      AnimaXLog.e(TAG, "load fail, MediaExtractor setDataSource error");
+    try {
+      if (!setDataSource(extractor, fileUrl)) {
+        AnimaXLog.e(TAG, "load fail, MediaExtractor setDataSource error");
+        return null;
+      }
+      // get audio track index and format.
+      findAudioTrack(extractor, audioInfo);
+      if (audioInfo.getAudioTrackIndex() < 0) {
+        AnimaXLog.e(TAG, "load fail, there is no audio track");
+        return null;
+      }
+      return audioInfo;
+    } finally {
+      // Also release the extractor if a metadata getter throws on malformed input.
       extractor.release();
-      return null;
     }
-    // get audio track index and format.
-    findAudioTrack(extractor, audioInfo);
-    if (audioInfo.getAudioTrackIndex() < 0) {
-      AnimaXLog.e(TAG, "load fail, there is no audio track");
-      extractor.release();
-      return null;
-    }
-
-    extractor.release();
-    return audioInfo;
   }
 
   private static boolean setDataSource(@NonNull MediaExtractor extractor, String filePath) {

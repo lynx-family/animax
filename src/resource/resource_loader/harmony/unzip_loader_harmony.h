@@ -5,13 +5,15 @@
 #ifndef ANIMAX_SRC_RESOURCE_RESOURCE_LOADER_HARMONY_UNZIP_LOADER_HARMONY_H_
 #define ANIMAX_SRC_RESOURCE_RESOURCE_LOADER_HARMONY_UNZIP_LOADER_HARMONY_H_
 
+#include "include/base/macros.h"
 #include "include/resource/loader.h"
 #include "include/resource/unzip_task.h"
 
 namespace lynx {
 namespace animax {
 
-class UnzipLoaderHarmony : public Loader<UnzipRequest, UnzipResponse> {
+class ANIMAX_EXPORT UnzipLoaderHarmony
+    : public Loader<UnzipRequest, UnzipResponse> {
  public:
   UnzipLoaderHarmony();
   ~UnzipLoaderHarmony() override = default;

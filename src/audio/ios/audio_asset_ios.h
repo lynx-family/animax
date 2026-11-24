@@ -25,9 +25,11 @@ class AudioAssetIOS : public AudioAsset {
   explicit AudioAssetIOS(AudioAssetModel model);
   ~AudioAssetIOS() override = default;
   void LoadLocal(const std::string& file_path) override;
+  LoaderError PrepareForPreload(const std::string& file_path) override;
 
   const AudioInfo& GetAudioInfo() const;
   const std::vector<uint8_t>& GetAudioData() const;
+  int64_t GetMemoryUsageBytes() const override;
 
  private:
   bool InitAudioFormatAndInfo(ExtAudioFileRef ext_audio_file);

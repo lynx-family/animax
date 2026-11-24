@@ -13,6 +13,7 @@
 #include <sstream>
 
 #include "src/base/log/log.h"
+#include "src/base/util/harmony/scoped_object_harmony.h"
 #include "src/resource/asset/video_asset_model.h"
 #include "src/video/video_player.h"
 
@@ -26,7 +27,9 @@ std::shared_ptr<VideoAsset> VideoAsset::Make(VideoAssetModel model) {
 VideoAssetHarmony::VideoAssetHarmony(VideoAssetModel model)
     : VideoAsset(std::move(model)) {}
 
-VideoAssetHarmony::~VideoAssetHarmony() {
+VideoAssetHarmony::~VideoAssetHarmony() { ReleaseSource(); }
+
+void VideoAssetHarmony::ReleaseSource() {
   if (av_demuxer_) {
     OH_AVDemuxer_Destroy(av_demuxer_);
     av_demuxer_ = nullptr;
@@ -35,6 +38,7 @@ VideoAssetHarmony::~VideoAssetHarmony() {
     OH_AVSource_Destroy(av_source_);
     av_source_ = nullptr;
   }
+  source_fd_.reset();
 }
 
 bool VideoAssetHarmony::InitVideoInfo() {
@@ -84,7 +88,12 @@ bool VideoAssetHarmony::ReadSampleBuffers(int64_t file_size) {
   bool has_end = false;
   int32_t current_offset = 0;
   OH_AVDemuxer_SelectTrackByID(av_demuxer_, data_.track_index);
-  auto* cache_buffer = OH_AVBuffer_Create(file_size);
+  ScopedOHObject<OH_AVBuffer, OH_AVBuffer_Destroy> scoped_buffer;
+  scoped_buffer.reset(OH_AVBuffer_Create(file_size));
+  auto* cache_buffer = scoped_buffer.Ptr();
+  if (!cache_buffer) {
+    return false;
+  }
   while (!has_end) {
     OH_AVErrCode err_code = OH_AVDemuxer_ReadSampleBuffer(
         av_demuxer_, data_.track_index, cache_buffer);
@@ -125,33 +134,54 @@ bool VideoAssetHarmony::ReadSampleBuffers(int64_t file_size) {
 
   data_.frame_count = data_.frame_list.size();
 
-  OH_AVBuffer_Destroy(cache_buffer);
   return true;
 }
 
+LoaderError VideoAssetHarmony::PrepareFrameDataForPreload(
+    const std::string& video_path) {
+  // ReadSampleBuffers only succeeds at EOS. Preserve the legacy return value
+  // while requiring actual prepared samples for independent loading.
+  const bool prepared = PrepareFrameData(video_path);
+  // Playback owns copied samples and its track format. Independent preloads
+  // may wait a long time before binding and no longer need file/demux handles.
+  ReleaseSource();
+  if (!prepared || !IsValid() || data_.buffer_data.empty() ||
+      data_.keyframe_index.empty() || data_.keyframe_index.front() != 0) {
+    return {kInvalidRawData,
+            "Video preparation did not finish with valid samples"};
+  }
+  return {};
+}
+
+int64_t VideoAssetHarmony::GetMemoryUsageBytes() const {
+  return VideoAsset::GetMemoryUsageBytes() + sizeof(VideoAssetHarmony) -
+         sizeof(VideoAsset) + data_.buffer_data.capacity() +
+         data_.frame_list.capacity() * sizeof(VideoFrameInfo) +
+         data_.keyframe_index.capacity() * sizeof(int32_t);
+}
+
 bool VideoAssetHarmony::PrepareFrameData(const std::string& video_path) {
-  int fd = open(video_path.c_str(), O_RDONLY);
-  if (fd == -1) {
+  fml::UniqueFD fd(open(video_path.c_str(), O_RDONLY));
+  if (!fd.is_valid()) {
     ANIMAX_LOGE("Failed to open file: " << video_path);
     return false;
   }
 
   struct stat file_stat;
-  if (fstat(fd, &file_stat) == -1) {
+  if (fstat(fd.get(), &file_stat) == -1) {
     ANIMAX_LOGE("Failed to get file size: " << video_path);
-    close(fd);
     return false;
   }
   int64_t file_size = file_stat.st_size;
 
   // Create AVSource by local file's fd
-  av_source_ = OH_AVSource_CreateWithFD(fd, 0, file_size);
+  av_source_ = OH_AVSource_CreateWithFD(fd.get(), 0, file_size);
 
   if (!av_source_) {
     ANIMAX_LOGE("OH_AVSource_CreateWithFD fail");
-    close(fd);
     return false;
   }
+  source_fd_ = std::move(fd);
 
   av_demuxer_ = OH_AVDemuxer_CreateWithSource(av_source_);
   if (!av_demuxer_) {

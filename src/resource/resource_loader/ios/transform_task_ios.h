@@ -30,6 +30,11 @@ struct TransformRequestIOS {
    * used.
    */
   std::string default_file_path_for_ns_data_file_path_conversion;
+  // Only independent image requests opt into exact resizing. Zero dimensions
+  // retain the original decode size; legacy requests leave these fields zero.
+  uint32_t image_width = 0;
+  uint32_t image_height = 0;
+  bool cache_by_content = false;
 };
 
 using TransformResponseIOS = ResourceResponse;

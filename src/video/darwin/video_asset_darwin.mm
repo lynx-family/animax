@@ -27,6 +27,28 @@ VideoAssetDarwin::~VideoAssetDarwin() {
 }
 
 bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
+  return PrepareFrameData(video_path, nullptr);
+}
+
+LoaderError VideoAssetDarwin::PrepareFrameDataForPreload(const std::string& video_path) {
+  LoaderError error{kInvalidRawData, "Video preparation failed"};
+  PrepareFrameData(video_path, &error);
+  return error;
+}
+
+int64_t VideoAssetDarwin::GetMemoryUsageBytes() const {
+  // AVFoundation's opaque format-description allocations are not measurable
+  // here; compressed bytes and all owned index buffers are included.
+  return VideoAsset::GetMemoryUsageBytes() + sizeof(VideoAssetDarwin) - sizeof(VideoAsset) +
+         static_cast<int64_t>([frames_ length]) +
+         static_cast<int64_t>(frame_infos_.capacity()) * sizeof(FrameInfo) +
+         static_cast<int64_t>(key_frames_.capacity() +
+                              presentation_frame_to_decode_frame_.capacity() +
+                              decode_start_frames_.capacity()) *
+             sizeof(int32_t);
+}
+
+bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path, LoaderError* preload_error) {
   ANIMAX_TRACE_EVENT_ASSET_ID(kPrepareAlphaVideoFrameData, Model().id);
   NSString* file_path = [NSString stringWithUTF8String:video_path.c_str()];
   if (!file_path) {
@@ -74,8 +96,17 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
   }
   AVAssetReaderTrackOutput* output = [[AVAssetReaderTrackOutput alloc] initWithTrack:video_track
                                                                       outputSettings:nil];
+  if (preload_error && ![reader canAddOutput:output]) {
+    *preload_error = {kInvalidRawData, "Video reader cannot add its track output"};
+    return false;
+  }
   [reader addOutput:output];
-  [reader startReading];
+  const bool started = [reader startReading];
+  if (preload_error && !started) {
+    *preload_error = {kInvalidRawData, "Video reader failed to start"};
+    [reader cancelReading];
+    return false;
+  }
   NSNumber* file_size = nil;
   [file_url getResourceValue:&file_size forKey:NSURLFileSizeKey error:nil];
   NSMutableData* frames = [NSMutableData dataWithCapacity:[file_size unsignedIntegerValue]];
@@ -87,6 +118,7 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
   std::vector<std::pair<double, uint32_t>>
       gop;                  // Group of Pictures, first is presentation time, second is decode index
   uint32_t sorted_num = 0;  // number of frame info which has correct presetation index
+  bool samples_valid = true;
   while ((sample_buffer = [output copyNextSampleBuffer])) {
     block_buffer = CMSampleBufferGetDataBuffer(sample_buffer);
     if (block_buffer) {
@@ -96,7 +128,14 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
       }
       frame_size = 0;
       frame_data = nullptr;
-      CMBlockBufferGetDataPointer(block_buffer, 0, nullptr, &frame_size, &frame_data);
+      const OSStatus data_status =
+          CMBlockBufferGetDataPointer(block_buffer, 0, nullptr, &frame_size, &frame_data);
+      if (preload_error && (data_status != kCMBlockBufferNoErr || !frame_data || frame_size == 0)) {
+        samples_valid = false;
+        CMSampleBufferInvalidate(sample_buffer);
+        CFRelease(sample_buffer);
+        break;
+      }
       [frames appendBytes:frame_data length:frame_size];
       CMSampleTimingInfo timing_info{
           .duration = CMSampleBufferGetDuration(sample_buffer),
@@ -111,7 +150,15 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
     CMSampleBufferInvalidate(sample_buffer);
     CFRelease(sample_buffer);
   }
+  // cancelReading changes the reader's status; capture the terminal result
+  // first. Legacy loading keeps its original best-effort validity policy.
+  const bool completed = reader.status == AVAssetReaderStatusCompleted && !reader.error;
   [reader cancelReading];
+
+  if (preload_error && (!completed || !samples_valid || total_size == 0)) {
+    *preload_error = {kInvalidRawData, "Video reader did not finish with valid samples"};
+    return false;
+  }
 
   ComputePresentationIndex(gop, sorted_num);
   ComputePresentationFrameToDecodeFrame();
@@ -123,6 +170,9 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path) {
   if (GetVideoWidth() > 0 && GetVideoHeight() > 0 && IsKeyFramesValid() && GetFrameRate() > 0.f) {
     frames_ = frames;
     is_valid_.store(true);
+    if (preload_error) {
+      *preload_error = {};
+    }
   }
   return IsValid();
 }

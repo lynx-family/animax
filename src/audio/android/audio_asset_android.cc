@@ -35,5 +35,22 @@ void AudioAssetAndroid::LoadLocal(const std::string& file_path) {
       env, asset_.Get(),
       android::JNIConvertHelper::ConvertToJNIStringUTF(env, file_path).Get());
 }
+
+LoaderError AudioAssetAndroid::PrepareForPreload(const std::string& file_path) {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  is_valid_ = Java_AudioAsset_loadLocalForPreload(
+      env, asset_.Get(),
+      android::JNIConvertHelper::ConvertToJNIStringUTF(env, file_path).Get());
+  return IsValid() ? LoaderError{}
+                   : LoaderError{kInvalidRawData,
+                                 "Audio preparation did not complete"};
+}
+
+int64_t AudioAssetAndroid::GetMemoryUsageBytes() const {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  return AudioAsset::GetMemoryUsageBytes() + sizeof(AudioAssetAndroid) -
+         sizeof(AudioAsset) +
+         Java_AudioAsset_getPreparedDataSize(env, asset_.Get());
+}
 }  // namespace animax
 }  // namespace lynx

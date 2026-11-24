@@ -24,6 +24,18 @@ const AudioInfo& AudioAssetIOS::GetAudioInfo() const { return info_; }
 
 const std::vector<uint8_t>& AudioAssetIOS::GetAudioData() const { return audio_data_; }
 
+int64_t AudioAssetIOS::GetMemoryUsageBytes() const {
+  return AudioAsset::GetMemoryUsageBytes() + sizeof(AudioAssetIOS) - sizeof(AudioAsset) +
+         audio_data_.capacity();
+}
+
+LoaderError AudioAssetIOS::PrepareForPreload(const std::string& file_path) {
+  // A fresh candidate becomes valid only after ReadAllFrames reaches EOF
+  // without an error and has produced nonempty PCM.
+  LoadLocal(file_path);
+  return IsValid() ? LoaderError{} : LoaderError{kInvalidRawData, "Audio preparation failed"};
+}
+
 void AudioAssetIOS::LoadLocal(const std::string& file_path) {
   CFStringRef cf_path =
       CFStringCreateWithCString(kCFAllocatorDefault, file_path.c_str(), kCFStringEncodingUTF8);

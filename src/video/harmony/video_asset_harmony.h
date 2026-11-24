@@ -12,6 +12,7 @@
 
 #include <queue>
 
+#include "base/include/fml/unique_fd.h"
 #include "src/resource/asset/video_asset.h"
 #include "src/resource/asset/video_asset_model.h"
 
@@ -46,6 +47,9 @@ class VideoAssetHarmony : public VideoAsset {
   ~VideoAssetHarmony() override;
 
   bool PrepareFrameData(const std::string& video_path) override;
+  LoaderError PrepareFrameDataForPreload(
+      const std::string& video_path) override;
+  int64_t GetMemoryUsageBytes() const override;
 
   int32_t GetFrameCount() const override { return data_.frame_count; }
 
@@ -58,10 +62,13 @@ class VideoAssetHarmony : public VideoAsset {
   bool InitVideoInfo();
   // Read the video raw buffer by demuxer and save into buffer_data.
   bool ReadSampleBuffers(int64_t file_size);
+  void ReleaseSource();
 
   OH_AVSource* av_source_ = nullptr;
   OH_AVDemuxer* av_demuxer_ = nullptr;
-  VideoData data_;
+  // AVSource borrows the descriptor. Destroy source/demuxer before this closes.
+  fml::UniqueFD source_fd_;
+  VideoData data_{};
 };
 
 }  // namespace animax
