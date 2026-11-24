@@ -4,6 +4,16 @@
 
 #import <AnimaX/AnimaXPlayerProtocol.h>
 
+#ifdef __cplusplus
+#include <memory>
+
+namespace lynx {
+namespace animax {
+class AnimaXPlayer;
+}
+}  // namespace lynx
+#endif
+
 @protocol AnimaXCompositionListenerProtocol <NSObject>
 
 - (void)onCompositionReady;
@@ -20,5 +30,11 @@
 
 - (instancetype)initWithContext:(AnimaXContext *)context;
 - (instancetype)initWithContext:(AnimaXContext *)context scale:(CGFloat)scale;
+
+#ifdef __cplusplus
+// Platform integrations use the existing player rather than creating another
+// receiver or retaining a separate native lifetime.
+- (std::shared_ptr<lynx::animax::AnimaXPlayer>)getPlayerShared;
+#endif
 
 @end
