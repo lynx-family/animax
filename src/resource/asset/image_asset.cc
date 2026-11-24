@@ -40,6 +40,7 @@ Image* ImageAsset::GetImage(RealContext* real_context) {
     // file_name_ may hold large base64 data.
     // Clean up file_name_ after the bitmap is loaded.
     model_.file_name = std::string{};
+    bound_file_name_memory_ticket_.reset();
   }
 
   return image_.get();
@@ -47,6 +48,7 @@ Image* ImageAsset::GetImage(RealContext* real_context) {
 
 void ImageAsset::ResetModel(ImageAssetModel info) {
   model_ = std::move(info);
+  bound_file_name_memory_ticket_.reset();
   bitmap_ = nullptr;
   image_ = nullptr;
 }
