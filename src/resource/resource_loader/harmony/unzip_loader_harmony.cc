@@ -4,6 +4,7 @@
 
 #include "src/resource/resource_loader/harmony/unzip_loader_harmony.h"
 
+#include <atomic>
 #include <filesystem>
 
 #include "src/resource/loader/exec_loader.h"
@@ -21,11 +22,14 @@ std::filesystem::path GetParentPath(const std::string& path) {
 }
 
 std::string GetHashString(const std::string& path) {
-  uintptr_t pointer_value = reinterpret_cast<uintptr_t>(path.c_str());
-  size_t hash_value = std::hash<uintptr_t>{}(pointer_value);
+  // Each request gets its own directory. Another ZIP can reuse the address of a
+  // freed path, and a directory shared by one path would let a concurrent load
+  // rewrite files that are still being read.
+  static std::atomic<uint64_t> sequence{0};
 
   std::stringstream ss;
-  ss << std::hex << std::setw(16) << std::setfill('0') << hash_value;
+  ss << std::hex << std::setw(16) << std::setfill('0')
+     << std::hash<std::string>{}(path) << '_' << sequence.fetch_add(1);
   return ss.str();
 }
 }  // namespace
