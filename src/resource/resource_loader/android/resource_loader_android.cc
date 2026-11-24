@@ -6,6 +6,7 @@
 
 #include <android/bitmap.h>
 
+#include <cstdint>
 #include <cstring>
 
 #include "base/include/platform/android/jni_convert_helper.h"
@@ -66,8 +67,13 @@ std::unique_ptr<lynx::animax::Bitmap> JavaBitmapToBitmap(JNIEnv* env,
   AndroidBitmap_getInfo(env, java_bitmap, &info);
   bool valid_format = info.format == ANDROID_BITMAP_FORMAT_RGBA_8888 ||
                       info.format == ANDROID_BITMAP_FORMAT_RGB_565;
+  // Bitmap rows are tightly packed (BytesPerRow is width * bytes per pixel), so
+  // any row padding in the Android bitmap is dropped when copying.
+  const size_t row_bytes =
+      static_cast<size_t>(info.width) *
+      (info.format == ANDROID_BITMAP_FORMAT_RGBA_8888 ? 4 : 2);
   if (!valid_format || info.height == 0 || info.width == 0 ||
-      info.stride == 0) {
+      info.stride < row_bytes) {
     ANIMAX_LOGE(
         "Failed to convert Android Bitmap to animax::Bitmap. The issue could "
         "be due to invalid dimensions or the bitmap not being in the RGBA8888 "
@@ -75,7 +81,7 @@ std::unique_ptr<lynx::animax::Bitmap> JavaBitmapToBitmap(JNIEnv* env,
         "format.");
     return nullptr;
   }
-  const auto bitmap_byte_size = info.stride * info.height;
+  const size_t bitmap_byte_size = row_bytes * info.height;
   AndroidBitmap_lockPixels(env, java_bitmap, &java_bitmap_data);
   // A call to AndroidBitmap_lockPixels must be balanced by a call to
   // AndroidBitmap_unlockPixels We use a unique_ptr to ensure that the call to
@@ -98,7 +104,16 @@ std::unique_ptr<lynx::animax::Bitmap> JavaBitmapToBitmap(JNIEnv* env,
   }
   // java_bitmap_data != nullptr && bitmap_data != nullptr && bitmap_byte_size
   // != 0
-  memcpy(bitmap_data, java_bitmap_data, bitmap_byte_size);
+  if (info.stride == row_bytes) {
+    memcpy(bitmap_data, java_bitmap_data, bitmap_byte_size);
+  } else {
+    auto* dst = static_cast<uint8_t*>(bitmap_data);
+    const auto* src = static_cast<const uint8_t*>(java_bitmap_data);
+    for (uint32_t row = 0; row < info.height; ++row) {
+      memcpy(dst + row * row_bytes,
+             src + static_cast<size_t>(row) * info.stride, row_bytes);
+    }
+  }
   BitmapFormat format = info.format == ANDROID_BITMAP_FORMAT_RGBA_8888
                             ? BitmapFormat::kRGBA
                             : BitmapFormat::kRGB565;

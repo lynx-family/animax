@@ -741,6 +741,33 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     return nativeGetMemoryUsageBytes(mPtr);
   }
 
+  // Component integrations lock this before flushing their initial source properties.
+  @RestrictTo(RestrictTo.Scope.LIBRARY)
+  public boolean setCompositionMode(boolean enabled) {
+    return mPtr != 0 && nativeSetCompositionMode(mPtr, enabled);
+  }
+
+  @Nullable
+  @RestrictTo(RestrictTo.Scope.LIBRARY)
+  public ReadableMap getCompositionReceiverInfo() {
+    return mPtr == 0 ? null : nativeGetCompositionReceiverInfo(mPtr);
+  }
+
+  // Node removal can precede destruction. Cancel only an unfinished binding;
+  // a committed composition and the player stay intact.
+  @RestrictTo(RestrictTo.Scope.LIBRARY)
+  public void cancelPendingCompositionBinding() {
+    if (mPtr != 0) {
+      nativeCancelPendingCompositionBinding(mPtr);
+    }
+  }
+
+  private native boolean nativeSetCompositionMode(long player, boolean enabled);
+
+  private native ReadableMap nativeGetCompositionReceiverInfo(long player);
+
+  private native void nativeCancelPendingCompositionBinding(long player);
+
   private native void nativeGetMetricsAsync(long player, AnimaXMetricsCallback callback);
 
   private native long nativeCreate(long loader, AnimaXContext context);
