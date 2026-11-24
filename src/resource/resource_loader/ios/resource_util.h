@@ -16,10 +16,11 @@ namespace animax {
 bool TryCreateDirectory(NSString* directory);
 std::string EnsureCacheDirectory();
 std::string GetTempFilePathForUrl(const std::string& url);
+std::string GetTempFilePathForData(NSData* data, const std::string& source_path);
 
 bool DeviceHasIOS17IndexedPNGDecodingBug();
-std::unique_ptr<Bitmap> NSDataToBitmap(NSData* data);
-std::unique_ptr<Bitmap> UIImageToBitmap(UIImage* ui_image);
+std::unique_ptr<Bitmap> NSDataToBitmap(NSData* data, uint32_t width = 0, uint32_t height = 0);
+std::unique_ptr<Bitmap> UIImageToBitmap(UIImage* ui_image, uint32_t width = 0, uint32_t height = 0);
 std::unique_ptr<RawData> NSDataToRawData(NSData* ns_data);
 bool WriteNSDataToFile(NSData* data, const std::string& path);
 

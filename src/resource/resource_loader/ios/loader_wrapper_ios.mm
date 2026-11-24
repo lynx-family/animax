@@ -46,6 +46,11 @@ TransformRequestIOS AnimaXLoaderResponseToTransformRequestIOS(ResourceRequest re
   const auto request_type = request.type;
   auto transform_request = TransformRequestIOS{};
   transform_request.input = response.payload;
+  transform_request.cache_by_content = request.cache_by_content;
+  if (request.image_size_mode == ImageSizeMode::kExact) {
+    transform_request.image_width = request.width;
+    transform_request.image_height = request.height;
+  }
 
   switch (response.payloadType) {
     case AnimaXLoaderPayloadTypeNSData: {

@@ -16,6 +16,8 @@ class AudioAssetAndroid : public AudioAsset {
   ~AudioAssetAndroid() override = default;
   explicit AudioAssetAndroid(AudioAssetModel model);
   void LoadLocal(const std::string& file_path) override;
+  LoaderError PrepareForPreload(const std::string& file_path) override;
+  int64_t GetMemoryUsageBytes() const override;
   jobject JavaObject() const { return asset_.Get(); }
 
  private:

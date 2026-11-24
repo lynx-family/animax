@@ -20,12 +20,12 @@ NSDataBitmapTransformLoader::NSDataBitmapTransformLoader(AnimaXContext* context)
 
 void NSDataBitmapTransformLoader::Load(TransformRequestIOS request, CallbackType callback) {
   auto response = TransformResponseIOS{};
-  auto bitmap = NSDataToBitmap(request.input);
+  auto bitmap = NSDataToBitmap(request.input, request.image_width, request.image_height);
 
   if (!bitmap && decoder_impl_) {
     UIImage* ui_image = [decoder_impl_ loadImageData:request.input];
     if (ui_image) {
-      bitmap = UIImageToBitmap(ui_image);
+      bitmap = UIImageToBitmap(ui_image, request.image_width, request.image_height);
     } else {
       ANIMAX_LOGE("Failed to decode image by AnimaXImageDecoderService.");
     }
@@ -79,14 +79,19 @@ void FilePathNSStringToNSDataLoader::Load(TransformRequestIOS request, CallbackT
   NSData* file_content = [NSData dataWithContentsOfFile:file_path];
   auto new_request = TransformRequestIOS{.input = file_content,
                                          .input_type = TransformRequestInputType::kNSData,
-                                         .output_type = request.output_type};
+                                         .output_type = request.output_type,
+                                         .image_width = request.image_width,
+                                         .image_height = request.image_height};
   callback(std::move(new_request), LoaderError{});
 }
 
 void NSDataToFilePathStringLoader::Load(TransformRequestIOS request, CallbackType callback) {
   auto file_path = std::string{};
 
-  if (request.default_file_path_for_ns_data_file_path_conversion.empty()) {
+  if (request.cache_by_content) {
+    file_path = GetTempFilePathForData(request.input,
+                                       request.default_file_path_for_ns_data_file_path_conversion);
+  } else if (request.default_file_path_for_ns_data_file_path_conversion.empty()) {
     NSString* ns_data_hash = [[NSNumber numberWithUnsignedLong:[request.input hash]] stringValue];
     auto hash_str = std::string{[ns_data_hash UTF8String]};
     file_path = GetTempFilePathForUrl(hash_str);

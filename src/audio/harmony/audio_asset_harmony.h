@@ -56,8 +56,10 @@ class AudioAssetHarmony : public AudioAsset {
   ~AudioAssetHarmony() override = default;
   explicit AudioAssetHarmony(AudioAssetModel model);
   void LoadLocal(const std::string& file_path) override;
+  LoaderError PrepareForPreload(const std::string& file_path) override;
   const AudioInfo& GetAudioInfo() const;
   const std::vector<uint8_t>& GetAudioData() const;
+  int64_t GetMemoryUsageBytes() const override;
 
  private:
   // Find audio track by av format
@@ -86,6 +88,9 @@ class AudioAssetHarmony : public AudioAsset {
   std::shared_ptr<AudioInfo> info_ = std::make_shared<AudioInfo>();
   std::vector<uint8_t> audio_data_;
   CodecUserData codec_ctx_;
+  // Observation for the independent-load result; legacy decoding still drains
+  // its queued data after a demuxer read error.
+  bool read_failed_ = false;
 };
 }  // namespace animax
 }  // namespace lynx

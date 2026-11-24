@@ -36,6 +36,23 @@ public class AudioAsset {
     return prepareAudioDataIfNecessary();
   }
 
+  @CalledByNative
+  public boolean loadLocalForPreload(String filePath) {
+    try {
+      mAudioInfo = AudioAssetExtractor.extractAudioInfo(filePath);
+      if (!isValid()) {
+        return false;
+      }
+      mFileUrl = filePath;
+      mAudioData = AudioAssetExtractor.extractDecodedAudioData(
+          mAudioInfo, mFileUrl, mAudioInfo.getAudioTrackIndex(), true);
+      return mAudioData != null;
+    } catch (RuntimeException e) {
+      AnimaXLog.e(TAG, "Failed to prepare independent audio: " + e.getMessage());
+      return false;
+    }
+  }
+
   public boolean isValid() {
     return mAudioInfo != null && mAudioInfo.getChannelCount() > 0 && mAudioInfo.getSampleRate() > 0
         && mAudioInfo.getDuration() > 0;
@@ -47,6 +64,11 @@ public class AudioAsset {
 
   public ByteBuffer getAudioData() {
     return mAudioData;
+  }
+
+  @CalledByNative
+  public long getPreparedDataSize() {
+    return mAudioData == null ? 0 : mAudioData.capacity();
   }
 
   private boolean prepareAudioDataIfNecessary() {
