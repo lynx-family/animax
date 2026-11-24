@@ -88,8 +88,13 @@ class FontAsset : public BaseAsset<FontAsset> {
   ANIMAX_EXPORT std::shared_ptr<Font> GetFontSnapshot();
 
  private:
+  friend class BoundCompositionMemory;
+
   FontAssetModel model_{};
   mutable std::mutex data_mutex_;
+  // SetRawData and ResetModel release the current RawData. Its charge ends
+  // there, even if this asset remains alive. Empty on ordinary paths.
+  std::shared_ptr<void> bound_raw_data_memory_ticket_;
   std::unique_ptr<RawData> raw_data_ = nullptr;
   uint64_t data_revision_ = 0;
   uint64_t font_data_revision_ = 0;

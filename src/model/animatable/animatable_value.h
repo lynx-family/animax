@@ -25,7 +25,7 @@ class AnimatableValue {
  public:
   virtual ~AnimatableValue() = default;
 
-  KeyframeModelList& GetKeyframes();
+  ANIMAX_EXPORT KeyframeModelList& GetKeyframes();
 
   virtual bool IsStatic();
   virtual ValueType Type() { return ValueType::kUnknown; }

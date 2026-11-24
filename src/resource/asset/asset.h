@@ -5,6 +5,8 @@
 #ifndef ANIMAX_SRC_RESOURCE_ASSET_ASSET_H_
 #define ANIMAX_SRC_RESOURCE_ASSET_ASSET_H_
 
+#include <memory>
+
 namespace lynx {
 namespace animax {
 
@@ -48,6 +50,11 @@ class Asset {
    * Asset.
    */
   virtual void AcceptVisitor(AssetVisitor& visitor) = 0;
+
+ private:
+  friend class BoundCompositionMemory;
+  // Empty on ordinary loading paths. Released after the derived asset data.
+  std::shared_ptr<void> bound_memory_ticket_;
 };
 
 template <typename T>

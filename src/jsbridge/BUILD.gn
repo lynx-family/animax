@@ -7,6 +7,8 @@ animax_napi_sources = [
   "bindings/animax/animax_module.cc",
   "bindings/animax/animax_player_delegate.cc",
   "bindings/animax/animax_player_delegate.h",
+  "bindings/animax/bound_composition_memory.cc",
+  "bindings/animax/bound_composition_memory.h",
   "bindings/animax/napi_composition_element.cc",
   "bindings/animax/napi_composition_element.h",
   "bindings/animax/napi_on_layer_bounds_callback.cc",
@@ -19,6 +21,10 @@ animax_napi_sources = [
   "bindings/animax/napi_task_runner.h",
   "bindings/animax/napi_value_param.cc",
   "bindings/animax/napi_value_param.h",
+  "bindings/animax/preload_host.cc",
+  "bindings/animax/preload_host.h",
+  "bindings/animax/preload_model_memory.cc",
+  "bindings/animax/preload_model_memory.h",
 ]
 
 if (is_ios || is_mac) {

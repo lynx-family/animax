@@ -87,7 +87,7 @@ class LayerModel {
     DCHECK(in_out_frames_);
     return *in_out_frames_;
   }
-  AnimatableTransformModel* GetTransform();
+  ANIMAX_EXPORT AnimatableTransformModel* GetTransform();
 
   Color& GetSolidColor() { return *solid_color_; }
   int32_t GetSolidWidth() { return solid_width_; }

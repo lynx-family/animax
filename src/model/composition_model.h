@@ -133,6 +133,10 @@ class CompositionModel {
   bool GetEnable3D() const { return enable_3d_; }
 
  private:
+  friend class BoundCompositionMemory;
+  // Declared first so the model-owned fields are destroyed before its charge.
+  std::shared_ptr<void> bound_memory_ticket_;
+
   std::unique_ptr<RectF> bounds_;
 
   int32_t mask_and_matte_count_ = 0;
