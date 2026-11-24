@@ -84,14 +84,10 @@ class ImageAsset : public BaseAsset<ImageAsset> {
   void ResetModel(ImageAssetModel info);
 
  private:
-  friend class BoundCompositionMemory;
   // Temporary friend class allowed to fetch resources; to be removed after
   // refactoring.
   friend class ImageFetcher;
 
-  // GetImage and ResetModel release the source name. Its charge ends there,
-  // even if this asset remains alive. Empty on ordinary paths.
-  std::shared_ptr<void> bound_file_name_memory_ticket_;
   ImageAssetModel model_{};
   std::unique_ptr<Bitmap> bitmap_;
   std::unique_ptr<Image> image_;

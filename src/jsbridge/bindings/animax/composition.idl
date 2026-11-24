@@ -1,0 +1,3 @@
+interface Composition {
+    void dispose();
+};
