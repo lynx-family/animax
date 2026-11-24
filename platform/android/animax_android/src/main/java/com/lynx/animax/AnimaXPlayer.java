@@ -38,9 +38,16 @@ import com.lynx.animax.util.AnimaX;
 import com.lynx.animax.util.AnimaXLog;
 import com.lynx.animax.util.AnimaXMetricsCallback;
 import com.lynx.animax.util.DeviceUtil;
+import com.lynx.animax.util.UIThreadUtils;
 
 public class AnimaXPlayer implements IAnimaXPlayer {
   private static final String TAG = "AnimaXPlayer";
+
+  // Only the optional native preload adapter uses this during UI-thread association.
+  long getNativePtrForPreload() {
+    UIThreadUtils.assertOnUiThread();
+    return mPtr;
+  }
 
   private volatile long mPtr;
 

@@ -1,0 +1,19 @@
+# Copyright 2026 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+jni_register_configs:
+  output_path: platform/android/animax_napi/src/main/jni/gen/animax_napi_so_load.cc
+  custom_headers:
+    - base/include/platform/android/jni_utils.h
+  namespaces:
+    - animax
+gn_configs:
+  output_path: platform/android/animax_napi/src/main/jni/BUILD.gn
+  template_name: animax_source_set
+  custom_headers:
+    - src/animax.gni
+jni_class_configs:
+  output_dir: platform/android/animax_napi/src/main/jni/gen
+  jni_classes:
+    - java: platform/android/animax_napi/src/main/java/com/lynx/animax/AnimaXPreloadHost.java
