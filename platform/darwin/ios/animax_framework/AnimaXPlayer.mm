@@ -10,12 +10,14 @@
 #import <AnimaX/AnimaXSurfaceDrawable.h>
 #import "AnimaXComposition+Internal.h"
 #import "AnimaXContext+Internal.h"
+#import "AnimaXPlayer+Internal.h"
 #import "AnimaXPropertyUpdater.h"
 #import "AnimaXResourceLoaderHolder.h"
 #import "AnimaXSurfaceDrawable+Internal.h"
 
 #include <map>
 #include <string>
+#include <utility>
 
 #include "include/player/animax_player.h"
 #include "include/player/animax_player_builder.h"
@@ -463,6 +465,12 @@ static NSDictionary<NSString *, id> *MapToNSDictionary(const lynx::animax::Event
       return lynx::animax::AnimaXSurfaceIOS::Make(drawable);
     }
   });
+}
+
+- (void)adoptAnimaXSurfaceFactory:(lynx::animax::SurfaceCreationFactory)factory {
+  if (factory) {
+    _player->CreateSurface(std::move(factory));
+  }
 }
 
 - (void)addAnimationEventListener:(id<AnimaXAnimationListener>)listener {

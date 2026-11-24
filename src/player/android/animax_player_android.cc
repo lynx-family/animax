@@ -5,6 +5,7 @@
 #include <android/native_window_jni.h>
 
 #include <memory>
+#include <utility>
 
 #include "base/include/fml/synchronization/waitable_event.h"
 #include "base/include/platform/android/jni_convert_helper.h"
@@ -222,6 +223,23 @@ static void UpdateAnimaXSurface(JNIEnv* env, jobject jcaller, jlong player,
         return ResizeAnimaXSurface(std::move(old_surface),
                                    std::move(surface_drawable));
       });
+}
+
+static jboolean SetSurfaceFactory(JNIEnv* env, jobject jcaller, jlong player,
+                                  jlong factory_handle) {
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr || !factory_handle) {
+    return JNI_FALSE;
+  }
+
+  auto* factory =
+      reinterpret_cast<lynx::animax::SurfaceCreationFactory*>(factory_handle);
+  if (!*factory) {
+    return JNI_FALSE;
+  }
+  // Transfer ownership before returning to the caller's JNI scope.
+  player_ptr->CreateSurface(std::move(*factory));
+  return JNI_TRUE;
 }
 
 static void SetAutoPlay(JNIEnv* env, jobject jcaller, jlong player,
