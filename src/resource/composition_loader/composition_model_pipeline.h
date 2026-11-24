@@ -63,6 +63,12 @@ class CompositionModelPipeline
  public:
   CompositionModelPipeline() = default;
 
+  // Construct in the core library so the optional NAPI module does not need
+  // the pipeline's private implementation or timestamp-recorder symbols.
+  static ANIMAX_EXPORT std::shared_ptr<CompositionModelPipeline> MakeForPreload(
+      ResourceLoader::Ptr resource_loader, UnzipLoader::Ptr unzip_loader,
+      bool enable_audio);
+
   /**
    * Initializes the pipeline with necessary loaders.
    * This function is thread-safe.
@@ -126,6 +132,13 @@ class CompositionModelPipeline
    */
   void LoadCompositionModelFromURI(std::string uri, float scale,
                                    AssetLoader::CallbackType callback);
+
+  // Independent loading returns a parsed model, or validated AlphaPlayer
+  // configuration pending video preparation, with source metadata. Default
+  // assets are not prepared. Use a separate pipeline per request and call on
+  // the resource thread; completion also runs there (including early errors).
+  ANIMAX_EXPORT void LoadCompositionModelOnlyFromURI(
+      std::string uri, float scale, ModelLoader::CallbackType callback);
 
   /**
    * Initiates the loading of a composition model from a JSON string.

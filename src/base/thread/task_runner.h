@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_BASE_THREAD_TASK_RUNNER_H_
 #define ANIMAX_SRC_BASE_THREAD_TASK_RUNNER_H_
 
+#include "include/base/macros.h"
 #include "src/base/thread/gpu_thread_handler.h"
 
 namespace lynx {
@@ -14,7 +15,9 @@ const RunnerPtr& GetAnimaXMainThread();
 
 std::shared_ptr<GPUThreadHolder> GetAnimaXGPUThreadHolder(
     bool enable_multi_gpu_thread);
-const RunnerPtr& GetAnimaXResourceThread();
+// Export the existing runner for the optional NAPI module's independent loads;
+// this does not introduce another resource thread or change its lifetime.
+ANIMAX_EXPORT const RunnerPtr& GetAnimaXResourceThread();
 
 }  // namespace animax
 }  // namespace lynx

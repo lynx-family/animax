@@ -18,6 +18,12 @@ enum class ResourceRequestType {
   kDownloadToLocal,
 };
 
+enum class ImageSizeMode {
+  kDefault = 0,  // Preserve the existing host's decoding policy.
+  kOriginal,
+  kExact,
+};
+
 struct ResourceRequest {
   ResourceRequestType type = ResourceRequestType::kInvalid;
   UriInfo uri_info{};
@@ -25,6 +31,10 @@ struct ResourceRequest {
   int32_t height = 0;
   std::string id{};
   std::string main_uri{};
+  ImageSizeMode image_size_mode = ImageSizeMode::kDefault;
+  // New independent loads may resolve one URI to different per-page bytes.
+  // Preserve legacy URI-based temporary files unless explicitly requested.
+  bool cache_by_content = false;
 };
 
 enum class ResourcePayloadType {

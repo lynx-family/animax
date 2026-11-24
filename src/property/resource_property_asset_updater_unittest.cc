@@ -36,6 +36,29 @@ class MockAudioAsset : public AudioAsset {
   void LoadLocal(const std::string& file_path) override { is_valid_ = true; }
 };
 
+TEST(AudioAssetTest, IndependentPreparationRequiresBackendSupport) {
+  MockAudioAsset asset;
+  EXPECT_EQ(kNoSuchLoader, asset.PrepareForPreload("audio.mp3").code);
+  EXPECT_FALSE(asset.IsValid());
+}
+
+TEST(AudioAssetTest, RebindingPreservesAudioAndAccountsForItsNewModel) {
+  auto asset = MockAudioAsset::Make({"original", "audio/", "first.mp3"});
+  asset->LoadLocal("audio/first.mp3");
+  const AudioAssetModel replacement{std::string(64, 'a'), "prepared/",
+                                    "second.mp3"};
+  asset->ResetModel(replacement);
+  EXPECT_TRUE(asset->IsValid());
+  const auto& stored = asset->Model();
+  EXPECT_EQ(replacement.id, stored.id);
+  EXPECT_EQ(replacement.dir_name, stored.dir_name);
+  EXPECT_EQ(replacement.file_name, stored.file_name);
+  EXPECT_EQ(sizeof(AudioAsset) + stored.id.capacity() +
+                stored.dir_name.capacity() + stored.file_name.capacity() +
+                std::string{}.capacity(),
+            asset->GetMemoryUsageBytes());
+}
+
 TEST(ResourcePropertyAssetUpdatorTest, NullParamsTest) {
   auto request = ResourceUpdateRequest::Make(
       ResourcePropertyType::kUnknown, "font1",

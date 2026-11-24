@@ -33,6 +33,8 @@ resource_shared_sources = [
   "composition_loader/json_alpha_video_model_loader.h",
   "composition_loader/json_composition_model_loader.cc",
   "composition_loader/json_composition_model_loader.h",
+  "composition_loader/preloaded_asset_loader.cc",
+  "composition_loader/preloaded_asset_loader.h",
   "composition_loader/zip_alpha_video_model_loader.cc",
   "composition_loader/zip_alpha_video_model_loader.h",
   "composition_loader/zip_composition_model_loader.cc",

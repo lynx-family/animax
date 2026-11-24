@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_RESOURCE_URI_URI_UTIL_H_
 #define ANIMAX_SRC_RESOURCE_URI_URI_UTIL_H_
 
+#include "include/base/macros.h"
 #include "include/resource/uri_info.h"
 #include "src/resource/asset/font_asset.h"
 #include "src/resource/asset/image_asset.h"
@@ -26,7 +27,7 @@ class VideoAsset;
 bool IsBase64Uri(const std::string& uri);
 bool IsPolyfillUri(const std::string& uri);
 
-UriInfo::Scheme ParseUriScheme(const std::string& uri);
+ANIMAX_EXPORT UriInfo::Scheme ParseUriScheme(const std::string& uri);
 UriInfo::ContentType ParseUriMainResourceContentType(
     const std::string& uri, bool allow_extensionless_json = false);
 std::string ParseUriMainResourceBaseUri(const std::string& uri);
@@ -34,14 +35,14 @@ std::string ParseUriMainResourceBaseUri(const std::string& uri);
 std::string ConcatFilePaths(const std::string& base_path,
                             const std::string& relative_path);
 
-UriInfo UriInfoFromFontAsset(const MainResourceUriInfo& main_uri_info,
-                             const FontAsset& font_asset);
-UriInfo UriInfoFromImageAsset(const MainResourceUriInfo& main_uri_info,
-                              const ImageAsset& image_asset);
-UriInfo UriInfoFromVideoAsset(const MainResourceUriInfo& main_uri_info,
-                              const VideoAsset& video_asset);
-UriInfo UriInfoFromAudioAsset(const MainResourceUriInfo& main_uri_info,
-                              const AudioAsset& audio_asset);
+ANIMAX_EXPORT UriInfo UriInfoFromFontAsset(
+    const MainResourceUriInfo& main_uri_info, const FontAsset& font_asset);
+ANIMAX_EXPORT UriInfo UriInfoFromImageAsset(
+    const MainResourceUriInfo& main_uri_info, const ImageAsset& image_asset);
+ANIMAX_EXPORT UriInfo UriInfoFromVideoAsset(
+    const MainResourceUriInfo& main_uri_info, const VideoAsset& video_asset);
+ANIMAX_EXPORT UriInfo UriInfoFromAudioAsset(
+    const MainResourceUriInfo& main_uri_info, const AudioAsset& audio_asset);
 
 bool IsRegularFileExists(const std::string& filePath);
 

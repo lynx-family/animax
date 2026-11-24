@@ -1,6 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+// cspell:ignore extensionless
+
+#include "src/resource/composition_loader/composition_model_pipeline.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -225,5 +228,161 @@ TEST(CompositionModelPipelineTest, LoadCompositionModel_ShouldLoadAllAssets) {
           exp->Fulfill();
         });
   });
+  EXPECT_FALSE(exp->Wait());
+}
+
+TEST(CompositionModelPipelineTest, ModelOnlyBeforeInitReturnsError) {
+  auto pipeline = std::make_shared<CompositionModelPipeline>();
+  auto exp = GTestExpectation::Make();
+  GetAnimaXResourceThread()->PostTask([pipeline, exp] {
+    pipeline->LoadCompositionModelOnlyFromURI(
+        "https://example.com/model.json", 1.f,
+        [exp](CompositionModelResponse response, LoaderError error) {
+          EXPECT_EQ(kInvalidLoader, error.code);
+          EXPECT_EQ(nullptr, response.model);
+          exp->Fulfill();
+        });
+  });
+  EXPECT_FALSE(exp->Wait());
+}
+
+TEST(CompositionModelPipelineTest,
+     ModelOnlyPreservesMetadataWithoutLoadingAssets) {
+  auto pipeline = std::make_shared<CompositionModelPipeline>();
+  auto resource_loader = std::make_shared<StrictMock<MockResourceLoader>>();
+  auto unzip_loader = std::make_shared<StrictMock<MockUnzipLoader>>();
+  EXPECT_CALL(*resource_loader, Load(_, _))
+      .Times(1)
+      .WillOnce([](ResourceRequest request, auto callback) {
+        EXPECT_EQ(ResourceRequestType::kLoadRawData, request.type);
+        callback(
+            ResourceResponse{
+                .payload = MakeRawDataResourcePayload(RawData::MakeRawData(
+                    kCompositionModelJSON,
+                    std::string_view{kCompositionModelJSON}.length(), nullptr,
+                    nullptr))},
+            {});
+      });
+  auto exp = GTestExpectation::Make();
+  GetAnimaXResourceThread()->PostTask([pipeline, resource_loader, unzip_loader,
+                                       exp] {
+    pipeline->Init(resource_loader, unzip_loader);
+    pipeline->LoadCompositionModelOnlyFromURI(
+        "https://example.com/model/test.json", 3.f,
+        [exp](CompositionModelResponse response, LoaderError error) {
+          EXPECT_FALSE(!!error);
+          EXPECT_EQ(CompositionModelType::kLottie, response.model_type);
+          EXPECT_EQ("https://example.com/model/test.json", response.main_uri);
+          EXPECT_EQ("https://example.com/model/", response.base_uri);
+          EXPECT_NE(nullptr, response.model);
+          if (response.model) {
+            EXPECT_FLOAT_EQ(3.f, response.model->GetScale());
+            EXPECT_FLOAT_EQ(3375.f, response.model->GetBounds().GetWidth());
+            EXPECT_TRUE(response.model->should_reset_identity_);
+            for (const auto& [id, asset] : response.model->GetImages()) {
+              EXPECT_FALSE(asset->IsLoaded());
+            }
+            for (const auto& [id, asset] : response.model->GetFonts()) {
+              EXPECT_FALSE(asset->IsLoaded());
+            }
+            for (const auto& [id, asset] : response.model->GetVideos()) {
+              EXPECT_FALSE(asset->IsValid());
+            }
+          }
+          exp->Fulfill();
+        });
+  });
+  EXPECT_FALSE(exp->Wait());
+}
+
+TEST(CompositionModelPipelineTest,
+     ModelOnlyConcurrentRequestsKeepConfiguration) {
+  static constexpr const char* kJSON = R"({
+    "v":"5.6.10","fr":30,"ip":0,"op":60,"w":100,"h":100,
+    "assets":[{"id":"audio","u":"","p":"sound.mp3"}],"layers":[]
+  })";
+  auto first = std::make_shared<CompositionModelPipeline>();
+  auto second = std::make_shared<CompositionModelPipeline>();
+  auto resource_loader = std::make_shared<StrictMock<MockResourceLoader>>();
+  auto unzip_loader = std::make_shared<StrictMock<MockUnzipLoader>>();
+  MockResourceLoader::CallbackType pending;
+  EXPECT_CALL(*resource_loader, Load(_, _))
+      .Times(2)
+      .WillRepeatedly([&pending](ResourceRequest request, auto callback) {
+        EXPECT_EQ(UriInfo::ContentType::kJson, request.uri_info.content_type);
+        if (request.uri_info.uri == "https://example.com/a/model") {
+          pending = std::move(callback);
+          return;
+        }
+        auto respond = [](auto callback) {
+          callback(
+              ResourceResponse{
+                  .payload = MakeRawDataResourcePayload(RawData::MakeRawData(
+                      kJSON, std::string_view{kJSON}.length(), nullptr,
+                      nullptr))},
+              {});
+        };
+        respond(std::move(callback));
+        respond(std::move(pending));
+      });
+  auto first_done = GTestExpectation::Make();
+  auto second_done = GTestExpectation::Make();
+  GetAnimaXResourceThread()->PostTask([first, second, resource_loader,
+                                       unzip_loader, first_done, second_done] {
+    first->Init(resource_loader, unzip_loader);
+    first->SetEnableAudio(true);
+    first->SetAllowExtensionlessJson(true);
+    second->Init(resource_loader, unzip_loader);
+    first->LoadCompositionModelOnlyFromURI(
+        "https://example.com/a/model", 2.f,
+        [first_done](CompositionModelResponse response, LoaderError error) {
+          EXPECT_FALSE(!!error);
+          EXPECT_EQ("https://example.com/a/", response.base_uri);
+          EXPECT_NE(nullptr, response.model);
+          if (response.model) {
+            EXPECT_FLOAT_EQ(2.f, response.model->GetScale());
+            EXPECT_EQ(1u, response.model->GetAudios().size());
+          }
+          first_done->Fulfill();
+        });
+    second->LoadCompositionModelOnlyFromURI(
+        "https://example.com/b/model.json", 3.f,
+        [second_done](CompositionModelResponse response, LoaderError error) {
+          EXPECT_FALSE(!!error);
+          EXPECT_EQ("https://example.com/b/", response.base_uri);
+          EXPECT_NE(nullptr, response.model);
+          if (response.model) {
+            EXPECT_FLOAT_EQ(3.f, response.model->GetScale());
+            EXPECT_TRUE(response.model->GetAudios().empty());
+          }
+          second_done->Fulfill();
+        });
+  });
+  EXPECT_FALSE(first_done->Wait());
+  EXPECT_FALSE(second_done->Wait());
+}
+
+TEST(CompositionModelPipelineTest, ModelOnlyPreservesLoadingError) {
+  auto pipeline = std::make_shared<CompositionModelPipeline>();
+  auto resource_loader = std::make_shared<StrictMock<MockResourceLoader>>();
+  auto unzip_loader = std::make_shared<StrictMock<MockUnzipLoader>>();
+  EXPECT_CALL(*resource_loader, Load(_, _))
+      .WillOnce([](ResourceRequest request, auto callback) {
+        callback({}, LoaderError{.code = kFileIOFailure,
+                                 .message = "unavailable model"});
+      });
+  auto exp = GTestExpectation::Make();
+  GetAnimaXResourceThread()->PostTask(
+      [pipeline, resource_loader, unzip_loader, exp] {
+        pipeline->Init(resource_loader, unzip_loader);
+        pipeline->LoadCompositionModelOnlyFromURI(
+            "https://example.com/model.json", 1.f,
+            [exp](CompositionModelResponse response, LoaderError error) {
+              EXPECT_EQ(nullptr, response.model);
+              EXPECT_EQ(kFileIOFailure, error.code);
+              EXPECT_EQ("unavailable model", error.message);
+              exp->Fulfill();
+            });
+      });
   EXPECT_FALSE(exp->Wait());
 }

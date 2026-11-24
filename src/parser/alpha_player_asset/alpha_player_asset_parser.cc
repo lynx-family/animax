@@ -5,6 +5,7 @@
 #include "src/parser/alpha_player_asset/alpha_player_asset_parser.h"
 
 #include <array>
+#include <cmath>
 
 #include "src/base/log/log.h"
 #include "src/base/util/composition_frame_util.h"
@@ -35,6 +36,20 @@ bool ParseRect(std::array<int32_t, 4> &rect, const rapidjson::Value &value) {
     rect[index] = it->GetInt();
   }
   return (4 == index);
+}
+
+bool ParseConfigRect(std::array<int32_t, 4> &rect,
+                     const rapidjson::Value &value) {
+  if (!value.IsArray() || value.Size() != rect.size()) {
+    return false;
+  }
+  for (rapidjson::SizeType index = 0; index < value.Size(); ++index) {
+    if (!value[index].IsInt() || value[index].GetInt() < 0) {
+      return false;
+    }
+    rect[index] = value[index].GetInt();
+  }
+  return rect == std::array<int32_t, 4>{} || (rect[2] > 0 && rect[3] > 0);
 }
 
 void AddVideoAsset(const std::shared_ptr<lynx::animax::CompositionModel> &model,
@@ -239,6 +254,82 @@ std::shared_ptr<lynx::animax::CompositionModel> ParseAsset(
 
 namespace lynx {
 namespace animax {
+
+std::shared_ptr<const AlphaPlayerConfig> AlphaPlayerAssetParser::ParseConfig(
+    const std::string &unzip_path, const char *config, size_t length) {
+  if (!config || length == 0) {
+    return nullptr;
+  }
+  rapidjson::Document document;
+  document.Parse(config, length);
+  if (document.HasParseError() || !document.IsObject()) {
+    return nullptr;
+  }
+  const auto portrait = document.FindMember("portrait");
+  if (portrait == document.MemberEnd() || !portrait->value.IsObject()) {
+    return nullptr;
+  }
+  const auto &asset = portrait->value;
+  const auto path = asset.FindMember("path");
+  if (path == asset.MemberEnd() || !path->value.IsString() ||
+      path->value.GetStringLength() == 0) {
+    return nullptr;
+  }
+
+  auto result = std::make_shared<AlphaPlayerConfig>();
+  result->video_path = ConcatFilePaths(
+      unzip_path,
+      std::string(path->value.GetString(), path->value.GetStringLength()));
+  const auto rgb_frame = asset.FindMember("rgbFrame");
+  if (rgb_frame != asset.MemberEnd() &&
+      !ParseConfigRect(result->rgb_frame, rgb_frame->value)) {
+    return nullptr;
+  }
+  const auto alpha_frame = asset.FindMember("aFrame");
+  if (alpha_frame != asset.MemberEnd() &&
+      !ParseConfigRect(result->alpha_frame, alpha_frame->value)) {
+    return nullptr;
+  }
+  // VideoAsset only recovers the side-by-side layout when both regions are
+  // entirely zero. Nonzero regions use x, y, width, height; validating them
+  // against the video also requires its dimensions, which are unavailable here.
+  if ((result->rgb_frame == std::array<int32_t, 4>{}) !=
+      (result->alpha_frame == std::array<int32_t, 4>{})) {
+    return nullptr;
+  }
+  return result;
+}
+
+std::shared_ptr<CompositionModel>
+AlphaPlayerAssetParser::BuildFromPreparedVideo(
+    const AlphaPlayerConfig &config, const std::shared_ptr<VideoAsset> &video,
+    const VideoAssetModel &resolved_video_model,
+    const std::shared_ptr<AudioAsset> &audio, float scale, bool enable_audio) {
+  if (!video || resolved_video_model.id != kVideoId || !std::isfinite(scale) ||
+      scale <= 0.f) {
+    return nullptr;
+  }
+  auto model = std::make_shared<CompositionModel>(scale);
+  model->GetVideos()[kVideoId] = video;
+  AddAlphaVideoLayer(model, video->GetFrameCount());
+  if (enable_audio) {
+    // The default soundtrack remains attached to config, independently of the
+    // selected visual video. Explicit audio retains its prepared data.
+    model->GetAudios()[kAudioId] =
+        audio
+            ? audio
+            : AudioAsset::Make(AudioAssetModel{.id = kAudioId,
+                                               .dir_name = std::string{},
+                                               .file_name = config.video_path});
+    AddAudioLayer(model, video->GetFrameCount());
+  }
+  model->Init(
+      std::make_unique<RectF>(0, 0, scale * resolved_video_model.rgb_frame[2],
+                              scale * resolved_video_model.rgb_frame[3]),
+      0.f, CompositionFrameUtil::ToPlaybackEndFrame(video->GetFrameCount()),
+      video->GetFrameRate(), false);
+  return model;
+}
 
 std::shared_ptr<CompositionModel> AlphaPlayerAssetParser::Parse(
     const std::string &unzip_path, const char *config, size_t length,

@@ -15,6 +15,7 @@ namespace lynx {
 namespace animax {
 
 class CompositionModel;
+struct AlphaPlayerConfig;
 
 enum class CompositionModelType {
   kInvalid = 0,
@@ -43,6 +44,9 @@ struct CompositionModelRequest {
   std::string json_str;
   float scale = 1.0f;
   bool enable_audio = false;
+  // Independent loading skips default assets. AlphaPlayer packages return
+  // configuration until video metadata is available to construct the model.
+  bool model_only = false;
 };
 
 /**
@@ -63,6 +67,9 @@ struct CompositionModelResponse {
   CompositionModelType model_type{};
   std::string base_uri{};
   std::string main_uri{};
+  // For model_only requests, exactly one of model and alpha_player_config is
+  // present on success. Legacy requests always return a completed model.
+  std::shared_ptr<const AlphaPlayerConfig> alpha_player_config{};
 };
 
 }  // namespace animax

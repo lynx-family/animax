@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include "include/base/macros.h"
+#include "include/resource/loader_error.h"
 #include "include/resource/raw_data.h"
 #include "src/resource/asset/asset.h"
 #include "src/resource/asset/video_asset_model.h"
@@ -58,6 +60,15 @@ class VideoAsset : public BaseAsset<VideoAsset>,
   virtual bool PrepareFrameData(std::unique_ptr<RawData> raw_data) {
     return false;
   }
+
+  // New independent loads require complete input, not the legacy best-effort
+  // validity check. Backends opt in after recording their actual read result.
+  virtual LoaderError PrepareFrameDataForPreload(const std::string& path) {
+    return {kNoSuchLoader, "Independent video preparation is unavailable"};
+  }
+
+  // Owned CPU storage; excludes decoder/OS allocations and GPU resources.
+  virtual int64_t GetMemoryUsageBytes() const;
 
   /**
    * Retrieves the total number of frames in the video.
@@ -128,6 +139,14 @@ class VideoAsset : public BaseAsset<VideoAsset>,
    * @param info New VideoAssetModel to replace the current one.
    */
   void ResetModel(VideoAssetModel info);
+
+  // Validates slot geometry against prepared video data. Both empty regions
+  // recover the legacy side-by-side layout. Failure leaves the model unchanged.
+  ANIMAX_EXPORT LoaderError ResolvePreparedModel(VideoAssetModel* model) const;
+
+  // Rebinds an exclusively owned prepared asset without clearing its media
+  // data. Call only when committing an unbound composition update.
+  ANIMAX_EXPORT LoaderError SetPreparedModel(VideoAssetModel model);
 
   /**
    * Compatibility with legacy issue
