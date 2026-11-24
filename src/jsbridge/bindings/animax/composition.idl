@@ -1,3 +1,15 @@
 interface Composition {
+    // resourceId identifies an existing template resource. A successful update
+    // transfers the prepared payload; failure leaves both objects unchanged.
+    void updateImage(ByteString resourceId, Image image, OnResourceUpdateCallback callback);
+    void updateAudio(ByteString resourceId, PreloadedAudio audio, OnResourceUpdateCallback callback);
+    void updateVideo(ByteString resourceId, AlphaVideo alphaVideo, OnResourceUpdateCallback callback);
+    // Changes content in all used text layers with this exact name, before binding.
+    void updateText(ByteString layerName, ByteString text, OnResourceUpdateCallback callback);
+    // Transfers prepared bytes and replaces the cached font only on success.
+    void updateFont(ByteString fontName, Font font, OnResourceUpdateCallback callback);
     void dispose();
 };
+
+// Reports a resource transfer or text edit, not rendering readiness.
+[HolderStorageNamespace = binding] callback OnResourceUpdateCallback = void (boolean success, ByteString errorCode, ByteString errorMessage);

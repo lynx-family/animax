@@ -38,6 +38,11 @@ class NapiComposition : public NapiBridge {
   // Attributes
 
   // Methods
+  Napi::Value UpdateImageMethod(const Napi::CallbackInfo&);
+  Napi::Value UpdateAudioMethod(const Napi::CallbackInfo&);
+  Napi::Value UpdateVideoMethod(const Napi::CallbackInfo&);
+  Napi::Value UpdateTextMethod(const Napi::CallbackInfo&);
+  Napi::Value UpdateFontMethod(const Napi::CallbackInfo&);
   Napi::Value DisposeMethod(const Napi::CallbackInfo&);
 
   // Overload Hubs
