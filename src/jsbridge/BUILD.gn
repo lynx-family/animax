@@ -27,7 +27,9 @@ animax_napi_sources = [
   "bindings/animax/preload_model_memory.h",
 ]
 
-if (is_ios || is_mac) {
+if (is_android) {
+  animax_napi_sources += [ "bindings/animax/android/preload_host_android.cc" ]
+} else if (is_ios || is_mac) {
   animax_napi_sources += [ "bindings/animax/ios/use_mod_animax.mm" ]
 } else if (is_win) {
   animax_napi_sources += [ "bindings/animax/win/use_mod_animax.cc" ]

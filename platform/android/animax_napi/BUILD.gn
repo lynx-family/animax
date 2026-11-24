@@ -11,11 +11,15 @@ cmake_target("AnimaXNapi") {
   output_name = "animax_napi"
 
   deps = [
+    ":animax_napi_jni_files",
     "../../../src/jsbridge",
     "../animax_android:AnimaXAndroid",
   ]
 
-  lib_dirs = [ "${primjs_native_lib_dir}" ]
+  lib_dirs = [
+    "${lynx_base_native_lib_dir}",
+    "${primjs_native_lib_dir}",
+  ]
   libs = [
     "napi",
     "EGL",
@@ -23,6 +27,7 @@ cmake_target("AnimaXNapi") {
     "android",
     "dl",
     "log",
+    "lynxbase",
     "jnigraphics",
   ]
 
@@ -43,4 +48,17 @@ cmake_target("AnimaXNapi") {
     "-Map=output.map",
   ]
   configs = [ "../../../platform/android:16kb_page" ]
+}
+
+group("animax_napi_jni_files") {
+  exec_script(
+      "../../../buildtools/tools_shared/tools_shared/jni_generator/generate_and_register_jni_files.py",
+      [
+        "-root",
+        rebase_path("//"),
+        "-path",
+        rebase_path("./src/main/jni/jni_configs.yml"),
+        "--use-base-jni-header",
+      ])
+  public_deps = [ "src/main/jni:build" ]
 }
