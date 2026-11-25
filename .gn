@@ -11,4 +11,5 @@ root = ":root"
 
 default_args = {
   lynx_dir = ""
+  textlayout_use_local_config = false
 }

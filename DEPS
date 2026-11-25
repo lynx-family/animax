@@ -150,11 +150,8 @@ deps = {
     'third_party/lynx-textra': {
         "type": "solution",
         "url": "https://github.com/lynx-family/lynx-textra.git",
-        "commit": "e8abbb637d4f3b512d3a9e5f03b4c224e7350612",
+        "commit": "b29c5ed91c71888ce13a3c4599b918e1bd6e83d7",
         "deps_file": "DEPS",
-        'patches': [
-            os.path.join(root_dir, 'patches', 'lynx-textra', '*.patch')
-        ],
         "ignore_in_git": True,
     },
     'third_party/harfbuzz': {
