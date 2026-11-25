@@ -4,6 +4,7 @@
 
 #include "src/resource/resource_loader/ios/base_transform_loaders_ios.h"
 #import <XCTest/XCTest.h>
+#include "src/resource/resource_loader/ios/transform_loader_ios.h"
 
 using namespace lynx::animax;
 
@@ -194,6 +195,52 @@ using namespace lynx::animax;
         XCTAssertEqual(error.code, LoaderErrorCode::kFileDoesNotExist);
       });
   [self waitForExpectationsWithTimeout:5 handler:nil];
+}
+
+- (NSString *)loadFilePath:(NSString *)filePath cacheByContent:(BOOL)cacheByContent {
+  auto loader = TransformLoaderIOS::Make<TransformLoaderIOS>();
+  XCTestExpectation *expectation = [self expectationWithDescription:@"Callback should be called."];
+  NSString *resultPath = nil;
+  loader->Load(TransformRequestIOS{.input = filePath,
+                                   .input_type = TransformRequestInputType::kFilePathNSString,
+                                   .output_type = ResourcePayloadType::kFilePath,
+                                   .default_file_path_for_ns_data_file_path_conversion =
+                                       "/unused/animation.zip",
+                                   .cache_by_content = static_cast<bool>(cacheByContent)},
+               [expectation, &resultPath](TransformResponseIOS result, LoaderError error) {
+                 XCTAssertFalse(!!error);
+                 resultPath = [NSString stringWithUTF8String:result.payload.path.c_str()];
+                 [expectation fulfill];
+               });
+  [self waitForExpectationsWithTimeout:5 handler:nil];
+  return resultPath;
+}
+
+- (void)testTransformLoader_SnapshotsReusedFilePathByContent {
+  NSString *fileName = [NSString stringWithFormat:@"%@.zip", [[NSUUID UUID] UUIDString]];
+  self.tmpFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
+  NSData *dataA = [@"zip content A" dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *dataB = [@"zip content B" dataUsingEncoding:NSUTF8StringEncoding];
+
+  XCTAssertTrue([dataA writeToFile:self.tmpFilePath atomically:YES]);
+  NSString *pathA = [self loadFilePath:self.tmpFilePath cacheByContent:YES];
+  XCTAssertTrue([dataB writeToFile:self.tmpFilePath atomically:YES]);
+  NSString *pathB = [self loadFilePath:self.tmpFilePath cacheByContent:YES];
+
+  XCTAssertNotEqualObjects(pathA, self.tmpFilePath);
+  XCTAssertNotEqualObjects(pathA, pathB);
+  XCTAssertEqualObjects(pathA.pathExtension, @"zip");
+  XCTAssertEqualObjects([NSData dataWithContentsOfFile:pathA], dataA);
+  XCTAssertEqualObjects([NSData dataWithContentsOfFile:pathB], dataB);
+  NSString *fileURI = [NSURL fileURLWithPath:self.tmpFilePath].absoluteString;
+  XCTAssertEqualObjects([self loadFilePath:fileURI cacheByContent:YES], pathB);
+  [[NSFileManager defaultManager] removeItemAtPath:pathA error:nil];
+  [[NSFileManager defaultManager] removeItemAtPath:pathB error:nil];
+}
+
+- (void)testTransformLoader_KeepsFilePathWithoutCacheByContent {
+  XCTAssertEqualObjects([self loadFilePath:@"/host/animation.zip" cacheByContent:NO],
+                        @"/host/animation.zip");
 }
 
 - (void)testNSDataToFilePathStringLoader_Success_UseDefaultFilePath {

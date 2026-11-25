@@ -126,29 +126,27 @@ void JBitmapToNativeBitmapTransformLoader::Load(
       base::android::ScopedLocalJavaRef<jobject>(input_data.input);
   auto bitmap_ref = AnimaXCloseableBitmapReference{java_bitmap_ref};
 
-  auto res = std::unique_ptr<Bitmap>{};
-  auto error = LoaderError{};
-
   if (!bitmap_ref.IsValid()) {
-    error = LoaderError{.code = kBitmapError,
-                        .message = "AnimaXCloseableBitmapReference is closed."};
-  } else if (bitmap_ref.GetBitmap().IsNull()) {
-    error = LoaderError{
-        .code = kBitmapError,
-        .message = "AnimaXCloseableBitmapReference returns a null bitmap."};
-  } else {
-    auto bitmap = bitmap_ref.GetBitmap();
-    res = JavaBitmapToBitmap(env, bitmap.Get());
+    callback({}, LoaderError{
+                     .code = kBitmapError,
+                     .message = "AnimaXCloseableBitmapReference is closed."});
+    return;
+  }
+  auto bitmap = bitmap_ref.GetBitmap();
+  if (bitmap.IsNull()) {
     bitmap_ref.Close();
+    callback({},
+             LoaderError{
+                 .code = kBitmapError,
+                 .message =
+                     "AnimaXCloseableBitmapReference returns a null bitmap."});
+    return;
   }
-
-  if (error) {
-    callback(TransformResponseAndroid{}, std::move(error));
-  } else {
-    callback(TransformResponseAndroid{.payload = MakeBitmapResourcePayload(
-                                          std::move(res))},
-             LoaderError{});
-  }
+  auto res = JavaBitmapToBitmap(env, bitmap.Get());
+  bitmap_ref.Close();
+  callback(TransformResponseAndroid{.payload = MakeBitmapResourcePayload(
+                                        std::move(res))},
+           {});
 }
 
 void JByteArrayToNativeStringTransformLoader::Load(

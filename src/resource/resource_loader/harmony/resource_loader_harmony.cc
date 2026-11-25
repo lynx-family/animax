@@ -53,7 +53,22 @@ void ReadFileToMemory(const char* file_path,
   file.close();
 }
 
-std::unique_ptr<Bitmap> LoadBitmapFromData(uint8_t* data, size_t size) {
+struct EncodedImage {
+  std::vector<uint8_t> data;
+  Image_Size target_size;
+};
+
+// An empty size keeps the original image size.
+Image_Size GetTargetSize(const ResourceRequest& request) {
+  if (request.image_size_mode != ImageSizeMode::kExact) {
+    return {};
+  }
+  return {.width = static_cast<uint32_t>(request.width),
+          .height = static_cast<uint32_t>(request.height)};
+}
+
+std::unique_ptr<Bitmap> LoadBitmapFromData(uint8_t* data, size_t size,
+                                           Image_Size target_size) {
   if (!data || size == 0) {
     ANIMAX_LOGE("LoadBitmapFromData fail, invalid input parameters");
     return nullptr;
@@ -73,6 +88,12 @@ std::unique_ptr<Bitmap> LoadBitmapFromData(uint8_t* data, size_t size) {
   if (OH_DecodingOptions_Create(decode_options.WritablePtr()) !=
       IMAGE_SUCCESS) {
     ANIMAX_LOGE("Failed to create decoding options");
+    return nullptr;
+  }
+  if (target_size.width > 0 && target_size.height > 0 &&
+      OH_DecodingOptions_SetDesiredSize(decode_options.Ptr(), &target_size) !=
+          IMAGE_SUCCESS) {
+    ANIMAX_LOGE("Failed to set the desired image size");
     return nullptr;
   }
 
@@ -225,13 +246,13 @@ ResourceLoaderHarmony::CreateRawDataHttpLoader() {
 Loader<ResourceRequest, ResourceResponse>::Ptr
 ResourceLoaderHarmony::CreateBitmapHttpLoader() {
   // Step 1: Fetch bitmap data from platform.
-  auto fetch_data = MakeLambdaLoader<ResourceRequest, std::vector<uint8_t>>(
+  auto fetch_data = MakeLambdaLoader<ResourceRequest, EncodedImage>(
       [platform_loader = platform_loader_](ResourceRequest request,
                                            auto callback) {
         auto& uri = request.uri_info.uri;
         auto shared_platform_loader = platform_loader.lock();
         if (shared_platform_loader == nullptr) {
-          callback(std::vector<uint8_t>{},
+          callback(EncodedImage{},
                    LoaderError{.code = kReferToMessage,
                                .message = "Platform loader is null."});
           return;
@@ -240,24 +261,27 @@ ResourceLoaderHarmony::CreateBitmapHttpLoader() {
         shared_platform_loader->LoadResource(
             lynx::pub::LynxResourceRequest{
                 uri, lynx::pub::LynxResourceType::kLottie},
-            [callback = std::move(callback)](
+            [target_size = GetTargetSize(request),
+             callback = std::move(callback)](
                 pub::LynxResourceResponse& response) mutable {
               if (!response.Success()) {
-                callback(std::vector<uint8_t>{},
+                callback(EncodedImage{},
                          LoaderError{.code = kLoaderNotHandleRequest,
                                      .message = "Load bitmap failed."});
                 return;
               }
-              callback(base::CopyByteArray(response.data.data(),
-                                           response.data.size()),
+              callback(EncodedImage{base::CopyByteArray(response.data.data(),
+                                                        response.data.size()),
+                                    target_size},
                        LoaderError{});
             });
       });
 
   // Step 2: Decode bitmap from data. This runs on resource thread.
-  auto decode_bitmap = MakeLambdaLoader<std::vector<uint8_t>, ResourceResponse>(
-      [](std::vector<uint8_t> data, auto callback) {
-        auto bitmap = LoadBitmapFromData(data.data(), data.size());
+  auto decode_bitmap = MakeLambdaLoader<EncodedImage, ResourceResponse>(
+      [](EncodedImage image, auto callback) {
+        auto bitmap = LoadBitmapFromData(image.data.data(), image.data.size(),
+                                         image.target_size);
         if (bitmap) {
           callback(ResourceResponse{.payload = MakeBitmapResourcePayload(
                                         std::move(bitmap))},
@@ -279,7 +303,7 @@ ResourceLoaderHarmony::CreateBitmapBase64Loader() {
       [](ResourceRequest request, auto callback) {
         auto& uri = request.uri_info.uri;
         auto bitmap = LoadBitmapFromData(reinterpret_cast<uint8_t*>(uri.data()),
-                                         uri.size());
+                                         uri.size(), GetTargetSize(request));
         if (!bitmap) {
           callback(ResourceResponse{},
                    LoaderError{.code = kInvalidImageData,
@@ -300,7 +324,8 @@ ResourceLoaderHarmony::CreateBitmapFileLoader() {
         std::unique_ptr<uint8_t[]> data_ptr;
         size_t data_size = 0;
         ReadFileToMemory(request.uri_info.uri.c_str(), data_ptr, &data_size);
-        auto bitmap = LoadBitmapFromData(data_ptr.get(), data_size);
+        auto bitmap = LoadBitmapFromData(data_ptr.get(), data_size,
+                                         GetTargetSize(request));
         if (!bitmap) {
           callback(
               ResourceResponse{},

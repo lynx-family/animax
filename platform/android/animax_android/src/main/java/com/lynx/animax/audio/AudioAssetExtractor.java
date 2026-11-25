@@ -109,7 +109,7 @@ public class AudioAssetExtractor {
                                                 : null;
   }
 
-  private static boolean decodeAudioData(MediaExtractor extractor, AudioAssetDecoder decoder,
+  static boolean decodeAudioData(MediaExtractor extractor, AudioAssetDecoder decoder,
       ByteArrayOutputStream outputStream) throws IOException {
     boolean needInput = true;
     decoder.start();
@@ -124,6 +124,11 @@ public class AudioAssetExtractor {
           while (frameCount <= MAX_FRAME_COUNT_PER_LOOP) {
             extractor.readSampleData(buffer, 0);
             if (inputBuffer.position() + buffer.limit() > inputBuffer.capacity()) {
+              if (inputBuffer.position() == 0) {
+                // Queuing an empty buffer would keep the extractor on this sample forever.
+                throw new IOException("audio sample of " + buffer.limit()
+                    + " bytes exceeds the decoder input buffer of " + inputBuffer.capacity());
+              }
               break;
             }
             inputBuffer.put(buffer);

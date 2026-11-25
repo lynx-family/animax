@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+// cspell:ignore demuxer
 
 #include "src/audio/harmony/audio_asset_harmony.h"
 
@@ -26,6 +27,11 @@ AudioAssetHarmony::AudioAssetHarmony(AudioAssetModel model)
 
 LoaderError AudioAssetHarmony::PrepareForPreload(const std::string& file_path) {
   LoadLocal(file_path);
+  // Playback only needs the PCM data and audio info. Independent preloads may
+  // wait a long time before binding, so do not keep the decoder alive for them.
+  av_codec_.reset();
+  av_demuxer_.reset();
+  av_source_.reset();
   return IsValid() && !read_failed_
              ? LoaderError{}
              : LoaderError{kInvalidRawData,

@@ -21,6 +21,18 @@ public class AnimaXLoader {
 
   @CalledByNative
   public void load(AnimaXLoaderRequest request, AnimaXLoaderCompletionHandler completionHandler) {
-    mLoader.load(request, completionHandler);
+    IAnimaXLoaderRequest.IImageInfo imageInfo = request.getImageInfo();
+    if (imageInfo == null || !request.requiresExactImageSize()) {
+      mLoader.load(request, completionHandler);
+      return;
+    }
+    mLoader.load(request, response -> {
+      if (response.getType() == AnimaXLoaderResponse.Type.BITMAP) {
+        response = AnimaXLoaderResponse.createBitmapResponse(
+            new ExactSizeBitmapReference((IAnimaXCloseableBitmapReference) response.getData(),
+                imageInfo.getWidth(), imageInfo.getHeight()));
+      }
+      completionHandler.onComplete(response);
+    });
   }
 }

@@ -148,6 +148,33 @@
   [self waitForExpectationsWithTimeout:5 handler:nil];
 }
 
+- (void)testDownloadToLocal_OnlySnapshotsZipFilePath {
+  using namespace lynx::animax;
+  OCMStub([self.mockResponse payload]).andReturn(@"/host/resource");
+  OCMStub([self.mockResponse payloadType]).andReturn(AnimaXLoaderPayloadTypeFilePathNSString);
+  OCMStub([self.mockResponse error]).andReturn(nil);
+  OCMStub([self.mockLoader handleRequest:[OCMArg any]
+                              completion:([OCMArg invokeBlockWithArgs:self.mockResponse, nil])]);
+  auto wrapper = LoaderWrapperIOS::Make<LoaderWrapperIOS>(self.mockLoader);
+  auto cache_by_content = [&wrapper](std::string uri, UriInfo::ContentType content_type,
+                                     bool requested) {
+    auto result = std::make_shared<bool>(!requested);
+    wrapper->Load(ResourceRequest{.type = ResourceRequestType::kDownloadToLocal,
+                                  .uri_info = UriInfo{.scheme = ParseUriScheme(uri),
+                                                      .content_type = content_type,
+                                                      .uri = uri},
+                                  .cache_by_content = requested},
+                  [result](TransformRequestIOS request, LoaderError error) {
+                    *result = request.cache_by_content;
+                  });
+    return *result;
+  };
+
+  XCTAssertTrue(cache_by_content("https://example.com/a.zip", UriInfo::ContentType::kZip, true));
+  XCTAssertFalse(cache_by_content("https://example.com/a.mp4", UriInfo::ContentType::kVideo, true));
+  XCTAssertFalse(cache_by_content("https://example.com/a.zip", UriInfo::ContentType::kZip, false));
+}
+
 - (void)testLoadRawData_nilResponse {
   using namespace lynx::animax;
   auto wrapper = LoaderWrapperIOS::Make<LoaderWrapperIOS>(self.mockLoader);

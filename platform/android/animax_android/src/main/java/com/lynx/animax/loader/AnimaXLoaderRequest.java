@@ -17,6 +17,9 @@ import java.util.Map;
 public class AnimaXLoaderRequest implements IAnimaXLoaderRequest {
   private final static String PARAMS_IMAGE_WIDTH_KEY = "image_width";
   private final static String PARAMS_IMAGE_HEIGHT_KEY = "image_height";
+  private final static String PARAMS_IMAGE_SIZE_MODE_KEY = "image_size_mode";
+  // The value of ImageSizeMode::kExact in native code.
+  private final static int IMAGE_SIZE_MODE_EXACT = 2;
   private final static String PARAMS_SCHEME_KEY = "scheme";
 
   private final String mUri;
@@ -78,6 +81,11 @@ public class AnimaXLoaderRequest implements IAnimaXLoaderRequest {
       }
     }
     return null;
+  }
+
+  boolean requiresExactImageSize() {
+    return mParams != null
+        && Integer.valueOf(IMAGE_SIZE_MODE_EXACT).equals(mParams.get(PARAMS_IMAGE_SIZE_MODE_KEY));
   }
 
   private static String createUriWithScheme(String uri, AnimaXLoaderScheme scheme) {
