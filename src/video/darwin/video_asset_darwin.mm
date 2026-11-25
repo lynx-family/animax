@@ -113,8 +113,6 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path, LoaderErr
   CMSampleBufferRef sample_buffer;
   CMBlockBufferRef block_buffer;
   size_t total_size = 0;
-  size_t frame_size = 0;
-  char* frame_data = nullptr;
   std::vector<std::pair<double, uint32_t>>
       gop;                  // Group of Pictures, first is presentation time, second is decode index
   uint32_t sorted_num = 0;  // number of frame info which has correct presetation index
@@ -122,21 +120,25 @@ bool VideoAssetDarwin::PrepareFrameData(const std::string& video_path, LoaderErr
   while ((sample_buffer = [output copyNextSampleBuffer])) {
     block_buffer = CMSampleBufferGetDataBuffer(sample_buffer);
     if (block_buffer) {
-      if (IsKeyFrame(sample_buffer)) {
-        ComputePresentationIndex(gop, sorted_num);
-        key_frames_.push_back(frame_infos_.size());
-      }
-      frame_size = 0;
-      frame_data = nullptr;
-      const OSStatus data_status =
-          CMBlockBufferGetDataPointer(block_buffer, 0, nullptr, &frame_size, &frame_data);
-      if (preload_error && (data_status != kCMBlockBufferNoErr || !frame_data || frame_size == 0)) {
+      // A sample may span several memory blocks, so copy it instead of reading
+      // the whole sample through the pointer to its first block.
+      const size_t frame_size = CMBlockBufferGetDataLength(block_buffer);
+      [frames setLength:total_size + frame_size];
+      auto* bytes = static_cast<char*>([frames mutableBytes]);
+      if (frame_size == 0 ||
+          CMBlockBufferCopyDataBytes(block_buffer, 0, frame_size, bytes + total_size) !=
+              kCMBlockBufferNoErr) {
+        // Later frames may depend on this sample. Keep only the readable prefix.
+        [frames setLength:total_size];
         samples_valid = false;
         CMSampleBufferInvalidate(sample_buffer);
         CFRelease(sample_buffer);
         break;
       }
-      [frames appendBytes:frame_data length:frame_size];
+      if (IsKeyFrame(sample_buffer)) {
+        ComputePresentationIndex(gop, sorted_num);
+        key_frames_.push_back(frame_infos_.size());
+      }
       CMSampleTimingInfo timing_info{
           .duration = CMSampleBufferGetDuration(sample_buffer),
           .presentationTimeStamp = CMSampleBufferGetPresentationTimeStamp(sample_buffer),

@@ -6,6 +6,7 @@
 #include <AnimaX/AnimaXContext.h>
 #include "src/base/thread/task_runner.h"
 #include "src/resource/loader/exec_loader.h"
+#include "src/resource/loader/lambda_loader.h"
 #include "src/resource/loader/pipe_loader.h"
 #include "src/resource/resource_loader/ios/base_transform_loaders_ios.h"
 #include "src/resource/resource_loader/ios/resource_util.h"
@@ -38,6 +39,12 @@ TransformLoaderIOS::TransformMatrix MakeMatrix(AnimaXContext* context) {
   auto ns_string_path = LoaderIOS::Make<FilePathNSStringToFilePathStringLoader>();
 
   auto ns_data_file = ResourceThreadExecLoader(LoaderIOS::Make<NSDataToFilePathStringLoader>());
+  auto ns_string_file = MakeLambdaLoader<TransformRequestIOS, TransformResponseIOS>(
+      [ns_string_path, ns_string_snapshot = ns_string_ns_data | ns_data_file](
+          TransformRequestIOS request, auto callback) {
+        auto loader = request.cache_by_content ? ns_string_snapshot : ns_string_path;
+        loader->Load(std::move(request), std::move(callback));
+      });
 
   auto matrix = TransformLoaderIOS::TransformMatrix{};
   MatrixSetLoader(matrix, TransformRequestInputType::kNSData, ResourcePayloadType::kRawData,
@@ -51,7 +58,7 @@ TransformLoaderIOS::TransformMatrix MakeMatrix(AnimaXContext* context) {
   MatrixSetLoader(matrix, TransformRequestInputType::kFilePathNSString,
                   ResourcePayloadType::kBitmap, ns_string_bitmap);
   MatrixSetLoader(matrix, TransformRequestInputType::kFilePathNSString,
-                  ResourcePayloadType::kFilePath, ns_string_path);
+                  ResourcePayloadType::kFilePath, ns_string_file);
   return matrix;
 };
 }  // namespace

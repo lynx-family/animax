@@ -59,6 +59,10 @@ TransformRequestIOS AnimaXLoaderResponseToTransformRequestIOS(ResourceRequest re
     }
     case AnimaXLoaderPayloadTypeFilePathNSString: {
       transform_request.input_type = TransformRequestInputType::kFilePathNSString;
+      // Files unzipped from a host path are read after this request. Other
+      // media is consumed right away and does not need a copy of the file.
+      transform_request.cache_by_content &=
+          request.uri_info.content_type == UriInfo::ContentType::kZip;
       break;
     }
     case AnimaXLoaderPayloadTypeInvalid:

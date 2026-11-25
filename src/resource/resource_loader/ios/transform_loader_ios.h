@@ -41,7 +41,8 @@ namespace animax {
 //  *1: Save NSData to default_file_path_for_ns_data_file_path_conversion
 //      if given, otherwise, save to a temporary file
 //
-//  *2: Just convert the NSString to std::string
+//  *2: Just convert the NSString to std::string. With cache_by_content, copy
+//      the file to a path derived from its content instead
 //
 class TransformLoaderIOS : public TransformLoaderBaseIOS {
  public:

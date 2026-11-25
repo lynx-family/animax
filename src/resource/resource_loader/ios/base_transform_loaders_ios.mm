@@ -71,18 +71,18 @@ void FilePathNSStringToNSDataLoader::Load(TransformRequestIOS request, CallbackT
     callback(std::move(request), LoaderError{.code = kInvalidArgument, "File Path is empty."});
     return;
   }
+  NSURL* file_url = [NSURL URLWithString:file_path];
+  if ([file_url isFileURL]) {
+    file_path = [file_url path];
+  }
   if (![manager fileExistsAtPath:file_path]) {
     callback(std::move(request), LoaderError{.code = kFileDoesNotExist, "File does not exist."});
     return;
   }
 
-  NSData* file_content = [NSData dataWithContentsOfFile:file_path];
-  auto new_request = TransformRequestIOS{.input = file_content,
-                                         .input_type = TransformRequestInputType::kNSData,
-                                         .output_type = request.output_type,
-                                         .image_width = request.image_width,
-                                         .image_height = request.image_height};
-  callback(std::move(new_request), LoaderError{});
+  request.input = [NSData dataWithContentsOfFile:file_path];
+  request.input_type = TransformRequestInputType::kNSData;
+  callback(std::move(request), LoaderError{});
 }
 
 void NSDataToFilePathStringLoader::Load(TransformRequestIOS request, CallbackType callback) {
