@@ -4,6 +4,8 @@
 
 #include "src/layer/textra/text_content_layout_context.h"
 
+#include <textra/platform_helper.h>
+
 #include <algorithm>
 
 #include "base/include/string/string_utils.h"
@@ -16,6 +18,26 @@
 namespace lynx {
 namespace animax {
 namespace {
+// Released Textra packages still expose ShaperType, while newer builds require
+// an explicit rendering backend. Infer the enum from the shared Preload API.
+template <typename Backend,
+          typename Platform = ttoffice::tttext::PlatformHelper>
+auto SelectSkityBackend(int) -> decltype(Backend::kSkity) {
+  return Platform::IsBackendAvailable(Backend::kSkity)
+             ? Backend::kSkity
+             : Backend::kSkityCoreText;
+}
+
+template <typename Backend>
+Backend SelectSkityBackend(...) {
+  return Backend::kSelfRendering;
+}
+
+template <typename Backend>
+Backend SelectTextLayoutBackend(bool (*preload)(Backend)) {
+  return SelectSkityBackend<Backend>(0);
+}
+
 using TTHorizontalAlignment = ttoffice::tttext::ParagraphHorizontalAlignment;
 TTHorizontalAlignment ToHorizontalAlignment(
     DocumentJustification justification) {
@@ -189,7 +211,7 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
   ttoffice::tttext::TTTextContext context;
   ttoffice::tttext::TextLayout text_layout(
       static_cast<TTFontMgrCollection*>(data_source.GetFontMgrCollection()),
-      ttoffice::tttext::ShaperType::kSelfRendering);
+      SelectTextLayoutBackend(&ttoffice::tttext::TextLayout::Preload));
   if (is_box_mode_) {
     // Layout by text box
     layout_region_ =
