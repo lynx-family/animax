@@ -30,6 +30,16 @@ ext.enable_coverage_bool = (enable_coverage == 'true')
 
 allprojects {
     repositories {
+        ivy {
+            url = uri("https://github.com/lynx-family/lynx-textra/releases/download")
+            patternLayout {
+                artifact("[revision]/[artifact]-[revision].[ext]")
+            }
+            metadataSources { artifact() }
+            content {
+                includeVersion("org.lynxsdk.lynx", "lynxtextra", "0.3.0-rc.2")
+            }
+        }
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }

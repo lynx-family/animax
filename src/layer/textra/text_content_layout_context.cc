@@ -4,6 +4,8 @@
 
 #include "src/layer/textra/text_content_layout_context.h"
 
+#include <textra/platform_helper.h>
+
 #include <algorithm>
 
 #include "base/include/string/string_utils.h"
@@ -189,7 +191,8 @@ void TextContentLayoutContext::Layout(const TextContentDataSource& data_source,
   ttoffice::tttext::TTTextContext context;
   ttoffice::tttext::TextLayout text_layout(
       static_cast<TTFontMgrCollection*>(data_source.GetFontMgrCollection()),
-      ttoffice::tttext::ShaperType::kSelfRendering);
+      ttoffice::tttext::PlatformHelper::GetSelfRenderingBackend(
+          ttoffice::tttext::RenderingBackend::kSkity));
   if (is_box_mode_) {
     // Layout by text box
     layout_region_ =

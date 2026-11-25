@@ -180,6 +180,6 @@ task configGnCompileParas {
 
 dependencies {
     implementation project(':AnimaXAndroid')
-    implementation "org.lynxsdk.lynx:lynxtextra:${project.ext.TEXTRA_VERSION}"
+    implementation "org.lynxsdk.lynx:lynxtextra:${project.ext.TEXTRA_VERSION}@aar"
     implementation "org.lynxsdk.lynx:skity-native:${project.ext.SKITY_VERSION}"
 }
