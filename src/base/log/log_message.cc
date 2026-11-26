@@ -26,7 +26,7 @@ LogMessage::~LogMessage() {
 #endif
 
 #if defined(OS_ANDROID) || defined(OS_IOS) || defined(OS_OSX) || \
-    defined(OS_WIN) || defined(OS_HARMONY)
+    defined(OS_WIN) || defined(OS_HARMONY) || defined(OS_LINUX)
   lynx::animax::Log(this);
 #else
   std::string str_newline(stream_.str());
