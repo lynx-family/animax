@@ -9,6 +9,7 @@ namespace animax {
 
 const std::string kPerformanceEventName = "animax_performance";
 const std::string kErrorEventName = "animax_error";
+const std::string kResourceLoadEventName = "animax_resource_load";
 const std::string kDefaultIntegrationType = "default";
 
 }  // namespace animax

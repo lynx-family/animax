@@ -3,17 +3,59 @@
 // LICENSE file in the root directory of this source tree.
 
 #include "src/resource/resource_loader/ios/loader_wrapper_ios.h"
+#include <atomic>
+
 #include "src/base/log/log.h"
 #include "src/resource/resource_loader/ios/resource_util.h"
 
 #import <AnimaX/AnimaXLoaderRequest.h>
 #import <AnimaX/AnimaXLoaderResponse.h>
+#import <AnimaX/AnimaXURLUtils.h>
+#import <CommonCrypto/CommonDigest.h>
 #import "AnimaXLoaderResponse+Internal.h"
 
 namespace lynx {
 namespace animax {
 
 namespace {
+
+NSString* ResourceCacheSource(id source) {
+  static NSSet<NSString*>* sources;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    sources = [NSSet setWithArray:@[
+      @"memory", @"disk", @"offline", @"http_cache", @"http_revalidated", @"cdn_cache", @"network",
+      @"builtin", @"in_flight"
+    ]];
+  });
+  return [source isKindOfClass:NSString.class] && [sources containsObject:source] ? source
+                                                                                  : @"unknown";
+}
+
+NSString* ResourceURLHash(const void* bytes, NSUInteger length) {
+  unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+  CC_SHA256(bytes, (CC_LONG)length, digest);
+  return [[NSData dataWithBytes:digest length:sizeof(digest)] base64EncodedStringWithOptions:0];
+}
+
+NSString* ResourceTypeName(UriInfo::ContentType type) {
+  switch (type) {
+    case UriInfo::ContentType::kJson:
+      return @"json";
+    case UriInfo::ContentType::kZip:
+      return @"zip";
+    case UriInfo::ContentType::kFont:
+      return @"font";
+    case UriInfo::ContentType::kImage:
+      return @"image";
+    case UriInfo::ContentType::kVideo:
+      return @"video";
+    case UriInfo::ContentType::kAudio:
+      return @"audio";
+    default:
+      return @"unknown";
+  }
+}
 
 NSString* MakeRequestURL(const ResourceRequest& request) {
   if (!request.uri_info.Valid()) {
@@ -117,6 +159,20 @@ void LoaderWrapperIOS::Load(ResourceRequest request, CallbackType callback) {
              LoaderError{.code = kInvalidArgument, .message = "Invalid URI."});
     return;
   }
+  id<AnimaXMonitorService> monitor = monitor_;
+  NSString* request_id = nil;
+  NSString* src_url = nil;
+  if (monitor) {
+    request_id = NSUUID.UUID.UUIDString;
+    animax_request.resourceLoadInfo = [@{@"request_id" : request_id} mutableCopy];
+    BOOL is_template = request.uri_info.content_type == UriInfo::ContentType::kJson ||
+                       request.uri_info.content_type == UriInfo::ContentType::kZip;
+    src_url = [AnimaXURLUtils
+        clearUrlQuery:is_template ? animax_request.url : [monitor.urlHolder getCurrentUrl]];
+  }
+  // Keep only the per-request metadata alive while the host is loading.
+  NSDictionary* load_info = animax_request.resourceLoadInfo;
+  auto reported = monitor ? std::make_shared<std::atomic<bool>>(false) : nullptr;
   auto shared_callback = std::shared_ptr<CallbackType>(new CallbackType{std::move(callback)});
   [ios_loader_ handleRequest:animax_request
                   completion:^(AnimaXLoaderResponse* _Nonnull response) {
@@ -132,8 +188,27 @@ void LoaderWrapperIOS::Load(ResourceRequest request, CallbackType callback) {
                       result = AnimaXLoaderResponseToTransformRequestIOS(request, response);
                     }
 
+                    const bool has_payload = !error;
+                    const bool report = reported && !reported->exchange(true);
                     auto& cb = *shared_callback;
                     cb(std::move(result), std::move(error));
+                    if (report) {
+                      BOOL success = has_payload && [response.payload length] > 0;
+                      BOOL cancelled = [load_info[@"cancelled"] isEqual:@YES] ||
+                                       ([response.error.domain isEqualToString:NSURLErrorDomain] &&
+                                        response.error.code == NSURLErrorCancelled);
+                      [monitor reportResourceLoad:@{
+                        @"request_id" : request_id,
+                        @"phase" : @"consume",
+                        @"resource_type" : ResourceTypeName(request.uri_info.content_type),
+                        @"resource_url_hash" : ResourceURLHash(request.uri_info.uri.data(),
+                                                               request.uri_info.uri.size()),
+                        @"status" : success ? @"success" : (cancelled ? @"cancelled" : @"failed"),
+                        @"cache_source" : success ? ResourceCacheSource(load_info[@"cache_source"])
+                                                  : @"unknown",
+                        AnimaXMonitorSourceUrl : src_url,
+                      }];
+                    }
                   }];
 }
 

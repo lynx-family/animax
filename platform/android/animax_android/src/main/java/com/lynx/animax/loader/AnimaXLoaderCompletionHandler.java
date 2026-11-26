@@ -6,10 +6,17 @@ package com.lynx.animax.loader;
 
 import androidx.annotation.RestrictTo;
 import com.lynx.animax.base.CalledByNative;
+import com.lynx.animax.util.AnimaXLog;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class AnimaXLoaderCompletionHandler implements IAnimaXLoaderCompletionHandler {
+  private IAnimaXLoaderCompletionHandler mResourceLoadObserver;
+
+  void setResourceLoadObserver(IAnimaXLoaderCompletionHandler observer) {
+    mResourceLoadObserver = observer;
+  }
+
   private final long mNativePtr;
   private final AtomicBoolean mCompleted = new AtomicBoolean(false);
   public AnimaXLoaderCompletionHandler(long nativePtr) {
@@ -24,7 +31,16 @@ public class AnimaXLoaderCompletionHandler implements IAnimaXLoaderCompletionHan
   @Override
   public void onComplete(AnimaXLoaderResponse<?> response) {
     if (!mCompleted.getAndSet(true)) {
+      IAnimaXLoaderCompletionHandler observer = mResourceLoadObserver;
+      mResourceLoadObserver = null;
       nativeOnComplete(this.mNativePtr, AnimaXLoaderResponseNativeAdapter.create(response));
+      if (observer != null) {
+        try {
+          observer.onComplete(response);
+        } catch (RuntimeException ignored) {
+          AnimaXLog.w("AnimaXResourceLoad", "Could not report the completed load.");
+        }
+      }
     }
   }
 

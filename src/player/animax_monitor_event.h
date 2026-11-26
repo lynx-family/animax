@@ -16,6 +16,8 @@ extern const std::string kPerformanceEventName;
 // event: animax_error
 extern const std::string kErrorEventName;
 
+extern const std::string kResourceLoadEventName;
+
 // integration_type: default
 extern const std::string kDefaultIntegrationType;
 

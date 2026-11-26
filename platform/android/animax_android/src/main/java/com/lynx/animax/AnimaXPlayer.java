@@ -18,7 +18,9 @@ import com.lynx.animax.composition.AnimaXComposition;
 import com.lynx.animax.drawable.AnimaXSurfaceDrawable;
 import com.lynx.animax.drawable.Backend;
 import com.lynx.animax.listener.IAnimationListener;
+import com.lynx.animax.loader.AnimaXResourceLoadInfo;
 import com.lynx.animax.loader.AnimaXResourceLoaderHolder;
+import com.lynx.animax.monitor.AnimaXMonitorUtil;
 import com.lynx.animax.property.AnimaXKeyPath;
 import com.lynx.animax.property.AnimaXKeyPathListCallback;
 import com.lynx.animax.property.AnimaXPropertyCallback;
@@ -26,6 +28,7 @@ import com.lynx.animax.property.AnimaXValueCallback;
 import com.lynx.animax.property.AnimaXValueParam;
 import com.lynx.animax.property.LayerPropertyType;
 import com.lynx.animax.property.ResourcePropertyType;
+import com.lynx.animax.service.IAnimaXMonitorService;
 import com.lynx.animax.service.IAnimaXResourceFactoryService;
 import com.lynx.animax.ui.AnimaXContext;
 import com.lynx.animax.ui.IAnimaXPlayer;
@@ -45,6 +48,7 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   @NonNull private final AnimaXContext mAnimaXContext;
 
   private AnimaXResourceLoaderHolder mResourceLoaderHolder;
+  private AnimaXResourceLoadInfo mResourceLoadInfo;
 
   private boolean mAutoPlay = false;
   private boolean mHasDestroyed = false;
@@ -137,7 +141,16 @@ public class AnimaXPlayer implements IAnimaXPlayer {
 
     IAnimaXResourceFactoryService resourceFactory =
         mAbility.getService(IAnimaXResourceFactoryService.class);
-    mResourceLoaderHolder = new AnimaXResourceLoaderHolder(resourceFactory);
+    IAnimaXMonitorService monitor = mAbility.getService(IAnimaXMonitorService.class);
+    if (monitor instanceof IAnimaXMonitorService.ResourceLoadReporter
+        && mAnimaXContext.enableResourceLoadReporting()) {
+      mResourceLoadInfo =
+          new AnimaXResourceLoadInfo((IAnimaXMonitorService.ResourceLoadReporter) monitor);
+    } else if (monitor != null && monitor.useResourceLoadReportingSetting()
+        && DeviceUtil.enableResourceLoadReporting(mAbility)) {
+      mResourceLoadInfo = new AnimaXResourceLoadInfo(monitor::reportResourceLoad);
+    }
+    mResourceLoaderHolder = new AnimaXResourceLoaderHolder(resourceFactory, mResourceLoadInfo);
     mPtr = nativeCreate(mResourceLoaderHolder.getNativePtr(), mAnimaXContext);
     mCleanupOnUiThread = new CleanupOnUiThread(mPtr);
     mCleanUpReference = new CleanupReference(this, mCleanupOnUiThread, true);
@@ -287,6 +300,9 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     if (!checkNativeReady()) {
       return;
     }
+    if (mResourceLoadInfo != null) {
+      mResourceLoadInfo.setSource("json");
+    }
     nativeSetJson(mPtr, json);
     mAbility.getMonitorDelegate().updateUrl("json");
   }
@@ -344,6 +360,9 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     if (!checkNativeReady()) {
       return;
     }
+    if (mResourceLoadInfo != null) {
+      mResourceLoadInfo.setSource(src);
+    }
     nativeSetSrc(mPtr, src);
     mAbility.getMonitorDelegate().updateUrl(src);
   }
@@ -353,6 +372,9 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     mAnimaXComposition = composition;
     if (!checkNativeReady()) {
       return;
+    }
+    if (mResourceLoadInfo != null) {
+      mResourceLoadInfo.setSource(AnimaXMonitorUtil.SRC_URL_UNKNOWN);
     }
     nativeSetComposition(mPtr, composition.getNativePtr());
   }

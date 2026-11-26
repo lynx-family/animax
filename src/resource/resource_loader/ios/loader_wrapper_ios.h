@@ -6,6 +6,7 @@
 #define ANIMAX_SRC_RESOURCE_RESOURCE_LOADER_IOS_LOADER_WRAPPER_IOS_H_
 
 #import <AnimaX/AnimaXLoaderProtocol.h>
+#import <AnimaX/AnimaXMonitorService.h>
 
 #include "include/resource/loader.h"
 #include "include/resource/resource_task.h"
@@ -20,12 +21,15 @@ class LoaderWrapperIOS : public Loader<ResourceRequest, TransformRequestIOS> {
 
   ~LoaderWrapperIOS() override = default;
 
-  LoaderWrapperIOS(id<AnimaXLoaderProtocol> loader) : ios_loader_(loader) {}
+  LoaderWrapperIOS(id<AnimaXLoaderProtocol> loader,
+                   id<AnimaXMonitorService> monitor = nil)
+      : ios_loader_(loader), monitor_(monitor) {}
 
   void Load(ResourceRequest, CallbackType callback) override;
 
  private:
   id<AnimaXLoaderProtocol> ios_loader_ = nil;
+  id<AnimaXMonitorService> monitor_ = nil;
 };
 
 }  // namespace animax

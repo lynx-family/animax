@@ -9,6 +9,17 @@ import androidx.annotation.NonNull;
 
 public final class AnimaXLoaderResponse<T> {
   public enum Type { STRING_FILE_PATH, BYTE_ARRAY, BITMAP, ERROR }
+  // Optional source of this completed response. Never sent as request parameters.
+  private String mCacheSource;
+
+  public void setCacheSource(String source) {
+    mCacheSource = source;
+  }
+
+  String getCacheSource() {
+    return mCacheSource;
+  }
+
   private final Type mType;
   private final T mData;
 

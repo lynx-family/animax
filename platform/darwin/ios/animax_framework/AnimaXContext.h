@@ -15,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign) BOOL enableMultiThreadAccelerate;
 @property(nonatomic, assign) BOOL disablePlaybackOnAssetLoadFailure;
 @property(nonatomic, assign) BOOL enableDownsampleVideo;
+/// Enables per-request monitoring for remote resources consumed by this player.
+@property(nonatomic, assign) BOOL enableResourceLoadReporting;
 @property(nonatomic, assign) CGFloat scale;
 
 + (instancetype)contextWithDefaultAbility;  // For client usage

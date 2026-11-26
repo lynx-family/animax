@@ -67,6 +67,11 @@ public class DeviceUtil {
     return isPositiveConfigValue(value);
   }
 
+  public static boolean enableResourceLoadReporting(@NonNull BaseAbility ability) {
+    return isPositiveConfigValue(
+        getStringFromExternalEnv("ANIMAX_ENABLE_RESOURCE_CACHE_REPORT", ability));
+  }
+
   public static boolean enableDownsampleVideo(@NonNull BaseAbility ability) {
     final String value = getStringFromExternalEnv(sSettingEnableDownsampleVideo, ability);
     return isPositiveConfigValue(value);

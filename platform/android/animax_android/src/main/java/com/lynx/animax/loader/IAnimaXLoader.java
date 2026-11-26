@@ -4,7 +4,17 @@
 
 package com.lynx.animax.loader;
 
+import androidx.annotation.RestrictTo;
+import java.util.Map;
+
 public interface IAnimaXLoader {
+  // Only for XElement built against older SDKs. Remove once it uses ResourceLoadReporter.
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  default void loadWithCacheSource(IAnimaXLoaderRequest request,
+      IAnimaXLoaderCompletionHandler completion, Map<AnimaXLoaderResponse<?>, String> sources) {
+    load(request, completion);
+  }
+
   void load(IAnimaXLoaderRequest request, IAnimaXLoaderCompletionHandler completionHandler);
 
   AnimaXLoaderScheme getScheme();
