@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+// cspell:ignore AUDIOSTREAM
+
 #include "src/audio/harmony/audio_player_harmony.h"
 
 #include <algorithm>
@@ -122,10 +124,25 @@ bool AudioPlayerHarmony::Init(std::shared_ptr<AudioAsset> asset) {
   return true;
 }
 
-void AudioPlayerHarmony::Resume() {
-  if (renderer_.Ptr()) {
-    OH_AudioRenderer_Start(renderer_.Ptr());
+bool AudioPlayerHarmony::Resume() {
+  if (!renderer_.Ptr()) {
+    return false;
   }
+  // Starting a running renderer is an illegal state. The system can also stop
+  // the renderer, so check its actual state.
+  if (GetState() == AUDIOSTREAM_STATE_RUNNING) {
+    return true;
+  }
+  OH_AudioStream_Result result = OH_AudioRenderer_Start(renderer_.Ptr());
+  if (result != AUDIOSTREAM_SUCCESS) {
+    if (!start_failed_) {
+      ANIMAX_LOGE("OH_AudioRenderer_Start error: " << result)
+    }
+    start_failed_ = true;
+    return false;
+  }
+  start_failed_ = false;
+  return true;
 }
 
 void AudioPlayerHarmony::Pause() {
@@ -145,7 +162,10 @@ void AudioPlayerHarmony::SeekToProgress(double progress) {
     return;
   }
 
-  OH_AudioRenderer_Flush(renderer_.Ptr());
+  // A newly prepared renderer has no buffered audio to discard.
+  if (GetState() != AUDIOSTREAM_STATE_PREPARED) {
+    OH_AudioRenderer_Flush(renderer_.Ptr());
+  }
 
   std::lock_guard<std::mutex> lock(playback_mutex_);
   start_position_bytes_ =
@@ -181,6 +201,15 @@ double AudioPlayerHarmony::GetAudioTime() {
   int64_t current_byte_pos = (start_position_bytes_ + played_bytes) % data_size;
   double ratio = static_cast<double>(current_byte_pos) / data.size();
   return ratio * GetDuration();
+}
+
+OH_AudioStream_State AudioPlayerHarmony::GetState() const {
+  OH_AudioStream_State state = AUDIOSTREAM_STATE_INVALID;
+  if (OH_AudioRenderer_GetCurrentState(renderer_.Ptr(), &state) !=
+      AUDIOSTREAM_SUCCESS) {
+    return AUDIOSTREAM_STATE_INVALID;
+  }
+  return state;
 }
 
 int64_t AudioPlayerHarmony::AlignByteToFrames(int64_t byte_position) const {

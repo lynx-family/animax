@@ -21,6 +21,7 @@
 #include "src/layer/composition_layer.h"
 #include "src/parser/alpha_player_asset/alpha_player_asset_parser.h"
 #include "src/parser/composition_parser.h"
+#include "src/player/animax_ability.h"
 #include "src/player/animax_playback_event_handler.h"
 #include "src/player/animax_renderer.h"
 #include "src/render/surface_sw.h"
@@ -75,6 +76,42 @@ TEST(AudioLayer, InvalidTest) {
   layer->Init();
 }
 
+TEST(AudioLayer, FailedPlayerCreationIsNotRetriedOnEveryFrame) {
+  auto model = CompositionParser::Parse(lottie_json, std::strlen(lottie_json),
+                                        1.0f, true);
+  ASSERT_NE(nullptr, model);
+  auto asset = std::make_shared<TestAsset>(AudioAssetModel{});
+  asset->LoadLocal("");
+  model->GetAudios()["audio_0"] = asset;
+  auto layer =
+      std::make_unique<AudioLayer>(*model->GetLayers().front(), *model);
+  auto context = std::make_shared<AnimaXPlayerContext>();
+  auto ability = std::make_shared<AnimaXAbility>();
+  context->weak_ability = ability;
+  layer->SetPlayerContext(context);
+
+  // Desktop builds have no platform player, so every attempt fails.
+  layer->Init();
+  EXPECT_FALSE(layer->audio_controller_->HasAudioPlayer());
+  // A failure in Init doesn't delay the first active frame.
+  EXPECT_EQ(layer->next_attach_time_, std::chrono::steady_clock::time_point{});
+
+  layer->SetProgress(0.5);
+  const auto before_attempt = std::chrono::steady_clock::now();
+  layer->UpdateAudio();
+  const auto retry_time = layer->next_attach_time_;
+  EXPECT_GE(retry_time, before_attempt + std::chrono::seconds(1));
+  for (int frame = 0; frame < 3; frame++) {
+    layer->UpdateAudio();
+    EXPECT_EQ(layer->next_attach_time_, retry_time);
+  }
+
+  // The next attempt is allowed once the retry time has passed.
+  layer->next_attach_time_ = std::chrono::steady_clock::now();
+  layer->UpdateAudio();
+  EXPECT_GE(layer->next_attach_time_, retry_time);
+}
+
 namespace {
 
 class RecordingAudioPlayer : public AudioPlayer {
@@ -86,9 +123,10 @@ class RecordingAudioPlayer : public AudioPlayer {
     is_playing = false;
     pause_count++;
   }
-  void Resume() override {
+  bool Resume() override {
     is_playing = true;
     resume_count++;
+    return true;
   }
   void SeekToProgress(double progress) override {
     last_progress = progress;

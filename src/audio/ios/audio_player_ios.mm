@@ -116,11 +116,29 @@ bool AudioPlayerIOS::Init(std::shared_ptr<AudioAsset> asset) {
   return true;
 }
 
-void AudioPlayerIOS::Resume() {
-  if (audio_unit_) {
-    // TODO(lixianruo.cyrus): use SystemInvoke Service instead.
-    AudioOutputUnitStart(audio_unit_);
+bool AudioPlayerIOS::Resume() {
+  if (!audio_unit_) {
+    return false;
   }
+  // The system can also stop the unit, so check its actual state.
+  UInt32 is_running = 0;
+  UInt32 size = sizeof(is_running);
+  OSStatus status = AudioUnitGetProperty(audio_unit_, kAudioOutputUnitProperty_IsRunning,
+                                         kAudioUnitScope_Global, 0, &is_running, &size);
+  if (status == noErr && is_running) {
+    return true;
+  }
+  // TODO(lixianruo.cyrus): use SystemInvoke Service instead.
+  status = AudioOutputUnitStart(audio_unit_);
+  if (status != noErr) {
+    if (!start_failed_) {
+      ANIMAX_LOGE("AudioOutputUnitStart error: " << status)
+    }
+    start_failed_ = true;
+    return false;
+  }
+  start_failed_ = false;
+  return true;
 }
 
 void AudioPlayerIOS::Pause() {

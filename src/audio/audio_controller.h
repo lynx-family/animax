@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_AUDIO_AUDIO_CONTROLLER_H_
 #define ANIMAX_SRC_AUDIO_AUDIO_CONTROLLER_H_
 
+#include <chrono>
 #include <memory>
 
 #include "src/player/animax_player_context.h"
@@ -18,6 +19,8 @@ class AudioAsset;
  */
 class AudioController : public std::enable_shared_from_this<AudioController> {
  public:
+  static constexpr std::chrono::milliseconds kStartRetryInterval{100};
+
   void OnResume();
   void OnPause();
   // Bracket a layer-tree audio update, not a skipped render.
@@ -33,6 +36,8 @@ class AudioController : public std::enable_shared_from_this<AudioController> {
   bool can_play_ = false;
   bool is_playing_ = false;
   bool updated_this_frame_ = false;
+  // The earliest time to retry a start refused by the platform.
+  std::chrono::steady_clock::time_point next_start_time_;
   std::unique_ptr<AudioPlayer> audio_player_;
 };
 }  // namespace animax
