@@ -26,7 +26,10 @@ class AudioPlayer {
   static constexpr int kMaxIncreaseFactorTime = 3;
 
   virtual ~AudioPlayer() = default;
-  virtual void Resume() = 0;
+  // Called on every active frame. Starts playback unless it is already running,
+  // and refills the buffer on platforms without a data request callback.
+  // Returns false when the platform refuses to start.
+  virtual bool Resume() = 0;
   virtual void Pause() = 0;
   virtual void SeekToProgress(double progress) = 0;
 

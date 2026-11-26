@@ -24,6 +24,7 @@ class TestPlayer : public AudioPlayer {
   int pause_count = 0;
   int duration_read_count = 0;
   bool is_playing = false;
+  bool can_start = true;
   double GetAudioTime() override { return current_progress * duration; }
   void Advance(double elapsed_ms = 100) {
     if (is_playing) {
@@ -38,9 +39,10 @@ class TestPlayer : public AudioPlayer {
     is_playing = false;
     pause_count++;
   }
-  void Resume() override {
-    is_playing = true;
+  bool Resume() override {
+    is_playing = can_start;
     resume_count++;
+    return can_start;
   }
   void SeekToProgress(double progress) override {
     // Android pauses and flushes on seek; the controller must resume afterward.
@@ -420,4 +422,146 @@ TEST(AudioControllerUnittest, ReentryDoesNotRaiseDriftThreshold) {
   controller.EndFrame();
   EXPECT_DOUBLE_EQ(test->GetAudioTime(), 90);
   EXPECT_EQ(test->seek_count, 4);
+}
+
+TEST(AudioControllerUnittest, RefusedStartIsNotRetriedOnEveryFrame) {
+  auto player = std::make_unique<TestPlayer>();
+  auto* test = player.get();
+  AudioController controller;
+  controller.SetAudioPlayer(std::move(player));
+  controller.OnResume();
+  test->can_start = false;
+  const auto begin = std::chrono::steady_clock::now();
+  constexpr int kFrames = 1000;
+  for (int frame = 0; frame < kFrames; frame++) {
+    controller.BeginFrame();
+    controller.OnTimeUpdate(frame * 10);
+    controller.EndFrame();
+  }
+  const auto elapsed = std::chrono::steady_clock::now() - begin;
+  // Attempts depend on elapsed time, not on the number of frames.
+  const int max_attempts =
+      1 + static_cast<int>(elapsed / AudioController::kStartRetryInterval);
+  ASSERT_LT(max_attempts, kFrames);
+  EXPECT_FALSE(test->is_playing);
+  EXPECT_GE(test->resume_count, 1);
+  EXPECT_LE(test->resume_count, max_attempts);
+  EXPECT_EQ(test->seek_count, test->resume_count);
+  EXPECT_EQ(test->pause_count, 0);
+
+  // A later retry has to start from the current timestamp.
+  test->can_start = true;
+  const int attempts = test->resume_count;
+  std::this_thread::sleep_for(AudioController::kStartRetryInterval +
+                              std::chrono::milliseconds(20));
+  controller.BeginFrame();
+  controller.OnTimeUpdate(110);
+  controller.EndFrame();
+  EXPECT_TRUE(test->is_playing);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 110);
+  EXPECT_EQ(test->resume_count, attempts + 1);
+  EXPECT_EQ(test->seek_count, attempts + 1);
+}
+
+TEST(AudioControllerUnittest, LifecycleChangeRetriesRefusedStartImmediately) {
+  auto player = std::make_unique<TestPlayer>();
+  auto* test = player.get();
+  AudioController controller;
+  controller.SetAudioPlayer(std::move(player));
+  controller.OnResume();
+
+  test->can_start = false;
+  const auto refused_time = std::chrono::steady_clock::now();
+  controller.OnTimeUpdate(100);
+  ASSERT_FALSE(test->is_playing);
+  test->can_start = true;
+  controller.OnTimeUpdate(110);
+  // A slow run can pass the retry time, which allows the start by design.
+  if (std::chrono::steady_clock::now() - refused_time <
+      AudioController::kStartRetryInterval) {
+    EXPECT_FALSE(test->is_playing);
+  }
+  controller.OnPause();
+  controller.OnResume();
+  controller.OnTimeUpdate(120);
+  EXPECT_TRUE(test->is_playing);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 120);
+
+  controller.OnPause();
+  controller.OnResume();
+  test->can_start = false;
+  controller.OnTimeUpdate(130);
+  ASSERT_FALSE(test->is_playing);
+  test->can_start = true;
+  controller.SetMuted(true);
+  controller.SetMuted(false);
+  controller.OnTimeUpdate(140);
+  EXPECT_TRUE(test->is_playing);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 140);
+
+  controller.OnPause();
+  controller.OnResume();
+  test->can_start = false;
+  controller.OnTimeUpdate(150);
+  ASSERT_FALSE(test->is_playing);
+  auto replacement = std::make_unique<TestPlayer>();
+  test = replacement.get();
+  controller.SetAudioPlayer(std::move(replacement));
+  controller.OnTimeUpdate(160);
+  EXPECT_TRUE(test->is_playing);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 160);
+}
+
+TEST(AudioControllerUnittest, RepeatedMuteValueDoesNotRetryRefusedStart) {
+  auto player = std::make_unique<TestPlayer>();
+  auto* test = player.get();
+  AudioController controller;
+  controller.SetAudioPlayer(std::move(player));
+  controller.OnResume();
+  test->can_start = false;
+  const auto begin = std::chrono::steady_clock::now();
+  for (int frame = 0; frame < 10; frame++) {
+    controller.SetMuted(false);
+    controller.OnTimeUpdate(frame * 10);
+  }
+  const auto elapsed = std::chrono::steady_clock::now() - begin;
+  const int max_attempts =
+      1 + static_cast<int>(elapsed / AudioController::kStartRetryInterval);
+  EXPECT_FALSE(test->is_playing);
+  EXPECT_LE(test->resume_count, max_attempts);
+}
+
+TEST(AudioControllerUnittest, SystemStopResynchronizesWithoutRaisingThreshold) {
+  auto player = std::make_unique<TestPlayer>(10000);
+  auto* test = player.get();
+  AudioController controller;
+  controller.SetAudioPlayer(std::move(player));
+  controller.OnResume();
+  controller.OnTimeUpdate(1000);
+  ASSERT_TRUE(test->is_playing);
+  ASSERT_EQ(test->seek_count, 1);
+
+  // The system stops the output and refuses to start it again. The audio clock
+  // is frozen, so every seek below comes from an attempt to restart.
+  test->can_start = false;
+  for (int frame = 0; frame < 10; frame++) {
+    controller.OnTimeUpdate(1010 + frame * 100);
+  }
+  EXPECT_FALSE(test->is_playing);
+  EXPECT_EQ(test->seek_count, 1 + (test->resume_count - 2));
+  EXPECT_LT(test->resume_count, 10);
+
+  test->can_start = true;
+  std::this_thread::sleep_for(AudioController::kStartRetryInterval +
+                              std::chrono::milliseconds(20));
+  // The restart seeks even though the target is close to the stopped position.
+  controller.OnTimeUpdate(1010);
+  EXPECT_TRUE(test->is_playing);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 1010);
+  const int seeks_after_restart = test->seek_count;
+
+  // The frozen clock must not have raised the normal 50 ms threshold.
+  controller.OnTimeUpdate(1070);
+  EXPECT_DOUBLE_EQ(test->GetAudioTime(), 1070);
+  EXPECT_EQ(test->seek_count, seeks_after_restart + 1);
 }
