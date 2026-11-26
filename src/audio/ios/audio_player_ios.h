@@ -23,7 +23,7 @@ class AudioPlayerIOS : public AudioPlayer {
 
   bool Init(std::shared_ptr<AudioAsset> asset);
 
-  void Resume() override;
+  bool Resume() override;
   void Pause() override;
   void SeekToProgress(double progress) override;
 
@@ -57,6 +57,9 @@ class AudioPlayerIOS : public AudioPlayer {
 
   std::shared_ptr<AudioAssetIOS> asset_ios_;
   AudioUnit audio_unit_ = nullptr;
+  // Accessed on the render thread only. Logs just the first start the system
+  // refuses in a row, e.g. during a phone call, instead of every retry.
+  bool start_failed_ = false;
 
   // Pre-calculated invariant values to avoid computation in the hot path.
   // Read-only after Init().

@@ -5,6 +5,7 @@
 #ifndef ANIMAX_SRC_LAYER_AUDIO_LAYER_H_
 #define ANIMAX_SRC_LAYER_AUDIO_LAYER_H_
 
+#include <chrono>
 #include <memory>
 
 #include "src/layer/base_layer.h"
@@ -27,6 +28,8 @@ class AudioLayer : public BaseLayer {
   void AttachToAssetOnce();
   std::shared_ptr<AudioAsset> audio_asset_;
   std::shared_ptr<AudioController> audio_controller_;
+  // The earliest time to retry a failed player creation.
+  std::chrono::steady_clock::time_point next_attach_time_;
 };
 
 }  // namespace animax

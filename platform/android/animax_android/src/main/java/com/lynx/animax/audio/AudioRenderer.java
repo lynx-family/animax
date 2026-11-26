@@ -7,6 +7,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.os.Build;
 import androidx.annotation.NonNull;
 import com.lynx.animax.util.AnimaXLog;
 import java.nio.ByteBuffer;
@@ -18,7 +19,7 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
   private final int mBytePerFrame;
   private final ByteBuffer mBuffer;
   private IAudioRendererListener mListener;
-  private int mEndPositionInByte = 0;
+  private long mEndPositionInByte = 0;
   @NonNull final private AudioTrack mAudioTrack;
 
   public AudioRenderer(@NonNull AudioInfo audioInfo) {
@@ -33,8 +34,15 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
     }
 
     int encodingFormat = audioInfo.getPCMEncodingFormat();
+    AudioFormat format = new AudioFormat.Builder()
+                             .setEncoding(encodingFormat)
+                             .setSampleRate(sampleRate)
+                             .setChannelMask(channelConfig)
+                             .build();
     int bytePerSample = 2;
-    if (encodingFormat == AudioFormat.ENCODING_PCM_8BIT) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      bytePerSample = format.getFrameSizeInBytes() / format.getChannelCount();
+    } else if (encodingFormat == AudioFormat.ENCODING_PCM_8BIT) {
       bytePerSample = 1;
     } else if (encodingFormat == AudioFormat.ENCODING_PCM_FLOAT) {
       bytePerSample = 4;
@@ -53,12 +61,6 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
                                      .setUsage(AudioAttributes.USAGE_MEDIA)
                                      .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                                      .build();
-
-    AudioFormat format = new AudioFormat.Builder()
-                             .setEncoding(encodingFormat)
-                             .setSampleRate(sampleRate)
-                             .setChannelMask(channelConfig)
-                             .build();
 
     mAudioTrack = new AudioTrack(attributes, format, mMaxBufferSize, AudioTrack.MODE_STREAM,
         AudioManager.AUDIO_SESSION_ID_GENERATE);
@@ -83,19 +85,28 @@ public class AudioRenderer implements AudioTrack.OnPlaybackPositionUpdateListene
   @Override
   public void onMarkerReached(AudioTrack track) {}
 
+  static int getWritableByteCount(int capacity, long writtenBytes, long playedBytes) {
+    // A playback position from before a flush can exceed the new write position.
+    long queuedBytes = Math.max(0L, writtenBytes - playedBytes);
+    return (int) Math.max(0L, capacity - queuedBytes);
+  }
+
   @Override
   public void onPeriodicNotification(AudioTrack track) {
     if (mListener == null) {
       return;
     }
-    long currentPositionByte = getPlaybackHeadPositionInByte();
     int emptyBufferSize =
-        Math.toIntExact(mMaxBufferSize - (mEndPositionInByte - currentPositionByte));
+        getWritableByteCount(mMaxBufferSize, mEndPositionInByte, getPlaybackHeadPositionInByte());
+    if (emptyBufferSize == 0) {
+      return;
+    }
     mBuffer.clear();
     mBuffer.limit(emptyBufferSize);
     mListener.onDataRequest(mEndPositionInByte, emptyBufferSize, mBuffer);
     mBuffer.flip();
-    int writtenSize = mAudioTrack.write(mBuffer, emptyBufferSize, AudioTrack.WRITE_NON_BLOCKING);
+    int writtenSize =
+        mAudioTrack.write(mBuffer, mBuffer.remaining(), AudioTrack.WRITE_NON_BLOCKING);
     if (writtenSize > 0) {
       mEndPositionInByte += writtenSize;
     }
