@@ -26,7 +26,7 @@ class AudioPlayerHarmony : public AudioPlayer {
 
   bool Init(std::shared_ptr<AudioAsset> asset);
 
-  void Resume() override;
+  bool Resume() override;
   void Pause() override;
   void SeekToProgress(double progress) override;
 
@@ -35,6 +35,7 @@ class AudioPlayerHarmony : public AudioPlayer {
   double GetAudioTime() override;
 
  private:
+  OH_AudioStream_State GetState() const;
   int64_t AlignByteToFrames(int64_t byte_position) const;
 
   static int32_t OnWriteData(OH_AudioRenderer* renderer, void* userData,
@@ -49,6 +50,9 @@ class AudioPlayerHarmony : public AudioPlayer {
 
   std::shared_ptr<AudioAssetHarmony> asset_harmony_;
   ScopedOHObject<OH_AudioRenderer, OH_AudioRenderer_Release> renderer_;
+  // Accessed on the render thread only. Logs just the first start the system
+  // refuses in a row, e.g. during a phone call, instead of every retry.
+  bool start_failed_ = false;
 
   int32_t bytes_per_frame_ = 0;
   double duration_ms_ = 0;

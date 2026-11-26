@@ -27,14 +27,15 @@ public class AudioPlayer implements IAudioRendererListener {
   }
 
   public static AudioPlayer create(@NonNull AudioAsset asset) {
-    if (!asset.isValid() || asset.getAudioData() == null) {
+    ByteBuffer data = asset.getAudioData();
+    if (!asset.isValid() || data == null || data.capacity() == 0) {
       AnimaXLog.e(TAG,
           "Failed to create AudioPlayer: "
               + "asset is not ready");
       return null;
     }
     try {
-      return new AudioPlayer(asset.getAudioInfo(), asset.getAudioData());
+      return new AudioPlayer(asset.getAudioInfo(), data);
     } catch (Exception e) {
       AnimaXLog.e(TAG, "Failed to create AudioPlayer: " + e.getMessage());
       return null;
@@ -71,18 +72,15 @@ public class AudioPlayer implements IAudioRendererListener {
 
   @Override
   public void onDataRequest(long offset, int size, ByteBuffer buffer) {
-    int startPosition = Math.toIntExact((mAudioStartPosition + offset) % mAudioDataCapacity);
-    int endPosition = Math.min(mAudioDataCapacity, startPosition + size);
-    mAudioData.position(startPosition);
-    mAudioData.limit(endPosition);
-    buffer.put(mAudioData);
-    if (mAudioDataCapacity < startPosition + size) {
-      endPosition = (startPosition + size) % mAudioDataCapacity;
-      mAudioData.position(0);
-      mAudioData.limit(endPosition);
-      buffer.put(mAudioData);
+    int position = Math.toIntExact((mAudioStartPosition + offset) % mAudioDataCapacity);
+    // A single AudioTrack request can span several loops of a short PCM clip.
+    // The decoder wraps a byte array, so copying by index preserves the asset's cursor.
+    int remaining = size;
+    while (remaining > 0) {
+      int count = Math.min(remaining, mAudioDataCapacity - position);
+      buffer.put(mAudioData.array(), mAudioData.arrayOffset() + position, count);
+      remaining -= count;
+      position = 0;
     }
-    mAudioData.position(0);
-    mAudioData.limit(mAudioDataCapacity);
   }
 }

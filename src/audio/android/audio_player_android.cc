@@ -41,9 +41,10 @@ AudioPlayerAndroid::AudioPlayerAndroid(
   player_.Reset(env, player);
 }
 
-void AudioPlayerAndroid::Resume() {
+bool AudioPlayerAndroid::Resume() {
   JNIEnv *env = lynx::base::android::AttachCurrentThread();
   Java_AudioPlayer_play(env, player_.Get());
+  return true;
 }
 
 void AudioPlayerAndroid::Pause() {

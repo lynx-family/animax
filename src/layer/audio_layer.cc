@@ -10,6 +10,11 @@
 
 namespace lynx {
 namespace animax {
+namespace {
+
+constexpr std::chrono::seconds kAttachRetryInterval{1};
+
+}  // namespace
 
 AudioLayer::AudioLayer(LayerModel &layer, CompositionModel &composition)
     : BaseLayer(layer, composition) {
@@ -29,6 +34,9 @@ void AudioLayer::Init() {
     return;
   }
   AttachToAssetOnce();
+  // Init can run long before the layer becomes active. A failure here must not
+  // delay the attempt on its first active frame.
+  next_attach_time_ = {};
   auto context = weak_context_.lock();
   if (!context) {
     return;
@@ -77,8 +85,15 @@ void AudioLayer::AttachToAssetOnce() {
   if (!ability) {
     return;
   }
+  // Creating a platform player is expensive. Don't repeat a failed attempt on
+  // every frame.
+  const auto now = std::chrono::steady_clock::now();
+  if (now < next_attach_time_) {
+    return;
+  }
   auto player = AudioPlayer::MakeAudioPlayer(ability, audio_asset_);
   if (!player) {
+    next_attach_time_ = now + kAttachRetryInterval;
     return;
   }
   audio_controller_->SetAudioPlayer(std::move(player));

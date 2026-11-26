@@ -27,6 +27,9 @@ void AudioController::OnTimeUpdate(double time_ms) {
   if (!audio_player_ || !can_play_ || mute_) {
     return;
   }
+  if (!is_playing_ && std::chrono::steady_clock::now() < next_start_time_) {
+    return;
+  }
 
   // A stopped/new player must discard its previous position and buffers even
   // when the target differs by less than the continuous-playback threshold.
@@ -36,12 +39,18 @@ void AudioController::OnTimeUpdate(double time_ms) {
 
   // AudioTrack don't have a data request callback until Android 10,
   // feed it every frame to prevent audio render from starving.
-  // No side effects on other platforms.
-  audio_player_->Resume();
-  is_playing_ = true;
+  // Other platforms only start an output that is not running.
+  is_playing_ = audio_player_->Resume();
+  if (!is_playing_) {
+    // The platform can refuse to start, e.g. during a phone call.
+    next_start_time_ = std::chrono::steady_clock::now() + kStartRetryInterval;
+  }
 }
 
-void AudioController::OnResume() { can_play_ = true; }
+void AudioController::OnResume() {
+  can_play_ = true;
+  next_start_time_ = {};
+}
 
 void AudioController::OnPause() {
   is_playing_ = false;
@@ -52,7 +61,13 @@ void AudioController::OnPause() {
 }
 
 void AudioController::SetMuted(bool mute) {
+  // Hosts can set the same value repeatedly. Only a real change retries a
+  // refused start immediately.
+  if (mute_ == mute) {
+    return;
+  }
   mute_ = mute;
+  next_start_time_ = {};
   if (mute_ && is_playing_) {
     is_playing_ = false;
     if (audio_player_) {
@@ -64,6 +79,7 @@ void AudioController::SetMuted(bool mute) {
 void AudioController::SetAudioPlayer(std::unique_ptr<AudioPlayer> player) {
   audio_player_ = std::move(player);
   is_playing_ = false;
+  next_start_time_ = {};
 }
 
 bool AudioController::HasAudioPlayer() { return audio_player_ != nullptr; }

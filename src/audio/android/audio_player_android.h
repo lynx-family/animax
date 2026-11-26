@@ -17,7 +17,7 @@ class AudioPlayerAndroid : public AudioPlayer {
   ~AudioPlayerAndroid() override = default;
   explicit AudioPlayerAndroid(
       base::android::ScopedLocalJavaRef<jobject> player);
-  void Resume() override;
+  bool Resume() override;
   void Pause() override;
   void SeekToProgress(double progress) override;
 
