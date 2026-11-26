@@ -46,6 +46,7 @@ animax_framework_sources = [
   "AnimaXImageView.mm",
   "AnimaXLayer.h",
   "AnimaXLayer.mm",
+  "AnimaXPlayer+Internal.h",
   "AnimaXPlayer.mm",
   "AnimaXView.mm",
   "ability/BaseAnimaXAbility.mm",

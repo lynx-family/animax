@@ -238,6 +238,15 @@ public class AnimaXPlayer implements IAnimaXPlayer {
     nativeUpdateAnimaXSurface(mPtr, surfaceDrawable);
   }
 
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public boolean setSurfaceFactory(long factory) {
+    try {
+      return checkNativeReady() && nativeSetSurfaceFactory(mPtr, factory);
+    } catch (UnsatisfiedLinkError error) {
+      return false;
+    }
+  }
+
   @Override
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void markPlatformSurfaceAsInvalid(boolean isInvalid) {
@@ -719,6 +728,8 @@ public class AnimaXPlayer implements IAnimaXPlayer {
   private native void nativeCreateAnimaXSurface(long player, AnimaXSurfaceDrawable surfaceDrawable);
 
   private native void nativeUpdateAnimaXSurface(long player, AnimaXSurfaceDrawable surfaceDrawable);
+
+  private native boolean nativeSetSurfaceFactory(long player, long factory);
 
   private native void nativeSetAutoPlay(long player, boolean enable);
 
