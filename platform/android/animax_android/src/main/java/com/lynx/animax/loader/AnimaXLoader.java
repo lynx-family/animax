@@ -10,13 +10,31 @@ import com.lynx.animax.base.CalledByNative;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class AnimaXLoader {
   private final IAnimaXLoader mLoader;
+  private final AnimaXResourceLoadInfo mLoadInfo;
+
   AnimaXLoader(IAnimaXLoader loader) {
+    this(loader, null);
+  }
+
+  AnimaXLoader(IAnimaXLoader loader, AnimaXResourceLoadInfo loadInfo) {
+    mLoadInfo = loadInfo;
     this.mLoader = loader;
   }
 
   @CalledByNative
   public static AnimaXLoader create(IAnimaXLoader loader) {
     return new AnimaXLoader(loader);
+  }
+
+  @CalledByNative
+  public void loadWithType(AnimaXLoaderRequest request,
+      AnimaXLoaderCompletionHandler completionHandler, int contentType) {
+    // Exact-size images go through load() so they are resized; they are not reported yet.
+    if (mLoadInfo == null || request.requiresExactImageSize()) {
+      load(request, completionHandler);
+      return;
+    }
+    mLoadInfo.load(mLoader, request, completionHandler, contentType);
   }
 
   @CalledByNative

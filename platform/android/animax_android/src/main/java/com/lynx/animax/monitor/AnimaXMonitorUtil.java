@@ -12,6 +12,7 @@ import org.json.JSONObject;
 public final class AnimaXMonitorUtil {
   public static final String TAG = "AnimaXMonitor";
   public static final String PERFORMANCE_EVENT_NAME = "animax_performance";
+  public static final String RESOURCE_LOAD_EVENT_NAME = "animax_resource_load";
   public static final String ERROR_EVENT_NAME = "animax_error";
 
   public static final String CLASS_PERF_METRICS = "PerfMetrics";

@@ -338,3 +338,146 @@
 }
 
 @end
+
+using namespace lynx::animax;
+
+@interface ResourceLoadRecorder : NSObject <AnimaXLoaderProtocol, AnimaXMonitorService>
+@property(nonatomic, strong) NSMutableArray<AnimaXLoaderRequest *> *requests;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSNumber *, AnimaXLoaderCompletionHandler> *completions;
+@property(nonatomic, strong) NSMutableArray<NSDictionary *> *events;
+- (void)finish:(NSUInteger)index response:(AnimaXLoaderResponse *)response;
+@end
+
+@implementation ResourceLoadRecorder
+@dynamic urlHolder;
+- (instancetype)init {
+  if ((self = [super init])) {
+    _requests = [NSMutableArray new];
+    _completions = [NSMutableDictionary new];
+    _events = [NSMutableArray new];
+  }
+  return self;
+}
+- (AnimaXLoaderScheme)getScheme {
+  return AnimaXLoaderSchemeHttp;
+}
+- (void)handleRequest:(AnimaXLoaderRequest *)request completion:(AnimaXLoaderCompletionHandler)cb {
+  self.completions[@(self.requests.count)] = [cb copy];
+  [self.requests addObject:request];
+}
+- (void)finish:(NSUInteger)index response:(AnimaXLoaderResponse *)response {
+  AnimaXLoaderCompletionHandler completion = self.completions[@(index)];
+  [self.completions removeObjectForKey:@(index)];
+  completion(response);
+}
+- (void)reportResourceLoad:(NSDictionary *)params {
+  [self.events addObject:params];
+}
+- (void)reportError:(NSDictionary *)params {
+}
+- (void)reportPerformance:(NSDictionary *)params {
+}
+@end
+
+namespace {
+ResourceRequest Request(UriInfo::ContentType type) {
+  return {.type = ResourceRequestType::kLoadRawData,
+          .uri_info = {.scheme = UriInfo::Scheme::kHttp,
+                       .content_type = type,
+                       .uri = "https://example.org/resource?signature=test"}};
+}
+}  // namespace
+
+@interface AnimaXResourceLoadReportingTest : XCTestCase
+@end
+
+@implementation AnimaXResourceLoadReportingTest
+- (void)testOverlappingRequestsKeepIndependentSourcesAndRunPlaybackFirst {
+  ResourceLoadRecorder *host = [ResourceLoadRecorder new];
+  LoaderWrapperIOS loader(host, host);
+  auto request = Request(UriInfo::ContentType::kJson);
+  loader.Load(request, [self, host](TransformRequestIOS, LoaderError error) {
+    XCTAssertFalse(!!error);
+    XCTAssertEqual(host.events.count, 1u);
+  });
+  loader.Load(request, [self, host](TransformRequestIOS, LoaderError error) {
+    XCTAssertFalse(!!error);
+    XCTAssertEqual(host.events.count, 0u);
+  });
+  NSDictionary *first = host.requests[0].resourceLoadInfo;
+  NSDictionary *second = host.requests[1].resourceLoadInfo;
+  XCTAssertNotNil(first[@"request_id"]);
+  XCTAssertNotEqualObjects(first[@"request_id"], second[@"request_id"]);
+  host.requests[1].resourceLoadInfo[@"cache_source"] = @"in_flight";
+  AnimaXLoaderResponse *response =
+      [AnimaXLoaderResponse responseWithPayload:[@"{}" dataUsingEncoding:NSUTF8StringEncoding]];
+  [host finish:1 response:response];
+  host.requests[0].resourceLoadInfo[@"cache_source"] = @"http_cache";
+  [host finish:0 response:response];
+  XCTAssertEqual(host.events.count, 2u);
+  XCTAssertEqualObjects(host.events[0][@"request_id"], second[@"request_id"]);
+  XCTAssertEqualObjects(host.events[0][@"phase"], @"consume");
+  XCTAssertEqualObjects(host.events[0][@"resource_url_hash"],
+                        @"Q7HaREAHGj520CD7v47QfuEwazrPZ/wiGUikE4yzmbQ=");
+  XCTAssertEqualObjects(host.events[1][@"resource_url_hash"], host.events[0][@"resource_url_hash"]);
+  XCTAssertEqualObjects(host.events[0][@"cache_source"], @"in_flight");
+  XCTAssertEqualObjects(host.events[1][@"cache_source"], @"http_cache");
+  XCTAssertEqualObjects(host.events[1][@"status"], @"success");
+  XCTAssertEqualObjects(host.events[1][AnimaXMonitorSourceUrl], @"https://example.org/resource");
+}
+
+- (void)testResourceTypeComesFromTheModelAndMissingSourceStaysUnknown {
+  ResourceLoadRecorder *host = [ResourceLoadRecorder new];
+  LoaderWrapperIOS loader(host, host);
+  NSArray *expected = @[ @"json", @"zip", @"font", @"image", @"video", @"audio" ];
+  for (NSUInteger i = 0; i < expected.count; ++i) {
+    loader.Load(Request(static_cast<UriInfo::ContentType>(i)),
+                [](TransformRequestIOS, LoaderError) {});
+    // An older host leaves the request untouched. An unrecognized source is also unknown.
+    if (i == 1) {
+      host.requests[i].resourceLoadInfo[@"cache_source"] = @"unrecognized-source";
+    }
+    [host finish:i
+        response:[AnimaXLoaderResponse
+                     responseWithPayload:[@"asset" dataUsingEncoding:NSUTF8StringEncoding]]];
+    XCTAssertEqualObjects(host.events[i][@"resource_type"], expected[i]);
+    XCTAssertEqualObjects(host.events[i][@"cache_source"], @"unknown");
+  }
+}
+
+- (void)testFailuresAndCancellationAreNeverCacheHits {
+  ResourceLoadRecorder *host = [ResourceLoadRecorder new];
+  LoaderWrapperIOS loader(host, host);
+  for (NSString *status in @[ @"failed", @"cancelled" ]) {
+    loader.Load(Request(UriInfo::ContentType::kImage),
+                [self](TransformRequestIOS, LoaderError error) { XCTAssertTrue(!!error); });
+    host.requests.lastObject.resourceLoadInfo[@"cache_source"] = @"memory";
+    host.requests.lastObject.resourceLoadInfo[@"cancelled"] =
+        @([status isEqualToString:@"cancelled"]);
+    [host finish:host.requests.count - 1
+        response:[AnimaXLoaderResponse responseWithErrorMessage:@"load failed"]];
+    XCTAssertEqualObjects(host.events.lastObject[@"status"], status);
+    XCTAssertEqualObjects(host.events.lastObject[@"cache_source"], @"unknown");
+  }
+}
+
+- (void)testUnmonitoredRequestHasNoDiagnostics {
+  ResourceLoadRecorder *host = [ResourceLoadRecorder new];
+  LoaderWrapperIOS loader(host);
+  loader.Load(Request(UriInfo::ContentType::kFont), [](TransformRequestIOS, LoaderError) {});
+  XCTAssertNil(host.requests.lastObject.resourceLoadInfo);
+  [host finish:0 response:[AnimaXLoaderResponse responseWithPayload:[NSData data]]];
+  XCTAssertEqual(host.events.count, 0u);
+}
+
+- (void)testEmptyPayloadIsExcludedFromCacheHits {
+  ResourceLoadRecorder *host = [ResourceLoadRecorder new];
+  LoaderWrapperIOS loader(host, host);
+  loader.Load(Request(UriInfo::ContentType::kJson), [](TransformRequestIOS, LoaderError) {});
+  host.requests.lastObject.resourceLoadInfo[@"cache_source"] = @"memory";
+  [host finish:0 response:[AnimaXLoaderResponse responseWithPayload:[NSData data]]];
+  XCTAssertEqualObjects(host.events.lastObject[@"status"], @"failed");
+  XCTAssertEqualObjects(host.events.lastObject[@"cache_source"], @"unknown");
+}
+@end

@@ -24,6 +24,9 @@ FOUNDATION_EXPORT void const *AnimaXMonitorUrlHolderKey;
 @property(nonatomic, readonly) AnimaXMonitorUrlHolder *urlHolder;
 - (void)reportError:(NSDictionary<NSString *, NSObject *> *)params;
 - (void)reportPerformance:(NSDictionary<NSString *, NSObject *> *)params;
+@optional
+/// Called after a monitored player request completes, on the loader's completion thread.
+- (void)reportResourceLoad:(NSDictionary<NSString *, NSObject *> *)params;
 @end
 
 @interface NSObject (AnimaXMonitorServiceDefaultImpl)

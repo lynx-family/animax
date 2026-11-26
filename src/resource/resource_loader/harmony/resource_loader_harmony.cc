@@ -8,7 +8,9 @@
 #include <multimedia/image_framework/image/image_common.h>
 #include <multimedia/image_framework/image/image_source_native.h>
 
+#include <cstdio>
 #include <fstream>
+#include <random>
 
 #include "base/include/byte_utils.h"
 #include "base/include/string/string_utils.h"
@@ -23,6 +25,83 @@ namespace lynx {
 namespace animax {
 
 namespace {
+std::string RequestId() {
+  std::random_device random;
+  uint32_t a = random(), b = random(), c = random(), d = random();
+  char id[37];
+  std::snprintf(id, sizeof(id), "%08x-%04x-%04x-%04x-%04x%08x", a, b >> 16,
+                (b & 0x0fff) | 0x4000, ((c >> 16) & 0x3fff) | 0x8000,
+                c & 0xffff, d);
+  return id;
+}
+
+const char* ResourceType(UriInfo::ContentType type) {
+  switch (type) {
+    case UriInfo::ContentType::kJson:
+      return "json";
+    case UriInfo::ContentType::kZip:
+      return "zip";
+    case UriInfo::ContentType::kImage:
+      return "image";
+    case UriInfo::ContentType::kFont:
+      return "font";
+    case UriInfo::ContentType::kAudio:
+      return "audio";
+    case UriInfo::ContentType::kVideo:
+      return "video";
+    default:
+      return "unknown";
+  }
+}
+
+std::string SourceUrl(const ResourceRequest& request,
+                      const ResourceLoaderHarmony::Reporting& reporting) {
+  const auto type = request.uri_info.content_type;
+  auto source =
+      type == UriInfo::ContentType::kJson || type == UriInfo::ContentType::kZip
+          ? request.uri_info.uri
+          : reporting.Source();
+  if (source.empty()) return "unknown";
+  const auto query = source.find('?'), fragment = source.find('#');
+  if (query < fragment) source.erase(query, fragment - query);
+  return source;
+}
+
+bool HasPayload(const pub::LynxResourceResponse& response) {
+  return !response.data.empty();
+}
+bool HasPayload(const pub::LynxPathResponse& response) {
+  return !response.path.empty();
+}
+
+// Capture the host response before the player moves the data or decodes an
+// image.
+template <typename Response, typename Dispatch, typename Callback>
+void Fetch(const ResourceRequest& request,
+           const std::shared_ptr<ResourceLoaderHarmony::Reporting>& reporting,
+           Dispatch dispatch, Callback callback) {
+  pub::LynxResourceRequest host_request{request.uri_info.uri,
+                                        pub::LynxResourceType::kLottie};
+  if (!reporting || request.uri_info.scheme != UriInfo::Scheme::kHttp ||
+      !reporting->enabled.load(std::memory_order_relaxed)) {
+    dispatch(host_request, std::move(callback));
+    return;
+  }
+  dispatch(host_request, [callback = std::move(callback), reporting,
+                          type = request.uri_info.content_type,
+                          source = SourceUrl(request, *reporting)](
+                             Response& response) mutable {
+    const bool success = response.Success() && HasPayload(response);
+    callback(response);
+    reporting->send({{"request_id", RequestId()},
+                     {"phase", "consume"},
+                     {"resource_type", ResourceType(type)},
+                     {"src_url", source},
+                     {"status", success ? "success" : "failed"},
+                     {"cache_source", "unknown"}});
+  });
+}
+
 void ReadFileToMemory(const char* file_path,
                       std::unique_ptr<uint8_t[]>& data_ptr, size_t* data_size) {
   auto local_path = GetUriLocalPath(file_path);
@@ -139,9 +218,9 @@ std::unique_ptr<Bitmap> LoadBitmapFromData(uint8_t* data, size_t size,
 }  // namespace
 
 ResourceLoaderHarmony::ResourceLoaderHarmony(
-    std::shared_ptr<pub::LynxResourceLoader> loader) {
-  platform_loader_ = loader;
-
+    std::shared_ptr<pub::LynxResourceLoader> loader,
+    std::shared_ptr<Reporting> reporting)
+    : platform_loader_(std::move(loader)), reporting_(std::move(reporting)) {
   raw_data_http_loader_ = CreateRawDataHttpLoader();
   raw_data_file_loader_ = CreateRawDataFileLoader();
   bitmap_http_loader_ = CreateBitmapHttpLoader();
@@ -180,8 +259,8 @@ ResourceLoaderHarmony::CreateRawDataFileLoader() {
 Loader<ResourceRequest, ResourceResponse>::Ptr
 ResourceLoaderHarmony::CreateRawDataHttpLoader() {
   auto load_raw_data = MakeLambdaLoader<ResourceRequest, ResourceResponse>(
-      [platform_loader = platform_loader_](ResourceRequest request,
-                                           auto callback) {
+      [platform_loader = platform_loader_, reporting = reporting_](
+          ResourceRequest request, auto callback) {
         auto shared_platform_loader = platform_loader.lock();
         if (shared_platform_loader == nullptr) {
           callback(ResourceResponse{},
@@ -190,9 +269,12 @@ ResourceLoaderHarmony::CreateRawDataHttpLoader() {
           return;
         }
 
-        shared_platform_loader->LoadResource(
-            lynx::pub::LynxResourceRequest{
-                request.uri_info.uri, lynx::pub::LynxResourceType::kLottie},
+        Fetch<pub::LynxResourceResponse>(
+            request, reporting,
+            [&](const auto& host_request, auto done) {
+              shared_platform_loader->LoadResource(host_request,
+                                                   std::move(done));
+            },
             [callback = std::move(callback)](
                 pub::LynxResourceResponse& response) mutable {
               if (!response.Success()) {
@@ -247,9 +329,8 @@ Loader<ResourceRequest, ResourceResponse>::Ptr
 ResourceLoaderHarmony::CreateBitmapHttpLoader() {
   // Step 1: Fetch bitmap data from platform.
   auto fetch_data = MakeLambdaLoader<ResourceRequest, EncodedImage>(
-      [platform_loader = platform_loader_](ResourceRequest request,
-                                           auto callback) {
-        auto& uri = request.uri_info.uri;
+      [platform_loader = platform_loader_, reporting = reporting_](
+          ResourceRequest request, auto callback) {
         auto shared_platform_loader = platform_loader.lock();
         if (shared_platform_loader == nullptr) {
           callback(EncodedImage{},
@@ -258,9 +339,12 @@ ResourceLoaderHarmony::CreateBitmapHttpLoader() {
           return;
         }
 
-        shared_platform_loader->LoadResource(
-            lynx::pub::LynxResourceRequest{
-                uri, lynx::pub::LynxResourceType::kLottie},
+        Fetch<pub::LynxResourceResponse>(
+            request, reporting,
+            [&](const auto& host_request, auto done) {
+              shared_platform_loader->LoadResource(host_request,
+                                                   std::move(done));
+            },
             [target_size = GetTargetSize(request),
              callback = std::move(callback)](
                 pub::LynxResourceResponse& response) mutable {
@@ -343,8 +427,8 @@ ResourceLoaderHarmony::CreateBitmapFileLoader() {
 Loader<ResourceRequest, ResourceResponse>::Ptr
 ResourceLoaderHarmony::CreateDownloadToLocalHttpLoader() {
   auto download_to_local = MakeLambdaLoader<ResourceRequest, ResourceResponse>(
-      [platform_loader = platform_loader_](ResourceRequest request,
-                                           auto callback) {
+      [platform_loader = platform_loader_, reporting = reporting_](
+          ResourceRequest request, auto callback) {
         auto shared_platform_loader = platform_loader.lock();
         if (shared_platform_loader == nullptr) {
           callback(ResourceResponse{},
@@ -353,9 +437,12 @@ ResourceLoaderHarmony::CreateDownloadToLocalHttpLoader() {
           return;
         }
 
-        shared_platform_loader->LoadResourcePath(
-            lynx::pub::LynxResourceRequest{
-                request.uri_info.uri, lynx::pub::LynxResourceType::kLottie},
+        Fetch<pub::LynxPathResponse>(
+            request, reporting,
+            [&](const auto& host_request, auto done) {
+              shared_platform_loader->LoadResourcePath(host_request,
+                                                       std::move(done));
+            },
             [callback =
                  std::move(callback)](pub::LynxPathResponse& response) mutable {
               if (!response.Success()) {

@@ -53,11 +53,13 @@ class SchemeRouterLoader : public PlatformLoader {
 };
 }  // namespace
 
-std::shared_ptr<ResourcePipelineIOS> ResourcePipelineIOS::MakePipeline(AnimaXContext *context) {
-  return std::shared_ptr<ResourcePipelineIOS>{new ResourcePipelineIOS(context)};
+std::shared_ptr<ResourcePipelineIOS> ResourcePipelineIOS::MakePipeline(
+    AnimaXContext *context, id<AnimaXMonitorService> monitor) {
+  return std::make_shared<ResourcePipelineIOS>(context, monitor);
 }
 
-ResourcePipelineIOS::ResourcePipelineIOS(AnimaXContext *context) {
+ResourcePipelineIOS::ResourcePipelineIOS(AnimaXContext *context, id<AnimaXMonitorService> monitor)
+    : monitor_(monitor) {
   file_loader_ = [[AnimaXFileLoader alloc] init];
   auto file_loader = ResourceThreadExecLoader(PlatformLoader::Make<LoaderWrapperIOS>(file_loader_));
   auto base64_loader = ResourceThreadExecLoader(
@@ -85,7 +87,8 @@ void ResourcePipelineIOS::Load(ResourceRequest request, CallbackType callback) {
 void ResourcePipelineIOS::RegisterAnimaXLoaderProtocolForScheme(UriInfo::Scheme scheme,
                                                                 id<AnimaXLoaderProtocol> protocol) {
   auto scheme_router = std::static_pointer_cast<SchemeRouterLoader>(platform_stage_);
-  auto new_loader = PlatformLoader::Make<LoaderWrapperIOS>(protocol);
+  auto new_loader = PlatformLoader::Make<LoaderWrapperIOS>(
+      protocol, scheme == UriInfo::Scheme::kHttp ? monitor_ : nil);
   scheme_router->RegisterLoaderForScheme(scheme, new_loader);
 }
 

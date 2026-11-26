@@ -17,6 +17,7 @@ public class AnimaXResourceLoaderHolder {
   private static final String TAG = "AnimaXResourceLoaderHolder";
 
   private long mResourceLoaderHolderPtr;
+  private final AnimaXResourceLoadInfo mLoadInfo;
 
   // This array holds all registered IAnimaXLoader and will be released when the AnimaXPlayer is
   // destroyed.
@@ -47,6 +48,12 @@ public class AnimaXResourceLoaderHolder {
   }
 
   public AnimaXResourceLoaderHolder(IAnimaXResourceFactoryService resourceFactory) {
+    this(resourceFactory, null);
+  }
+
+  public AnimaXResourceLoaderHolder(
+      IAnimaXResourceFactoryService resourceFactory, AnimaXResourceLoadInfo loadInfo) {
+    mLoadInfo = loadInfo;
     mResourceLoaderHolderPtr = nativeCreate();
     mCleanUpReference =
         new CleanupReference(this, new CleanupOnUiThread(mResourceLoaderHolderPtr), true);
@@ -82,10 +89,11 @@ public class AnimaXResourceLoaderHolder {
   }
 
   private void registerLoaderForScheme(IAnimaXLoader loader) {
-    AnimaXLoader animaXLoader = AnimaXLoader.create(loader);
+    AnimaXLoaderScheme scheme = loader.getScheme();
+    AnimaXLoader animaXLoader =
+        new AnimaXLoader(loader, scheme == AnimaXLoaderScheme.HTTP ? mLoadInfo : null);
     mAnimaXLoaders.add(animaXLoader);
-    nativeRegisterLoaderForScheme(
-        mResourceLoaderHolderPtr, animaXLoader, loader.getScheme().ordinal());
+    nativeRegisterLoaderForScheme(mResourceLoaderHolderPtr, animaXLoader, scheme.ordinal());
   }
 
   public long getNativePtr() {

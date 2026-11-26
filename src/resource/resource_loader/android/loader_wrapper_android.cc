@@ -43,8 +43,10 @@ void LoaderWrapperAndroid::Load(ResourceRequest request,
   auto animax_completion_handler =
       LoaderWrapperAndroidCallbackToAnimaXLoaderCompletionHandler(
           env, request.type, std::move(callback));
-  Java_AnimaXLoader_load(env, android_loader.Get(), animax_loader_request.Get(),
-                         animax_completion_handler.Get());
+  Java_AnimaXLoader_loadWithType(
+      env, android_loader.Get(), animax_loader_request.Get(),
+      animax_completion_handler.Get(),
+      static_cast<jint>(request.uri_info.content_type));
 }
 
 }  // namespace animax

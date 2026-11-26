@@ -5,6 +5,11 @@
 #ifndef ANIMAX_SRC_RESOURCE_RESOURCE_LOADER_HARMONY_RESOURCE_LOADER_HARMONY_H_
 #define ANIMAX_SRC_RESOURCE_RESOURCE_LOADER_HARMONY_RESOURCE_LOADER_HARMONY_H_
 
+#include <atomic>
+#include <functional>
+#include <map>
+#include <mutex>
+
 #include "core/public/lynx_resource_loader.h"
 #include "include/base/macros.h"
 #include "include/resource/loader.h"
@@ -18,7 +23,31 @@ class ANIMAX_EXPORT ResourceLoaderHarmony
  public:
   using Loader = Loader<ResourceRequest, ResourceResponse>::Ptr;
 
-  ResourceLoaderHarmony(std::shared_ptr<pub::LynxResourceLoader> loader);
+  using Report = std::map<std::string, std::string>;
+  using Reporter = std::function<void(Report)>;
+
+  struct Reporting {
+    explicit Reporting(Reporter callback, bool enable = true)
+        : send(std::move(callback)), enabled(enable) {}
+    void SetSource(const std::string& source) {
+      std::lock_guard<std::mutex> lock(source_mutex_);
+      source_ = source;
+    }
+    std::string Source() const {
+      std::lock_guard<std::mutex> lock(source_mutex_);
+      return source_;
+    }
+    const Reporter send;
+    std::atomic<bool> enabled;
+
+   private:
+    mutable std::mutex source_mutex_;
+    std::string source_ = "unknown";
+  };
+
+  explicit ResourceLoaderHarmony(
+      std::shared_ptr<pub::LynxResourceLoader> loader,
+      std::shared_ptr<Reporting> reporting = nullptr);
 
   ~ResourceLoaderHarmony() override = default;
 
@@ -50,6 +79,7 @@ class ANIMAX_EXPORT ResourceLoaderHarmony
   Loader download_to_local_http_loader_;
 
   std::weak_ptr<pub::LynxResourceLoader> platform_loader_;
+  std::shared_ptr<Reporting> reporting_;
 };
 
 }  // namespace animax

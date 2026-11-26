@@ -15,6 +15,7 @@
 @class AnimaXFileLoader;
 @class AnimaXContext;
 @protocol AnimaXResourceFactoryService;
+@protocol AnimaXMonitorService;
 
 namespace lynx {
 namespace animax {
@@ -32,8 +33,9 @@ namespace animax {
  */
 class ResourcePipelineIOS : public Loader<ResourceRequest, ResourceResponse> {
  public:
-  static std::shared_ptr<ResourcePipelineIOS> MakePipeline(AnimaXContext* context = nullptr);
-  ResourcePipelineIOS(AnimaXContext* context = nullptr);
+  static std::shared_ptr<ResourcePipelineIOS> MakePipeline(AnimaXContext* context = nullptr,
+                                                           id<AnimaXMonitorService> monitor = nil);
+  ResourcePipelineIOS(AnimaXContext* context = nullptr, id<AnimaXMonitorService> monitor = nil);
   ~ResourcePipelineIOS() override = default;
 
   /**
@@ -68,6 +70,7 @@ class ResourcePipelineIOS : public Loader<ResourceRequest, ResourceResponse> {
   Loader<ResourceRequest, TransformRequestIOS>::Ptr platform_stage_{};
   Loader<ResourceRequest, ResourceResponse>::Ptr pipeline_{};
   AnimaXFileLoader* file_loader_;
+  id<AnimaXMonitorService> monitor_;
   void SetupResourceFactory(id<AnimaXResourceFactoryService> factory);
 };
 

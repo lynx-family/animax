@@ -17,12 +17,14 @@ public class AnimaXContext {
   @NonNull private final BaseAbility mAbility;
   @NonNull private final Context mContext;
   private final boolean mMultiThreadAccelerate;
+  private final boolean mResourceLoadReporting;
   private float mDeviceDensity = 0.f;
 
   private AnimaXContext(Builder builder) {
     this.mAbility = builder.mAbility;
     this.mContext = builder.mContext;
     this.mMultiThreadAccelerate = builder.mMultiThreadAccelerate;
+    mResourceLoadReporting = builder.mResourceLoadReporting;
   }
 
   /**
@@ -32,6 +34,10 @@ public class AnimaXContext {
   @CalledByNative
   public BaseAbility getAbility() {
     return mAbility;
+  }
+
+  public boolean enableResourceLoadReporting() {
+    return mResourceLoadReporting;
   }
 
   public Context getContext() {
@@ -75,6 +81,7 @@ public class AnimaXContext {
   public static class Builder {
     private final BaseAbility mAbility;
     private final Context mContext;
+    private boolean mResourceLoadReporting;
     private boolean mMultiThreadAccelerate = false;
 
     public Builder(@NonNull BaseAbility ability, @NonNull Context context) {
@@ -85,6 +92,11 @@ public class AnimaXContext {
     public Builder multiThreadAccelerate(boolean enable) {
       // Shader cache with multithread acceleration can crash on Huawei Android devices.
       mMultiThreadAccelerate = enable && !DeviceUtil.isHuaWei();
+      return this;
+    }
+
+    public Builder enableResourceLoadReporting(boolean enable) {
+      mResourceLoadReporting = enable;
       return this;
     }
 

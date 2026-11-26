@@ -4,6 +4,7 @@
 
 #import "AnimaXResourceLoaderHolder.h"
 #import <AnimaX/AnimaXContext.h>
+#import <AnimaX/AnimaXMonitorService.h>
 #import <AnimaX/AnimaXServiceCenter.h>
 #import <AnimaX/AnimaXServiceScope.h>
 #import "AnimaXContext+Internal.h"
@@ -15,7 +16,7 @@
 #include "src/resource/resource_loader/ios/unzip_loader_ios.h"
 
 @interface AnimaXResourceLoaderHolder ()
-- (instancetype)initPrivate;
+- (instancetype)initWithContext:(AnimaXContext *)context monitor:(id<AnimaXMonitorService>)monitor;
 @end
 
 @implementation AnimaXResourceLoaderHolder {
@@ -23,10 +24,10 @@
   std::shared_ptr<lynx::animax::UnzipLoaderIOS> _unzipLoader;
 }
 
-- (instancetype)initPrivate:(AnimaXContext *)context {
+- (instancetype)initWithContext:(AnimaXContext *)context monitor:(id<AnimaXMonitorService>)monitor {
   self = [super init];
   if (self) {
-    _resourcePipeline = lynx::animax::ResourcePipelineIOS::MakePipeline(context);
+    _resourcePipeline = lynx::animax::ResourcePipelineIOS::MakePipeline(context, monitor);
     _unzipLoader =
         std::shared_ptr<lynx::animax::UnzipLoaderIOS>{new lynx::animax::UnzipLoaderIOS{}};
   }
@@ -44,14 +45,24 @@
     return nil;
   }
 
-  AnimaXResourceLoaderHolder *loader = [[AnimaXResourceLoaderHolder alloc] initPrivate:context];
+  id<AnimaXMonitorService> monitor = nil;
+  if (context.enableResourceLoadReporting) {
+    monitor =
+        (id<AnimaXMonitorService>)[context.ability getService:@protocol(AnimaXMonitorService)];
+    if (![monitor respondsToSelector:@selector(reportResourceLoad:)]) {
+      monitor = nil;
+    }
+  }
+  AnimaXResourceLoaderHolder *loader = [[AnimaXResourceLoaderHolder alloc] initWithContext:context
+                                                                                   monitor:monitor];
   builder->SetResourceLoader(loader->_resourcePipeline).SetUnzipLoader(loader->_unzipLoader);
   return loader;
 }
 
 + (AnimaXResourceLoaderHolder *)loaderForCompositionFactory:(AnimaXContext *)context {
   AnimaXServiceScope *scope = context.ability.getServiceScope;
-  AnimaXResourceLoaderHolder *loader = [[AnimaXResourceLoaderHolder alloc] initPrivate:context];
+  AnimaXResourceLoaderHolder *loader = [[AnimaXResourceLoaderHolder alloc] initWithContext:context
+                                                                                   monitor:nil];
   lynx::animax::AnimaXCompositionFactory::Instance().CreateLoader(
       scope.description.UTF8String, loader->_resourcePipeline, loader->_unzipLoader);
   return loader;
