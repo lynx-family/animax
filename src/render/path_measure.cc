@@ -24,18 +24,19 @@ bool PathMeasure::NextContour() { return pm_->NextContour(); }
 float PathMeasure::GetLength() { return pm_->GetLength(); }
 
 bool PathMeasure::GetPosTan(float distance, PointF* out_pos) {
-  skity::Point pos{};
+  skity::Vec2 pos{};
 
-  bool result = pm_->GetPosTan(distance, &pos, nullptr);
+  bool result = pm_->GetPosTan2D(distance, &pos, nullptr);
   if (result) {
-    out_pos->Set(pos.x, pos.y, pos.z);
+    out_pos->Set(pos.x, pos.y, 0.f);
   }
   return result;
 }
 
 bool PathMeasure::GetSegment(float start, float stop, Path& dst,
                              bool start_with_move_to) {
-  return pm_->GetSegment(start, stop, &dst.GetPath(), start_with_move_to);
+  return pm_->GetSegmentToBuilder(start, stop, &dst.GetBuilder(),
+                                  start_with_move_to);
 }
 
 }  // namespace animax
