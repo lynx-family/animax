@@ -23,6 +23,8 @@ class Bitmap;
 class CompositionModel;
 class VideoAsset;
 class PreloadHost;
+class NapiOnResourceUpdateCallback;
+class CompositionOperation;
 class PreloadedImage;
 class PreloadedAudio;
 class PreloadedAlphaVideo;
@@ -64,6 +66,7 @@ class PreloadedResource : public binding::ImplBase {
   std::shared_ptr<Storage> storage_;
 
  private:
+  friend class CompositionOperation;
   friend class Composition;
 };
 
@@ -84,8 +87,30 @@ class Composition : public PreloadedResource {
   const AlphaPlayerConfig* GetAlphaPlayerConfig() const;
   const CompositionLoadInfo& GetLoadInfo() const;
 
+  void UpdateImage(std::string resource_id, PreloadedImage* image,
+                   std::unique_ptr<NapiOnResourceUpdateCallback> callback);
+  void UpdateAudio(std::string resource_id, PreloadedAudio* audio,
+                   std::unique_ptr<NapiOnResourceUpdateCallback> callback);
+  void UpdateVideo(std::string resource_id, PreloadedAlphaVideo* video,
+                   std::unique_ptr<NapiOnResourceUpdateCallback> callback);
+  // Edits all text keyframes in matching used layers before binding. Shares
+  // the resource FIFO; a failed edit leaves every matching layer unchanged.
+  void UpdateText(std::string layer_name, std::string text,
+                  std::unique_ptr<NapiOnResourceUpdateCallback> callback);
+  // Transfers prepared font bytes while preserving template names and style.
+  // A failed transfer leaves the candidate and existing font unchanged.
+  void UpdateFont(std::string font_name, PreloadedFont* font,
+                  std::unique_ptr<NapiOnResourceUpdateCallback> callback);
+  void Dispose() override;
+
  private:
   struct Data;
+  friend class CompositionOperation;
+  void EnqueueOperation(std::shared_ptr<CompositionOperation> operation,
+                        PreloadedResource* resource = nullptr);
+  void EnqueueUpdate(std::string resource_id, PreloadedResource* resource,
+                     ResourceType type,
+                     std::unique_ptr<NapiOnResourceUpdateCallback> callback);
 };
 
 class PreloadedImage : public PreloadedResource {
@@ -96,6 +121,7 @@ class PreloadedImage : public PreloadedResource {
 
  private:
   struct Data;
+  friend class CompositionOperation;
 };
 
 class PreloadedAudio : public PreloadedResource {
@@ -106,6 +132,7 @@ class PreloadedAudio : public PreloadedResource {
 
  private:
   struct Data;
+  friend class CompositionOperation;
 };
 
 // Internal payload prepared without a template. Rendering creates its Font
@@ -119,6 +146,7 @@ class PreloadedFont : public PreloadedResource {
 
  private:
   struct Data;
+  friend class CompositionOperation;
 };
 
 // The public AlphaVideo wrapper owns prepared MP4 data. RGB/alpha regions
@@ -131,6 +159,7 @@ class PreloadedAlphaVideo : public PreloadedResource {
 
  private:
   struct Data;
+  friend class CompositionOperation;
 };
 
 void InstallPreloadBindings(Napi::Env env, Napi::Object& module);

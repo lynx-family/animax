@@ -16,6 +16,11 @@
 #include "base/include/vector.h"
 
 #include "src/base/log/log.h"
+#include "src/jsbridge/bindings/animax/napi_alpha_video.h"
+#include "src/jsbridge/bindings/animax/napi_font.h"
+#include "src/jsbridge/bindings/animax/napi_image.h"
+#include "src/jsbridge/bindings/animax/napi_on_resource_update_callback.h"
+#include "src/jsbridge/bindings/animax/napi_preloaded_audio.h"
 #include "src/jsbridge/bindings/animax/preloaded_resource.h"
 #include "third_party/binding/napi/exception_message.h"
 #include "third_party/binding/napi/napi_base_wrap.h"
@@ -149,6 +154,123 @@ void NapiComposition::Init(std::unique_ptr<Composition> impl) {
   impl_->AssociateWithWrapper(this);
 }
 
+Value NapiComposition::UpdateImageMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 3) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "UpdateImage", "3");
+    return Value();
+  }
+
+  auto arg0_resourceId = NativeValueTraits<IDLString>::NativeValue(info, 0);
+
+  auto arg1_image = NativeValueTraits<NapiImage>::NativeValue(info, 1);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  auto arg2_callback = NativeValueTraits<IDLFunction<NapiOnResourceUpdateCallback>>::NativeValue(info, 2);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->UpdateImage(std::move(arg0_resourceId), arg1_image, std::move(arg2_callback));
+  return info.Env().Undefined();
+}
+
+Value NapiComposition::UpdateAudioMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 3) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "UpdateAudio", "3");
+    return Value();
+  }
+
+  auto arg0_resourceId = NativeValueTraits<IDLString>::NativeValue(info, 0);
+
+  auto arg1_audio = NativeValueTraits<NapiPreloadedAudio>::NativeValue(info, 1);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  auto arg2_callback = NativeValueTraits<IDLFunction<NapiOnResourceUpdateCallback>>::NativeValue(info, 2);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->UpdateAudio(std::move(arg0_resourceId), arg1_audio, std::move(arg2_callback));
+  return info.Env().Undefined();
+}
+
+Value NapiComposition::UpdateVideoMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 3) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "UpdateVideo", "3");
+    return Value();
+  }
+
+  auto arg0_resourceId = NativeValueTraits<IDLString>::NativeValue(info, 0);
+
+  auto arg1_alphaVideo = NativeValueTraits<NapiAlphaVideo>::NativeValue(info, 1);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  auto arg2_callback = NativeValueTraits<IDLFunction<NapiOnResourceUpdateCallback>>::NativeValue(info, 2);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->UpdateVideo(std::move(arg0_resourceId), arg1_alphaVideo, std::move(arg2_callback));
+  return info.Env().Undefined();
+}
+
+Value NapiComposition::UpdateTextMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 3) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "UpdateText", "3");
+    return Value();
+  }
+
+  auto arg0_layerName = NativeValueTraits<IDLString>::NativeValue(info, 0);
+
+  auto arg1_text = NativeValueTraits<IDLString>::NativeValue(info, 1);
+
+  auto arg2_callback = NativeValueTraits<IDLFunction<NapiOnResourceUpdateCallback>>::NativeValue(info, 2);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->UpdateText(std::move(arg0_layerName), std::move(arg1_text), std::move(arg2_callback));
+  return info.Env().Undefined();
+}
+
+Value NapiComposition::UpdateFontMethod(const CallbackInfo& info) {
+  DCHECK(impl_);
+
+  if (info.Length() < 3) {
+    ExceptionMessage::NotEnoughArguments(info.Env(), InterfaceName(), "UpdateFont", "3");
+    return Value();
+  }
+
+  auto arg0_fontName = NativeValueTraits<IDLString>::NativeValue(info, 0);
+
+  auto arg1_font = NativeValueTraits<NapiFont>::NativeValue(info, 1);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  auto arg2_callback = NativeValueTraits<IDLFunction<NapiOnResourceUpdateCallback>>::NativeValue(info, 2);
+  if (info.Env().IsExceptionPending()) {
+    return info.Env().Undefined();
+  }
+
+  impl_->UpdateFont(std::move(arg0_fontName), arg1_font, std::move(arg2_callback));
+  return info.Env().Undefined();
+}
+
 Value NapiComposition::DisposeMethod(const CallbackInfo& info) {
   DCHECK(impl_);
 
@@ -163,11 +285,16 @@ Napi::Class* NapiComposition::Class(Napi::Env env) {
     return clazz;
   }
 
-  base::InlineVector<Wrapped::PropertyDescriptor, 1> props;
+  base::InlineVector<Wrapped::PropertyDescriptor, 6> props;
 
   // Attributes
 
   // Methods
+  AddInstanceMethod(props, "updateImage", &NapiComposition::UpdateImageMethod);
+  AddInstanceMethod(props, "updateAudio", &NapiComposition::UpdateAudioMethod);
+  AddInstanceMethod(props, "updateVideo", &NapiComposition::UpdateVideoMethod);
+  AddInstanceMethod(props, "updateText", &NapiComposition::UpdateTextMethod);
+  AddInstanceMethod(props, "updateFont", &NapiComposition::UpdateFontMethod);
   AddInstanceMethod(props, "dispose", &NapiComposition::DisposeMethod);
 
   // Cache the class

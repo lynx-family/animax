@@ -23,6 +23,8 @@ animax_napi_sources = [
   "bindings/animax/napi_on_layer_property_callback.h",
   "bindings/animax/napi_on_property_callback.cc",
   "bindings/animax/napi_on_property_callback.h",
+  "bindings/animax/napi_on_resource_update_callback.cc",
+  "bindings/animax/napi_on_resource_update_callback.h",
   "bindings/animax/napi_preloaded_audio.cc",
   "bindings/animax/napi_preloaded_audio.h",
   "bindings/animax/napi_task_runner.cc",
