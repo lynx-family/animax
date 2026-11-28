@@ -6,6 +6,7 @@ package com.lynx.animax;
 import androidx.annotation.Keep;
 import androidx.annotation.RestrictTo;
 import com.lynx.animax.base.CalledByNative;
+import com.lynx.animax.base.CleanupReference;
 import com.lynx.animax.loader.AnimaXResourceLoaderHolder;
 import com.lynx.animax.util.AnimaXLog;
 import com.lynx.animax.util.UIThreadUtils;
@@ -23,6 +24,9 @@ public final class AnimaXPreloadHost {
 
   private final WeakReference<Provider> mProvider;
   private long mNativePtr;
+  // Releases the native host once, through invalidate() or after this object
+  // is collected without it.
+  private final CleanupReference mNativeCleanup;
   // Accessed only by the owning runtime's attach/detach callbacks.
   private long mEnv;
   // Protected by this host's lock; only outstanding requests are retained.
@@ -31,6 +35,9 @@ public final class AnimaXPreloadHost {
   public AnimaXPreloadHost(Provider provider) {
     mProvider = new WeakReference<>(provider);
     mNativePtr = nativeCreate();
+    // Capture only the pointer so that this object can still be collected.
+    final long nativePtr = mNativePtr;
+    mNativeCleanup = new CleanupReference(this, () -> nativeDestroy(nativePtr), false);
   }
 
   public synchronized boolean onRuntimeAttach(long env) {
@@ -55,8 +62,9 @@ public final class AnimaXPreloadHost {
 
   public synchronized void invalidate() {
     if (mNativePtr != 0) {
-      nativeDestroy(mNativePtr);
       mNativePtr = 0;
+      // Runs nativeDestroy on this thread, as before.
+      mNativeCleanup.cleanupNow();
     }
   }
 

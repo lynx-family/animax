@@ -601,6 +601,32 @@ static jobject GetEventTrackingMap(JNIEnv* env, jobject jcaller, jlong player) {
       GetEventTrackingMapInternal(env, player).jni_object());
 }
 
+static jboolean SetCompositionMode(JNIEnv* env, jobject jcaller, jlong player,
+                                   jboolean enabled) {
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  return player_ptr && player_ptr->SetCompositionMode(enabled);
+}
+
+static jobject GetCompositionReceiverInfo(JNIEnv* env, jobject jcaller,
+                                          jlong player) {
+  auto player_ptr = GetAnimaXPlayerSharedPtr(player);
+  if (!player_ptr) {
+    return nullptr;
+  }
+  lynx::animax::android::JavaOnlyMap info;
+  info.PushString("elementID", player_ptr->GetPlayerID());
+  info.PushString("instanceToken",
+                  std::to_string(player_ptr->GetInstanceToken()));
+  return env->NewLocalRef(info.jni_object());  // NOLINT
+}
+
+static void CancelPendingCompositionBinding(JNIEnv* env, jobject jcaller,
+                                            jlong player) {
+  if (auto player_ptr = GetAnimaXPlayerSharedPtr(player)) {
+    player_ptr->CancelPendingCompositionBinding();
+  }
+}
+
 static void SetFpsEventInterval(JNIEnv* env, jobject jcaller, jlong player,
                                 jlong interval) {
   auto player_ptr = GetAnimaXPlayerSharedPtr(player);
